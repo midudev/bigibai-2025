@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^9.4.4",
     "@midudev/tailwind-animations": "^0.2.0",
     "@supabase/supabase-js": "^2.74.0",
     "@tailwindcss/vite": "^4.1.14",
