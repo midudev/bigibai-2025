@@ -1,46 +1,92 @@
-# Astro Starter Kit: Basics
+# Web Oficial de BigIbai 2025
 
-```sh
-pnpm create astro@latest -- --template basics
-```
+<a name="readme-top"></a>
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+<div align="center">
 
-## 🚀 Project Structure
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
 
-Inside of your Astro project, you'll see the following folders and files:
+</div>
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+## Descripción
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+BigIbai 2025 es un evento anual organizado por Ibai Llanos que combina un calendario interactivo con sorteos, contenidos exclusivos y experiencias para la comunidad. Esta web es el proyecto oficial desarrollado de forma abierta por la comunidad de Midudev.
+Este repositorio contiene el desarrollo **open source** de la web oficial de BigIbai 2025.  
+El proyecto se construye en stream a traves de Twitch y Youtube, de forma colaborativa junto a la comunidad de Midudev.
 
-## 🧞 Commands
+## 🚀 Tech Stack
 
-All commands are run from the root of the project, from a terminal:
+- [![Astro][astro-badge]][astro-url] - The web framework for content-driven websites.
+- [![Typescript][typescript-badge]][typescript-url] - JavaScript with syntax for types.
+- [![Tailwind CSS][tailwind-badge]][tailwind-url] - A utility-first CSS framework for rapidly building custom designs.
+- [![@midudev/tailwind-animations][animations-badge]][animations-url] - Easy peasy animations for your Tailwind project.
+- [![Supabase][supabase-badge]][supabase-url] - The open source Firebase alternative.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+## 🧑‍💻 Cómo contribuir
 
-## 👀 Want to learn more?
+¡Toda ayuda es bienvenida! Si quieres formar parte de la construcción:
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+1. Haz un **fork** del repositorio.
+2. Crea una rama para tu feature:
+
+    ```bash
+    git checkout -b feature/nombre-feature
+    ```
+
+3. Haz tus cambios y commitea:
+
+    ```bash
+    git commit -m "feat: describe tu cambio brevemente"
+    ```
+
+4. Haz push a tu rama:
+
+    ```bash
+    git push origin feature/nombre-feature
+    ```
+
+5. Abre un Pull Request explicando claramente qué hiciste.
+
+## Desarrollo local
+
+1. Clona el repositorio:
+
+    ```bash
+    git clone https://github.com/midudev/bigibai-2025.git
+    ```
+
+2. Instala las dependencias:
+
+    ```bash
+    pnpm install
+    ```
+
+3. Inicia el servidor de desarrollo:
+
+    ```bash
+    pnpm dev
+    ```
+
+4. Abre [http://localhost:4321](http://localhost:4321) en tu navegador.
+
+[astro-url]: https://astro.build/
+[typescript-url]: https://www.typescriptlang.org/
+[tailwind-url]: https://tailwindcss.com/
+[animations-url]: https://tailwindcss-animations.vercel.app/
+[astro-badge]: https://img.shields.io/badge/Astro-fff?style=for-the-badge&logo=astro&logoColor=bd303a&color=352563
+[typescript-badge]: https://img.shields.io/badge/Typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white&color=blue
+[tailwind-badge]: https://img.shields.io/badge/Tailwind-ffffff?style=for-the-badge&logo=tailwindcss&logoColor=38bdf8
+[animations-badge]: https://img.shields.io/badge/@midudev/tailwind-animations-ff69b4?style=for-the-badge&logo=node.js&logoColor=white&color=blue
+[contributors-shield]: https://img.shields.io/github/contributors/midudev/la-velada-web-oficial.svg?style=for-the-badge
+[contributors-url]: https://github.com/midudev/bigibai-2025/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/midudev/la-velada-web-oficial.svg?style=for-the-badge
+[forks-url]: https://github.com/midudev/bigibai-2025/network/members
+[stars-shield]: https://img.shields.io/github/stars/midudev/bigibai-2025.svg?style=for-the-badge
+[stars-url]: https://github.com/midudev/bigibai-2025/stargazers
+[issues-shield]: https://img.shields.io/github/issues/midudev/la-velada-web-oficial.svg?style=for-the-badge
+[issues-url]: https://github.com/midudev/la-velada-web-oficial/issues
+[supabase-url]: https://supabase.com/
+[supabase-badge]: https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white
