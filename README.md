@@ -80,13 +80,13 @@ El proyecto se construye en stream a traves de Twitch y Youtube, de forma colabo
 [typescript-badge]: https://img.shields.io/badge/Typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white&color=blue
 [tailwind-badge]: https://img.shields.io/badge/Tailwind-ffffff?style=for-the-badge&logo=tailwindcss&logoColor=38bdf8
 [animations-badge]: https://img.shields.io/badge/@midudev/tailwind-animations-ff69b4?style=for-the-badge&logo=node.js&logoColor=white&color=blue
-[contributors-shield]: https://img.shields.io/github/contributors/midudev/la-velada-web-oficial.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/midudev/bigibai-2025.svg?style=for-the-badge
 [contributors-url]: https://github.com/midudev/bigibai-2025/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/midudev/la-velada-web-oficial.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/midudev/bigibai-2025.svg?style=for-the-badge
 [forks-url]: https://github.com/midudev/bigibai-2025/network/members
 [stars-shield]: https://img.shields.io/github/stars/midudev/bigibai-2025.svg?style=for-the-badge
 [stars-url]: https://github.com/midudev/bigibai-2025/stargazers
-[issues-shield]: https://img.shields.io/github/issues/midudev/la-velada-web-oficial.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/midudev/bigibai-2025.svg?style=for-the-badge
 [issues-url]: https://github.com/midudev/la-velada-web-oficial/issues
 [supabase-url]: https://supabase.com/
 [supabase-badge]: https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white
