@@ -8,7 +8,7 @@ export const server = {
       email: z.string().email('¡Lo siento! El email no es válido')
     }),
     async handler({ email }) {
-      const { success, duplicated, error } = await saveNewsletterEmail(email)
+      const { success, error } = await saveNewsletterEmail(email)
 
       if (!success) {
         throw new ActionError({
@@ -17,10 +17,10 @@ export const server = {
         })
       }
 
-      if (duplicated) {
+      if (error) {
         return {
           success: true,
-          message: "¡Este usuario ya estaba en la newsletter!"
+          message: error
         }
       }
 
