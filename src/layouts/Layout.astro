@@ -1,22 +1,89 @@
+---
+import GradientOverlay from "../components/GradientOverlay.astro"
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>bigibai - ¡Algo grande se acerca!</title>
+    <meta name="description" content="bigibai - ¡Algo grande se acerca!" />
+    <meta name="keywords" content="bigibai" />
+    <meta name="author" content="Ibai Llanos" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="bingbot" content="index, follow" />
+    <meta name="yandexbot" content="index, follow" />
+  </head>
+  <body>
+    <div id="background-mask" class="min-h-screen w-full">
+      <GradientOverlay />
+      <div class="relative z-2">
+        <slot />
+      </div>
+    </div>
+  </body>
 </html>
 
+<style is:global>
+  @import "tailwindcss";
+  @plugin "@midudev/tailwind-animations";
+
+  @font-face {
+    font-family: "Century";
+    src: url("/fonts/century.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Century";
+    src: url("/fonts/century-bold.woff2") format("woff2");
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Heavy";
+    src: url("/fonts/heavy.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  h1,
+  h2 {
+    font-family: "Heavy", sans-serif;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Century", sans-serif;
+  }
+</style>
+
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+  body {
+    background: #000;
+  }
+
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  #background-mask {
+    background-image: url("/fondo.webp");
+    background-size: cover;
+    background-position: top;
+    background-repeat: no-repeat;
+  }
 </style>
