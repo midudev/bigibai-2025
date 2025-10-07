@@ -17,6 +17,15 @@ BigIbai 2025 es un evento anual organizado por Ibai Llanos que combina un calend
 Este repositorio contiene el desarrollo **open source** de la web oficial de BigIbai 2025.  
 El proyecto se construye en stream a traves de Twitch y Youtube, de forma colaborativa junto a la comunidad de Midudev.
 
+## Índice
+
+- [Web Oficial de BigIbai 2025](#web-oficial-de-bigibai-2025)
+  - [Descripción](#descripción)
+  - [Índice](#índice)
+  - [🚀 Tech Stack](#-tech-stack)
+  - [🧑‍💻 Cómo contribuir](#-cómo-contribuir)
+  - [Desarrollo local](#desarrollo-local)
+
 ## 🚀 Tech Stack
 
 - [![Astro][astro-badge]][astro-url] - The web framework for content-driven websites.
