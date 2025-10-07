@@ -1,0 +1,73 @@
+---
+import { actions } from "astro:actions"
+---
+
+<section class="w-full max-w-xl mx-auto">
+  <form
+    method="POST"
+    id="newsletter-form"
+    class="flex flex-col gap-4"
+    action={actions.newsletter}
+  >
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input
+        required
+        type="email"
+        name="email"
+        class="flex-1 px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+        placeholder="Contenido exclusivo sólo para los reals"
+      />
+      <button
+        type="submit"
+        class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >¡Avísame!
+      </button>
+    </div>
+
+    <div id="newsletter-message" class="hidden text-sm text-center text-brand">
+      ¡Ya eres parte de la newsletter!
+    </div>
+  </form>
+</section>
+
+<script>
+  import { actions, isInputError } from "astro:actions"
+  import { throwConfetti } from "@/utils/confetti"
+
+  const form = document.getElementById("newsletter-form") as HTMLFormElement
+  const message = document.getElementById(
+    "newsletter-message"
+  ) as HTMLDivElement
+
+  message.classList.add("hidden")
+  message.classList.remove("text-red-500", "text-green-500")
+
+  form.addEventListener("submit", async (event) => {
+    console.log("submit")
+
+    event.preventDefault()
+
+    const formData = new FormData(form)
+    const email = formData.get("email") as string
+
+    const { data, error } = await actions.newsletter({ email })
+
+    if (error) {
+      const messageText = isInputError(error)
+        ? error?.fields?.email?.join(", ")
+        : error.message
+
+      message.textContent =
+        messageText ?? "Error al guardar el email en la newsletter"
+      message.classList.remove("hidden")
+      message.classList.add("text-red-500")
+    }
+
+    if (data) {
+      throwConfetti()
+      message.textContent = data.message
+      message.classList.remove("hidden")
+      message.classList.add("text-green-500")
+    }
+  })
+</script>

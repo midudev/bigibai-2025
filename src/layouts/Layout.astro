@@ -1,4 +1,5 @@
 ---
+import "../global.css"
 import GradientOverlay from "../components/GradientOverlay.astro"
 ---
 
@@ -12,10 +13,6 @@ import GradientOverlay from "../components/GradientOverlay.astro"
     <meta name="description" content="bigibai - ¡Algo grande se acerca!" />
     <meta name="keywords" content="bigibai" />
     <meta name="author" content="Ibai Llanos" />
-    <meta name="robots" content="index, follow" />
-    <meta name="googlebot" content="index, follow" />
-    <meta name="bingbot" content="index, follow" />
-    <meta name="yandexbot" content="index, follow" />
   </head>
   <body>
     <div id="background-mask" class="min-h-screen w-full">
@@ -26,47 +23,6 @@ import GradientOverlay from "../components/GradientOverlay.astro"
     </div>
   </body>
 </html>
-
-<style is:global>
-  @import "tailwindcss";
-  @plugin "@midudev/tailwind-animations";
-
-  @font-face {
-    font-family: "Century";
-    src: url("/fonts/century.woff2") format("woff2");
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Century";
-    src: url("/fonts/century-bold.woff2") format("woff2");
-    font-weight: bold;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Heavy";
-    src: url("/fonts/heavy.woff2") format("woff2");
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  h1,
-  h2 {
-    font-family: "Heavy", sans-serif;
-  }
-
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: "Century", sans-serif;
-  }
-</style>
 
 <style>
   body {
@@ -85,5 +41,34 @@ import GradientOverlay from "../components/GradientOverlay.astro"
     background-size: cover;
     background-position: top;
     background-repeat: no-repeat;
+
+    mask-image: url("/lock.svg");
+    mask-position: center 50%;
+    mask-repeat: no-repeat;
+    mask-size: 50px;
+
+    &.unlocked {
+      animation: lock-reveal 3s forwards ease-in-out;
+    }
+  }
+
+  @keyframes lock-reveal {
+    0% {
+      mask-size: 50px;
+    }
+
+    100% {
+      mask-size: 1000vh;
+    }
   }
 </style>
+
+<script>
+  const backgroundMask = document.getElementById(
+    "background-mask"
+  ) as HTMLDivElement
+
+  document.addEventListener("DOMContentLoaded", () => {
+    backgroundMask.classList.add("unlocked")
+  })
+</script>
