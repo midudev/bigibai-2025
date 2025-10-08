@@ -3,6 +3,8 @@
 
 @theme {
   --color-brand: #f8b134;
+  --color-destructive: var(--color-red-600);
+  --color-destructive-foreground: var(--color-white);
 }
 
 @font-face {
