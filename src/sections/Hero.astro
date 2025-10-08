@@ -5,6 +5,20 @@ import SubscribeForm from "../newsletter/components/SubscribeForm.astro"
 <main
   class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4"
 >
+<!-- choco Ibai - si cambias el modelo de ibai2.glb a ibai3.glb el modelo camina-->
+  <div class="w-full flex items-center justify-center">
+  <model-viewer
+    src="/models/ibai2.glb"
+    autoplay
+    camera-orbit="0deg 90deg"
+    disable-zoom
+    camera-controls
+    camera-orbit="0deg 90deg 1.2m"
+    field-of-view="90deg"
+    class=" w-[250px] h-[250px] top-0 rounded-full"
+    style="transform: translateY(-30px)"
+  ></model-viewer>
+</div>
   <p class="text-xl text-white/80 text-center text-balance mb-10">
     ¿Listos para celebrar las Navidades juntos de nuevo? Descubre la nueva
     edición de Big Ibai y mucho más próximamente.
