@@ -1,6 +1,5 @@
-import { saveNewsletterEmail } from '@/newsletter/services/subscribe';
-import { ActionError, defineAction } from 'astro:actions';
-import { z } from 'astro:schema';
+import { defineAction, ActionError } from 'astro:actions';
+import { z } from 'zod';
 
 export const server = {
   newsletter: defineAction({
@@ -8,6 +7,9 @@ export const server = {
       email: z.string().email('¡Lo siento! El email no es válido')
     }),
     async handler({ email }) {
+      // Importación dinámica para evitar errores en tiempo de carga
+      const { saveNewsletterEmail } = await import('../newsletter/services/subscribe');
+      
       const { success, duplicated, error } = await saveNewsletterEmail(email)
 
       if (!success) {
