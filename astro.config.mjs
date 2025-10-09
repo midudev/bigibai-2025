@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import path from 'node:path';
 import node from '@astrojs/node';
 
 import tailwindcss from '@tailwindcss/vite';
@@ -10,6 +11,11 @@ export default defineConfig({
     mode: 'standalone'
   }),
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        '@': path.resolve('./src'),
+      },
+    },
   }
 });
