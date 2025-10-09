@@ -47,7 +47,7 @@ import { actions } from "astro:actions"
       </button>
     </div>
 
-    <div id="newsletter-message" class="hidden text-sm text-center text-brand">
+    <div id="newsletter-message" class="invisible block h-6 leading-6 text-sm text-center text-brand">
       ¡Ya eres parte de la newsletter!
     </div>
   </form>
@@ -65,8 +65,16 @@ import { actions } from "astro:actions"
   const buttonText = document.getElementById("button-text") as HTMLSpanElement
   const buttonLoader = document.getElementById("button-loader") as HTMLSpanElement
 
-  message.classList.add("hidden")
+  message.classList.add("invisible")
   message.classList.remove("text-red-500", "text-green-500")
+
+  const input = form.querySelector("input[name='email']") as HTMLInputElement
+
+  input.addEventListener("focus", () => {
+    message.classList.add("invisible")
+    message.classList.remove("text-red-500", "text-green-500")
+    message.textContent = ""
+  })
 
   form.addEventListener("submit", async (event) => {
     console.log("submit")
@@ -95,15 +103,16 @@ import { actions } from "astro:actions"
 
       message.textContent =
         messageText ?? "Error al guardar el email en la newsletter"
-      message.classList.remove("hidden")
+      message.classList.remove("invisible")
       message.classList.add("text-red-500")
     }
 
     if (data) {
       throwConfetti()
       message.textContent = data.message
-      message.classList.remove("hidden")
+      message.classList.remove("invisible")
       message.classList.add("text-green-500")
+      form.reset()
     }
   })
 </script>
