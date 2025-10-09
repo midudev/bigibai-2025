@@ -1,0 +1,54 @@
+---
+import Layout from "../layouts/Layout.astro"
+import Header from "../sections/Header.astro"
+import Footer from "../sections/Footer.astro"
+---
+
+<Layout>
+  <div class="flex min-h-screen flex-col">
+    <Header />
+    <div class="flex flex-1">
+      <main
+        class="max-w-4xl mx-auto flex items-center justify-between px-4 py-16 flex-col gap-2 "
+      >
+        <!-- Texto principal -->
+        <div class="text-center ">
+          <h1 class="text-8xl font-normal text-brand leading-none">
+            404
+          </h1>
+          <h2 class="text-7xl font-normal text-brand break-words px-12">
+            Aún no se ha llegado a estas tierras.
+          </h2>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex flex-col sm:flex-row gap-4 ">
+          <a
+            href="/"
+            class="px-8 py-4 bg-brand hover:bg-yellow-400 text-black font-bold rounded-xl transition-all hover:scale-105 active:scale-95 text-center shadow-lg shadow-brand/50"
+            style="font-family: 'Century', sans-serif;"
+          >
+            Volver al inicio
+          </a>
+          
+          <button
+            id="back-button"
+            class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 backdrop-blur-lg border border-white/20"
+            style="font-family: 'Century', sans-serif;"
+          >
+            Página anterior
+          </button>
+        </div>
+      </main>
+    </div>
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  const backButton = document.getElementById("back-button")
+  
+  backButton?.addEventListener("click", () => {
+    window.history.back()
+  })
+</script>
