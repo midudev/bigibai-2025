@@ -1,6 +1,8 @@
 ---
 import "../global.css"
 import GradientOverlay from "../components/GradientOverlay.astro"
+
+import Metadata from "@/components/Metadata.astro"
 ---
 
 <!doctype html>
@@ -9,10 +11,9 @@ import GradientOverlay from "../components/GradientOverlay.astro"
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <Metadata />
+
     <title>bigibai - ¡Algo grande se acerca!</title>
-    <meta name="description" content="bigibai - ¡Algo grande se acerca!" />
-    <meta name="keywords" content="bigibai" />
-    <meta name="author" content="Ibai Llanos" />
   </head>
   <body>
     <div id="background-mask" class="min-h-screen w-full">
