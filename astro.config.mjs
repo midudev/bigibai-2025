@@ -7,11 +7,11 @@ import sitemap from '@astrojs/sitemap'
 
 import tailwindcss from '@tailwindcss/vite';
 
+import vercel from '@astrojs/vercel';
+
 // https://astro.build/config
 export default defineConfig({
-  adapter: node({
-    mode: 'standalone'
-  }),
+  adapter: vercel(),
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],
