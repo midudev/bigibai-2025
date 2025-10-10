@@ -51,7 +51,7 @@ h6,
 }
 
 .md-container {
-  @apply prose prose-invert mx-auto pt-24 px-4 md:px-0;
+  @apply prose prose-invert mx-auto pt-24 pb-2 px-4 md:px-0;
 }
 
 .md-container h1, h2 { @apply !text-brand uppercase text-center font-bold !mt-4 leading-[130%]; }
