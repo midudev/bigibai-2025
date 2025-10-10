@@ -2,13 +2,18 @@
 import Layout from "@/layouts/Layout.astro"
 
 import Footer from "@/sections/Footer.astro"
-import Privacy from "@/content/legal/politica-de-cookies.md"
+import CookiePolicy from "@/content/legal/politica-de-cookies.md"
 ---
 
 <Layout>
-    <main class="md-container">
-        <Privacy />
-    </main>
+  <main
+    class="md-container"
+    role="contentinfo"
+    aria-label="Política de Cookies"
+    aria-live="assertive"
+  >
+    <CookiePolicy />
+  </main>
 
-    <Footer />
+  <Footer />
 </Layout>

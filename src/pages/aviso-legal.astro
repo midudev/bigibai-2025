@@ -6,9 +6,14 @@ import LegalNotice from "@/content/legal/aviso-legal.md"
 ---
 
 <Layout>
-    <main class="md-container">
-        <LegalNotice />
-    </main>
+  <main
+    class="md-container"
+    role="contentinfo"
+    aria-label="Aviso Legal"
+    aria-live="assertive"
+  >
+    <LegalNotice />
+  </main>
 
-    <Footer />
+  <Footer />
 </Layout>
