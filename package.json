@@ -9,16 +9,16 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.4.4",
-    "@midudev/tailwind-animations": "^0.2.0",
-    "@supabase/supabase-js": "^2.74.0",
-    "@tailwindcss/vite": "^4.1.14",
+    "@astrojs/node": "9.4.4",
+    "@midudev/tailwind-animations": "0.2.0",
+    "@supabase/supabase-js": "2.74.0",
+    "@tailwindcss/vite": "4.1.14",
     "astro": "5.14.1",
-    "canvas-confetti": "^1.9.3",
-    "tailwindcss": "^4.1.14"
+    "canvas-confetti": "1.9.3",
+    "tailwindcss": "4.1.14"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.19",
-    "@types/canvas-confetti": "^1.9.0"
+    "@tailwindcss/typography": "0.5.19",
+    "@types/canvas-confetti": "1.9.0"
   }
 }
