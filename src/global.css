@@ -40,3 +40,61 @@ h5,
 h6 {
   font-family: "Century", sans-serif;
 }
+
+/* Global animations */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Interactivity enhancements */
+a, button, input {
+  transition: all 0.3s ease;
+}
+
+/* Hover effect for links */
+a:hover {
+  transform: translateY(-1px);
+}
+
+/* Smooth page load animation */
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: pageLoad 0.5s ease-out;
+}
+
+/* Scroll reveal effect */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 3D hover effect */
+.hover-3d {
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+/* Elevated card effect */
+.elevated {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.elevated:hover {
+  box-shadow: 0 20px 50px -15px rgba(248, 177, 52, 0.3);
+  transform: translateY(-5px);
+}
