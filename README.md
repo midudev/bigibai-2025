@@ -96,6 +96,6 @@ El proyecto se construye en stream a traves de Twitch y Youtube, de forma colabo
 [stars-shield]: https://img.shields.io/github/stars/midudev/bigibai-2025.svg?style=for-the-badge
 [stars-url]: https://github.com/midudev/bigibai-2025/stargazers
 [issues-shield]: https://img.shields.io/github/issues/midudev/bigibai-2025.svg?style=for-the-badge
-[issues-url]: https://github.com/midudev/la-velada-web-oficial/issues
+[issues-url]: https://github.com/midudev/bigibai-2025/issues
 [supabase-url]: https://supabase.com/
 [supabase-badge]: https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white
