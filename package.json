@@ -1,7 +1,7 @@
 {
   "name": "bigibai-2025",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@astrojs/node": "9.4.5",
+    "@astrojs/sitemap": "3.6.0",
+    "@astrojs/vercel": "8.2.9",
     "@midudev/tailwind-animations": "0.2.0",
     "@supabase/supabase-js": "2.75.0",
     "@tailwindcss/vite": "4.1.14",

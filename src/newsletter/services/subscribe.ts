@@ -1,9 +1,18 @@
 import { supabase } from "@/supabase"
+import { encrypt, hash } from "@/utils/crypto"
 
 const ERROR_CODE_ALREADY_EXISTS = "23505"
 
 export const saveNewsletterEmail = async (email: string) => {
-  const { error } = await supabase.from('newsletter').insert({ email })
+  // Hash para detectar duplicados (determinista)
+  const emailHash = hash(email)
+  // Cifrado para poder recuperar el email (reversible)
+  const emailEncrypted = encrypt(email)
+  
+  const { error } = await supabase.from('newsletter').insert({ 
+    email_hash: emailHash,
+    email_encrypted: emailEncrypted 
+  })
   
   if (error?.code === ERROR_CODE_ALREADY_EXISTS) {
     return {
