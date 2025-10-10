@@ -22,8 +22,9 @@
 ## 📎 Descripción:
 
 BigIbai 2025 **(&copy; Salad Brands SL.)** es un evento anual organizado por [Ibai Llanos][twitter-ibai-llanos] que combina un calendario de adviento interactivo con sorteos, contenidos exclusivos y experiencias para los ***reals***. Esta web es el proyecto oficial desarrollado de forma abierta por la comunidad de Midudev.
-<br>
+
 Este repositorio contiene el desarrollo ***open source*** de la web oficial de BigIbai 2025.  
+
 El proyecto se construye en stream, a través de la plataforma [Twitch](https://www.twitch.tv/midudev "Twitch de Midudev") & [Youtube](https://www.youtube.com/midudev "Youtube de Midudev"), de manera colaborativa por la comunidad de Migel Ángel Durán ~ *@midudev*.
 
 <p align="right">
