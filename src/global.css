@@ -1,8 +1,11 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @plugin "@midudev/tailwind-animations";
 
 @theme {
   --color-brand: #f8b134;
+  --color-primary: hsl(0, 0, 95%);
+  --color-secondary: hsl(0, 0, 60%);
 }
 
 @font-face {
@@ -30,14 +33,20 @@
 }
 
 h1,
-h2 {
+h2,
+.md-container h1,
+.md-container h2 {
   font-family: "Heavy", sans-serif;
 }
 
 h3,
 h4,
 h5,
-h6 {
+h6,
+.md-container h3,
+.md-container h4,
+.md-container h5,
+.md-container h6 {
   font-family: "Century", sans-serif;
 }
 
