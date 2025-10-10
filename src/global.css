@@ -1,10 +1,13 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @plugin "@midudev/tailwind-animations";
 
 @theme {
   --color-brand: #f8b134;
   --color-destructive: var(--color-red-600);
   --color-destructive-foreground: var(--color-white);
+  --color-primary: hsl(0, 0, 95%);
+  --color-secondary: hsl(0, 0, 60%);
 }
 
 @font-face {
@@ -32,13 +35,30 @@
 }
 
 h1,
-h2 {
+h2,
+.md-container h1,
+.md-container h2 {
   font-family: "Heavy", sans-serif;
 }
 
 h3,
 h4,
 h5,
-h6 {
+h6,
+.md-container h3,
+.md-container h4,
+.md-container h5,
+.md-container h6 {
   font-family: "Century", sans-serif;
 }
+
+.md-container {
+  @apply prose prose-invert mx-auto pt-24 px-4 md:px-0;
+}
+
+.md-container h1, h2 { @apply !text-brand uppercase text-center font-bold !mt-4 leading-[130%]; }
+.md-container h2 { @apply text-6xl;}
+.md-container h3 { @apply text-primary mb-4; }
+.md-container a { @apply text-secondary font-bold; }
+.md-container p, li { @apply text-secondary; }
+.md-container l1::marker { color: oklch(0.45 0.03 257.71); }
