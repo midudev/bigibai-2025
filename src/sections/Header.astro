@@ -1,11 +1,16 @@
 <header class="pt-24">
-  <div class="relative">
-    <img class="max-w-xl mx-auto px-4 md:px-0" src="/logo-a.svg" alt="bigibai logo" />
+  <div class="relative logo-container">
+    <img 
+      class="max-w-xl mx-auto px-4 md:px-0 relative z-10 logo-main" 
+      src="/logo-a.svg" 
+      alt="bigibai logo" 
+    />
     <img
       class="inline-block absolute top-0 left-0 blur-sm w-full h-full opacity-50 -z-10 pulse"
       src="/logo-a.svg"
       alt="bigibai logo"
     />
+    <div class="glow-effect"></div>
   </div>
 </header>
 
@@ -13,16 +18,73 @@
   @keyframes pulse {
     0% {
       opacity: 0.5;
+      transform: scale(1);
     }
     50% {
       opacity: 0.75;
+      transform: scale(1.02);
     }
     100% {
       opacity: 0.5;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(0.95);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
   }
 
   .pulse {
-    animation: pulse 2s infinite;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  .logo-main {
+    animation: float 4s ease-in-out infinite, fadeInScale 0.8s ease-out;
+    filter: drop-shadow(0 0 20px rgba(248, 177, 52, 0.4));
+  }
+
+  .logo-container {
+    animation: fadeInScale 0.6s ease-out;
+  }
+
+  .glow-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(248, 177, 52, 0.4) 0%, transparent 70%);
+    filter: blur(40px);
+    animation: glow 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
   }
 </style>
