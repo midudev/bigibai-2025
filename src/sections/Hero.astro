@@ -5,12 +5,46 @@ import SubscribeForm from "@/newsletter/components/SubscribeForm.astro"
 <main
   class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4"
 >
-  <p class="text-xl text-white/80 text-center text-balance mb-10">
+  <p class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up" style="animation-delay: 0.2s;">
     ¿Listos para celebrar las Navidades juntos de nuevo? Descubre la nueva
     edición de Big Ibai y mucho más próximamente.
   </p>
-  <h2 class="text-5xl font-normal text-white text-center">
+  <h2 class="text-5xl font-normal text-white text-center fade-in-up glow-text" style="animation-delay: 0.4s;">
     ¿Quieres que te avisemos?
   </h2>
-  <SubscribeForm />
+  <div class="w-full fade-in-up" style="animation-delay: 0.6s;">
+    <SubscribeForm />
+  </div>
 </main>
+
+<style>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes textGlow {
+    0%, 100% {
+      text-shadow: 0 0 20px rgba(248, 177, 52, 0.3),
+                   0 0 40px rgba(248, 177, 52, 0.2);
+    }
+    50% {
+      text-shadow: 0 0 30px rgba(248, 177, 52, 0.5),
+                   0 0 60px rgba(248, 177, 52, 0.3);
+    }
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.8s ease-out backwards;
+  }
+
+  .glow-text {
+    animation: fadeInUp 0.8s ease-out backwards, textGlow 3s ease-in-out infinite;
+  }
+</style>
