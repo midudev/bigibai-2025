@@ -12,8 +12,95 @@ import { actions } from "astro:actions"
     }
   }
   
+  @keyframes shimmer {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) translateY(-20px);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.95);
+    }
+    100% {
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(248, 177, 52, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(248, 177, 52, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(248, 177, 52, 0);
+    }
+  }
+  
   .spinner {
     animation: spin 1s linear infinite;
+  }
+
+  .form-input {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .form-input:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(248, 177, 52, 0.5);
+  }
+
+  .submit-button {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, #f8b134, #ffd700, #f8b134);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .submit-button:hover {
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .submit-button:active {
+    animation: none;
+  }
+
+  .error-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .success-bounce {
+    animation: bounce-in 0.6s ease-out;
+  }
+
+  .pulse-effect {
+    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) infinite;
+  }
+
+  .message-container {
+    transition: all 0.3s ease;
+    min-height: 24px;
   }
 </style>
 
@@ -29,16 +116,17 @@ import { actions } from "astro:actions"
         required
         type="email"
         name="email"
-        class="flex-1 px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+        id="email-input"
+        class="form-input flex-1 px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
         placeholder="Contenido exclusivo sólo para los reals"
       />
       <button
         type="submit"
         id="submit-button"
-        class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative"
+        class="submit-button px-6 py-3 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative cursor-pointer"
       >
         <span id="button-text">¡Avísame!</span>
-        <span id="button-loader" class="hidden absolute inset-0 flex items-center justify-center">
+        <span id="button-loader" class="absolute inset-0 items-center justify-center hidden">
           <svg class="spinner h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -47,7 +135,7 @@ import { actions } from "astro:actions"
       </button>
     </div>
 
-    <div id="newsletter-message" class="invisible block h-6 leading-6 text-sm text-center text-brand">
+    <div id="newsletter-message" class="message-container invisible block h-6 leading-6 text-sm text-center text-brand font-semibold">
       ¡Ya eres parte de la newsletter!
     </div>
   </form>
@@ -72,8 +160,9 @@ import { actions } from "astro:actions"
 
   input.addEventListener("focus", () => {
     message.classList.add("invisible")
-    message.classList.remove("text-red-500", "text-green-500")
+    message.classList.remove("text-red-500", "text-green-500", "error-shake", "success-bounce")
     message.textContent = ""
+    input.classList.remove("error-shake")
   })
 
   form.addEventListener("submit", async (event) => {
@@ -81,20 +170,24 @@ import { actions } from "astro:actions"
 
     event.preventDefault()
 
-    // Activar estado de carga
+    // Activate charging status
     submitButton.disabled = true
+    submitButton.classList.add("pulse-effect")
     buttonText.classList.add("invisible")
     buttonLoader.classList.remove("hidden")
+    buttonLoader.classList.add("flex")
 
     const formData = new FormData(form)
     const email = formData.get("email") as string
 
     const { data, error } = await actions.newsletter({ email })
 
-    // Desactivar estado de carga
+    // Disable charging status
     submitButton.disabled = false
+    submitButton.classList.remove("pulse-effect")
     buttonText.classList.remove("invisible")
     buttonLoader.classList.add("hidden")
+    buttonLoader.classList.remove("flex")
 
     if (error) {
       const messageText = isInputError(error)
@@ -103,15 +196,22 @@ import { actions } from "astro:actions"
 
       message.textContent =
         messageText ?? "Error al guardar el email en la newsletter"
-      message.classList.remove("invisible")
-      message.classList.add("text-red-500")
+      message.classList.remove("invisible", "success-bounce")
+      message.classList.add("text-red-500", "error-shake")
+      input.classList.add("error-shake")
+      
+      // Remove shake class after animation ends to allow re-triggering it
+      setTimeout(() => {
+        message.classList.remove("error-shake")
+        input.classList.remove("error-shake")
+      }, 500)
     }
 
     if (data) {
       throwConfetti()
       message.textContent = data.message
-      message.classList.remove("invisible")
-      message.classList.add("text-green-500")
+      message.classList.remove("invisible", "error-shake")
+      message.classList.add("text-green-500", "success-bounce")
       form.reset()
     }
   })
