@@ -1,18 +1,65 @@
 ---
 import "@/global.css"
+
 import GradientOverlay from "@/components/GradientOverlay.astro"
+
+const title = "Big Ibai: Calendario de Adviento con chocolates y premios"
+const description =
+  "Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día."
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <title>{title}</title>
+
+    <link
+      rel="preload"
+      href="/fonts/century.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/century-bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/heavy.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>bigibai - ¡Algo grande se acerca!</title>
-    <meta name="description" content="bigibai - ¡Algo grande se acerca!" />
+    <meta name="description" content={description} />
     <meta name="keywords" content="bigibai" />
     <meta name="author" content="Ibai Llanos" />
+
+    <meta name="og:title" content={title} />
+    <meta name="og:description" content={description} />
+    <meta name="og:image" content="https://www.bigibai.com/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@IbaiLlanos" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="https://www.bigibai.com/og.jpg" />
+    <meta name="twitter:image:alt" content={title} />
+    <meta name="theme-color" content="#4c2d7e" />
+
+    <link rel="icon" href="/cropped-favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" href="/cropped-favicon-192x192.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/cropped-favicon-180x180.png" />
+    <meta
+      name="msapplication-TileImage"
+      content="/cropped-favicon-270x270.png"
+    />
   </head>
   <body>
     <div id="background-mask" class="min-h-screen w-full">

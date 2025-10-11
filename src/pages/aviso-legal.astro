@@ -1,0 +1,16 @@
+---
+import Layout from "@/layouts/Layout.astro"
+
+import Footer from "@/sections/Footer.astro"
+import LegalNotice from "@/content/legal/aviso-legal.md"
+---
+
+<Layout>
+    <section class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0">
+        <main class="relative z-10 md-container">
+            <LegalNotice />
+        </main>
+    </section>
+
+    <Footer />
+</Layout>
