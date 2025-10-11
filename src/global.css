@@ -4,6 +4,8 @@
 
 @theme {
   --color-brand: #f8b134;
+  --color-destructive: var(--color-red-600);
+  --color-destructive-foreground: var(--color-white);
   --color-primary: hsl(0, 0, 95%);
   --color-secondary: hsl(0, 0, 60%);
 }
