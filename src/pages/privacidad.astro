@@ -2,13 +2,15 @@
 import Layout from "@/layouts/Layout.astro"
 
 import Footer from "@/sections/Footer.astro"
-import CookiePolicy from "@/content/legal/privacidad.md"
+import Privacy from "@/content/legal/privacidad.md"
 ---
 
 <Layout>
-    <main class="md-container">
-        <CookiePolicy />
-    </main>
+    <section class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0">
+        <main class="relative z-10 md-container">
+            <Privacy />
+        </main>
+    </section>
 
     <Footer />
 </Layout>
