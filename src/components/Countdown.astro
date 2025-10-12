@@ -1,0 +1,170 @@
+---
+export interface Props {
+  date: Date;
+  format?: "clock" | "date"; // clock -> 25 Días 6 Horas 0 Minutos 0 Segundos | date -> 25D 06:00:00
+  class?: string;
+}
+
+const {
+  date,
+  format = "clock",
+  class: className = "",
+  ...rest
+} = Astro.props;
+
+const targetDate = date.toISOString();
+
+const baseClasses = {
+  wrapper: "relative",
+  group: "flex flex-col items-center justify-center",
+  digit: "text-5xl text-primary font-bold",
+  label: "text-sm text-secondary uppercase tracking-wide"
+};
+
+
+const variantClasses = {
+  clock: {
+    wrapper: "grid grid-cols-4 gap-4 text-center",
+    group: "",
+    digit: "text-6xl font-extrabold",
+    label: "mt-1 text-xs opacity-70"
+  },
+  date: {
+    wrapper: "flex items-center justify-center space-x-1 text-lg font-semibold",
+    group: "flex items-center",
+    digit: "inline-block",
+    label: "ml-1"
+  }
+};
+
+const classes = {
+  wrapper: [
+    baseClasses.wrapper,
+    variantClasses[format].wrapper,
+    className
+  ].filter(Boolean).join(" "),
+  group: [
+    baseClasses.group,
+    variantClasses[format].group,
+  ].filter(Boolean).join(" "),
+  digit: [
+    baseClasses.digit,
+    variantClasses[format].digit,
+  ].filter(Boolean).join(" "),
+  label: [
+    baseClasses.label,
+    variantClasses[format].label,
+  ].filter(Boolean).join(" "),
+}
+---
+
+<div
+  class={classes.wrapper}
+  id="countdown-wrapper"
+  data-target={targetDate}
+  data-format={format}
+>
+  <!-- Días -->
+  <div class={classes.group}>
+    <span class={classes.digit} id="days">00</span>
+    <span class={classes.label}>
+      {format === "clock" ? "Días" : "D"}
+    </span>
+  </div>
+  <!-- Días -->
+
+  <!-- Horas -->
+  <div class={classes.group}>
+    <span class={classes.digit} id="hours">00</span>
+    <span class={classes.label}>
+      {format === "clock" ? "Horas" : ":"}
+    </span>
+  </div>
+  <!-- Horas -->
+
+  <!-- Minutos -->
+  <div class={classes.group}>
+    <span class={classes.digit} id="minutes">00</span>
+    <span class={classes.label}>
+      {format === "clock" ? "Minutos" : ":"}
+    </span>
+  </div>
+  <!-- Minutos -->
+
+  <!-- Segundos -->
+  <div class={classes.group}>
+    <span class={classes.digit} id="seconds">00</span>
+    <span class={classes.label}>
+      {format === "clock" ? "Segundos" : ""}
+    </span>
+  </div>
+  <!-- Segundos -->
+      
+  <canvas id="confetti-canvas" />
+</div>
+
+<script>
+  import { throwConfettiByCanvas } from "@/utils/confetti";
+
+  const wrapper = document.getElementById("countdown-wrapper") as HTMLDivElement;
+  const canvas = document.getElementById("confetti-canvas") as HTMLCanvasElement;
+
+  const secondMeter = document.getElementById("seconds") as HTMLSpanElement;
+  const minuteMeter = document.getElementById("minutes") as HTMLSpanElement;
+  const hourMeter = document.getElementById("hours") as HTMLSpanElement;
+  const dayMeter = document.getElementById("days") as HTMLSpanElement;
+
+  /** UTC Offset ej:
+   * España: 25/12/2025 18:00:00 (6pm)  UTC+2
+   * México: 25/12/2025 10:00:00 (10am) UTC-6
+   */ 
+  if (!wrapper.dataset.target) {
+    throw new Error(" [!] Countdown Error: | data-target={targetDate} isn't defined |... ");
+  }
+  const target = new Date(wrapper.dataset.target);
+  const format = wrapper.dataset.format;
+  
+  let isFinished = false;
+  setInterval(() => {
+    if (isFinished) return;
+
+    const now = new Date();
+    const diffMs = target.getTime() - now.getTime() - 2_678_400_000;
+    
+    console.log(diffMs)
+
+    if (diffMs <= 0) {
+      isFinished = true;
+      throwConfettiByCanvas(canvas);
+
+      secondMeter.innerText = "00";
+      minuteMeter.innerText = "00";
+      hourMeter.innerText = "00";
+      dayMeter.innerText = "00";
+
+      return;
+    }
+
+    // 1000                 : Segundo
+    // 1000 * 60            : Minuto
+    // 1000 * 60 * 60       : Hora
+    // 1000 * 60 * 60 * 24  : Día
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
+    const seconds = Math.floor((diffMs / 1000) % 60);
+
+    if (format === "clock") {
+      dayMeter.innerText = String(days).padStart(2, "0");
+      hourMeter.innerText = String(hours).padStart(2, "0");
+      minuteMeter.innerText = String(minutes).padStart(2, "0");
+      secondMeter.innerText = String(seconds).padStart(2, "0");
+    } else {
+      // Formato date (91D 08:30:00)
+      dayMeter.innerText = `${days}D`;
+      hourMeter.innerText = String(hours).padStart(2, "0");
+      minuteMeter.innerText = String(minutes).padStart(2, "0");
+      secondMeter.innerText = String(seconds).padStart(2, "0");
+    }
+  }, 1000);
+</script>

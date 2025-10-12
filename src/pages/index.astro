@@ -4,11 +4,13 @@ import Layout from "@/layouts/Layout.astro"
 import Header from "@/sections/Header.astro"
 import Hero from "@/sections/Hero.astro"
 import Footer from "@/sections/Footer.astro"
+import Countdown from "@/components/Countdown.astro"
 ---
 
 <Layout>
   <div class="flex min-h-screen flex-col">
     <Header />
+    <Countdown date={new Date(2025, 10, 12, 12, 0, 0, 0)}/>
     <div class="flex flex-1">
       <Hero />
     </div>
