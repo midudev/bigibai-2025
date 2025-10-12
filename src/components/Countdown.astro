@@ -1,7 +1,7 @@
 ---
 export interface Props {
   date: Date;
-  format?: "clock" | "date"; // clock -> 25 Días 6 Horas 0 Minutos 0 Segundos | date -> 25D 06:00:00
+  format?: "clock" | "inline"; // clock -> 25 Días 6 Horas 0 Minutos 0 Segundos | inline -> 25D 06:00:00
   class?: string;
 }
 
@@ -29,7 +29,7 @@ const variantClasses = {
     digit: "text-6xl font-extrabold",
     label: "mt-1 text-xs opacity-70"
   },
-  date: {
+  inline: {
     wrapper: "flex items-center justify-center space-x-1 text-lg font-semibold",
     group: "flex items-center",
     digit: "inline-block",
@@ -160,7 +160,7 @@ const classes = {
       minuteMeter.innerText = String(minutes).padStart(2, "0");
       secondMeter.innerText = String(seconds).padStart(2, "0");
     } else {
-      // Formato date (91D 08:30:00)
+      // Formato inline (91D 08:30:00)
       dayMeter.innerText = `${days}D`;
       hourMeter.innerText = String(hours).padStart(2, "0");
       minuteMeter.innerText = String(minutes).padStart(2, "0");
