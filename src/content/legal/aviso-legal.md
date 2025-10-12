@@ -13,7 +13,7 @@ Titular: Salad Brands, S.L.
 <br>
 Registro Mercantil de Barcelona, número de inscripción 1, Tomo 49198, folio 1, hoja 611184
 <br>
-Domicilio principal: Calle Sagues, 27
+Domicilio principal: Calle Sagués, 27
 <br>
 08021 – Barcelona
 <br>
