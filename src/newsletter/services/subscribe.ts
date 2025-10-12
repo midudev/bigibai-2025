@@ -28,7 +28,7 @@ export const saveNewsletterEmail = async (email: string) => {
   if (existing) {
     return {
       duplicated: true,
-      success: false,
+      success: true,
       error: null
     }
   }
@@ -45,7 +45,7 @@ export const saveNewsletterEmail = async (email: string) => {
     // Por si acaso hubo una race condition
     return {
       duplicated: true,
-      success: false,
+      success: true,
       error: null
     }
   }
