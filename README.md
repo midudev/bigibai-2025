@@ -33,17 +33,16 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 </p>
 
 ---
+<a name="readme-index"></a>
 
 ## 🗂️ Índice:
 
-<a name="readme-index"></a>
-
-- [Web Oficial de BigIbai 2025](#web-oficial-de-bigibai-2025 "Volver...")
-  - [📎 Descripción](#descripción "Ir a la Descripción")
-  - [🗂️ Índice](#índice "Ir al Índice")
-  - [🚀 Tech Stack](#tech-stack "Ir al Stack Tecnologico")
-  - [☝️🖥️ ¿Cómo Contribuir?](#cómo-contribuir "Ir a Contribuir")
-  - [🧑🖥️ Desarrollo Local](#desarrollo-local "Ir a Clonar Repositorio")
+- [Web Oficial de BigIbai 2025](#-web-oficial-de-bigibai-2025 "Volver...")
+  - [📎 Descripción](#-descripcion "Ir a la Descripción")
+  - [🗂️ Índice](#-indice "Ir al Índice")
+  - [🚀 Tech Stack](#-tech-stack "Ir al Stack Tecnologico")
+  - [☝️🖥️ ¿Cómo Contribuir?](#-como-contribuir "Ir a Contribuir")
+  - [🧑🖥️ Desarrollo Local](#-desarrollo-local "Ir a Clonar Repositorio")
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
@@ -80,7 +79,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     git checkout -b {rama}/{nombre-de-implementación}
 
     # Recomendado : Git >= 2.23.
-    git switch -c "{rama}: {describa su cambio brevemente}"
+    git switch -c rama/{nombre-de-implementación}
     ```
 
     **Le aconsejamos seguir el siguiente patrón al nombrar una rama para su feature:**
@@ -115,8 +114,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     ```bash
     git push origin {rama}/{nombre-de-implementación}
     ```
-    > [!WARNING]
-    > Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
+> [!WARNING]
+> Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
 
 6. Abra un Pull Request & explique claramente qué hizo...
 
