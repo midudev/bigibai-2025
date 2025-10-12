@@ -2,6 +2,7 @@
 import "@/global.css"
 
 import GradientOverlay from "@/components/GradientOverlay.astro"
+import Snowballs from "@/components/Snowballs.astro"
 
 const title = "Big Ibai: Calendario de Adviento con chocolates y premios"
 const description =
@@ -64,6 +65,7 @@ const description =
   <body>
     <div id="background-mask" class="min-h-screen w-full">
       <GradientOverlay />
+      <Snowballs />
       <div class="relative z-2">
         <slot />
       </div>

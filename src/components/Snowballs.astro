@@ -1,0 +1,102 @@
+<div id="snowflakes-container" aria-hidden="true"></div>
+
+<script>
+  
+if (typeof window !== "undefined") {
+  const initSnow = () => {
+  const container = document.getElementById("snowflakes-container");
+  if (!container || container.hasChildNodes()) return;
+
+  const numFlakes = window.innerWidth < 768 ? 12 : 30;
+  const colors = ["#ffffff", "#d4f1f9", "#e8f8ff"];
+
+  const segmentWidth = 100 / numFlakes;
+
+  for (let i = 0; i < numFlakes; i++) {
+    const flake = document.createElement("div");
+    flake.className = "snowflake";
+
+    const inner = document.createElement("div");
+    inner.className = "snowflake-inner";
+    inner.textContent = "❄";
+
+    const size = Math.random() * 12 + 8;
+    const left = segmentWidth * i + Math.random() * segmentWidth * 0.7;
+    const top = -10 + Math.random() * 10;
+
+    const fallDuration = (10 + (20 - size) * 0.6).toFixed(2) + "s"; 
+    const swayDuration = (3 + Math.random() * 3).toFixed(2) + "s";
+    const delay = (Math.random() * 6).toFixed(2) + "s";
+
+    flake.style.left = `${left}vw`;
+    flake.style.top = `${top}vh`;
+    flake.style.setProperty("--fall-duration", fallDuration);
+    flake.style.setProperty("--fall-delay", delay);
+
+    inner.style.fontSize = `${size}px`;
+    inner.style.color = colors[Math.floor(Math.random() * colors.length)];
+    inner.style.opacity = size > 15 ? "0.95" : "0.6";
+    inner.style.filter = `blur(${size > 16 ? 0.2 : 0.7}px)`;
+    inner.style.setProperty("--sway-duration", (3 + Math.random() * 4) + "s");
+
+    const skewX = Math.random() * 15 - 10;
+    const skewY = Math.random() * 15 - 10;
+    inner.style.setProperty("--skewX", `${skewX}deg`);
+    inner.style.setProperty("--skewY", `${skewY}deg`);
+
+    flake.appendChild(inner);
+    container.appendChild(flake);
+  }
+};
+
+
+  if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", initSnow);
+  } else {
+    initSnow();
+  }
+}
+</script>
+
+<style>
+
+#snowflakes-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0; 
+  font-family: Arial, sans-serif;
+}
+
+:global(.snowflake) {
+  position: absolute;
+  top: -5%;
+  will-change: transform, opacity;
+  animation: fall var(--fall-duration, 10s) linear var(--fall-delay, 0s) infinite;
+  animation-fill-mode: forwards;
+}
+
+:global(.snowflake-inner) {
+  display: inline-block;
+  animation:
+  fall var(--fall-duration) linear var(--fall-delay) infinite,
+  sway var(--sway-duration) ease-in-out var(--fall-delay) infinite alternate;
+  transform-origin: center;
+  user-select: none;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes fall {
+  0% { transform: translateY(-10vh) rotate(0deg); }
+  100% { transform: translateY(110vh) rotate(360deg); }
+}
+
+@keyframes sway {
+  0% { transform: translateX(0) rotate(var(--angle, 0deg)); }
+  50% { transform: translateX(20px) rotate(calc(var(--angle, 0deg) + 15deg)); }
+  100% { transform: translateX(-20px) rotate(calc(var(--angle, 0deg) - 15deg)); }
+}
+
+</style>
