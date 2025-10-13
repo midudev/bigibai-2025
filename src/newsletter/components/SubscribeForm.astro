@@ -1,5 +1,5 @@
 ---
-import { actions } from "astro:actions"
+import { actions } from "astro:actions";
 ---
 
 <style>
@@ -11,9 +11,103 @@ import { actions } from "astro:actions"
       transform: rotate(360deg);
     }
   }
-  
+
+  @keyframes shimmer {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
+
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) translateY(-20px);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.95);
+    }
+    100% {
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(248, 177, 52, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(248, 177, 52, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(248, 177, 52, 0);
+    }
+  }
+
   .spinner {
     animation: spin 1s linear infinite;
+  }
+
+  .form-input {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .form-input:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(248, 177, 52, 0.5);
+  }
+
+  .submit-button {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, #f8b134, #ffd700, #f8b134);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .submit-button:hover {
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .submit-button:active {
+    animation: none;
+  }
+
+  .error-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .success-bounce {
+    animation: bounce-in 0.6s ease-out;
+  }
+
+  .pulse-effect {
+    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  }
+
+  .message-container {
+    transition: all 0.3s ease;
+    min-height: 24px;
   }
 </style>
 
@@ -41,18 +135,31 @@ import { actions } from "astro:actions"
       <button
         type="submit"
         id="submit-button"
-        class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative"
-        role="button"
-        aria-label="¡Avísame!"
+        class="submit-button px-6 py-3 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative cursor-pointer"
       >
         <span id="button-text">¡Avísame!</span>
-        <span id="button-loader"
-          class="hidden absolute inset-0 flex items-center justify-center" aria-hidden="true"
-          aria-label="Cargando"
+        <span
+          id="button-loader"
+          class="absolute inset-0 items-center justify-center hidden"
         >
-          <svg class="spinner h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg
+            class="spinner h-5 w-5 text-black"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
         </span>
       </button>
@@ -76,10 +183,10 @@ import { actions } from "astro:actions"
 </section>
 
 <script>
-  import { actions, isInputError } from "astro:actions"
-  import { throwConfetti } from "@/utils/confetti"
+  import { actions, isInputError } from "astro:actions";
+  import { throwConfetti } from "@/utils/confetti";
 
-  const form = document.getElementById("newsletter-form") as HTMLFormElement
+  const form = document.getElementById("newsletter-form") as HTMLFormElement;
   const message = document.getElementById(
     "newsletter-message"
   ) as HTMLDivElement
@@ -89,13 +196,13 @@ import { actions } from "astro:actions"
   const submitButton = document.getElementById("submit-button") as HTMLButtonElement
   const buttonText = document.getElementById("button-text") as HTMLSpanElement
   const buttonLoader = document.getElementById(
-    "button-loader"
-  ) as HTMLSpanElement
+    "button-loader",
+  ) as HTMLSpanElement;
 
   message.classList.add("invisible")
   message.classList.remove("text-white", "text-black")
 
-  const input = form.querySelector("input[name='email']") as HTMLInputElement
+  const input = form.querySelector("input[name='email']") as HTMLInputElement;
 
   input.addEventListener("focus", () => {
     message.classList.add("invisible")
@@ -124,33 +231,35 @@ import { actions } from "astro:actions"
   })
 
   form.addEventListener("submit", async (event) => {
-    console.log("submit")
+    console.log("submit");
 
-    event.preventDefault()
+    event.preventDefault();
 
-    // Activar estado de carga
-    submitButton.disabled = true
-    submitButton.setAttribute("aria-busy", "true")
-    buttonText.classList.add("invisible")
-    buttonLoader.classList.remove("hidden")
-    buttonLoader.classList.add("flex")
+    // Activate charging status
+    submitButton.disabled = true;
+    submitButton.setAttribute("aria-busy", "true");
+    submitButton.classList.add("pulse-effect");
+    buttonText.classList.add("invisible");
+    buttonLoader.classList.remove("hidden");
+    buttonLoader.classList.add("flex");
 
-    const formData = new FormData(form)
-    const email = formData.get("email") as string
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
 
-    const { data, error } = await actions.newsletter({ email })
+    const { data, error } = await actions.newsletter({ email });
 
-    // Desactivar estado de carga
-    submitButton.disabled = false
-    submitButton.setAttribute("aria-busy", "false")
-    buttonText.classList.remove("invisible")
-    buttonLoader.classList.add("hidden")
-    buttonLoader.classList.remove("flex")
+    // Disable charging status
+    submitButton.disabled = false;
+    submitButton.setAttribute("aria-busy", "false");
+    submitButton.classList.remove("pulse-effect");
+    buttonText.classList.remove("invisible");
+    buttonLoader.classList.add("hidden");
+    buttonLoader.classList.remove("flex");
 
     if (error) {
       const messageText = isInputError(error)
         ? error?.fields?.email?.join(", ")
-        : error.message
+        : error.message;
 
       message.textContent =
         messageText ?? "Error al guardar el email en la newsletter"
