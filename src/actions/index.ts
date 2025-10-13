@@ -73,10 +73,10 @@ export const server = {
       }
 
       if (duplicated) {
-        return {
-          success: true,
+        throw new ActionError({ 
+          code: 'BAD_REQUEST',
           message: "¡Este usuario ya estaba en la newsletter!"
-        }
+        })
       }
 
       return {
