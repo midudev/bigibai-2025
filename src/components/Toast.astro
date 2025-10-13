@@ -1,0 +1,177 @@
+---
+export interface Props {
+  id?: string;
+}
+
+const { id = "toast-notification" } = Astro.props;
+---
+
+<div
+  id={id}
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+  class="toast-container fixed bottom-4 right-4 z-50 invisible opacity-0 transition-all duration-300 ease-in-out"
+>
+  <div class="toast-content flex items-start gap-3 p-4 rounded-lg shadow-lg backdrop-blur-lg border max-w-md">
+    <div class="toast-icon flex-shrink-0">
+      <!-- Success Icon -->
+      <svg
+        class="toast-icon-success hidden w-6 h-6 text-green-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <!-- Error Icon -->
+      <svg
+        class="toast-icon-error hidden w-6 h-6 text-red-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <!-- Info Icon -->
+      <svg
+        class="toast-icon-info hidden w-6 h-6 text-brand"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </div>
+    <div class="toast-text flex-1">
+      <p class="toast-message text-sm font-medium text-white"></p>
+    </div>
+    <button
+      type="button"
+      class="toast-close flex-shrink-0 text-white/60 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-black rounded"
+      aria-label="Cerrar notificación"
+    >
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  .toast-container.show {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .toast-content {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(248, 177, 52, 0.3);
+  }
+
+  .toast-content.success {
+    border-color: rgba(74, 222, 128, 0.3);
+  }
+
+  .toast-content.error {
+    border-color: rgba(248, 113, 113, 0.3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toast-container {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  export type ToastType = "success" | "error" | "info";
+
+  export interface ShowToastOptions {
+    message: string;
+    type?: ToastType;
+    duration?: number;
+  }
+
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  export function showToast({ message, type = "info", duration = 5000 }: ShowToastOptions) {
+    const container = document.getElementById("toast-notification");
+    if (!container) return;
+
+    const content = container.querySelector(".toast-content");
+    const messageEl = container.querySelector(".toast-message");
+    const closeBtn = container.querySelector(".toast-close");
+
+    if (!content || !messageEl) return;
+
+    // Limpiar timeout anterior si existe
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+
+    // Resetear iconos
+    const allIcons = container.querySelectorAll("[class^='toast-icon-']");
+    allIcons.forEach((icon) => icon.classList.add("hidden"));
+
+    // Mostrar icono correcto
+    const iconClass = `.toast-icon-${type}`;
+    const activeIcon = container.querySelector(iconClass);
+    activeIcon?.classList.remove("hidden");
+
+    // Actualizar estilos del contenedor
+    content.classList.remove("success", "error", "info");
+    content.classList.add(type);
+
+    // Actualizar mensaje
+    messageEl.textContent = message;
+
+    // Mostrar toast
+    container.classList.add("show");
+
+    // Configurar auto-hide
+    if (duration > 0) {
+      hideTimeout = setTimeout(() => {
+        hideToast();
+      }, duration);
+    }
+
+    // Manejar cierre manual
+    if (closeBtn) {
+      closeBtn.onclick = () => hideToast();
+    }
+  }
+
+  export function hideToast() {
+    const container = document.getElementById("toast-notification");
+    if (!container) return;
+
+    container.classList.remove("show");
+
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+  }
+
+  // Exponer funciones globalmente para uso en otros scripts
+  if (typeof window !== "undefined") {
+    (window as any).showToast = showToast;
+    (window as any).hideToast = hideToast;
+  }
+</script>

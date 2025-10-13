@@ -62,3 +62,57 @@ h6,
 .md-container a { @apply text-secondary font-bold; }
 .md-container p, li { @apply text-secondary; }
 .md-container l1::marker { color: oklch(0.45 0.03 257.71); }
+
+/* ===================================
+   Accessibility Utilities
+   =================================== */
+
+/* Screen reader only - oculta visualmente pero accesible para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus visible mejorado - solo muestra outline cuando se navega con teclado */
+*:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Soporte para usuarios que prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip to content link - aparecerá cuando reciba focus */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: var(--color-brand);
+  color: black;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  font-weight: bold;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}

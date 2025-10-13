@@ -1,5 +1,6 @@
 ---
 import { actions } from "astro:actions"
+import Toast from "@/components/Toast.astro"
 ---
 
 <style>
@@ -17,39 +18,54 @@ import { actions } from "astro:actions"
   }
 </style>
 
-<section class="w-full max-w-xl mx-auto">
+<section class="w-full max-w-xl mx-auto" aria-labelledby="newsletter-heading">
+  <Toast />
   <form
     method="POST"
     id="newsletter-form"
     class="flex flex-col gap-4"
     action={actions.newsletter}
+    aria-describedby="newsletter-description"
   >
     <div class="flex flex-col sm:flex-row gap-3">
-      <input
-        required
-        type="email"
-        name="email"
-        class="flex-1 px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
-        placeholder="Contenido exclusivo sólo para los reals"
-      />
+      <div class="flex-1">
+        <label for="email-input" class="sr-only">
+          Dirección de correo electrónico para recibir notificaciones
+        </label>
+        <input
+          required
+          type="email"
+          id="email-input"
+          name="email"
+          autocomplete="email"
+          aria-required="true"
+          aria-invalid="false"
+          aria-describedby="email-error newsletter-description"
+          class="w-full px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+          placeholder="tu@email.com"
+        />
+        <span id="email-error" class="sr-only" role="alert" aria-live="polite"></span>
+      </div>
       <button
         type="submit"
         id="submit-button"
+        aria-label="Suscribirse a la newsletter"
         class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative"
       >
-        <span id="button-text">¡Avísame!</span>
-        <span id="button-loader" class="hidden absolute inset-0 flex items-center justify-center">
-          <svg class="spinner h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <span id="button-text" aria-hidden="false">¡Avísame!</span>
+        <span id="button-loader" class="hidden absolute inset-0 flex items-center justify-center" aria-hidden="true">
+          <svg class="spinner h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-label="Cargando">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </span>
+        <span class="sr-only" id="loading-announcement" role="status" aria-live="polite"></span>
       </button>
     </div>
 
-    <div id="newsletter-message" class="invisible block h-6 leading-6 text-sm text-center text-brand">
-      ¡Ya eres parte de la newsletter!
-    </div>
+    <p id="newsletter-description" class="sr-only">
+      Suscríbete para recibir notificaciones sobre Big Ibai 2025 y contenido exclusivo
+    </p>
   </form>
 </section>
 
@@ -58,63 +74,113 @@ import { actions } from "astro:actions"
   import { throwConfetti } from "@/utils/confetti"
 
   const form = document.getElementById("newsletter-form") as HTMLFormElement
-  const message = document.getElementById(
-    "newsletter-message"
-  ) as HTMLDivElement
   const submitButton = document.getElementById("submit-button") as HTMLButtonElement
   const buttonText = document.getElementById("button-text") as HTMLSpanElement
   const buttonLoader = document.getElementById("button-loader") as HTMLSpanElement
+  const loadingAnnouncement = document.getElementById("loading-announcement") as HTMLSpanElement
+  const input = document.getElementById("email-input") as HTMLInputElement
+  const emailError = document.getElementById("email-error") as HTMLSpanElement
 
-  message.classList.add("invisible")
-  message.classList.remove("text-red-500", "text-green-500")
+  // Importar función showToast del componente Toast
+  const showToast = (window as any).showToast
 
-  const input = form.querySelector("input[name='email']") as HTMLInputElement
-
-  input.addEventListener("focus", () => {
-    message.classList.add("invisible")
-    message.classList.remove("text-red-500", "text-green-500")
-    message.textContent = ""
+  // Limpiar error cuando el usuario empieza a escribir
+  input.addEventListener("input", () => {
+    input.setAttribute("aria-invalid", "false")
+    emailError.textContent = ""
   })
 
   form.addEventListener("submit", async (event) => {
-    console.log("submit")
-
     event.preventDefault()
 
     // Activar estado de carga
     submitButton.disabled = true
+    submitButton.setAttribute("aria-busy", "true")
+    buttonText.setAttribute("aria-hidden", "true")
     buttonText.classList.add("invisible")
     buttonLoader.classList.remove("hidden")
+    buttonLoader.setAttribute("aria-hidden", "false")
+    loadingAnnouncement.textContent = "Enviando solicitud..."
 
     const formData = new FormData(form)
     const email = formData.get("email") as string
 
-    const { data, error } = await actions.newsletter({ email })
+    try {
+      const { data, error } = await actions.newsletter({ email })
 
-    // Desactivar estado de carga
-    submitButton.disabled = false
-    buttonText.classList.remove("invisible")
-    buttonLoader.classList.add("hidden")
+      // Desactivar estado de carga
+      submitButton.disabled = false
+      submitButton.setAttribute("aria-busy", "false")
+      buttonText.setAttribute("aria-hidden", "false")
+      buttonText.classList.remove("invisible")
+      buttonLoader.classList.add("hidden")
+      buttonLoader.setAttribute("aria-hidden", "true")
+      loadingAnnouncement.textContent = ""
 
-    if (error) {
-      const messageText = isInputError(error)
-        ? error?.fields?.email?.join(", ")
-        : error.message
+      if (error) {
+        const messageText = isInputError(error)
+          ? error?.fields?.email?.join(", ")
+          : error.message
 
-      message.textContent =
-        messageText ?? "Error al guardar el email en la newsletter"
-      message.classList.remove("invisible")
-      message.classList.remove("text-red-500")
-      message.classList.add("text-red-500")
-    }
+        const errorMessage = messageText ?? "Error al guardar el email en la newsletter"
+        
+        // Marcar input como inválido
+        input.setAttribute("aria-invalid", "true")
+        emailError.textContent = errorMessage
+        
+        // Mostrar toast de error
+        if (showToast) {
+          showToast({
+            message: errorMessage,
+            type: "error",
+            duration: 6000
+          })
+        }
 
-    if (data) {
-      throwConfetti()
-      message.textContent = data.message
-      message.classList.remove("invisible")
-      message.classList.remove("text-red-500")
-      message.classList.add("text-green-500")
-      form.reset()
+        // Focus de vuelta al input para corrección
+        input.focus()
+      }
+
+      if (data) {
+        throwConfetti()
+        
+        // Mostrar toast de éxito
+        if (showToast) {
+          showToast({
+            message: data.message,
+            type: "success",
+            duration: 5000
+          })
+        }
+        
+        form.reset()
+        input.setAttribute("aria-invalid", "false")
+        
+        // Anunciar éxito a lectores de pantalla
+        loadingAnnouncement.textContent = data.message
+        setTimeout(() => {
+          loadingAnnouncement.textContent = ""
+        }, 3000)
+      }
+    } catch (err) {
+      // Manejo de errores inesperados
+      submitButton.disabled = false
+      submitButton.setAttribute("aria-busy", "false")
+      buttonText.classList.remove("invisible")
+      buttonLoader.classList.add("hidden")
+      loadingAnnouncement.textContent = ""
+      
+      const unexpectedError = "Ha ocurrido un error inesperado. Por favor, intenta de nuevo."
+      input.setAttribute("aria-invalid", "true")
+      emailError.textContent = unexpectedError
+      
+      if (showToast) {
+        showToast({
+          message: unexpectedError,
+          type: "error",
+          duration: 6000
+        })
+      }
     }
   })
 </script>
