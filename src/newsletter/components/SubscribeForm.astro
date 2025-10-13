@@ -11,7 +11,7 @@ import { actions } from "astro:actions"
       transform: rotate(360deg);
     }
   }
-  
+
   .spinner {
     animation: spin 1s linear infinite;
   }
@@ -106,8 +106,8 @@ import { actions } from "astro:actions"
     buttonLoader.classList.remove("hidden")
     buttonLoader.classList.add("flex")
 
-    const formData = new FormData(form);
-    const email = formData.get("email") as string;
+    const formData = new FormData(form)
+    const email = formData.get("email") as string
 
     const { data, error } = await actions.newsletter({ email })
 
