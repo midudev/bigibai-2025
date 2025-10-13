@@ -1,4 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from 'crypto'
+import EncryptRuntimeError from '@/errors/EncryptRuntimeError'
+import DecryptRuntimeError from '@/errors/DecryptRuntimeError'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 16      // Tamaño del vector de inicialización
@@ -12,11 +14,11 @@ function getEncryptionKey(): Buffer {
   const secret = import.meta.env.ENCRYPTION_SECRET
   
   if (!secret) {
-    throw new Error('ENCRYPTION_SECRET no está definida en las variables de entorno')
+    throw new EncryptRuntimeError('UNDEFINED_ECRYPTION_SECRET', 'ENCRYPTION_SECRET no está definida en las variables de entorno')
   }
 
   if (secret.length < 32) {
-    throw new Error('ENCRYPTION_SECRET debe tener al menos 32 caracteres')
+    throw new EncryptRuntimeError('ENCRYPTION_SECRET_LENGTH', 'ENCRYPTION_SECRET debe tener al menos 32 caracteres')
   }
 
   // Derivamos una clave de 32 bytes usando scrypt
@@ -58,7 +60,7 @@ export function decrypt(encryptedData: string): string {
   const parts = encryptedData.split('.')
   
   if (parts.length !== 3) {
-    throw new Error('Formato de datos cifrados inválido')
+    throw new DecryptRuntimeError('INVALID_FORMAT_DATA', 'Formato de datos cifrados inválido')
   }
   
   const iv = Buffer.from(parts[0], 'hex')

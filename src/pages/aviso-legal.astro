@@ -7,10 +7,14 @@ import LegalNotice from "@/content/legal/aviso-legal.md"
 
 <Layout>
     <section class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0">
-        <main class="relative z-10 md-container">
+        <main
+        class="relative z-10 md-container"
+        role="contentinfo"
+        aria-label="Aviso Legal"
+        aria-live="assertive"
+        >
             <LegalNotice />
         </main>
     </section>
-
-    <Footer />
+  <Footer />
 </Layout>

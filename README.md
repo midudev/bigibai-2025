@@ -161,20 +161,24 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     ```bash
     git clone https://github.com/midudev/bigibai-2025.git
     ```
+2. Entre en el repositorio:
+   ```bash
+    cd bigibai-2025
+   ```
 
-2. Instale las dependencias:
+3. Instale las dependencias:
 
     ```bash
     pnpm install
     ```
 
-3. Inicie el servidor en modo desarrollo:
+4. Inicie el servidor en modo desarrollo:
 
     ```bash
     pnpm run dev
     ```
 
-4. Abra el navegador en la siguiente URL:
+5. Abra el navegador en la siguiente URL:
 
     ==> [http://localhost:4321](http://localhost:4321) 
 

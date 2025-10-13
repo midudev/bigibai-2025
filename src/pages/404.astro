@@ -11,13 +11,16 @@ import Header from "@/sections/Header.astro";
       <section
         class="max-w-4xl mx-auto px-4 py-20 flex justify-center items-center flex-col gap-8"
       >
-        <h1 class="text-6xl md:text-8xl text-brand text-balance text-center">
+        <h1 class="text-6xl md:text-8xl text-brand text-balance text-center" aria-label="Big Ibai aún no ha llegado a estas tierras">
           Big Ibai aún no ha llegado a estas tierras
         </h1>
         <a
           href="/"
           title="Volver al Inicio"
           class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black/80 font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
+          role="link"
+          aria-label="Volver al inicio"
+          aria-live="assertive"
           >Volver al Inicio</a
         >
       </section>

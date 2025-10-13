@@ -15,7 +15,7 @@ A continuación, informamos, de manera general, acerca de la salvaguarda de la p
 #### 2.1 ¿Quién es el Responsable del tratamiento de sus datos personales?
 Sin perjuicio de la condición de Responsable del Tratamiento que puedan ostentar las distintas entidades pertenecientes al Grupo, entre otros factores, según sus interesados, el tipo de tratamiento y la jurisdicción aplicable, SALAD BRANDS, S.L., como titular de este sitio web, tiene la condición de Responsable del Tratamiento, con domicilio social a estos efectos en:
 
-Carrer Sagues, 27 – 1er. Piso
+Carrer Sagués, 27 – 1er. Piso
 <br>
 08021 – Barcelona
 
@@ -38,7 +38,7 @@ Los datos personales no serán cedidos o comunicados a terceros, salvo en los su
 Sin perjuicio de las medidas de seguridad adecuadas al riesgo y a sus correspondientes marcos legales aplicables que adopten las distintas entidades del Grupo, SALAD BRANDS, S.L. adoptará en su sistema de información las medidas técnicas y organizativas adecuadas, dando cumplimiento al principio de responsabilidad proactiva, a fin de garantizar la seguridad y confidencialidad de los datos almacenados, evitando así, su alteración, pérdida, tratamiento o acceso no autorizado; teniendo en cuenta el estado de la técnica, los costes de aplicación, y la naturaleza, el alcance, el contexto y los fines del tratamiento, así como riesgos de probabilidad y gravedad variables asociadas a cada uno de los tratamientos.
 
 #### 2.8 ¿Cuáles son sus derechos en protección de datos y cómo puede ejercerlos?
-Ud. podrá ejercitar los derechos de acceso, rectificación, supresión, limitación, portabilidad o, en su caso, oposición. a estos efectos, deberá presentar un escrito en SALAD BRANDS, S.L., Calle Sagues, 27 – 1er. Piso, 08021 – Barcelona, España, o a través de la dirección de correo electrónico: legal@bigibai.com. En el escrito deberá especificar cuál de estos derechos solicita sea satisfecho y, a su vez, deberá mostrar o, en caso de envío postal, acompañar la fotocopia del DNI o documento identificativo equivalente. En caso de que actuara mediante representante, legal o voluntario, deberá aportar también documento que acredite la representación y documento identificativo del mismo. En caso de considerar vulnerado su derecho a la protección de datos personales, podrá interponer una reclamación ante la Agencia Española de Protección de Datos (www.aepd.es).
+Ud. podrá ejercitar los derechos de acceso, rectificación, supresión, limitación, portabilidad o, en su caso, oposición. a estos efectos, deberá presentar un escrito en SALAD BRANDS, S.L., Calle Sagués, 27 – 1er. Piso, 08021 – Barcelona, España, o a través de la dirección de correo electrónico: legal@bigibai.com. En el escrito deberá especificar cuál de estos derechos solicita sea satisfecho y, a su vez, deberá mostrar o, en caso de envío postal, acompañar la fotocopia del DNI o documento identificativo equivalente. En caso de que actuara mediante representante, legal o voluntario, deberá aportar también documento que acredite la representación y documento identificativo del mismo. En caso de considerar vulnerado su derecho a la protección de datos personales, podrá interponer una reclamación ante la Agencia Española de Protección de Datos (www.aepd.es).
 
 ### 3. INFORMACIÓN ADICIONAL PROTECCIÓN DE DATOS
 #### 3.1 CANDIDATOS
