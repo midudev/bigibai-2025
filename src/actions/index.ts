@@ -1,3 +1,4 @@
+import { getNewsletterCount } from "@/newsletter/services/getEmails";
 import { saveNewsletterEmail } from "@/newsletter/services/subscribe";
 import { getRateLimitMessage } from "@/services/ratelimit";
 import { RateLimitPresets } from "@/services/ratelimit-presets";
@@ -82,6 +83,19 @@ export const server = {
       return {
         success: true,
         message: "¡Te has suscrito a la newsletter!"
+      }
+    }
+  }),
+  getNewsletterCount: defineAction({
+    async handler() {
+      try {
+        const count = await getNewsletterCount()
+        return { count }
+      } catch (error) {
+        throw new ActionError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error al obtener el conteo de suscriptores'
+        })
       }
     }
   })
