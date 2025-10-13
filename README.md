@@ -45,30 +45,13 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
         <a href="#readme-index" title="Más...">Web Oficial de BigIbai 2025</a>
     </summary>
 
-<ul>
-    <li>
-        <a href="#readme-top" title="Ir a la Descripción">📎 Descripción</a>
-    </li>
-    <li>
-        <a href="#readme-index" title="Ir al Índice"><strong>🗂️ Índice</strong></a>
-        <span><strong>< Usted está aquí</strong></span>
-    </li>
-    <li>
-        <a href="#readme-stack" title="Ir al Stack Tecnologico">🚀 Tech Stack</a>
-    </li>
-    <li>
-        <a href="#readme-contribute" title="Ir a Contribuir">☝️🖥️ ¿Cómo Contribuir?</a>
-    </li>
-    <li>
-        <a href="#readme-clone" title="Ir a Clonar Repositorio">🧑🖥️ Desarrollo Local</a>
-    </li>
-</ul>
+📎 <a href="#readme-top" title="Ir a la Descripción">Descripción</a>
+🗂️ <a href="#readme-index" title="Ir al Índice"><strong>Índice</strong></a><span><strong>< Usted está aquí</strong></span>
+🚀 <a href="#readme-stack" title="Ir al Stack Tecnologico">Tech Stack</a>
+☝️🖥️ <a href="#readme-contribute" title="Ir a Contribuir">¿Cómo Contribuir?</a>
+🧑🖥️ <a href="#readme-clone" title="Ir a Clonar Repositorio">Desarrollo Local</a>
 
 </details>
-
-<style hidden>
-    li::marker { content: ""; }
-</style>
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
