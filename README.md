@@ -46,9 +46,13 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     </summary>
 
 📎 <a href="#readme-top" title="Ir a la Descripción">Descripción</a>
+
 🗂️ <a href="#readme-index" title="Ir al Índice"><strong>Índice</strong></a><span><strong>< Usted está aquí</strong></span>
+
 🚀 <a href="#readme-stack" title="Ir al Stack Tecnologico">Tech Stack</a>
+
 ☝️🖥️ <a href="#readme-contribute" title="Ir a Contribuir">¿Cómo Contribuir?</a>
+
 🧑🖥️ <a href="#readme-clone" title="Ir a Clonar Repositorio">Desarrollo Local</a>
 
 </details>
