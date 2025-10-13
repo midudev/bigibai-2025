@@ -1,4 +1,6 @@
 import { saveNewsletterEmail } from "@/newsletter/services/subscribe";
+import { getRateLimitMessage } from "@/services/ratelimit";
+import { RateLimitPresets } from "@/services/ratelimit-presets";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
 
@@ -49,6 +51,15 @@ export const server = {
     async handler({ email }) {
       // Sanitización adicional en el servidor
       const sanitizedEmail = email.trim().toLowerCase();
+      // Rate limiting: protección anti-spam
+      const rateLimitResult = await RateLimitPresets.strict(sanitizedEmail)
+
+      if (!rateLimitResult.success) {
+        throw new ActionError({
+          code: 'TOO_MANY_REQUESTS',
+          message: getRateLimitMessage(rateLimitResult.reset)
+        })
+      }
 
       const { success, duplicated, error } = await saveNewsletterEmail(
         sanitizedEmail
@@ -56,22 +67,22 @@ export const server = {
 
       if (!success) {
         throw new ActionError({
-          code: "BAD_REQUEST",
-          message: error ?? "Error al guardar el email en la newsletter",
-        });
+          code: 'BAD_REQUEST',
+          message: error ?? "Error al guardar el email en la newsletter"
+        })
       }
 
       if (duplicated) {
         return {
           success: true,
-          message: "¡Este usuario ya estaba en la newsletter!",
-        };
+          message: "¡Este usuario ya estaba en la newsletter!"
+        }
       }
 
       return {
         success: true,
-        message: "¡Te has suscrito a la newsletter!",
-      };
-    },
-  }),
-};
+        message: "¡Te has suscrito a la newsletter!"
+      }
+    }
+  })
+}
