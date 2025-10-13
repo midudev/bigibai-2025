@@ -19,5 +19,27 @@ import SubscribeForm from "@/newsletter/components/SubscribeForm.astro"
   >
     ¿Quieres que te avisemos?
   </h2>
+  <!--<p class="text-xl text-white/80 text-center text-balance mb-10"  aria-live="off">Unete a los mas de <span class="text-brand font-bold text-3xl newsletter-count"><span id="newsletter-count"></span> reals</span> que ya están suscritos.</p>-->
   <SubscribeForm />
 </main>
+
+<script>
+  import { actions } from "astro:actions"
+
+  const count = document.getElementById('newsletter-count');
+
+  const updateNewsletterCount = async () => {
+    const currentCount: any = await actions.getNewsletterCount();
+    if (count) {
+      count.textContent = currentCount.data.count.toLocaleString() || '1000';
+    }
+  }
+
+  updateNewsletterCount();
+
+</script>
+<style>
+  .newsletter-count {
+    font-family: "Heavy", sans-serif;
+  }
+</style>
