@@ -22,11 +22,11 @@ export default class DecryptRuntimeError extends Error {
   log(): this {
     // use chalk to make it colorful [pnpm i chalk]
     console.error(
-`
- [!] ${this.name}: | ${this.code} |...
-  └── [+] Message: "${this.message}"
-`
-)
+    `
+    [!] ${this.name}: | ${this.code} |...
+      └── [+] Message: "${this.message}"
+    `
+    )
 
     return this
   }

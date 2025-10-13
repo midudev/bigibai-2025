@@ -24,12 +24,12 @@ export default class EncryptRuntimeError extends Error {
 
     // use chalk to make it colorful [pnpm i chalk]
     console.error(`
- [!] ${this.name}: | ${this.code} |...
-  └── [+] Message: "${this.message}"
-${secret != '<undefined>' ?
-`       └── [*] On: /.env ==> ENCRYPTION_SECRET=${secret}`
-: ''}
-`)
+    [!] ${this.name}: | ${this.code} |...
+      └── [+] Message: "${this.message}"
+    ${secret != '<undefined>' ?
+    `       └── [*] On: /.env ==> ENCRYPTION_SECRET=${secret}`
+    : ''}
+    `)
     return this
   }
 }

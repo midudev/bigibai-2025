@@ -21,16 +21,16 @@ export default class NewsletterCountingError extends Error {
   log(): this {
     // use chalk to make it colorful [pnpm i chalk]
     console.error(
-`
- [!] ${this.name}: | COUNT_SUSCRIBERS_FAULT |...
-  ├── [+] Message: "${this.message}"
-  └── [*] Postgrest.sql Error:
-        - .message : "${this.postgrestError?.message ?? 'N/A'}"
-        - .code    : "${this.postgrestError?.code ?? 'N/A'}"
-        - .details : "${this.postgrestError?.details ?? 'N/A'}"
-        - .hint    : "${this.postgrestError?.hint ?? 'N/A'}"
-`
-)
+    `
+    [!] ${this.name}: | COUNT_SUSCRIBERS_FAULT |...
+      ├── [+] Message: "${this.message}"
+      └── [*] Postgrest.sql Error:
+            - .message : "${this.postgrestError?.message ?? 'N/A'}"
+            - .code    : "${this.postgrestError?.code ?? 'N/A'}"
+            - .details : "${this.postgrestError?.details ?? 'N/A'}"
+            - .hint    : "${this.postgrestError?.hint ?? 'N/A'}"
+    `
+    )
 
     return this
   }
