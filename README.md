@@ -63,13 +63,12 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
         <a href="#readme-clone" title="Ir a Clonar Repositorio">🧑🖥️ Desarrollo Local</a>
     </li>
 </ul>
-          
-<style hidden>
-    li::marker { content: ""; }
-</style>
 
 </details>
 
+<style hidden>
+    li::marker { content: ""; }
+</style>
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
