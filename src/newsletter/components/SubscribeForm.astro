@@ -116,13 +116,14 @@ import { actions } from "astro:actions"
       message.textContent =
         messageText ?? "Error al guardar el email en la newsletter"
       message.classList.remove("invisible")
-      message.classList.add("text-red-500", "font-bold")
+      message.classList.add("text-red-500")
     }
 
     if (data) {
       throwConfetti()
       message.textContent = data.message
       message.classList.remove("invisible")
+      message.classList.remove("text-red-500")
       message.classList.add("text-green-500")
       form.reset()
     }
