@@ -4,6 +4,8 @@
 
 @theme {
   --color-brand: #f8b134;
+  --color-destructive: var(--color-red-600);
+  --color-destructive-foreground: var(--color-white);
   --color-primary: hsl(0, 0, 95%);
   --color-secondary: hsl(0, 0, 60%);
 }
@@ -51,7 +53,7 @@ h6,
 }
 
 .md-container {
-  @apply prose prose-invert mx-auto pt-24 px-4 md:px-0;
+  @apply prose prose-invert mx-auto pt-24 pb-2 px-4 md:px-0;
 }
 
 .md-container h1, h2 { @apply !text-brand uppercase text-center font-bold !mt-4 leading-[130%]; }
