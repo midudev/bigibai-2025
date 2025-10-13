@@ -179,12 +179,11 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     ```bash
     git clone https://github.com/midudev/bigibai-2025.git
     ```
-
-2. Diríjase a la carpeta del proyecto:
-
-    ```bash
+2. Entre en el repositorio:
+  
+   ```bash
     cd bigibai-2025
-    ```
+   ```
 
 3. Instale las dependencias:
 

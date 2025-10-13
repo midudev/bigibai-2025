@@ -2,6 +2,7 @@
 import "@/global.css"
 
 import GradientOverlay from "@/components/GradientOverlay.astro"
+import Snowballs from "@/components/Snowballs.astro"
 
 const title = "Big Ibai: Calendario de Adviento con chocolates y premios"
 const description =
@@ -37,14 +38,13 @@ const description =
     />
 
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content={description} />
     <meta name="keywords" content="bigibai" />
     <meta name="author" content="Ibai Llanos" />
 
-    <meta name="og:title" content={title} />
-    <meta name="og:description" content={description} />
-    <meta name="og:image" content="https://www.bigibai.com/og.jpg" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://www.bigibai.com/og.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="@IbaiLlanos" />
     <meta name="twitter:title" content={title} />
@@ -53,8 +53,9 @@ const description =
     <meta name="twitter:image:alt" content={title} />
     <meta name="theme-color" content="#4c2d7e" />
 
-    <link rel="icon" href="/cropped-favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" href="/cropped-favicon-192x192.png" sizes="192x192" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/cropped-favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/cropped-favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/cropped-favicon-192x192.png" />
     <link rel="apple-touch-icon" href="/cropped-favicon-180x180.png" />
     <meta
       name="msapplication-TileImage"
@@ -64,6 +65,7 @@ const description =
   <body>
     <div id="background-mask" class="min-h-screen w-full">
       <GradientOverlay />
+      <Snowballs />
       <div class="relative z-2">
         <slot />
       </div>

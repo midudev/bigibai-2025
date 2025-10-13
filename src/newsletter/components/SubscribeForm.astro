@@ -25,10 +25,16 @@ import { actions } from "astro:actions"
     action={actions.newsletter}
   >
     <div class="flex flex-col sm:flex-row gap-3">
+      <label for="email" class="sr-only">Correo electrónico</label>
       <input
         required
         type="email"
         name="email"
+        id="email"
+        autocomplete="email"
+        inputmode="email"
+        aria-required="true"
+        aria-describedby="newsletter-message"
         class="flex-1 px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
         placeholder="Contenido exclusivo sólo para los reals"
       />
@@ -36,9 +42,14 @@ import { actions } from "astro:actions"
         type="submit"
         id="submit-button"
         class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative"
+        role="button"
+        aria-label="¡Avísame!"
       >
         <span id="button-text">¡Avísame!</span>
-        <span id="button-loader" class="hidden absolute inset-0 flex items-center justify-center">
+        <span id="button-loader"
+          class="hidden absolute inset-0 flex items-center justify-center" aria-hidden="true"
+          aria-label="Cargando"
+        >
           <svg class="spinner h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -47,7 +58,7 @@ import { actions } from "astro:actions"
       </button>
     </div>
 
-    <div id="newsletter-message" class="invisible block h-6 leading-6 text-sm text-center text-brand">
+    <div id="newsletter-message" class="invisible block h-6 leading-6 text-sm text-center text-brand focus:outline-none" aria-live="polite" role="status">
       ¡Ya eres parte de la newsletter!
     </div>
   </form>
@@ -74,6 +85,9 @@ import { actions } from "astro:actions"
     message.classList.add("invisible")
     message.classList.remove("text-red-500", "text-green-500")
     message.textContent = ""
+    input.removeAttribute("aria-invalid")
+    message.removeAttribute("role")
+    message.setAttribute("aria-live", "polite")
   })
 
   form.addEventListener("submit", async (event) => {
@@ -83,6 +97,7 @@ import { actions } from "astro:actions"
 
     // Activar estado de carga
     submitButton.disabled = true
+    submitButton.setAttribute("aria-busy", "true")
     buttonText.classList.add("invisible")
     buttonLoader.classList.remove("hidden")
 
@@ -93,6 +108,7 @@ import { actions } from "astro:actions"
 
     // Desactivar estado de carga
     submitButton.disabled = false
+    submitButton.setAttribute("aria-busy", "false")
     buttonText.classList.remove("invisible")
     buttonLoader.classList.add("hidden")
 
@@ -104,8 +120,10 @@ import { actions } from "astro:actions"
       message.textContent =
         messageText ?? "Error al guardar el email en la newsletter"
       message.classList.remove("invisible")
-      message.classList.remove("text-red-500")
       message.classList.add("text-red-500")
+      message.setAttribute("role", "alert")
+      message.setAttribute("aria-live", "assertive")
+      input.setAttribute("aria-invalid", "true")
     }
 
     if (data) {
@@ -114,7 +132,12 @@ import { actions } from "astro:actions"
       message.classList.remove("invisible")
       message.classList.remove("text-red-500")
       message.classList.add("text-green-500")
+      message.setAttribute("role", "status")
+      message.setAttribute("aria-live", "polite")
+      input.removeAttribute("aria-invalid")
       form.reset()
+      message.setAttribute("tabindex", "-1")
+      ;(message as HTMLDivElement).focus()
     }
   })
 </script>
