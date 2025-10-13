@@ -20,7 +20,7 @@ import { checkRateLimit } from '@/services/ratelimit'
 
 const rateLimitResult = await checkRateLimit({
   identifier: 'user@example.com',  // Puede ser email, IP, user ID, etc.
-  limit: 5,                         // Número máximo de requests
+  limit: 5,                        // Número máximo de requests
   windowMs: 3_600_000              // Ventana de tiempo en ms (1 hora)
 })
 
