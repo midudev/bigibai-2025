@@ -9,6 +9,8 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 
+<br>
+
 <a href="https://www.bigibai.com/" target="_blank" rel="noopener noreferrer">
   <img width="300px" height="150px" src="https://raw.githubusercontent.com/midudev/bigibai-2025/refs/heads/main/public/logo-a.svg" alt="Logo" width="800" />
 </div>
@@ -32,23 +34,48 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     (<a href="#readme-index">índice</a>)
 </p>
 
+<a name="readme-index"></a>
+
 ---
 
 ## 🗂️ Índice:
 
-<a name="readme-index"></a>
+<details open>
+    <summary>
+        <a href="#readme-index" title="Más...">Web Oficial de BigIbai 2025</a>
+    </summary>
 
-- [Web Oficial de BigIbai 2025](#web-oficial-de-bigibai-2025 "Volver...")
-  - [📎 Descripción](#descripción "Ir a la Descripción")
-  - [🗂️ Índice](#índice "Ir al Índice")
-  - [🚀 Tech Stack](#tech-stack "Ir al Stack Tecnologico")
-  - [☝️🖥️ ¿Cómo Contribuir?](#cómo-contribuir "Ir a Contribuir")
-  - [🧑🖥️ Desarrollo Local](#desarrollo-local "Ir a Clonar Repositorio")
+<ul>
+    <li>
+        <a href="#readme-top" title="Ir a la Descripción">📎 Descripción</a>
+    </li>
+    <li>
+        <a href="#readme-index" title="Ir al Índice"><strong>🗂️ Índice</strong></a>
+        <span><strong>< Usted está aquí</strong></span>
+    </li>
+    <li>
+        <a href="#readme-stack" title="Ir al Stack Tecnologico">🚀 Tech Stack</a>
+    </li>
+    <li>
+        <a href="#readme-contribute" title="Ir a Contribuir">☝️🖥️ ¿Cómo Contribuir?</a>
+    </li>
+    <li>
+        <a href="#readme-clone" title="Ir a Clonar Repositorio">🧑🖥️ Desarrollo Local</a>
+    </li>
+</ul>
+
+<style>
+    li::marker { content: ""; }
+</style>
+
+</details>
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
     (<strong><a href="#readme-index">índice</a></strong>)
 </p>
+
+<a name="readme-stack"></a>
 
 ---
 
@@ -65,12 +92,14 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     (<a href="#readme-index">índice</a>)
 </p>
 
+<a name="readme-contribute"></a>
+
 ---
 
 ## ☝️🖥️ ¿Cómo Contribuir?
 
 > [!IMPORTANT]
-> ¡Toda ayuda es bienvenida! Si quieres formar parte de la construcción:
+> ¡Toda ayuda es bienvenida! Si quieres formar parte de la construcción, adelante.
 
 1. Haga un [Fork][how-to-fork-tutorial] de este repositorio.
 
@@ -80,7 +109,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     git checkout -b {rama}/{nombre-de-implementación}
 
     # Recomendado : Git >= 2.23.
-    git switch -c "{rama}: {describa su cambio brevemente}"
+    git switch -c {rama}/{nombre-de-implementación}
     ```
 
     **Le aconsejamos seguir el siguiente patrón al nombrar una rama para su feature:**
@@ -115,8 +144,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     ```bash
     git push origin {rama}/{nombre-de-implementación}
     ```
-    > [!WARNING]
-    > Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
+> [!WARNING]
+> Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
 
 6. Abra un Pull Request & explique claramente qué hizo...
 
@@ -124,6 +153,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     (<a href="#readme-top">regresar</a>)
     (<a href="#readme-index">índice</a>)
 </p>
+
+<a name="readme-clone"></a>
 
 ---
 
@@ -140,6 +171,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 - **Linux/MacOS:**
     ```bash
     git clone https://github.com/midudev/bigibai-2025.git &&
+    cd bigibai-2025 && 
     pnpm install &&
     pnpm run dev &&
     open "http://localhost:4321"
@@ -147,6 +179,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 - **Windows:**
     ```powershell
     git clone https://github.com/midudev/bigibai-2025.git &&
+    cd bigibai-2025 && 
     pnpm install &&
     pnpm run dev &&
     Start-Process "http://localhost:4321"
@@ -162,19 +195,38 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     git clone https://github.com/midudev/bigibai-2025.git
     ```
 
-2. Instale las dependencias:
+2. Diríjase a la carpeta del proyecto:
+
+    ```bash
+    cd bigibai-2025
+    ```
+
+3. Instale las dependencias:
 
     ```bash
     pnpm install
     ```
 
-3. Inicie el servidor en modo desarrollo:
+4. Configure el archivo .env:
+
+    ```bash
+    # Linux/MacOS:
+    cp .env.example .env
+
+    # Windows:
+    copy .env.example .env
+    ```
+
+> [!NOTE]
+> Recuerde establecer correctamente las credenciales correspondientes en el archivo **.env** si requiere un buen funcionamiento del *backend*, de lo contrario solamente renderizará el *frontend*.
+
+5. Inicie el servidor en modo desarrollo:
 
     ```bash
     pnpm run dev
     ```
 
-4. Abra el navegador en la siguiente URL:
+6. Abra el navegador en la siguiente URL:
 
     ==> [http://localhost:4321](http://localhost:4321) 
 
