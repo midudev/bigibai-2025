@@ -154,7 +154,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 - **Linux/MacOS:**
     ```bash
     git clone https://github.com/midudev/bigibai-2025.git &&
-    cd bigibai-2025 && 
+    cd bigibai-2025 &&
+    CP .env.example .env &&
     pnpm install &&
     pnpm run dev &&
     open "http://localhost:4321"
@@ -162,7 +163,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 - **Windows:**
     ```powershell
     git clone https://github.com/midudev/bigibai-2025.git &&
-    cd bigibai-2025 && 
+    cd bigibai-2025 &&
+    copy .env.example .env &&
     pnpm install &&
     pnpm run dev &&
     Start-Process "http://localhost:4321"
