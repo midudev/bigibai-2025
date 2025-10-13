@@ -64,7 +64,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     </li>
 </ul>
 
-<style>
+<style style="hidden">
     li::marker { content: ""; }
 </style>
 
