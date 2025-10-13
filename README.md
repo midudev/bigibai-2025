@@ -64,11 +64,11 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     </li>
 </ul>
 
-<style style="hidden">
+</details>
+
+<style>
     li::marker { content: ""; }
 </style>
-
-</details>
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
