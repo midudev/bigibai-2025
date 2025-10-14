@@ -58,7 +58,3 @@ h6,
 
 .md-container h1, h2 { @apply !text-brand uppercase text-center font-bold !mt-4 leading-[130%]; }
 .md-container h2 { @apply text-6xl;}
-.md-container h3 { @apply text-primary mb-4; }
-.md-container a { @apply text-secondary font-bold; }
-.md-container p, li { @apply text-secondary; }
-.md-container l1::marker { color: oklch(0.45 0.03 257.71); }
