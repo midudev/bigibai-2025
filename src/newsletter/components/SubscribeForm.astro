@@ -1,5 +1,6 @@
 ---
-import { actions } from "astro:actions";
+import { actions } from "astro:actions"
+import Button from "@/components/Button.astro"
 ---
 
 <style>
@@ -85,8 +86,8 @@ import { actions } from "astro:actions";
       #f8b134 25%,
       #ffd700 50%,
       #f8b134 75%
-    );
-    background-size: 300% 100%;
+    ) !important;
+    background-size: 300% 100% !important;
     animation: shimmer 3s linear infinite;
   }
 
@@ -137,10 +138,12 @@ import { actions } from "astro:actions";
         class="flex-1 px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
         placeholder="Contenido exclusivo sólo para los reals"
       />
-      <button
+      <Button
         type="submit"
         id="submit-button"
-        class="submit-button px-6 py-3 text-black font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative cursor-pointer"
+        variant="brand"
+        size="lg"
+        class="submit-button relative cursor-pointer"
       >
         <span id="button-text">¡Avísame!</span>
         <span
@@ -167,7 +170,7 @@ import { actions } from "astro:actions";
             ></path>
           </svg>
         </span>
-      </button>
+      </Button>
     </div>
 
     <div class="relative">
@@ -188,26 +191,28 @@ import { actions } from "astro:actions";
 </section>
 
 <script>
-  import { actions, isInputError } from "astro:actions";
-  import { throwConfetti } from "@/utils/confetti";
+  import { actions, isInputError } from "astro:actions"
+  import { throwConfetti } from "@/utils/confetti"
 
-  const form = document.getElementById("newsletter-form") as HTMLFormElement;
+  const form = document.getElementById("newsletter-form") as HTMLFormElement
   const message = document.getElementById(
     "newsletter-message"
   ) as HTMLDivElement
   const newsletterToastIcon = document.getElementById(
     "newsletter-icon"
   ) as HTMLImageElement
-  const submitButton = document.getElementById("submit-button") as HTMLButtonElement
+  const submitButton = document.getElementById(
+    "submit-button"
+  ) as HTMLButtonElement
   const buttonText = document.getElementById("button-text") as HTMLSpanElement
   const buttonLoader = document.getElementById(
-    "button-loader",
-  ) as HTMLSpanElement;
+    "button-loader"
+  ) as HTMLSpanElement
 
   message.classList.add("invisible")
   message.classList.remove("text-white", "text-black")
 
-  const input = form.querySelector("input[name='email']") as HTMLInputElement;
+  const input = form.querySelector("input[name='email']") as HTMLInputElement
 
   input.addEventListener("focus", () => {
     message.classList.add("invisible")
@@ -236,35 +241,35 @@ import { actions } from "astro:actions";
   })
 
   form.addEventListener("submit", async (event) => {
-    console.log("submit");
+    console.log("submit")
 
-    event.preventDefault();
+    event.preventDefault()
 
     // Activate charging status
-    submitButton.disabled = true;
-    submitButton.setAttribute("aria-busy", "true");
-    submitButton.classList.add("pulse-effect");
-    buttonText.classList.add("invisible");
-    buttonLoader.classList.remove("hidden");
-    buttonLoader.classList.add("flex");
+    submitButton.disabled = true
+    submitButton.setAttribute("aria-busy", "true")
+    submitButton.classList.add("pulse-effect")
+    buttonText.classList.add("invisible")
+    buttonLoader.classList.remove("hidden")
+    buttonLoader.classList.add("flex")
 
-    const formData = new FormData(form);
-    const email = formData.get("email") as string;
+    const formData = new FormData(form)
+    const email = formData.get("email") as string
 
-    const { data, error } = await actions.newsletter({ email });
+    const { data, error } = await actions.newsletter({ email })
 
     // Disable charging status
-    submitButton.disabled = false;
-    submitButton.setAttribute("aria-busy", "false");
-    submitButton.classList.remove("pulse-effect");
-    buttonText.classList.remove("invisible");
-    buttonLoader.classList.add("hidden");
-    buttonLoader.classList.remove("flex");
+    submitButton.disabled = false
+    submitButton.setAttribute("aria-busy", "false")
+    submitButton.classList.remove("pulse-effect")
+    buttonText.classList.remove("invisible")
+    buttonLoader.classList.add("hidden")
+    buttonLoader.classList.remove("flex")
 
     if (error) {
       const messageText = isInputError(error)
         ? error?.fields?.email?.join(", ")
-        : error.message;
+        : error.message
 
       message.textContent =
         messageText ?? "Error al guardar el email en la newsletter"
