@@ -1,30 +1,32 @@
-<footer class="pt-10 text-white pb-4">
-  <div class="w-full max-w-xl mx-auto p-4 flex justify-between items-center">
-    <a href="/">
+<footer class="pt-10 text-white pb-4 footer-fade-in">
+  <div
+    class="w-full max-w-xl mx-auto p-4 flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center"
+  >
+    <a href="/" class="footer-logo">
       <img
-        class="w-24 drop-shadow drop-shadow-black/30"
+        class="w-24 drop-shadow drop-shadow-black/30 select-none"
         src="/logo-a.svg"
         alt="bigibai logo"
       />
     </a>
 
     <nav>
-      <ul class="flex justify-center items-center">
-        <li>
+      <ul class="flex flex-wrap gap-4 md:gap-6 justify-center items-center">
+        <li class="footer-link-item" style="animation-delay: 0.1s;">
           <a
-            class="hover:underline hover:text-yellow-300 transition me-4 md:me-6"
+            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
             href="/privacidad">Privacidad</a
           >
         </li>
-        <li>
+        <li class="footer-link-item" style="animation-delay: 0.2s;">
           <a
-            class="hover:underline hover:text-yellow-300 transition me-4 md:me-6"
+            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
             href="/aviso-legal">Aviso Legal</a
           >
         </li>
-        <li>
+        <li class="footer-link-item" style="animation-delay: 0.3s;">
           <a
-            class="hover:underline hover:text-yellow-300 transition me-4 md:me-6"
+            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
             href="/politica-de-cookies">Política de Cookies</a
           >
         </li>
@@ -32,8 +34,12 @@
     </nav>
   </div>
 
-  <div class="text-center">
-    <small class="opacity-80"
+  <div class="text-center footer-copyright">
+    <small
+      class="hover:text-yellow-300 transition-colors duration-300"
+      role="contentinfo"
+      aria-label="Todos los derechos reservados para Salad Brands"
+      aria-live="off"
       >© 2025 Salad Brands SL. · <a
         class="hover:underline"
         href="mailto:hola@bigibai.com">hola@bigibai.com</a
@@ -41,3 +47,62 @@
     </small>
   </div>
 </footer>
+
+<style>
+  @keyframes fadeInFooter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .footer-fade-in {
+    animation: fadeInFooter 0.6s ease-out;
+  }
+
+  .footer-logo {
+    transition: transform 0.3s ease;
+  }
+
+  .footer-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  .footer-link-item {
+    animation: slideInLeft 0.5s ease-out backwards;
+  }
+
+  .footer-link::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #f8b134, #ffd700);
+    transition: width 0.3s ease;
+  }
+
+  .footer-link:hover::after {
+    width: 100%;
+  }
+
+  .footer-copyright {
+    animation: fadeInFooter 0.8s ease-out 0.4s backwards;
+  }
+</style>

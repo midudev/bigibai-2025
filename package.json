@@ -1,7 +1,7 @@
 {
   "name": "bigibai-2025",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -9,14 +9,20 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@midudev/tailwind-animations": "^0.2.0",
-    "@supabase/supabase-js": "^2.74.0",
-    "@tailwindcss/vite": "^4.1.14",
-    "astro": "5.14.1",
-    "canvas-confetti": "^1.9.3",
-    "tailwindcss": "^4.1.14"
+    "@astrojs/node": "9.4.5",
+    "@astrojs/sitemap": "3.6.0",
+    "@astrojs/vercel": "8.2.9",
+    "@midudev/tailwind-animations": "0.2.0",
+    "@supabase/supabase-js": "2.75.0",
+    "@tailwindcss/vite": "4.1.14",
+    "@upstash/ratelimit": "2.0.6",
+    "@upstash/redis": "1.35.5",
+    "astro": "5.14.3",
+    "canvas-confetti": "1.9.3",
+    "tailwindcss": "4.1.14"
   },
   "devDependencies": {
-    "@types/canvas-confetti": "^1.9.0"
+    "@tailwindcss/typography": "0.5.19",
+    "@types/canvas-confetti": "1.9.0"
   }
 }
