@@ -1,12 +1,23 @@
 ---
-import "@/global.css"
+import "@/global.css";
 
-import GradientOverlay from "@/components/GradientOverlay.astro"
-import Snowballs from "@/components/Snowballs.astro"
+import GradientOverlay from "@/components/GradientOverlay.astro";
+import Snowballs from "@/components/Snowballs.astro";
 
-const title = "Big Ibai: Calendario de Adviento con chocolates y premios"
-const description =
-  "Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día."
+const defaultTitle =
+  "Big Ibai: Calendario de Adviento con chocolates y premios";
+const defaultDescription =
+  "Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día.";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+let { title, description } = Astro.props;
+
+title ??= defaultTitle;
+description ??= defaultDescription;
 ---
 
 <!doctype html>
@@ -53,9 +64,24 @@ const description =
     <meta name="twitter:image:alt" content={title} />
     <meta name="theme-color" content="#4c2d7e" />
 
-    <link rel="icon" type="image/png" sizes="16x16" href="/cropped-favicon-16x16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/cropped-favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/cropped-favicon-192x192.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/cropped-favicon-16x16.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/cropped-favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/cropped-favicon-192x192.png"
+    />
     <link rel="apple-touch-icon" href="/cropped-favicon-180x180.png" />
     <meta
       name="msapplication-TileImage"
@@ -114,10 +140,10 @@ const description =
 
 <script>
   const backgroundMask = document.getElementById(
-    "background-mask"
-  ) as HTMLDivElement
+    "background-mask",
+  ) as HTMLDivElement;
 
   document.addEventListener("DOMContentLoaded", () => {
-    backgroundMask.classList.add("unlocked")
-  })
+    backgroundMask.classList.add("unlocked");
+  });
 </script>
