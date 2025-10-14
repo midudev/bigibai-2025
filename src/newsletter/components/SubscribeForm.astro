@@ -14,10 +14,10 @@ import { actions } from "astro:actions";
 
   @keyframes shimmer {
     0% {
-      background-position: -100% 0;
+      background-position: 0% 0;
     }
     100% {
-      background-position: 200% 0;
+      background-position: -200% 0;
     }
   }
 
@@ -80,8 +80,13 @@ import { actions } from "astro:actions";
   .submit-button {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(90deg, #f8b134, #ffd700, #f8b134);
-    background-size: 200% 100%;
+    background: linear-gradient(
+      90deg,
+      #f8b134 25%,
+      #ffd700 50%,
+      #f8b134 75%
+    );
+    background-size: 300% 100%;
     animation: shimmer 3s linear infinite;
   }
 
