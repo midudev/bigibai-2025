@@ -1,20 +1,5 @@
 ---
-export interface Props {
-  date: Date;
-  format?:
-    "clock" | // clock  ==> 25 Días 6 Horas 0 Minutos 0 Segundos
-    "inline"; // inline ==> 91D 08:30:00
-  class?: string;
-}
-
-const {
-  date,
-  format = "clock",
-  class: className = "",
-  ...rest
-} = Astro.props;
-
-const targetDate = date.toISOString();
+import Layout from '@/layouts/Layout.astro';
 
 const baseClasses = {
   wrapper: "",
@@ -39,72 +24,56 @@ const variantClasses = {
   }
 };
 
-const classes = {
-  wrapper: [
-    baseClasses.wrapper,
-    variantClasses[format].wrapper,
-    className
-  ].filter(Boolean).join(" "),
-  group: [
-    baseClasses.group,
-    variantClasses[format].group,
-  ].filter(Boolean).join(" "),
-  digit: [
-    baseClasses.digit,
-    variantClasses[format].digit,
-  ].filter(Boolean).join(" "),
-  label: [
-    baseClasses.label,
-    variantClasses[format].label,
-  ].filter(Boolean).join(" "),
-}
 ---
 
-<div
-  class={classes.wrapper}
-  id="countdown-wrapper"
-  data-target={targetDate}
-  data-format={format}
-  {...rest}
->
-  <!-- Días -->
-  <div class={classes.group}>
-    <span class={classes.digit} id="days">00</span>
-    <span class={classes.label}>
-      {format === "clock" ? "Días" : "D"}
-    </span>
-  </div>
-  <!-- Días -->
+<Layout class="!relative !w-[100vw] !h-[100vh]">
+    <div
+        class="absolute top-1/2 left-1/2 mt-56
+        
+        "
+        id="countdown-wrapper"
+        data-target={new Date(2025, 12, 25)}
+        data-format={"clock"}
+    >
+    <!-- Días -->
+    <div class="">
+        <span class="" id="days">00</span>
+        <span class="">
+        {"clock" === "clock" ? "Días" : "D"}
+        </span>
+    </div>
+    <!-- Días -->
 
-  <!-- Horas -->
-  <div class={classes.group}>
-    <span class={classes.digit} id="hours">00</span>
-    <span class={classes.label}>
-      {format === "clock" ? "Horas" : ":"}
-    </span>
-  </div>
-  <!-- Horas -->
+    <!-- Horas -->
+    <div class="">
+        <span class="" id="hours">00</span>
+        <span class="">
+        {"clock" === "clock" ? "Horas" : ":"}
+        </span>
+    </div>
+    <!-- Horas -->
 
-  <!-- Minutos -->
-  <div class={classes.group}>
-    <span class={classes.digit} id="minutes">00</span>
-    <span class={classes.label}>
-      {format === "clock" ? "Minutos" : ":"}
-    </span>
-  </div>
-  <!-- Minutos -->
+    <!-- Minutos -->
+    <div class="">
+        <span class="" id="minutes">00</span>
+        <span class="">
+        {"clock" === "clock" ? "Minutos" : ":"}
+        </span>
+    </div>
+    <!-- Minutos -->
 
-  <!-- Segundos -->
-  <div class={classes.group}>
-    <span class={classes.digit} id="seconds">00</span>
-    <span class={classes.label}>
-      {format === "clock" ? "Segundos" : ""}
-    </span>
-  </div>
-  <!-- Segundos -->
-      
-  <canvas id="confetti-canvas" />
-</div>
+    <!-- Segundos -->
+    <div class="">
+        <span class="" id="seconds">00</span>
+        <span class="">
+        {"clock" === "clock" ? "Segundos" : ""}
+        </span>
+    </div>
+    <!-- Segundos -->
+        
+    <canvas id="confetti-canvas" />
+    </div>
+</Layout>
 
 <script>
   import { throwConfettiByCanvas } from "@/utils/confetti";
