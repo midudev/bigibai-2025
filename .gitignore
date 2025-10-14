@@ -6,6 +6,7 @@ dist/
 
 # dependencies
 node_modules/
+pnpm-workspace.yaml
 
 # logs
 npm-debug.log*
@@ -25,3 +26,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# instructions for GitHub
+.github/

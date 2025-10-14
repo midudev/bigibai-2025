@@ -170,13 +170,19 @@ import { actions } from "astro:actions";
       </button>
     </div>
 
-    <div
-      id="newsletter-message"
-      class="invisible block h-6 leading-6 text-sm text-center text-brand focus:outline-none"
-      aria-live="polite"
-      role="status"
-    >
-      ¡Ya eres parte de la newsletter!
+    <div class="relative">
+      <div
+        id="newsletter-message"
+        class="invisible bg-gradient-to-bl peer from-yellow-400 font-semibold to-orange-300 shadow shadow-amber-200 block px-5 py-2 ring-4 ring-white/20 text-sm transition duration-300 hover:scale-105 cursor-crosshair text-center opacity-0 mx-10 rounded-lg translate-y-3 scale-90 relative"
+      >
+      </div>
+
+      <img
+        id="newsletter-icon"
+        src="https://static.vecteezy.com/system/resources/previews/009/380/248/non_2x/royal-crown-clipart-design-illustration-free-png.png"
+        alt=""
+        class="size-8 peer-hover:scale-105 transition duration-300 peer-hover:-translate-x-3 peer-hover:-translate-y-1 peer-hover:-rotate-[40deg] invisible drop-shadow-sm drop-shadow-amber-700 -rotate-45 aspect-square object-contain absolute -top-2.5 left-5 z-10"
+      />
     </div>
   </form>
 </section>
@@ -187,35 +193,47 @@ import { actions } from "astro:actions";
 
   const form = document.getElementById("newsletter-form") as HTMLFormElement;
   const message = document.getElementById(
-    "newsletter-message",
-  ) as HTMLDivElement;
-  const submitButton = document.getElementById(
-    "submit-button",
-  ) as HTMLButtonElement;
-  const buttonText = document.getElementById("button-text") as HTMLSpanElement;
+    "newsletter-message"
+  ) as HTMLDivElement
+  const newsletterToastIcon = document.getElementById(
+    "newsletter-icon"
+  ) as HTMLImageElement
+  const submitButton = document.getElementById("submit-button") as HTMLButtonElement
+  const buttonText = document.getElementById("button-text") as HTMLSpanElement
   const buttonLoader = document.getElementById(
     "button-loader",
   ) as HTMLSpanElement;
 
-  message.classList.add("invisible");
-  message.classList.remove("text-red-500", "text-green-500");
+  message.classList.add("invisible")
+  message.classList.remove("text-white", "text-black")
 
   const input = form.querySelector("input[name='email']") as HTMLInputElement;
 
   input.addEventListener("focus", () => {
-    message.classList.add("invisible");
+    message.classList.add("invisible")
+    newsletterToastIcon.classList.add("invisible")
+    message.classList.remove("opacity-100")
+    message.classList.remove("translate-y-0")
+    message.classList.remove("scale-100")
+    message.classList.remove("text-white", "text-black")
     message.classList.remove(
-      "text-red-500",
-      "text-green-500",
-      "error-shake",
-      "success-bounce",
-    );
-    message.textContent = "";
-    input.removeAttribute("aria-invalid");
-    message.removeAttribute("role");
-    message.setAttribute("aria-live", "polite");
-    input.classList.remove("error-shake");
-  });
+      "from-red-400",
+      "to-pink-600",
+      "shadow",
+      "shadow-pink-400"
+    )
+    newsletterToastIcon.src =
+      "https://static.vecteezy.com/system/resources/previews/009/380/248/non_2x/royal-crown-clipart-design-illustration-free-png.png"
+    newsletterToastIcon.classList.add("invisible")
+    newsletterToastIcon.classList.remove("animate-shake")
+    newsletterToastIcon.classList.add("-rotate-45")
+    newsletterToastIcon.classList.remove("hover:-rotate-12")
+    newsletterToastIcon.classList.add("hover:-rotate-[40deg]")
+    message.textContent = ""
+    input.removeAttribute("aria-invalid")
+    message.removeAttribute("role")
+    message.setAttribute("aria-live", "polite")
+  })
 
   form.addEventListener("submit", async (event) => {
     console.log("submit");
@@ -249,34 +267,56 @@ import { actions } from "astro:actions";
         : error.message;
 
       message.textContent =
-        messageText ?? "Error al guardar el email en la newsletter";
+        messageText ?? "Error al guardar el email en la newsletter"
+      message.classList.remove("invisible")
+      message.classList.remove(
+        "from-yellow-400",
+        "to-orange-300",
+        "shadow",
+        "shadow-amber-200"
+      )
+      newsletterToastIcon.src =
+        "https://png.pngtree.com/png-clipart/20250421/original/pngtree-cross-icon-wrong-sign-vector-with-transparent-background-png-image_20826131.png"
+      newsletterToastIcon.classList.remove("invisible")
+      newsletterToastIcon.classList.add("animate-shake")
+      newsletterToastIcon.addEventListener("animationend", () => {
+        newsletterToastIcon.classList.remove("animate-shake")
+      })
+      newsletterToastIcon.classList.remove("-rotate-45")
+      newsletterToastIcon.classList.remove("hover:-rotate-[40deg]")
+      newsletterToastIcon.classList.add("hover:-rotate-12")
 
-      message.setAttribute("role", "alert");
-      message.setAttribute("aria-live", "assertive");
-      input.setAttribute("aria-invalid", "true");
-      message.classList.remove("invisible", "success-bounce");
-      message.classList.add("text-red-500", "error-shake");
-      input.classList.add("error-shake");
-
-      // Remove shake class after animation ends to allow re-triggering it
-      setTimeout(() => {
-        message.classList.remove("error-shake");
-        input.classList.remove("error-shake");
-      }, 500);
+      message.classList.add("opacity-100")
+      message.classList.add("translate-y-0")
+      message.classList.add("scale-100")
+      message.classList.add(
+        "from-red-400",
+        "to-pink-600",
+        "shadow",
+        "shadow-pink-400",
+        "text-white"
+      )
     }
 
     if (data) {
-      throwConfetti();
-      message.textContent = data.message;
-      message.classList.add("text-green-500");
-      message.setAttribute("role", "status");
-      message.setAttribute("aria-live", "polite");
-      input.removeAttribute("aria-invalid");
-      message.classList.remove("invisible", "error-shake");
-      message.classList.add("text-green-500", "success-bounce");
-      form.reset();
-      message.setAttribute("tabindex", "-1");
-      (message as HTMLDivElement).focus();
+      throwConfetti()
+      message.textContent = data.message
+      message.classList.remove("invisible")
+      message.classList.add("opacity-100")
+      message.classList.add("translate-y-0")
+      message.classList.add("scale-100")
+      message.classList.add("text-black")
+
+      message.classList.add(
+        "from-yellow-400",
+        "to-orange-300",
+        "shadow",
+        "shadow-amber-200"
+      )
+      newsletterToastIcon.classList.remove("invisible")
+      form.reset()
+      message.setAttribute("tabindex", "-1")
+      ;(message as HTMLDivElement).focus()
     }
-  });
+  })
 </script>
