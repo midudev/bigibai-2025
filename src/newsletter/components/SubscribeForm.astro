@@ -191,6 +191,7 @@ import { actions } from "astro:actions";
   const buttonLoader = document.getElementById(
     "button-loader",
   ) as HTMLSpanElement;
+  let hideTimer: number | null = null
 
   message.classList.add("invisible");
   message.classList.remove("text-red-500", "text-green-500");
@@ -211,6 +212,59 @@ import { actions } from "astro:actions";
     message.setAttribute("aria-live", "polite");
     input.classList.remove("error-shake");
   });
+
+  const clearHideTimer = () => {
+    if (hideTimer !== null) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+  }
+
+  const hideMessage = () => {
+    clearHideTimer();
+    message.textContent = "";
+    message.classList.add("invisible");
+    message.classList.remove("text-red-500", "text-green-500", "error-shake", "success-bounce");
+    message.removeAttribute("role");
+    message.setAttribute("aria-live", "polite");
+    input.removeAttribute("aria-invalid");
+    try { message.removeAttribute("tabindex") } catch {}
+  }
+
+  const showMessage = (type: "error" | "success", text: string) => {
+    clearHideTimer();
+
+    message.textContent = text;
+
+    if (type === "error") {
+      message.setAttribute("role", "alert");
+      message.setAttribute("aria-live", "assertive");
+      input.setAttribute("aria-invalid", "true");
+      message.classList.remove("invisible", "success-bounce");
+      message.classList.add("text-red-500", "error-shake");
+      input.classList.add("error-shake");
+
+       // Remove shake class after animation ends to allow re-triggering it
+      setTimeout(() => {
+        message.classList.remove("error-shake");
+        input.classList.remove("error-shake");
+      }, 500);
+    } else {
+      message.classList.add("text-green-500");
+      message.setAttribute("role", "status");
+      message.setAttribute("aria-live", "polite");
+      input.removeAttribute("aria-invalid");
+      message.classList.remove("invisible", "error-shake");
+      message.classList.add("text-green-500", "success-bounce");
+      message.setAttribute("tabindex", "-1");
+      (message as HTMLDivElement).focus();
+    }
+
+    // Hide message after 10 seconds
+    hideTimer = window.setTimeout(() => {
+      hideMessage();
+    }, 10 * 1000);
+  }
 
   form.addEventListener("submit", async (event) => {
     console.log("submit");
@@ -243,35 +297,15 @@ import { actions } from "astro:actions";
         ? error?.fields?.email?.join(", ")
         : error.message;
 
-      message.textContent =
-        messageText ?? "Error al guardar el email en la newsletter";
-
-      message.setAttribute("role", "alert");
-      message.setAttribute("aria-live", "assertive");
-      input.setAttribute("aria-invalid", "true");
-      message.classList.remove("invisible", "success-bounce");
-      message.classList.add("text-red-500", "error-shake");
-      input.classList.add("error-shake");
-
-      // Remove shake class after animation ends to allow re-triggering it
-      setTimeout(() => {
-        message.classList.remove("error-shake");
-        input.classList.remove("error-shake");
-      }, 500);
+      showMessage("error", messageText ?? "Error al guardar el email en la newsletter")
+      return;
     }
 
     if (data) {
       throwConfetti();
-      message.textContent = data.message;
-      message.classList.add("text-green-500");
-      message.setAttribute("role", "status");
-      message.setAttribute("aria-live", "polite");
-      input.removeAttribute("aria-invalid");
-      message.classList.remove("invisible", "error-shake");
-      message.classList.add("text-green-500", "success-bounce");
+      showMessage("success", data.message)
       form.reset();
-      message.setAttribute("tabindex", "-1");
-      (message as HTMLDivElement).focus();
+      return;
     }
   });
 </script>
