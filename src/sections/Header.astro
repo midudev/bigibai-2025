@@ -1,4 +1,57 @@
+---
+import Button from "@/components/Button.astro"
+import { supabaseClient } from "@/supabase"
+
+// get session from supabase
+const {
+  data: { session },
+} = await supabaseClient.auth.getSession()
+---
+
 <header class="pt-24 overflow-hidden pb-5" aria-label="Big Ibai">
+  <!-- Barra superior con botón de login y contador -->
+  <div class="absolute top-4 right-4 z-20">
+    <div id="header-auth-section" class="flex items-center gap-3">
+      <!-- Contador de participaciones (solo visible con sesión) -->
+      <div id="participation-counter" class="hidden">
+        <div
+          class="bg-brand/20 backdrop-blur-lg border border-brand/50 rounded-lg px-3 py-2"
+        >
+          <span
+            id="participation-text"
+            class="text-brand font-semibold text-sm"
+          >
+            <!-- Se llenará dinámicamente -->
+          </span>
+        </div>
+      </div>
+
+      <!-- Botón de login (solo visible sin sesión) -->
+      {
+        !session && (
+          <a href="/registro">
+            <Button id="header-login-btn" variant="brand" size="sm">
+              Iniciar sesión
+            </Button>
+          </a>
+        )
+      }
+
+      {
+        session && (
+          <Button
+            id="header-logout-btn"
+            variant="ghost"
+            size="sm"
+            class="hidden text-white/70 hover:text-white"
+          >
+            Cerrar sesión
+          </Button>
+        )
+      }
+    </div>
+  </div>
+
   <div class="relative logo-container">
     <img
       class="max-w-xl mx-auto px-4 md:px-0 relative z-10 logo-main"
@@ -94,4 +147,126 @@
     pointer-events: none;
     z-index: 0;
   }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+  }
 </style>
+
+<script>
+  import { supabaseClient } from "@/supabase"
+
+  // Elementos del DOM
+  const participationCounter = document.getElementById(
+    "participation-counter"
+  ) as HTMLDivElement
+  const participationText = document.getElementById(
+    "participation-text"
+  ) as HTMLSpanElement
+  const headerLoginBtn = document.getElementById(
+    "header-login-btn"
+  ) as HTMLButtonElement
+  const headerLogoutBtn = document.getElementById(
+    "header-logout-btn"
+  ) as HTMLButtonElement
+  const headerLoginLink = headerLoginBtn?.parentElement as HTMLAnchorElement
+
+  // Función para actualizar el contador de participaciones
+  async function updateParticipationCounter() {
+    try {
+      // Primero verificar si hay una sesión activa
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession()
+
+      if (session?.user) {
+        const { data: coupons } = await supabaseClient
+          .from("coupons")
+          .select("id")
+          .eq("used_by", session.user.id)
+          .eq("is_used", true)
+
+        const count = coupons?.length || 0
+
+        if (count === 0) {
+          participationText.textContent = "Sin participaciones"
+        } else if (count === 1) {
+          participationText.textContent = "1 participación"
+        } else {
+          participationText.textContent = `${count} participaciones`
+        }
+
+        // Usuario autenticado: mostrar contador y logout, ocultar login
+        participationCounter.classList.remove("hidden")
+        participationCounter.classList.add("fade-in-up")
+        headerLoginLink.classList.add("hidden")
+        headerLogoutBtn.classList.remove("hidden")
+        headerLogoutBtn.style.display = ""
+        console.log("Usuario autenticado - mostrando logout")
+      } else {
+        // Usuario no autenticado: ocultar contador y logout, mostrar login
+        participationCounter.classList.add("hidden")
+        participationCounter.classList.remove("fade-in-up")
+        headerLoginLink.classList.remove("hidden")
+        headerLogoutBtn.classList.add("hidden")
+        headerLogoutBtn.style.display = "none"
+        console.log("Usuario no autenticado - ocultando logout")
+      }
+    } catch (error) {
+      console.error("Error al actualizar contador:", error)
+      // En caso de error, asumir que no hay sesión
+      participationCounter.classList.add("hidden")
+      participationCounter.classList.remove("fade-in-up")
+      headerLoginLink.classList.remove("hidden")
+      headerLogoutBtn.classList.add("hidden")
+      headerLogoutBtn.style.display = "none"
+    }
+  }
+
+  // Función para cerrar sesión
+  async function handleLogout() {
+    try {
+      const { error } = await supabaseClient.auth.signOut()
+      if (error) {
+        console.error("Error al cerrar sesión:", error)
+      } else {
+        await updateParticipationCounter()
+      }
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error)
+    }
+  }
+
+  // Event listeners
+  headerLogoutBtn.addEventListener("click", handleLogout)
+
+  // Escuchar cambios en la autenticación
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+      await updateParticipationCounter()
+    }
+  })
+
+  // Inicializar el contador
+  document.addEventListener("DOMContentLoaded", async () => {
+    // Asegurar estado inicial correcto
+    participationCounter.classList.add("hidden")
+    headerLoginLink.classList.remove("hidden")
+    headerLogoutBtn.classList.add("hidden")
+    headerLogoutBtn.style.display = "none"
+
+    // Luego actualizar según el estado real
+    await updateParticipationCounter()
+  })
+</script>
