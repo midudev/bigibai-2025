@@ -4,6 +4,8 @@ import { getRateLimitMessage } from "@/services/ratelimit";
 import { RateLimitPresets } from "@/services/ratelimit-presets";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
+import { supabase } from "@/supabase";
+import { encrypt } from "@/utils/crypto";
 
 // Extrae IP real del cliente evitando spoofing básico.
 function getClientIp(ctx: any): string {
@@ -17,6 +19,20 @@ function getClientIp(ctx: any): string {
     (ctx as any)?.clientAddress ||
     "unknown"
   );
+}
+
+// Valida el formato del cupón XXXX-XXXX-XXXX
+function validateCouponFormat(coupon: string): boolean {
+  const pattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+  return pattern.test(coupon);
+}
+
+// Normaliza el cupón a mayúsculas y elimina caracteres no válidos
+function normalizeCoupon(coupon: string): string {
+  return coupon
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, '') // Solo letras, números y guiones
+    .replace(/-+/g, '-'); // Múltiples guiones a uno solo
 }
 
 export const server = {
@@ -137,6 +153,178 @@ export const server = {
         throw new ActionError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Error al obtener el conteo de suscriptores",
+        });
+      }
+    },
+  }),
+
+  validateCoupon: defineAction({
+    input: z.object({
+      coupon: z
+        .string({
+          required_error: "El código del cupón es requerido",
+          invalid_type_error: "El código del cupón debe ser un texto",
+        })
+        .trim()
+        .min(1, "El código del cupón no puede estar vacío")
+        .max(15, "El código del cupón es demasiado largo"),
+    }),
+    async handler({ coupon }, ctx) {
+      const ip = getClientIp(ctx);
+      
+      // Rate limiting para validación de cupones
+      const [byIp, byGlobal] = await Promise.all([
+        RateLimitPresets.ip(ip),
+        RateLimitPresets.globalNewsletter(), // Reutilizamos el rate limit global
+      ]);
+
+      const failed =
+        (!byIp.success && { kind: "ip", res: byIp }) ||
+        (!byGlobal.success && { kind: "global", res: byGlobal }) ||
+        null;
+
+      if (failed) {
+        console.warn("[RATE_LIMIT_BLOCK_COUPON]", {
+          bucket: failed.kind,
+          reset: failed.res.reset,
+          ip,
+        });
+
+        throw new ActionError({
+          code: "TOO_MANY_REQUESTS",
+          message: getRateLimitMessage(failed.res.reset),
+        });
+      }
+
+      // Normalizar y validar formato del cupón
+      const normalizedCoupon = normalizeCoupon(coupon);
+      
+      if (!validateCouponFormat(normalizedCoupon)) {
+        throw new ActionError({
+          code: "BAD_REQUEST",
+          message: "El formato del cupón debe ser XXXX-XXXX-XXXX (solo letras y números)",
+        });
+      }
+
+      try {
+        // Encriptar el cupón para buscar en la base de datos
+        const encryptedCoupon = encrypt(normalizedCoupon);
+
+        // Buscar el cupón en la base de datos
+        const { data: couponData, error: fetchError } = await supabase
+          .from('coupons')
+          .select('*')
+          .eq('hash', encryptedCoupon)
+          .single();
+
+        if (fetchError) {
+          console.error("[COUPON_FETCH_ERROR]", {
+            ip,
+            coupon: normalizedCoupon,
+            error: fetchError,
+          });
+          throw new ActionError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al verificar el cupón",
+          });
+        }
+
+        if (!couponData) {
+          throw new ActionError({
+            code: "BAD_REQUEST",
+            message: "El cupón no es válido",
+          });
+        }
+
+        // Verificar si el cupón ya está usado
+        if (couponData.is_used) {
+          throw new ActionError({
+            code: "BAD_REQUEST",
+            message: "Este cupón ya ha sido utilizado",
+          });
+        }
+
+        // Obtener el usuario actual de la sesión
+        const authHeader = ctx.request.headers.get('authorization');
+        if (!authHeader) {
+          throw new ActionError({
+            code: "UNAUTHORIZED",
+            message: "Debes iniciar sesión para validar cupones",
+          });
+        }
+
+        // Extraer el token JWT del header Authorization
+        const token = authHeader.replace('Bearer ', '');
+        
+        // Verificar el token y obtener el usuario
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+          throw new ActionError({
+            code: "UNAUTHORIZED",
+            message: "Sesión inválida. Por favor, inicia sesión nuevamente",
+          });
+        }
+
+        // Marcar el cupón como usado
+        const { error: updateError } = await supabase
+          .from('coupons')
+          .update({
+            is_used: true,
+            used_at: new Date().toISOString(),
+            used_by: user.id,
+          })
+          .eq('id', couponData.id);
+
+        if (updateError) {
+          console.error("[COUPON_UPDATE_ERROR]", {
+            ip,
+            userId: user.id,
+            couponId: couponData.id,
+            error: updateError,
+          });
+          throw new ActionError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al marcar el cupón como usado",
+          });
+        }
+
+        // Obtener el número total de cupones validados por este usuario
+        const { data: userCoupons, error: countError } = await supabase
+          .from('coupons')
+          .select('id')
+          .eq('used_by', user.id)
+          .eq('is_used', true);
+
+        if (countError) {
+          console.error("[COUPON_COUNT_ERROR]", {
+            userId: user.id,
+            error: countError,
+          });
+        }
+
+        const totalCoupons = userCoupons?.length || 1;
+
+        return {
+          success: true,
+          message: "¡Cupón validado correctamente!",
+          totalCoupons,
+        };
+
+      } catch (error) {
+        if (error instanceof ActionError) {
+          throw error;
+        }
+
+        console.error("[COUPON_VALIDATION_ERROR]", {
+          ip,
+          coupon: normalizedCoupon,
+          error,
+        });
+
+        throw new ActionError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error interno al validar el cupón",
         });
       }
     },
