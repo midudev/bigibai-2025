@@ -8,8 +8,10 @@ import { supabase } from "@/supabase"
 
 const { data: { user } } = await supabase.auth.getUser()
 
+console.log(user)
+
 if (user) {
-  Astro.redirect('/dashboard')
+  return Astro.redirect('/dashboard')
 }
 ---
 
@@ -22,11 +24,11 @@ if (user) {
         <!-- Estado sin sesión: Opciones de login -->
         {
           !user && (
-          <div id="login-section" class="space-y-6">
-          <div class="text-center">
-            <h1 class="text-3xl text-white mb-2">¡Únete a Big Ibai!</h1>
-            <p class="text-white/70">
-              Inicia sesión para validar tus cupones y participar
+            <div id="login-section" class="space-y-6">
+              <div class="text-center">
+              <h1 class="text-3xl text-white mb-2">¡Únete a Big Ibai!</h1>
+              <p class="text-white/70">
+                Inicia sesión para validar tus cupones y participar
             </p>
           </div>
 
