@@ -6,6 +6,8 @@ export interface Props {
   type?: "button" | "submit" | "reset"
   disabled?: boolean
   id?: string
+  name?: string
+  value?: string
 }
 
 const {
@@ -14,6 +16,8 @@ const {
   class: className = "",
   type = "button",
   disabled = false,
+  value,
+  name,
   ...rest
 } = Astro.props
 
@@ -46,6 +50,13 @@ const classes = [
   .join(" ")
 ---
 
-<button type={type} class={classes} disabled={disabled} {...rest}>
+<button
+  type={type}
+  class={classes}
+  disabled={disabled}
+  value={value}
+  name={name}
+  {...rest}
+>
   <slot />
 </button>
