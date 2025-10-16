@@ -8,8 +8,6 @@ import { supabase } from "@/supabase"
 
 const { data: { user } } = await supabase.auth.getUser()
 
-console.log(user)
-
 if (user) {
   return Astro.redirect('/dashboard')
 }
