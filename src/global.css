@@ -10,6 +10,16 @@
   --color-secondary: hsl(0, 0, 60%);
 }
 
+::selection {
+  background-color: #5C8948;
+  color: white;
+}
+
+::-moz-selection {
+  background-color: #5C8948;
+  color: white;
+}
+
 @font-face {
   font-family: "Century";
   src: url("/fonts/century.woff2") format("woff2");
