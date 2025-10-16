@@ -1,0 +1,85 @@
+---
+import Layout from "@/layouts/Layout.astro"
+import Header from "@/sections/Header.astro"
+import Footer from "@/sections/Footer.astro"
+import Button from "@/components/Button.astro"
+
+import { supabase } from "@/supabase"
+
+const { data: { user } } = await supabase.auth.getUser()
+
+if (!user) {
+  Astro.redirect('/registro')
+}
+---
+
+<Layout>
+  <div class="flex min-h-screen flex-col">
+    <Header />
+
+    <main class="flex-1 flex items-center justify-center px-4 py-8">
+      <!-- Estado con sesión: Formulario de cupón -->
+      {
+        user && (
+      <div id="coupon-section" class="space-y-6">
+        <div class="text-center">
+          <h1 class="text-3xl text-white mb-2">¡Bienvenido!</h1>
+          <p class="text-white/70">
+            Introduce tu código de cupón para participar
+          </p>
+          <div
+            id="coupon-count"
+            class="mt-4 text-brand font-semibold text-lg"
+          >
+          </div>
+        </div>
+
+        <form id="coupon-form" class="space-y-4">
+          <div>
+            <label for="coupon" class="sr-only">Código del cupón</label>
+            <input
+              type="text"
+              id="coupon"
+              name="coupon"
+              required
+              maxlength="14"
+              placeholder="XXXX-XXXX-XXXX"
+              autocomplete="off"
+              spellcheck="false"
+              class="w-full px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-center text-lg tracking-widest font-mono uppercase"
+            />
+            <p class="text-xs text-white/50 mt-2 text-center">
+              Formato automático: XXXX-XXXX-XXXX
+            </p>
+          </div>
+
+          <Button type="submit" variant="brand" size="lg" class="w-full">
+            Validar cupón
+          </Button>
+        </form>
+
+        <div class="text-center">
+          <Button
+            id="logout-btn"
+            variant="ghost"
+            size="sm"
+            class="text-white/70 hover:text-white"
+          >
+            Cerrar sesión
+          </Button>
+        </div>
+      </div>
+
+      <!-- Mensajes de estado -->
+      <div id="message-container" class="mt-6">
+        <div
+          id="message"
+          class="invisible bg-gradient-to-bl from-yellow-400 font-semibold to-orange-300 shadow shadow-amber-200 block px-5 py-2 ring-4 ring-white/20 text-sm transition duration-300 hover:scale-105 cursor-crosshair text-center opacity-0 mx-10 rounded-lg translate-y-3 scale-90 relative"
+        >
+        </div>
+      </div>
+      )}
+    </main>
+
+    </div>
+</Layout>
