@@ -26,6 +26,3 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
-
-# instructions for GitHub
-.github/
