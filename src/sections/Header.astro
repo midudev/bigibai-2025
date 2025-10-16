@@ -1,11 +1,11 @@
 ---
 import Button from "@/components/Button.astro"
-import { supabaseClient } from "@/supabase"
+import { supabase } from "@/supabase"
 
 // get session from supabase
-const {
-  data: { session },
-} = await supabaseClient.auth.getSession()
+const userResponse = await supabase.auth.getUser()
+
+const user = userResponse?.data?.user
 ---
 
 <header class="pt-24 overflow-hidden pb-5" aria-label="Big Ibai">
@@ -28,7 +28,7 @@ const {
 
       <!-- Botón de login (solo visible sin sesión) -->
       {
-        !session && (
+        !user && (
           <a href="/registro">
             <Button id="header-login-btn" variant="brand" size="sm">
               Iniciar sesión
@@ -38,15 +38,18 @@ const {
       }
 
       {
-        session && (
-          <Button
-            id="header-logout-btn"
-            variant="ghost"
-            size="sm"
-            class="hidden text-white/70 hover:text-white"
-          >
-            Cerrar sesión
-          </Button>
+        user && (
+          <form action="/api/auth/signout" method="post">
+            <Button
+              id="header-logout-btn"
+              variant="ghost"
+              size="sm"
+              class="hidden text-white/70 hover:text-white"
+              type="submit"
+            >
+              Cerrar sesión
+            </Button>
+          </form>
         )
       }
     </div>
@@ -161,110 +164,3 @@ const {
     animation: fadeInUp 0.3s ease-out;
   }
 </style>
-
-<script>
-  import { supabaseClient } from "@/supabase"
-
-  // Elementos del DOM
-  const participationCounter = document.getElementById(
-    "participation-counter"
-  ) as HTMLDivElement
-  const participationText = document.getElementById(
-    "participation-text"
-  ) as HTMLSpanElement
-  const headerLoginBtn = document.getElementById(
-    "header-login-btn"
-  ) as HTMLButtonElement
-  const headerLogoutBtn = document.getElementById(
-    "header-logout-btn"
-  ) as HTMLButtonElement
-  const headerLoginLink = headerLoginBtn?.parentElement as HTMLAnchorElement
-
-  // Función para actualizar el contador de participaciones
-  async function updateParticipationCounter() {
-    try {
-      // Primero verificar si hay una sesión activa
-      const {
-        data: { session },
-      } = await supabaseClient.auth.getSession()
-
-      if (session?.user) {
-        const { data: coupons } = await supabaseClient
-          .from("coupons")
-          .select("id")
-          .eq("used_by", session.user.id)
-          .eq("is_used", true)
-
-        const count = coupons?.length || 0
-
-        if (count === 0) {
-          participationText.textContent = "Sin participaciones"
-        } else if (count === 1) {
-          participationText.textContent = "1 participación"
-        } else {
-          participationText.textContent = `${count} participaciones`
-        }
-
-        // Usuario autenticado: mostrar contador y logout, ocultar login
-        participationCounter.classList.remove("hidden")
-        participationCounter.classList.add("fade-in-up")
-        headerLoginLink.classList.add("hidden")
-        headerLogoutBtn.classList.remove("hidden")
-        headerLogoutBtn.style.display = ""
-        console.log("Usuario autenticado - mostrando logout")
-      } else {
-        // Usuario no autenticado: ocultar contador y logout, mostrar login
-        participationCounter.classList.add("hidden")
-        participationCounter.classList.remove("fade-in-up")
-        headerLoginLink.classList.remove("hidden")
-        headerLogoutBtn.classList.add("hidden")
-        headerLogoutBtn.style.display = "none"
-        console.log("Usuario no autenticado - ocultando logout")
-      }
-    } catch (error) {
-      console.error("Error al actualizar contador:", error)
-      // En caso de error, asumir que no hay sesión
-      participationCounter.classList.add("hidden")
-      participationCounter.classList.remove("fade-in-up")
-      headerLoginLink.classList.remove("hidden")
-      headerLogoutBtn.classList.add("hidden")
-      headerLogoutBtn.style.display = "none"
-    }
-  }
-
-  // Función para cerrar sesión
-  async function handleLogout() {
-    try {
-      const { error } = await supabaseClient.auth.signOut()
-      if (error) {
-        console.error("Error al cerrar sesión:", error)
-      } else {
-        await updateParticipationCounter()
-      }
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error)
-    }
-  }
-
-  // Event listeners
-  headerLogoutBtn.addEventListener("click", handleLogout)
-
-  // Escuchar cambios en la autenticación
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-      await updateParticipationCounter()
-    }
-  })
-
-  // Inicializar el contador
-  document.addEventListener("DOMContentLoaded", async () => {
-    // Asegurar estado inicial correcto
-    participationCounter.classList.add("hidden")
-    headerLoginLink.classList.remove("hidden")
-    headerLogoutBtn.classList.add("hidden")
-    headerLogoutBtn.style.display = "none"
-
-    // Luego actualizar según el estado real
-    await updateParticipationCounter()
-  })
-</script>
