@@ -204,13 +204,37 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 > [!NOTE]
 > Recuerde establecer correctamente las credenciales correspondientes en el archivo **.env** si requiere un buen funcionamiento del *backend*, de lo contrario solamente renderizará el *frontend*.
 
-5. Inicie el servidor en modo desarrollo:
+5. Setup Supabase (opcional)
+
+### Opción A: Desarrollo local
+
+Como requisito previo, debe tener instalado un entorno de ejecución de contenedor compatible con las API de Docker (como `Docker Desktop`).
+
+```bash
+pnpx supabase start
+```
+
+Si el comando anterior se ejecutó sin problemas, este le proporcionará información sobre su entorno local de Supabase; copie los links de `API URL` y `Secret key` y peguelos en su archivo `.env`, dichos links corresponden a `SUPABASE_URL` y `SUPABASE_KEY`.
+
+Vea su instancia local de Supabase en: `http://localhost:54323`.
+
+### Opción B: Supabase en la Nube
+
+Si prefiere usar Supabase en la nube en lugar de local:
+
+- Creé un proyecto en Supabase.
+
+- Copia y pegue el contenido de `src/supabase/migrations/20251017045332_create_newsletter_table.sql` en el `SQL Editor` de su proyecto en supabase.
+
+- Configure las variables de entorno de `SUPABASE_URL` y `SUPABASE_KEY` del archivo `.env`.
+
+6. Inicie el servidor en modo desarrollo:
 
     ```bash
     pnpm run dev
     ```
 
-6. Abra el navegador en la siguiente URL:
+7. Abra el navegador en la siguiente URL:
 
     ==> [http://localhost:4321](http://localhost:4321) 
 
