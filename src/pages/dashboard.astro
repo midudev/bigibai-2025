@@ -1,8 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro"
+import CouponInput from "@/components/CouponInput.astro"
 import Header from "@/sections/Header.astro"
-import Footer from "@/sections/Footer.astro"
-import Button from "@/components/Button.astro"
 
 import { supabase } from "@/supabase"
 
@@ -17,15 +16,15 @@ if (!user) {
   <div class="flex min-h-screen flex-col">
     <Header />
 
-    <main class="flex-1 flex items-center justify-center px-4 py-8">
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-8">
       <!-- Estado con sesión: Formulario de cupón -->
       {
         user && (
       <div id="coupon-section" class="space-y-6">
         <div class="text-center">
-          <p class="text-white/70">
+          <h2 class="text-3xl text-shadow-title">
             Introduce tu código de cupón para participar
-          </p>
+          </>
           <div
             id="coupon-count"
             class="mt-4 text-brand font-semibold text-lg"
@@ -33,34 +32,9 @@ if (!user) {
           </div>
         </div>
 
-        <form id="coupon-form" class="space-y-4">
-          <div>
-            <label for="coupon" class="sr-only">Código del cupón</label>
-            <input
-              type="text"
-              id="coupon"
-              name="coupon"
-              required
-              maxlength="14"
-              placeholder="XXXX-XXXX-XXXX"
-              autocomplete="off"
-              spellcheck="false"
-              class="w-full px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-center text-lg tracking-widest font-mono uppercase"
-            />
-            
-          </div>
-
-          <Button type="submit" variant="brand" size="lg" class="w-full">
-            Validar cupón
-          </Button>
-        </form>
-
-        <p>
-          Aquí mostrar la tabla con las participaciones actuales del usuario
-        </p>
+        <CouponInput />
       </div>
 
-      <!-- Mensajes de estado -->
       <div id="message-container" class="mt-6">
         <div
           id="message"
@@ -68,6 +42,10 @@ if (!user) {
         >
         </div>
       </div>
+
+        <p class="text-white/70">
+          Aquí mostrar la tabla con las participaciones actuales del usuario
+        </p>
       )}
     </main>
 
