@@ -8,8 +8,17 @@ import { supabase } from "@/supabase"
 const { data: { user } } = await supabase.auth.getUser()
 
 if (!user) {
-  Astro.redirect('/registro')
+  return Astro.redirect('/registro')
 }
+
+// Obtener el número de cupones validados por el usuario
+const { data: userCoupons, error: couponsError } = await supabase
+  .from('coupons')
+  .select('id')
+  .eq('used_by', user.id)
+  .eq('is_used', true)
+
+const totalCoupons = userCoupons?.length || 0
 ---
 
 <Layout>
@@ -24,11 +33,16 @@ if (!user) {
         <div class="text-center">
           <h2 class="text-3xl text-shadow-title">
             Introduce tu código de cupón para participar
-          </>
+          </h2>
           <div
             id="coupon-count"
             class="mt-4 text-brand font-semibold text-lg"
           >
+            {totalCoupons > 0 && (
+              <span>
+                Has validado {totalCoupons} {totalCoupons === 1 ? 'cupón' : 'cupones'}
+              </span>
+            )}
           </div>
         </div>
 
