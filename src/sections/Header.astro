@@ -1,4 +1,5 @@
 ---
+import Avatar from "@/components/Avatar.astro"
 import Button from "@/components/Button.astro"
 import { supabase } from "@/supabase"
 
@@ -6,6 +7,25 @@ import { supabase } from "@/supabase"
 const userResponse = await supabase.auth.getUser()
 
 const user = userResponse?.data?.user
+
+const rawDisplayName =
+  user?.user_metadata?.full_name ??
+  user?.user_metadata?.name ??
+  user?.email ??
+  "Usuario"
+
+const displayName =
+  typeof rawDisplayName === "string" && rawDisplayName.trim().length > 0
+    ? rawDisplayName
+    : "Usuario"
+
+const fallbackInitial = displayName.trim().charAt(0).toUpperCase()
+
+const avatarUrl =
+  user?.user_metadata?.avatar_url ??
+  user?.user_metadata?.picture ??
+  user?.user_metadata?.avatar ??
+  null
 ---
 
 <header class="pt-24 overflow-hidden pb-5" aria-label="Big Ibai">
@@ -39,17 +59,25 @@ const user = userResponse?.data?.user
 
       {
         user && (
-          <form action="/api/auth/signout" method="post">
-            <Button
-              id="header-logout-btn"
-              variant="ghost"
+          <div class="flex items-center gap-2">
+            <Avatar
+              src={avatarUrl ?? undefined}
+              alt={displayName}
               size="sm"
-              class="hidden text-white/70 hover:text-white"
-              type="submit"
-            >
-              Cerrar sesión
-            </Button>
-          </form>
+              fallback={fallbackInitial}
+            />
+            <form action="/api/auth/signout" method="post">
+              <Button
+                id="header-logout-btn"
+                variant="ghost"
+                size="sm"
+                class="hidden text-white/70 hover:text-white"
+                type="submit"
+              >
+                Cerrar sesión
+              </Button>
+            </form>
+          </div>
         )
       }
     </div>
