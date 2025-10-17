@@ -8,6 +8,8 @@
   --color-destructive-foreground: var(--color-white);
   --color-primary: hsl(0, 0, 95%);
   --color-secondary: hsl(0, 0, 60%);
+
+  --text-shadow-title: 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.9);
 }
 
 ::selection {
