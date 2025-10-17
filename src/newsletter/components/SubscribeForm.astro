@@ -1,6 +1,7 @@
 ---
 import { actions } from "astro:actions"
 import Button from "@/components/Button.astro"
+import SpinnerIcon from "@/icons/spinner.svg"
 ---
 
 <style>
@@ -150,25 +151,7 @@ import Button from "@/components/Button.astro"
           id="button-loader"
           class="absolute inset-0 items-center justify-center hidden"
         >
-          <svg
-            class="spinner h-5 w-5 text-black"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
+          <SpinnerIcon class="spinner h-5 w-5 text-black" />
         </span>
       </Button>
     </div>
@@ -218,7 +201,17 @@ import Button from "@/components/Button.astro"
   input.addEventListener("focus", () => {
     message.classList.add("invisible")
     newsletterToastIcon.classList.add("invisible")
-    message.classList.remove("opacity-100")
+    message.classList.remove(
+      "opacity-100",
+      "translate-y-0",
+      "scale-100",
+      "text-white",
+      "text-black",
+      "from-red-400",
+      "to-pink-600",
+      "shadow",
+      "shadow-pink-400"
+    )
     message.classList.remove("translate-y-0")
     message.classList.remove("scale-100")
     message.classList.remove("text-white", "text-black")
@@ -228,8 +221,7 @@ import Button from "@/components/Button.astro"
       "shadow",
       "shadow-pink-400"
     )
-    newsletterToastIcon.src =
-      "https://static.vecteezy.com/system/resources/previews/009/380/248/non_2x/royal-crown-clipart-design-illustration-free-png.png"
+    newsletterToastIcon.src = "/crown.webp"
     newsletterToastIcon.classList.add("invisible")
     newsletterToastIcon.classList.remove("animate-shake")
     newsletterToastIcon.classList.add("-rotate-45")
@@ -253,11 +245,18 @@ import Button from "@/components/Button.astro"
     message.textContent = ""
     message.classList.add("invisible")
     newsletterToastIcon.classList.add("invisible")
-    message.classList.remove("text-red-500", "text-green-500", "error-shake", "success-bounce")
+    message.classList.remove(
+      "text-red-500",
+      "text-green-500",
+      "error-shake",
+      "success-bounce"
+    )
     message.removeAttribute("role")
     message.setAttribute("aria-live", "polite")
     input.removeAttribute("aria-invalid")
-    try { message.removeAttribute("tabindex") } catch {}
+    try {
+      message.removeAttribute("tabindex")
+    } catch {}
   }
 
   const showMessage = (type: "error" | "success", text: string) => {
@@ -348,7 +347,10 @@ import Button from "@/components/Button.astro"
       const messageText = isInputError(error)
         ? error?.fields?.email?.join(", ")
         : error.message
-      showMessage("error", messageText ?? "Error al guardar el email en la newsletter")
+      showMessage(
+        "error",
+        messageText ?? "Error al guardar el email en la newsletter"
+      )
       return
     }
 
