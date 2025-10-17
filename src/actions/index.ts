@@ -5,7 +5,7 @@ import { RateLimitPresets } from "@/services/ratelimit-presets";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
 import { supabase } from "@/supabase";
-import { encrypt } from "@/utils/crypto";
+import { hash } from "@/utils/crypto";
 
 // Extrae IP real del cliente evitando spoofing básico.
 function getClientIp(ctx: any): string {
@@ -207,29 +207,40 @@ export const server = {
       }
 
       try {
-        // Encriptar el cupón para buscar en la base de datos
-        const encryptedCoupon = encrypt(normalizedCoupon);
+        // Generar hash del cupón para buscar en la base de datos
+        const couponHash = hash(normalizedCoupon);
 
         // Buscar el cupón en la base de datos
         const { data: couponData, error: fetchError } = await supabase
           .from('coupons')
-          .select('*')
-          .eq('hash', encryptedCoupon)
+          .select('is_used, used_by, id')
+          .eq('hash', couponHash)
           .single();
 
-        if (fetchError) {
-          console.error("[COUPON_FETCH_ERROR]", {
-            ip,
-            coupon: normalizedCoupon,
-            error: fetchError,
-          });
-          throw new ActionError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Error al verificar el cupón",
-          });
-        }
+        // Si hay error O no hay datos, el cupón no es válido
+        if (fetchError || !couponData) {
+          // Si el error es "PGRST116" significa que no se encontró el registro
+          if (fetchError?.code === 'PGRST116') {
+            throw new ActionError({
+              code: "BAD_REQUEST",
+              message: "El cupón no es válido",
+            });
+          }
+          
+          // Si hay otro tipo de error, es un error interno
+          if (fetchError) {
+            console.error("[COUPON_FETCH_ERROR]", {
+              ip,
+              coupon: normalizedCoupon,
+              error: fetchError,
+            });
+            throw new ActionError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Error al verificar el cupón",
+            });
+          }
 
-        if (!couponData) {
+          // Si no hay error pero tampoco hay datos
           throw new ActionError({
             code: "BAD_REQUEST",
             message: "El cupón no es válido",
@@ -245,24 +256,12 @@ export const server = {
         }
 
         // Obtener el usuario actual de la sesión
-        const authHeader = ctx.request.headers.get('authorization');
-        if (!authHeader) {
-          throw new ActionError({
-            code: "UNAUTHORIZED",
-            message: "Debes iniciar sesión para validar cupones",
-          });
-        }
-
-        // Extraer el token JWT del header Authorization
-        const token = authHeader.replace('Bearer ', '');
-        
-        // Verificar el token y obtener el usuario
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
         
         if (authError || !user) {
           throw new ActionError({
             code: "UNAUTHORIZED",
-            message: "Sesión inválida. Por favor, inicia sesión nuevamente",
+            message: "Debes iniciar sesión para validar cupones",
           });
         }
 

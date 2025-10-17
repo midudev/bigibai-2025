@@ -210,6 +210,145 @@ import Button from "@/components/Button.astro"
   if (couponInputs.length > 0) {
     couponInputs[0].focus()
   }
+
+  // Manejar el submit del formulario
+  const couponForm = document.getElementById("coupon-form") as HTMLFormElement
+  const messageContainer = document.getElementById("message") as HTMLDivElement
+
+  if (couponForm) {
+    couponForm.addEventListener("submit", async (e) => {
+      e.preventDefault()
+
+      const couponValue = hiddenInput.value.trim()
+
+      // Validar que el cupón esté completo
+      if (couponValue.length !== 14) {
+        // XXXX-XXXX-XXXX = 14 caracteres
+        showMessage("Por favor, completa todos los caracteres del cupón", true)
+        return
+      }
+
+      try {
+        // Importar actions dinámicamente
+        const { actions } = await import("astro:actions")
+
+        // Deshabilitar el botón durante la validación
+        const submitButton = couponForm.querySelector(
+          'button[type="submit"]'
+        ) as HTMLButtonElement
+        if (submitButton) {
+          submitButton.disabled = true
+          submitButton.textContent = "Validando..."
+        }
+
+        // Llamar a la action
+        const { data, error } = await actions.validateCoupon({
+          coupon: couponValue,
+        })
+
+        if (error) {
+          showMessage(error.message || "Error al validar el cupón", true)
+        } else if (data) {
+          showMessage(data.message || "¡Cupón validado correctamente!", false)
+
+          // Limpiar el formulario
+          couponInputs.forEach((input) => {
+            input.value = ""
+          })
+          hiddenInput.value = ""
+
+          // Focus en el primer input
+          if (couponInputs.length > 0) {
+            couponInputs[0].focus()
+          }
+
+          // Actualizar el contador de cupones si existe
+          const couponCount = document.getElementById("coupon-count")
+          if (couponCount && data.totalCoupons) {
+            couponCount.textContent = `Has validado ${data.totalCoupons} ${data.totalCoupons === 1 ? "cupón" : "cupones"}`
+          }
+        }
+
+        // Rehabilitar el botón
+        if (submitButton) {
+          submitButton.disabled = false
+          submitButton.textContent = "Validar cupón"
+        }
+      } catch (error) {
+        console.error("Error al validar el cupón:", error)
+        showMessage(
+          "Error al validar el cupón. Por favor, inténtalo de nuevo.",
+          true
+        )
+
+        // Rehabilitar el botón
+        const submitButton = couponForm.querySelector(
+          'button[type="submit"]'
+        ) as HTMLButtonElement
+        if (submitButton) {
+          submitButton.disabled = false
+          submitButton.textContent = "Validar cupón"
+        }
+      }
+    })
+  }
+
+  // Función para mostrar mensajes
+  function showMessage(text: string, isError = false) {
+    if (!messageContainer) return
+
+    messageContainer.textContent = text
+    messageContainer.classList.remove(
+      "invisible",
+      "opacity-0",
+      "translate-y-3",
+      "scale-90"
+    )
+    messageContainer.classList.add("opacity-100", "translate-y-0", "scale-100")
+
+    if (isError) {
+      messageContainer.classList.remove(
+        "from-yellow-400",
+        "to-orange-300",
+        "shadow-amber-200",
+        "text-black"
+      )
+      messageContainer.classList.add(
+        "from-red-400",
+        "to-pink-600",
+        "shadow-pink-400",
+        "text-white"
+      )
+    } else {
+      messageContainer.classList.remove(
+        "from-red-400",
+        "to-pink-600",
+        "shadow-pink-400",
+        "text-white"
+      )
+      messageContainer.classList.add(
+        "from-yellow-400",
+        "to-orange-300",
+        "shadow-amber-200",
+        "text-black"
+      )
+    }
+
+    // Ocultar el mensaje después de 5 segundos
+    setTimeout(() => {
+      messageContainer.classList.add(
+        "invisible",
+        "opacity-0",
+        "translate-y-3",
+        "scale-90"
+      )
+      messageContainer.classList.remove(
+        "opacity-100",
+        "translate-y-0",
+        "scale-100"
+      )
+    }, 5000)
+  }
 </script>
 
 <style>
