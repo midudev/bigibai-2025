@@ -5,6 +5,7 @@ import { RateLimitPresets } from "@/services/ratelimit-presets";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
 import { supabase } from "@/supabase";
+import { supabaseAdmin } from "@/supabase-admin";
 import { hash } from "@/utils/crypto";
 
 // Extrae IP real del cliente evitando spoofing básico.
@@ -87,16 +88,14 @@ export const server = {
       const ip = getClientIp(ctx);
 
       // Email 5/h, IP 15/h, global 500/h.
-      const [byEmail, byIp, byGlobal] = await Promise.all([
+      const [byEmail, byIp] = await Promise.all([
         RateLimitPresets.email(sanitizedEmail),
-        RateLimitPresets.ip(ip),
-        RateLimitPresets.globalNewsletter(),
+        RateLimitPresets.ip(ip)
       ]);
 
       const failed =
         (!byEmail.success && { kind: "email", res: byEmail }) ||
         (!byIp.success && { kind: "ip", res: byIp }) ||
-        (!byGlobal.success && { kind: "global", res: byGlobal }) ||
         null;
 
       if (failed) {
@@ -170,17 +169,25 @@ export const server = {
         .max(15, "El código del cupón es demasiado largo"),
     }),
     async handler({ coupon }, ctx) {
+      // check we have a user logged in before validating the coupon
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new ActionError({
+          code: "UNAUTHORIZED",
+          message: "Debes iniciar sesión para validar cupones",
+        });
+      }
+
       const ip = getClientIp(ctx);
       
       // Rate limiting para validación de cupones
-      const [byIp, byGlobal] = await Promise.all([
-        RateLimitPresets.ip(ip),
-        RateLimitPresets.globalNewsletter(), // Reutilizamos el rate limit global
+      const [byIp] = await Promise.all([
+        RateLimitPresets.ip(ip)
       ]);
 
       const failed =
         (!byIp.success && { kind: "ip", res: byIp }) ||
-        (!byGlobal.success && { kind: "global", res: byGlobal }) ||
         null;
 
       if (failed) {
@@ -211,7 +218,7 @@ export const server = {
         const couponHash = hash(normalizedCoupon);
 
         // Buscar el cupón en la base de datos
-        const { data: couponData, error: fetchError } = await supabase
+        const { data: couponData, error: fetchError } = await supabaseAdmin
           .from('coupons')
           .select('is_used, used_by, id')
           .eq('hash', couponHash)
@@ -255,18 +262,8 @@ export const server = {
           });
         }
 
-        // Obtener el usuario actual de la sesión
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError || !user) {
-          throw new ActionError({
-            code: "UNAUTHORIZED",
-            message: "Debes iniciar sesión para validar cupones",
-          });
-        }
-
         // Marcar el cupón como usado
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
           .from('coupons')
           .update({
             is_used: true,
@@ -289,7 +286,7 @@ export const server = {
         }
 
         // Obtener el número total de cupones validados por este usuario
-        const { data: userCoupons, error: countError } = await supabase
+        const { data: userCoupons, error: countError } = await supabaseAdmin
           .from('coupons')
           .select('id')
           .eq('used_by', user.id)
