@@ -4,10 +4,13 @@ import Header from "@/sections/Header.astro"
 import Footer from "@/sections/Footer.astro"
 import Button from "@/components/Button.astro"
 
+import GoogleIcon from '@/icons/google.svg'
+
 import { supabase } from "@/supabase"
 
 const { data: { user } } = await supabase.auth.getUser()
 
+// si el usuario está logueado, redirigir a la página de dashboard
 if (user) {
   return Astro.redirect('/dashboard')
 }
@@ -40,24 +43,7 @@ if (user) {
               name="provider"
               type="submit"
             >
-              <svg class="w-5 h-5" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                ></path>
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                ></path>
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                ></path>
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                ></path>
-              </svg>
+              <GoogleIcon class="w-5 h-5" />
               Continuar con Google
             </Button>
           </form>
@@ -212,26 +198,12 @@ if (user) {
   import { throwConfetti } from "@/utils/confetti"
 
   // Elementos del DOM
-  const loginSection = document.getElementById(
-    "login-section"
-  ) as HTMLDivElement
-  const couponSection = document.getElementById(
-    "coupon-section"
-  ) as HTMLDivElement
-  const googleLoginBtn = document.getElementById(
-    "google-login-btn"
-  ) as HTMLButtonElement
   const magicLinkForm = document.getElementById(
     "magic-link-form"
   ) as HTMLFormElement
-  const couponForm = document.getElementById("coupon-form") as HTMLFormElement
-  const logoutBtn = document.getElementById("logout-btn") as HTMLButtonElement
-  const couponInput = document.getElementById("coupon") as HTMLInputElement
   const message = document.getElementById("message") as HTMLDivElement
-  const couponCount = document.getElementById("coupon-count") as HTMLDivElement
 
   let currentUser: any = null
-  let userCouponCount = 0
 
   // Función para mostrar mensajes
   function showMessage(text: string, isError = false) {
@@ -279,96 +251,6 @@ if (user) {
     message.classList.remove("opacity-100", "translate-y-0", "scale-100")
   }
 
-  // Función para formatear el cupón automáticamente con mask XXXX-XXXX-XXXX
-  function formatCouponInput(input: HTMLInputElement) {
-    // Guardar la posición del cursor
-    const cursorPosition = input.selectionStart || 0
-    const oldValue = input.value
-    
-    // Limpiar: solo letras y números, convertir a mayúsculas
-    let value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, "")
-
-    // Limitar a 12 caracteres (sin contar los guiones)
-    if (value.length > 12) {
-      value = value.substring(0, 12)
-    }
-
-    // Insertar guiones automáticamente para formato XXXX-XXXX-XXXX
-    let formatted = ""
-    for (let i = 0; i < value.length; i++) {
-      if (i === 4 || i === 8) {
-        formatted += "-"
-      }
-      formatted += value[i]
-    }
-
-    // Actualizar el valor
-    input.value = formatted
-
-    // Ajustar la posición del cursor
-    if (formatted.length > oldValue.length) {
-      // Si se agregó un guión, mover el cursor después del guión
-      if (formatted[cursorPosition] === "-") {
-        input.setSelectionRange(cursorPosition + 1, cursorPosition + 1)
-      } else {
-        input.setSelectionRange(cursorPosition, cursorPosition)
-      }
-    } else {
-      input.setSelectionRange(cursorPosition, cursorPosition)
-    }
-  }
-
-  // Función para actualizar la UI según el estado de sesión
-  async function updateUI() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (session?.user) {
-      currentUser = session.user
-      loginSection.classList.add("hidden")
-      couponSection.classList.remove("hidden")
-
-      // Obtener el número de cupones del usuario
-      await updateCouponCount()
-    } else {
-      currentUser = null
-      loginSection.classList.remove("hidden")
-      couponSection.classList.add("hidden")
-      hideMessage()
-    }
-  }
-
-  // Función para actualizar el contador de cupones
-  async function updateCouponCount() {
-    if (!currentUser) return
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: coupons } = await supabase
-        .from("coupons")
-        .select("id")
-        .eq("used_by", user.id)
-        .eq("is_used", true)
-
-      userCouponCount = coupons?.length || 0
-
-      if (userCouponCount === 0) {
-        couponCount.textContent = "Aún no tienes cupones validados"
-      } else if (userCouponCount === 1) {
-        couponCount.textContent = "Tienes 1 participación activa"
-      } else {
-        couponCount.textContent = `Tienes ${userCouponCount} participaciones activas`
-      }
-    } catch (error) {
-      console.error("Error al obtener cupones:", error)
-    }
-  }
-
   // Función para enviar Magic Link
   async function sendMagicLink(email: string) {
     try {
@@ -391,59 +273,6 @@ if (user) {
     }
   }
 
-  // Función para cerrar sesión
-  async function signOut() {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        showMessage("Error al cerrar sesión", true)
-      } else {
-        hideMessage()
-        await updateUI()
-      }
-    } catch (error) {
-      showMessage("Error al cerrar sesión", true)
-    }
-  }
-
-  // Función para validar cupón
-  async function validateCoupon(coupon: string) {
-    if (!currentUser) {
-      showMessage("Debes iniciar sesión para validar cupones", true)
-      return
-    }
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        showMessage(
-          "Sesión inválida. Por favor, inicia sesión nuevamente",
-          true
-        )
-        return
-      }
-
-      const { data, error } = await actions.validateCoupon({ coupon })
-
-      if (error) {
-        const messageText = isInputError(error)
-          ? error?.fields?.coupon?.join(", ")
-          : error.message
-        showMessage(messageText || "Error al validar el cupón", true)
-      } else if (data) {
-        throwConfetti()
-        showMessage(data.message)
-        couponInput.value = ""
-        await updateCouponCount()
-      }
-    } catch (error) {
-      console.error("Error al validar cupón:", error)
-      showMessage("Error al validar el cupón", true)
-    }
-  }
-
   magicLinkForm.addEventListener("submit", async (e) => {
     e.preventDefault()
     const formData = new FormData(magicLinkForm)
@@ -451,36 +280,6 @@ if (user) {
 
     if (email) {
       await sendMagicLink(email)
-    }
-  })
-
-  couponForm.addEventListener("submit", async (e) => {
-    e.preventDefault()
-    const formData = new FormData(couponForm)
-    const coupon = formData.get("coupon") as string
-
-    if (coupon) {
-      await validateCoupon(coupon)
-    }
-  })
-
-  logoutBtn?.addEventListener("click", signOut)
-
-  couponInput?.addEventListener("input", (e) => {
-    formatCouponInput(e.target as HTMLInputElement)
-  })
-
-  couponInput?.addEventListener("paste", (e) => {
-    // Pequeño delay para que el paste se complete antes de formatear
-    setTimeout(() => {
-      formatCouponInput(e.target as HTMLInputElement)
-    }, 10)
-  })
-
-  // Escuchar cambios en la autenticación
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-      await updateUI()
     }
   })
 
@@ -518,6 +317,5 @@ if (user) {
   // Inicializar la UI
   document.addEventListener("DOMContentLoaded", async () => {
     handleUrlErrors()
-    await updateUI()
   })
 </script>
