@@ -1,5 +1,5 @@
 ---
-import SubscribeForm from "@/newsletter/components/SubscribeForm.astro";
+import SubscribeForm from "@/newsletter/components/SubscribeForm.astro"
 ---
 
 <main
@@ -14,7 +14,7 @@ import SubscribeForm from "@/newsletter/components/SubscribeForm.astro";
     edición de Big Ibai y mucho más próximamente.
   </p>
   <h2
-    class="text-5xl font-normal text-white text-center fade-in-up"
+    class="text-5xl font-normal text-white text-center fade-in-up text-shadow-title"
     style="animation-delay: 0.4s;"
     role="contentinfo"
     aria-label="¿Quieres que te avisemos?"
@@ -26,16 +26,16 @@ import SubscribeForm from "@/newsletter/components/SubscribeForm.astro";
 </main>
 
 <script>
-  import { actions } from "astro:actions";
+  import { actions } from "astro:actions"
 
-  const count = document.getElementById("newsletter-count");
+  const count = document.getElementById("newsletter-count")
 
   const updateNewsletterCount = async () => {
-    const currentCount: any = await actions.getNewsletterCount();
+    const currentCount: any = await actions.getNewsletterCount()
     if (count) {
-      count.textContent = currentCount.data.count.toLocaleString() || "1000";
+      count.textContent = currentCount.data.count.toLocaleString() || "1000"
     }
-  };
+  }
 
-  updateNewsletterCount();
+  updateNewsletterCount()
 </script>
