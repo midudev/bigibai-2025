@@ -5,18 +5,20 @@ import Header from "@/sections/Header.astro"
 
 import { supabase } from "@/supabase"
 
-const { data: { user } } = await supabase.auth.getUser()
+const {
+  data: { user },
+} = await supabase.auth.getUser()
 
 if (!user) {
-  return Astro.redirect('/registro')
+  return Astro.redirect("/registro")
 }
 
 // Obtener el número de cupones validados por el usuario
 const { data: userCoupons, error: couponsError } = await supabase
-  .from('coupons')
-  .select('id')
-  .eq('used_by', user.id)
-  .eq('is_used', true)
+  .from("coupons")
+  .select("id")
+  .eq("used_by", user.id)
+  .eq("is_used", true)
 
 const totalCoupons = userCoupons?.length || 0
 ---
@@ -25,24 +27,23 @@ const totalCoupons = userCoupons?.length || 0
   <div class="flex min-h-screen flex-col">
     <Header />
 
-    <main class="flex-1 flex flex-col items-center justify-center px-4 py-8">
+    <main class="flex flex-1 flex-col items-center justify-center px-4 py-8">
       <!-- Estado con sesión: Formulario de cupón -->
-      {
-        user && (
+
       <div id="coupon-section" class="space-y-6">
         <div class="text-center">
-          <h2 class="text-3xl text-shadow-title">
+          <h2 class="text-shadow-title text-3xl">
             Introduce tu código de cupón para participar
           </h2>
-          <div
-            id="coupon-count"
-            class="mt-4 text-brand font-semibold text-lg"
-          >
-            {totalCoupons > 0 && (
-              <span>
-                Has validado {totalCoupons} {totalCoupons === 1 ? 'cupón' : 'cupones'}
-              </span>
-            )}
+          <div id="coupon-count" class="text-brand mt-4 text-lg font-semibold">
+            {
+              totalCoupons > 0 && (
+                <span>
+                  Has validado {totalCoupons}{" "}
+                  {totalCoupons === 1 ? "cupón" : "cupones"}
+                </span>
+              )
+            }
           </div>
         </div>
 
@@ -52,16 +53,14 @@ const totalCoupons = userCoupons?.length || 0
       <div id="message-container" class="mt-6">
         <div
           id="message"
-          class="invisible bg-gradient-to-bl from-yellow-400 font-semibold to-orange-300 shadow shadow-amber-200 block px-5 py-2 ring-4 ring-white/20 text-sm transition duration-300 hover:scale-105 cursor-crosshair text-center opacity-0 mx-10 rounded-lg translate-y-3 scale-90 relative"
+          class="invisible relative mx-10 block translate-y-3 scale-90 cursor-crosshair rounded-lg bg-gradient-to-bl from-yellow-400 to-orange-300 px-5 py-2 text-center text-sm font-semibold opacity-0 shadow ring-4 shadow-amber-200 ring-white/20 transition duration-300 hover:scale-105"
         >
         </div>
       </div>
 
-        <p class="text-white/70">
-          Aquí mostrar la tabla con las participaciones actuales del usuario
-        </p>
-      )}
+      <p class="text-white/70">
+        Aquí mostrar la tabla con las participaciones actuales del usuario
+      </p>
     </main>
-
-    </div>
+  </div>
 </Layout>
