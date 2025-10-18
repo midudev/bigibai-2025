@@ -89,11 +89,13 @@ description ??= defaultDescription;
     />
   </head>
   <body>
-    <div id="background-mask" class="min-h-screen w-full">
-      <GradientOverlay />
-      <Snowballs />
-      <div class="relative z-2">
-        <slot />
+    <div class="overflow-hidden">
+      <div id="background-mask" class="min-h-screen w-full">
+        <GradientOverlay />
+        <Snowballs />
+        <div class="relative z-2">
+          <slot />
+        </div>
       </div>
     </div>
   </body>
@@ -140,7 +142,7 @@ description ??= defaultDescription;
 
 <script>
   const backgroundMask = document.getElementById(
-    "background-mask",
+    "background-mask"
   ) as HTMLDivElement;
 
   document.addEventListener("DOMContentLoaded", () => {
