@@ -1,5 +1,6 @@
 ---
 interface Props {
+  class?: string
   src?: string
   alt?: string
   size?: "sm" | "md" | "lg"
@@ -7,6 +8,7 @@ interface Props {
 }
 
 const {
+  class: className = "",
   src,
   alt = "Avatar",
   size = "md",
@@ -23,7 +25,7 @@ const dimension = sizeMap[size] ?? sizeMap.md
 ---
 
 <span
-  class="avatar"
+  class:list={["avatar", className]}
   style={`--avatar-size: ${dimension}px`}
   aria-hidden={src ? "true" : "false"}
 >
