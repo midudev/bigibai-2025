@@ -16,7 +16,7 @@ if (!user) {
 // Obtener el número de cupones validados por el usuario
 const { data: userCoupons, error: couponsError } = await supabase
   .from("coupons")
-  .select("id")
+  .select("used_at")
   .eq("used_by", user.id)
   .eq("is_used", true)
 
