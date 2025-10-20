@@ -2,11 +2,15 @@
 import Avatar from "@/components/Avatar.astro"
 import Button from "@/components/Button.astro"
 import { supabase } from "@/supabase"
+import { supabaseAdmin } from "@/supabase-admin"
+import TicketIcon from "@/icons/ticket.svg"
 
 // get session from supabase
 const userResponse = await supabase.auth.getUser()
 
 const user = userResponse?.data?.user
+
+console.log(user)
 
 const rawDisplayName =
   user?.user_metadata?.full_name ??
@@ -26,29 +30,33 @@ const avatarUrl =
   user?.user_metadata?.picture ??
   user?.user_metadata?.avatar ??
   null
+
+// Obtener el número de participaciones del usuario
+let participationCount = 0
+if (user) {
+  const { data: coupons } = await supabaseAdmin
+    .from("coupons")
+    .select("id")
+    .eq("used_by", user.id)
+    .eq("is_used", true)
+
+  console.log({ coupons })
+
+  participationCount = coupons?.length || 0
+}
+
+// Verificar la página actual
+const currentPath = Astro.url.pathname
+const isRegistroPage = currentPath === "/registro"
 ---
 
-<header class="pt-24 overflow-hidden pb-5" aria-label="Big Ibai">
+<header class="overflow-hidden pt-24 pb-5" aria-label="Big Ibai">
   <!-- Barra superior con botón de login y contador -->
   <div class="absolute top-4 right-4 z-20">
     <div id="header-auth-section" class="flex items-center gap-3">
-      <!-- Contador de participaciones (solo visible con sesión) -->
-      <div id="participation-counter" class="hidden">
-        <div
-          class="bg-brand/20 backdrop-blur-lg border border-brand/50 rounded-lg px-3 py-2"
-        >
-          <span
-            id="participation-text"
-            class="text-brand font-semibold text-sm"
-          >
-            <!-- Se llenará dinámicamente -->
-          </span>
-        </div>
-      </div>
-
-      <!-- Botón de login (solo visible sin sesión) -->
+      <!-- Botón de login (solo visible sin sesión y fuera de /registro) -->
       {
-        !user && (
+        !user && !isRegistroPage && (
           <a href="/registro">
             <Button id="header-login-btn" variant="brand" size="sm">
               Iniciar sesión
@@ -59,19 +67,39 @@ const avatarUrl =
 
       {
         user && (
-          <div class="flex items-center gap-2">
-            <Avatar
-              src={avatarUrl ?? undefined}
-              alt={displayName}
-              size="sm"
-              fallback={fallbackInitial}
-            />
-            <form action="/api/auth/signout" method="post">
+          <div class="flex items-center gap-3">
+            <a
+              id="participation-badge"
+              href="/dashboard"
+              aria-describedby="participation-tooltip"
+              class="group flex items-center gap-3 rounded-full bg-black/50 px-2 py-1 backdrop-blur-lg transition-all duration-300 hover:bg-black/70 active:scale-90"
+            >
+              <Avatar
+                src={avatarUrl ?? undefined}
+                alt={displayName}
+                size="sm"
+                fallback={fallbackInitial}
+                class="transition-transform duration-300 group-hover:scale-105"
+              />
+              <div class="relative flex items-center justify-center px-2">
+                <TicketIcon class="text-brand absolute h-8 w-8 opacity-20 transition-transform group-hover:scale-110" />
+                <span class="text-brand relative z-10 text-sm font-bold transition-colors group-hover:text-white">
+                  {participationCount}
+                </span>
+              </div>
+            </a>
+            <div id="participation-tooltip" role="tooltip">
+              {participationCount === 1
+                ? "1 participación"
+                : `${participationCount} participaciones`}
+              <div id="tooltip-arrow" />
+            </div>
+            <form action="/api/auth/signout" method="post" data-astro-reload>
               <Button
                 id="header-logout-btn"
                 variant="ghost"
-                size="sm"
-                class="hidden text-white/70 hover:text-white"
+                size="md"
+                class="text-white/70 hover:text-white"
                 type="submit"
               >
                 Cerrar sesión
@@ -83,14 +111,14 @@ const avatarUrl =
     </div>
   </div>
 
-  <div class="relative logo-container">
+  <div class="logo-container relative">
     <img
-      class="max-w-xl mx-auto px-4 md:px-0 relative z-10 logo-main"
+      class="logo-main relative z-10 mx-auto max-w-xl px-4 md:px-0"
       src="/logo-a.svg"
       alt="bigibai logo"
     />
     <img
-      class="inline-block absolute top-0 left-0 blur-sm w-full h-full opacity-50 -z-10 pulse select-none"
+      class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
       src="/logo-a.svg"
       alt="bigibai logo"
     />
@@ -191,4 +219,105 @@ const avatarUrl =
   .fade-in-up {
     animation: fadeInUp 0.3s ease-out;
   }
+
+  #participation-tooltip {
+    display: none;
+    width: max-content;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #222;
+    color: white;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  #tooltip-arrow {
+    position: absolute;
+    background: #222;
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+  }
 </style>
+
+<script>
+  import { computePosition, flip, shift, offset, arrow } from "@floating-ui/dom"
+
+  console.log("hola")
+
+  const badge = document.getElementById("participation-badge")
+  const tooltip = document.getElementById("participation-tooltip")
+  const arrowElement = document.getElementById("tooltip-arrow")
+
+  console.log({
+    badge,
+    tooltip,
+    arrowElement,
+  })
+
+  if (badge && tooltip && arrowElement) {
+    function updateTooltip() {
+      if (!badge || !tooltip || !arrowElement) return
+
+      computePosition(badge, tooltip, {
+        placement: "bottom",
+        middleware: [
+          offset(8),
+          flip(),
+          shift({ padding: 5 }),
+          arrow({ element: arrowElement }),
+        ],
+      }).then(({ x, y, placement, middlewareData }) => {
+        if (!tooltip || !arrowElement) return
+
+        Object.assign(tooltip.style, {
+          left: `${x}px`,
+          top: `${y}px`,
+        })
+
+        const { x: arrowX, y: arrowY } = middlewareData.arrow || {}
+
+        const staticSide = {
+          top: "bottom",
+          right: "left",
+          bottom: "top",
+          left: "right",
+        }[placement.split("-")[0]]
+
+        Object.assign(arrowElement.style, {
+          left: arrowX != null ? `${arrowX}px` : "",
+          top: arrowY != null ? `${arrowY}px` : "",
+          right: "",
+          bottom: "",
+          [staticSide as string]: "-4px",
+        })
+      })
+    }
+
+    function showTooltip() {
+      if (!tooltip) return
+      tooltip.style.display = "block"
+      updateTooltip()
+    }
+
+    function hideTooltip() {
+      if (!tooltip) return
+      tooltip.style.display = "none"
+    }
+
+    ;[
+      ["mouseenter", showTooltip],
+      ["mouseleave", hideTooltip],
+      ["focus", showTooltip],
+      ["blur", hideTooltip],
+    ].forEach(([event, listener]) => {
+      badge.addEventListener(event as string, listener as EventListener)
+    })
+  }
+</script>
