@@ -57,13 +57,27 @@ export const server = {
               "guerrillamail.com",
               "mailinator.com",
               "yopmail.com",
+              "temp-mail.org",
+              "disposablemail.com",
+              "sharklasers.com",
+              "emailondeck.com",
+              "tempinbox.com",
+              "dispostable.com",
+              "tempmailaddress.com",
+              "fake-email.com",
+              "temporary-mail.net",
+              "tmpmail.org",
+              "trashmail.com",
+              "wegwerfmail.de",
+              "mohmal.com",
+              "tempmail.ninja"
             ];
             const domain = email.split("@")[1];
             return !disposable.includes(domain);
           },
           { message: "Por favor, usa un email permanente" }
         ),
-    }),
+          }),
     // Se aplica rate limit compuesto y se devuelve 429 explícito al bloquear.
     async handler({ email }, ctx) {
       // Sanitización adicional en el servidor
