@@ -4,15 +4,17 @@ import Header from "@/sections/Header.astro"
 import Footer from "@/sections/Footer.astro"
 import Button from "@/components/Button.astro"
 
-import GoogleIcon from '@/icons/google.svg'
+import GoogleIcon from "@/icons/google.svg"
 
 import { supabase } from "@/supabase"
 
-const { data: { user } } = await supabase.auth.getUser()
+const {
+  data: { user },
+} = await supabase.auth.getUser()
 
 // si el usuario está logueado, redirigir a la página de dashboard
 if (user) {
-  return Astro.redirect('/dashboard')
+  return Astro.redirect("/dashboard")
 }
 ---
 
@@ -20,300 +22,435 @@ if (user) {
   <div class="flex min-h-screen flex-col">
     <Header />
 
-    <main class="flex-1 flex items-center justify-center px-4 py-8">
-      <div class="w-full max-w-md mx-auto">
+    <main class="flex flex-1 items-center justify-center px-4 py-8">
+      <div class="mx-auto w-full max-w-md">
         <!-- Estado sin sesión: Opciones de login -->
         {
           !user && (
             <div id="login-section" class="space-y-6">
               <div class="text-center">
-              <h1 class="text-3xl text-white mb-2 text-balance">Inicia sesión para validar tus cupones</h1>
-              
-          </div>
+                <h1 class="mb-2 text-3xl text-balance text-white">
+                  Inicia sesión para validar tus cupones
+                </h1>
+              </div>
 
-          <form action="/api/auth/signin" method="post" class="w-full" data-astro-reload>
-            <Button
-              id="google-login-btn"
-              variant="brand"
-              size="lg"
-              class="w-full justify-center gap-3"
-              value="google"
-              name="provider"
-              type="submit"
-            >
-              <GoogleIcon class="w-5 h-5" />
-              Continuar con Google
-            </Button>
-          </form>
+              <form
+                action="/api/auth/signin"
+                method="post"
+                class="w-full"
+                data-astro-reload
+              >
+                <Button
+                  id="google-login-btn"
+                  variant="brand"
+                  size="lg"
+                  class="w-full justify-center gap-3"
+                  value="google"
+                  name="provider"
+                  type="submit"
+                >
+                  <GoogleIcon class="h-5 w-5" />
+                  Continuar con Google
+                </Button>
+              </form>
 
-          <!-- Separador -->
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-white/20"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-black text-white/70">o</span>
-            </div>
-          </div>
+              <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                  <div class="w-full border-t border-white/20" />
+                </div>
+                <div class="relative flex justify-center text-sm">
+                  <span class="bg-black px-2 text-white/70">o</span>
+                </div>
+              </div>
 
-          <!-- Formulario Magic Link -->
-          <form id="magic-link-form" class="space-y-4">
-            <div>
-              <label for="email" class="sr-only">Correo electrónico</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                autocomplete="email"
-                inputmode="email"
-                placeholder="tu@email.com"
-                class="w-full px-4 py-3 rounded-lg bg-black/50 border border-brand/50 backdrop-blur-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
-              />
+              <form id="magic-link-form" class="space-y-4">
+                <div>
+                  <label for="email" class="sr-only">
+                    Correo electrónico
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                    inputmode="email"
+                    placeholder="tu@email.com"
+                    class="border-brand/50 focus:ring-brand w-full rounded-lg border bg-black/50 px-4 py-3 text-white backdrop-blur-lg transition-all placeholder:text-white/50 focus:border-transparent focus:ring-2 focus:outline-none"
+                  />
+                </div>
+                <Button
+                  id="magic-link-btn"
+                  type="submit"
+                  variant="secondary"
+                  size="lg"
+                  class="w-full"
+                >
+                  <span id="magic-link-text">Enviar enlace mágico</span>
+                  <svg
+                    id="magic-link-spinner"
+                    class="animate-spin-clockwise mx-auto hidden h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    />
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                </Button>
+
+                <div
+                  id="message"
+                  class="invisible translate-y-2 scale-95 rounded-lg bg-gradient-to-r p-3 text-center text-sm font-medium opacity-0 transition-all duration-300"
+                />
+              </form>
             </div>
-            <Button type="submit" variant="secondary" size="lg" class="w-full">
-              Enviar enlace mágico
-            </Button>
-          </form>
-        </div>
-        )
+          )
         }
-        
+      </div>
 
+      <Footer />
     </main>
-
-    <Footer />
   </div>
-</Layout>
 
-<style>
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
+  <style>
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
-    to {
-      transform: rotate(360deg);
+
+    @keyframes shimmer {
+      0% {
+        background-position: 0% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
     }
-  }
 
-  @keyframes shimmer {
-    0% {
-      background-position: 0% 0;
+    @keyframes shake {
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+      25% {
+        transform: translateX(-5px);
+      }
+      75% {
+        transform: translateX(5px);
+      }
     }
-    100% {
-      background-position: -200% 0;
+
+    @keyframes bounce-in {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-20px);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+      70% {
+        transform: scale(0.95);
+      }
+      100% {
+        transform: scale(1) translateY(0);
+      }
     }
-  }
 
-  @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(248, 177, 52, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(248, 177, 52, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(248, 177, 52, 0);
+      }
     }
-    25% {
-      transform: translateX(-5px);
+
+    .spinner {
+      animation: spin 1s linear infinite;
     }
-    75% {
-      transform: translateX(5px);
+
+    .submit-button {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(
+        90deg,
+        #f8b134 25%,
+        #ffd700 50%,
+        #f8b134 75%
+      ) !important;
+      background-size: 300% 100% !important;
+      animation: shimmer 3s linear infinite;
     }
-  }
 
-  @keyframes bounce-in {
-    0% {
-      opacity: 0;
-      transform: scale(0.3) translateY(-20px);
+    .submit-button:hover {
+      animation: shimmer 1.5s linear infinite;
     }
-    50% {
-      opacity: 1;
-      transform: scale(1.05);
+
+    .submit-button:active {
+      animation: none;
     }
-    70% {
-      transform: scale(0.95);
+
+    .error-shake {
+      animation: shake 0.5s ease-in-out;
     }
-    100% {
-      transform: scale(1) translateY(0);
+
+    .success-bounce {
+      animation: bounce-in 0.6s ease-out;
     }
-  }
 
-  @keyframes pulse-ring {
-    0% {
-      box-shadow: 0 0 0 0 rgba(248, 177, 52, 0.7);
+    .pulse-effect {
+      animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
     }
-    70% {
-      box-shadow: 0 0 0 10px rgba(248, 177, 52, 0);
+
+    .message-container {
+      transition: all 0.3s ease;
+      min-height: 24px;
     }
-    100% {
-      box-shadow: 0 0 0 0 rgba(248, 177, 52, 0);
+  </style>
+
+  <script>
+    import { supabase } from "@/supabase"
+    import { actions, isInputError } from "astro:actions"
+    import { throwConfetti } from "@/utils/confetti"
+
+    // Elementos del DOM
+    const magicLinkForm = document.getElementById(
+      "magic-link-form"
+    ) as HTMLFormElement
+    const magicLinkBtn = document.getElementById(
+      "magic-link-btn"
+    ) as HTMLButtonElement
+    const magicLinkText = document.getElementById(
+      "magic-link-text"
+    ) as HTMLSpanElement
+    const magicLinkSpinner = document.getElementById(
+      "magic-link-spinner"
+    ) as HTMLElement
+    const message = document.getElementById("message") as HTMLDivElement
+
+    let currentUser: any = null
+
+    // Función para mostrar mensajes
+    function showMessage(text: string, isError = false) {
+      message.textContent = text
+      message.classList.remove("invisible")
+      message.classList.add("opacity-100")
+      message.classList.add("translate-y-0")
+      message.classList.add("scale-100")
+
+      if (isError) {
+        message.classList.remove(
+          "from-yellow-400",
+          "to-orange-300",
+          "shadow",
+          "shadow-amber-200"
+        )
+        message.classList.add(
+          "from-red-400",
+          "to-pink-600",
+          "shadow",
+          "shadow-pink-400",
+          "text-white"
+        )
+      } else {
+        message.classList.remove(
+          "from-red-400",
+          "to-pink-600",
+          "shadow",
+          "shadow-pink-400",
+          "text-white"
+        )
+        message.classList.add(
+          "from-yellow-400",
+          "to-orange-300",
+          "shadow",
+          "shadow-amber-200",
+          "text-black"
+        )
+      }
     }
-  }
 
-  .spinner {
-    animation: spin 1s linear infinite;
-  }
-
-  .submit-button {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(
-      90deg,
-      #f8b134 25%,
-      #ffd700 50%,
-      #f8b134 75%
-    ) !important;
-    background-size: 300% 100% !important;
-    animation: shimmer 3s linear infinite;
-  }
-
-  .submit-button:hover {
-    animation: shimmer 1.5s linear infinite;
-  }
-
-  .submit-button:active {
-    animation: none;
-  }
-
-  .error-shake {
-    animation: shake 0.5s ease-in-out;
-  }
-
-  .success-bounce {
-    animation: bounce-in 0.6s ease-out;
-  }
-
-  .pulse-effect {
-    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  }
-
-  .message-container {
-    transition: all 0.3s ease;
-    min-height: 24px;
-  }
-</style>
-
-<script>
-  import { supabase } from "@/supabase"
-  import { actions, isInputError } from "astro:actions"
-  import { throwConfetti } from "@/utils/confetti"
-
-  // Elementos del DOM
-  const magicLinkForm = document.getElementById(
-    "magic-link-form"
-  ) as HTMLFormElement
-  const message = document.getElementById("message") as HTMLDivElement
-
-  let currentUser: any = null
-
-  // Función para mostrar mensajes
-  function showMessage(text: string, isError = false) {
-    message.textContent = text
-    message.classList.remove("invisible")
-    message.classList.add("opacity-100")
-    message.classList.add("translate-y-0")
-    message.classList.add("scale-100")
-
-    if (isError) {
-      message.classList.remove(
-        "from-yellow-400",
-        "to-orange-300",
-        "shadow",
-        "shadow-amber-200"
-      )
-      message.classList.add(
-        "from-red-400",
-        "to-pink-600",
-        "shadow",
-        "shadow-pink-400",
-        "text-white"
-      )
-    } else {
-      message.classList.remove(
-        "from-red-400",
-        "to-pink-600",
-        "shadow",
-        "shadow-pink-400",
-        "text-white"
-      )
-      message.classList.add(
-        "from-yellow-400",
-        "to-orange-300",
-        "shadow",
-        "shadow-amber-200",
-        "text-black"
-      )
+    // Función para ocultar mensajes
+    function hideMessage() {
+      message.classList.add("invisible")
+      message.classList.remove("opacity-100", "translate-y-0", "scale-100")
     }
-  }
 
-  // Función para ocultar mensajes
-  function hideMessage() {
-    message.classList.add("invisible")
-    message.classList.remove("opacity-100", "translate-y-0", "scale-100")
-  }
+    // Función para mostrar/ocultar el spinner del botón
+    function setLoading(loading: boolean) {
+      if (loading) {
+        magicLinkBtn.disabled = true
+        magicLinkText.classList.add("hidden")
+        magicLinkSpinner.classList.remove("hidden")
+      } else {
+        magicLinkBtn.disabled = false
+        magicLinkText.classList.remove("hidden")
+        magicLinkSpinner.classList.add("hidden")
+      }
+    }
 
-  // Función para enviar Magic Link
-  async function sendMagicLink(email: string) {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/registro`,
-        },
-      })
+    // Función para enviar Magic Link
+    async function sendMagicLink(email: string) {
+      setLoading(true)
+      hideMessage()
+
+      try {
+        const { data, error } = await actions.sendMagicLink({ email })
+
+        if (error) {
+          // Manejar errores específicos
+          if (isInputError(error)) {
+            const firstError = Object.values(error.fields)[0]?.[0]
+            showMessage(firstError || "Error en el formato del email", true)
+          } else if (error.code === "TOO_MANY_REQUESTS") {
+            showMessage(error.message, true)
+          } else {
+            showMessage(
+              "Error al enviar el enlace mágico. Inténtalo más tarde.",
+              true
+            )
+          }
+        } else if (data) {
+          showMessage(data.message)
+          // Limpiar el formulario después del éxito
+          magicLinkForm.reset()
+        }
+      } catch (error) {
+        console.error("[MAGIC_LINK_CLIENT_ERROR]", error)
+        showMessage("Error inesperado. Por favor, inténtalo de nuevo.", true)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    magicLinkForm.addEventListener("submit", async (e) => {
+      e.preventDefault()
+      const formData = new FormData(magicLinkForm)
+      const email = formData.get("email") as string
+
+      if (email) {
+        await sendMagicLink(email)
+      }
+    })
+
+    // Función para manejar el código del magic link
+    async function handleMagicLinkCallback() {
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get("code")
+
+      if (!code) return
+
+      try {
+        showMessage("Iniciando sesión...", false)
+
+        // Intercambiar el código por una sesión
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (error) {
+          console.error("[MAGIC_LINK_EXCHANGE_ERROR]", error)
+          showMessage(
+            "Error al iniciar sesión. El enlace puede haber expirado.",
+            true
+          )
+
+          // Limpiar la URL
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          )
+          return
+        }
+
+        if (data?.session) {
+          showMessage("¡Sesión iniciada correctamente! Redirigiendo...", false)
+
+          // Limpiar la URL antes de redirigir
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          )
+
+          // Redirigir al dashboard después de un breve delay
+          setTimeout(() => {
+            window.location.href = "/dashboard"
+          }, 1000)
+        }
+      } catch (error) {
+        console.error("[MAGIC_LINK_CALLBACK_ERROR]", error)
+        showMessage("Error inesperado al iniciar sesión.", true)
+
+        // Limpiar la URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        )
+      }
+    }
+
+    // Función para manejar errores de URL
+    function handleUrlErrors() {
+      const urlParams = new URLSearchParams(window.location.search)
+      const error = urlParams.get("error")
 
       if (error) {
-        showMessage("Error al enviar el enlace mágico", true)
-      } else {
-        showMessage(
-          "¡Revisa tu email! Te hemos enviado un enlace para iniciar sesión"
+        switch (error) {
+          case "auth_failed":
+            showMessage(
+              "Error al autenticar. Por favor, inténtalo de nuevo.",
+              true
+            )
+            break
+          case "no_code":
+            showMessage(
+              "Error en el proceso de autenticación. Por favor, inténtalo de nuevo.",
+              true
+            )
+            break
+          default:
+            showMessage(
+              "Ha ocurrido un error. Por favor, inténtalo de nuevo.",
+              true
+            )
+        }
+
+        // Limpiar la URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
         )
       }
-    } catch (error) {
-      showMessage("Error al enviar el enlace mágico", true)
     }
-  }
 
-  magicLinkForm.addEventListener("submit", async (e) => {
-    e.preventDefault()
-    const formData = new FormData(magicLinkForm)
-    const email = formData.get("email") as string
+    // Inicializar la UI
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Primero verificar si hay un código de magic link
+      await handleMagicLinkCallback()
 
-    if (email) {
-      await sendMagicLink(email)
-    }
-  })
-
-  // Función para manejar errores de URL
-  function handleUrlErrors() {
-    const urlParams = new URLSearchParams(window.location.search)
-    const error = urlParams.get("error")
-
-    if (error) {
-      switch (error) {
-        case "auth_failed":
-          showMessage(
-            "Error al autenticar. Por favor, inténtalo de nuevo.",
-            true
-          )
-          break
-        case "no_code":
-          showMessage(
-            "Error en el proceso de autenticación. Por favor, inténtalo de nuevo.",
-            true
-          )
-          break
-        default:
-          showMessage(
-            "Ha ocurrido un error. Por favor, inténtalo de nuevo.",
-            true
-          )
-      }
-
-      // Limpiar la URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-  }
-
-  // Inicializar la UI
-  document.addEventListener("DOMContentLoaded", async () => {
-    handleUrlErrors()
-  })
-</script>
+      // Luego manejar otros errores
+      handleUrlErrors()
+    })
+  </script>
+</Layout>
