@@ -11,15 +11,10 @@ En cumplimiento del deber de información establecido en el artículo 10 de la L
 Los datos identificativos y de contacto con los titulares del sitio web https://bigibai.com son los siguientes:
 
 Titular: Salad Brands, S.L.
-<br>
 Registro Mercantil de Barcelona, número de inscripción 1, Tomo 49198, folio 1, hoja 611184
-<br>
 Domicilio principal: Calle Sagués, 27
-<br>
 08021 – Barcelona
-<br>
 CIF/NIF: B70835202
-<br>
 Dirección de correo electrónico de contacto: [**dataprotection@bigibai.com**](mailto:dataprotection@bigibai.com)
 
 ### 2. Objeto y ámbito de aplicación
