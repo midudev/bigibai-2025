@@ -3,16 +3,16 @@ interface Props {
   class?: string
   src?: string
   alt?: string
-  size?: "sm" | "md" | "lg"
+  size?: 'sm' | 'md' | 'lg'
   fallback?: string
 }
 
 const {
-  class: className = "",
+  class: className = '',
   src,
-  alt = "Avatar",
-  size = "md",
-  fallback = "?",
+  alt = 'Avatar',
+  size = 'md',
+  fallback = '?',
 } = Astro.props as Props
 
 const sizeMap = {
@@ -25,9 +25,9 @@ const dimension = sizeMap[size] ?? sizeMap.md
 ---
 
 <span
-  class:list={["avatar", className]}
+  class:list={['avatar', className]}
   style={`--avatar-size: ${dimension}px`}
-  aria-hidden={src ? "true" : "false"}
+  aria-hidden={src ? 'true' : 'false'}
 >
   {
     src ? (
@@ -37,6 +37,7 @@ const dimension = sizeMap[size] ?? sizeMap.md
         width={dimension}
         height={dimension}
         loading="lazy"
+        onerror="this.onerror=null; this.src='/fallback-avatar.webp'"
       />
     ) : (
       <span class="avatar-fallback" aria-label={alt}>
@@ -55,11 +56,7 @@ const dimension = sizeMap[size] ?? sizeMap.md
     justify-content: center;
     border-radius: 9999px;
     overflow: hidden;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.08),
-      rgba(255, 255, 255, 0.02)
-    );
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
   }
 
