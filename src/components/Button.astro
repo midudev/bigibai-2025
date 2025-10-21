@@ -6,6 +6,8 @@ export interface Props {
   type?: "button" | "submit" | "reset"
   disabled?: boolean
   id?: string
+  name?: string
+  value?: string
 }
 
 const {
@@ -14,20 +16,22 @@ const {
   class: className = "",
   type = "button",
   disabled = false,
+  value,
+  name,
   ...rest
 } = Astro.props
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed whitespace-nowrap hover:scale-[1.03] active:scale-[0.97] active:border-b-0 disabled:hover:scale-100 rounded-lg text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 transition-[background-color,transform] duration-150 ease-out"
+  "inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed whitespace-nowrap hover:scale-[1.03] active:scale-[0.97] active:border-b-0 disabled:hover:scale-100 rounded-lg text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 transition-[background-color,transform] duration-150 ease-out"
 
 const variantClasses = {
   brand:
-    "inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 from-brand to-brand/85 text-black shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter] hover:brightness-110 active:brightness-90",
+    "inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 from-brand to-brand/85 text-black shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter,transform] hover:brightness-110 active:brightness-90",
   secondary:
     "border-zinc-900 bg-zinc-900/75 text-white hover:bg-zinc-900/85 border border-b-2 shadow-md shadow-zinc-950/20 ring ring-inset ring-white/15 hover:brightness-110",
   ghost: "text-brand hover:bg-brand/10",
   destructive:
-    "from-destructive to-destructive/85 text-destructive-foreground inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter] hover:brightness-110 active:brightness-90",
+    "from-destructive to-destructive/85 text-destructive-foreground inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter,transform] hover:brightness-110 active:brightness-90",
 }
 
 const sizeClasses = {
@@ -46,6 +50,13 @@ const classes = [
   .join(" ")
 ---
 
-<button type={type} class={classes} disabled={disabled} {...rest}>
+<button
+  type={type}
+  class={classes}
+  disabled={disabled}
+  value={value}
+  name={name}
+  {...rest}
+>
   <slot />
 </button>

@@ -1,0 +1,351 @@
+---
+import Button from '@/components/Button.astro'
+---
+
+<form id="coupon-form" class="space-y-6">
+  <div>
+    <label class="sr-only">Código del cupón</label>
+
+    <!-- Input oculto para enviar el valor del formulario -->
+    <input type="hidden" id="coupon-value" name="coupon" required />
+
+    <!-- Contenedor de los inputs tipo OTP -->
+    <div class="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
+      <!-- Primer grupo: XXXX -->
+      <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="0">
+        <input
+          type="text"
+          maxlength="1"
+          data-index="0"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="1"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="2"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="3"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+      </div>
+
+      <!-- Separador -->
+      <div class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl">-</div>
+
+      <!-- Segundo grupo: XXXX -->
+      <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="1">
+        <input
+          type="text"
+          maxlength="1"
+          data-index="4"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="5"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="6"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="7"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+      </div>
+
+      <!-- Separador -->
+      <div class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl">-</div>
+
+      <!-- Tercer grupo: XXXX -->
+      <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="2">
+        <input
+          type="text"
+          maxlength="1"
+          data-index="8"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="9"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="10"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          data-index="11"
+          autocomplete="off"
+          spellcheck="false"
+          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
+        />
+      </div>
+    </div>
+
+    <p class="mt-4 text-center text-xs text-white/50">
+      No hace falta introducir el guión, se añadirá automáticamente
+    </p>
+  </div>
+
+  <div class="mx-auto w-full max-w-xl">
+    <Button type="submit" variant="brand" size="lg" class="w-full"> Validar cupón </Button>
+  </div>
+</form>
+
+<script>
+  import { throwConfetti } from '@/utils/confetti'
+
+  document.addEventListener('astro:page-load', () => {
+    const couponInputs = document.querySelectorAll('.coupon-input') as NodeListOf<HTMLInputElement>
+    const hiddenInput = document.getElementById('coupon-value') as HTMLInputElement
+    const headerParticipationCount = document.getElementById(
+      'header-participation-count'
+    ) as HTMLDivElement
+
+    // Función para actualizar el valor oculto
+    function updateHiddenInput() {
+      const values = Array.from(couponInputs).map((input) => input.value)
+      const couponValue = `${values.slice(0, 4).join('')}-${values.slice(4, 8).join('')}-${values.slice(8, 12).join('')}`
+      hiddenInput.value = couponValue
+    }
+
+    // Manejar input en cada caja
+    couponInputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement
+        let value = target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+
+        // Solo permitir un carácter
+        if (value.length > 1) {
+          value = value[0]
+        }
+
+        target.value = value
+
+        // Si se ingresó un carácter, mover al siguiente input
+        if (value && index < couponInputs.length - 1) {
+          couponInputs[index + 1].focus()
+        }
+
+        updateHiddenInput()
+      })
+
+      // Manejar backspace
+      input.addEventListener('keydown', (e) => {
+        const target = e.target as HTMLInputElement
+
+        if (e.key === 'Backspace' && !target.value && index > 0) {
+          couponInputs[index - 1].focus()
+        }
+      })
+
+      // Manejar paste
+      input.addEventListener('paste', (e) => {
+        e.preventDefault()
+        const pastedData = e.clipboardData?.getData('text') || ''
+        const cleaned = pastedData.toUpperCase().replace(/[^A-Z0-9]/g, '')
+
+        // Distribuir los caracteres pegados en los inputs
+        cleaned.split('').forEach((char, i) => {
+          const targetIndex = index + i
+          if (targetIndex < couponInputs.length) {
+            couponInputs[targetIndex].value = char
+          }
+        })
+
+        // Mover el foco al siguiente input disponible
+        const nextIndex = Math.min(index + cleaned.length, couponInputs.length - 1)
+        couponInputs[nextIndex].focus()
+
+        updateHiddenInput()
+      })
+    })
+
+    // Focus en el primer input al cargar
+    if (couponInputs.length > 0) {
+      couponInputs[0].focus()
+    }
+
+    // Manejar el submit del formulario
+    const couponForm = document.getElementById('coupon-form') as HTMLFormElement
+    const messageContainer = document.getElementById('message') as HTMLDivElement
+
+    if (couponForm) {
+      couponForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+
+        const couponValue = hiddenInput.value.trim()
+
+        // Validar que el cupón esté completo
+        if (couponValue.length !== 14) {
+          // XXXX-XXXX-XXXX = 14 caracteres
+          showMessage('Por favor, completa todos los caracteres del cupón', true)
+          return
+        }
+
+        try {
+          // Importar actions dinámicamente
+          const { actions } = await import('astro:actions')
+
+          // Deshabilitar el botón durante la validación
+          const submitButton = couponForm.querySelector(
+            'button[type="submit"]'
+          ) as HTMLButtonElement
+          if (submitButton) {
+            submitButton.disabled = true
+            submitButton.textContent = 'Validando...'
+          }
+
+          // Llamar a la action
+          const { data, error } = await actions.validateCoupon({
+            coupon: couponValue,
+          })
+
+          if (error) {
+            showMessage(error.message || 'Error al validar el cupón', true)
+          } else if (data) {
+            showMessage(data.message || '¡Cupón validado correctamente!', false)
+            throwConfetti()
+
+            // Limpiar el formulario
+            couponInputs.forEach((input) => {
+              input.value = ''
+            })
+            hiddenInput.value = ''
+
+            // Focus en el primer input
+            if (couponInputs.length > 0) {
+              couponInputs[0].focus()
+            }
+
+            // Actualizar el contador de cupones si existe
+            const couponCount = document.getElementById('coupon-count')
+            if (couponCount && data.totalCoupons) {
+              couponCount.textContent = `Has validado ${data.totalCoupons} ${data.totalCoupons === 1 ? 'cupón' : 'cupones'}`
+            }
+
+            // Actualizar el contador en el header si existe
+            if (headerParticipationCount && data.totalCoupons) {
+              headerParticipationCount.textContent = data.totalCoupons.toString()
+            }
+          }
+
+          // Rehabilitar el botón
+          if (submitButton) {
+            submitButton.disabled = false
+            submitButton.textContent = 'Validar cupón'
+          }
+        } catch (error) {
+          console.error('Error al validar el cupón:', error)
+          showMessage('Error al validar el cupón. Por favor, inténtalo de nuevo.', true)
+
+          // Rehabilitar el botón
+          const submitButton = couponForm.querySelector(
+            'button[type="submit"]'
+          ) as HTMLButtonElement
+          if (submitButton) {
+            submitButton.disabled = false
+            submitButton.textContent = 'Validar cupón'
+          }
+        }
+      })
+    }
+
+    // Función para mostrar mensajes
+    function showMessage(text: string, isError = false) {
+      if (!messageContainer) return
+
+      messageContainer.textContent = text
+      messageContainer.classList.remove('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
+      messageContainer.classList.add('opacity-100', 'translate-y-0', 'scale-100')
+
+      if (isError) {
+        messageContainer.classList.remove(
+          'from-yellow-400',
+          'to-orange-300',
+          'shadow-amber-200',
+          'text-black'
+        )
+        messageContainer.classList.add(
+          'from-red-400',
+          'to-pink-600',
+          'shadow-pink-400',
+          'text-white'
+        )
+      } else {
+        messageContainer.classList.remove(
+          'from-red-400',
+          'to-pink-600',
+          'shadow-pink-400',
+          'text-white'
+        )
+        messageContainer.classList.add(
+          'from-yellow-400',
+          'to-orange-300',
+          'shadow-amber-200',
+          'text-black'
+        )
+      }
+
+      // Ocultar el mensaje después de 5 segundos
+      setTimeout(() => {
+        messageContainer.classList.add('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
+        messageContainer.classList.remove('opacity-100', 'translate-y-0', 'scale-100')
+      }, 5000)
+    }
+  })
+</script>
+
+<style>
+  .coupon-input:focus {
+    transform: scale(1.05);
+  }
+
+  .coupon-input::placeholder {
+    color: rgba(248, 177, 52, 0.3);
+  }
+</style>

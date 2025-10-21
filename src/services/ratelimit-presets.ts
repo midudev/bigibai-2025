@@ -69,17 +69,6 @@ export const RateLimitPresets = {
       limit: 15,
       windowMs: ONE_HOUR,
     }),
-
-  /**
-   * Rate limiting global para el servicio de newsletter
-   * Protege contra sobrecarga del sistema limitando a 500 suscripciones por hora
-   */
-  globalNewsletter: () =>
-    checkRateLimit({
-      identifier: "newsletter:global",
-      limit: 500,
-      windowMs: ONE_HOUR,
-    }),
 } as const;
 
 /**
