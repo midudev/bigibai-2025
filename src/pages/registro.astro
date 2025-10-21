@@ -6,12 +6,7 @@ import Button from '@/components/Button.astro'
 
 import GoogleIcon from '@/icons/google.svg'
 
-import { createSupabaseClient } from '@/supabase'
-const supabase = createSupabaseClient()
-
-const {
-  data: { user },
-} = await supabase.auth.getUser()
+const user = Astro.locals.user
 
 // si el usuario está logueado, redirigir a la página de dashboard
 if (user) {
@@ -226,11 +221,9 @@ if (!allowAccess) {
   </style>
 
   <script>
-    import { createSupabaseClient } from '@/supabase'
+    import { supabase } from '@/supabase'
     import { actions, isInputError } from 'astro:actions'
     import { throwConfetti } from '@/utils/confetti'
-
-    const supabase = createSupabaseClient()
 
     // Elementos del DOM
     const magicLinkForm = document.getElementById('magic-link-form') as HTMLFormElement

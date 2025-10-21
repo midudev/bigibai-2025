@@ -1,4 +1,4 @@
-import { createSupabaseClient } from '@/supabase'
+import { supabase } from '@/supabase'
 import { encrypt, hash } from '@/utils/crypto'
 
 const ERROR_CODE_ALREADY_EXISTS = '23505'
@@ -6,8 +6,6 @@ const ERROR_CODE_ALREADY_EXISTS = '23505'
 export const saveNewsletterEmail = async (email: string) => {
   // Hash para detectar duplicados (determinista)
   const emailHash = hash(email)
-
-  const supabase = createSupabaseClient()
 
   // Verificar si el email ya existe antes de insertar
   const { data: existing, error: checkError } = await supabase

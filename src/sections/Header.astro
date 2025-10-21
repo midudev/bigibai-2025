@@ -1,15 +1,10 @@
 ---
 import Avatar from '@/components/Avatar.astro'
 import Button from '@/components/Button.astro'
-import { createSupabaseClient } from '@/supabase'
 import { supabaseAdmin } from '@/supabase-admin'
 import TicketIcon from '@/icons/ticket.svg'
 
-// get session from supabase
-const supabase = createSupabaseClient()
-const userResponse = await supabase.auth.getUser()
-
-const user = userResponse?.data?.user
+const user = Astro.locals.user
 
 const rawDisplayName =
   user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? 'Usuario'

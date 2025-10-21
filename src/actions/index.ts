@@ -3,8 +3,8 @@ import { getRateLimitMessage } from '@/services/ratelimit'
 import { RateLimitPresets } from '@/services/ratelimit-presets'
 import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
-import { createSupabaseClient } from '@/supabase'
 import { supabaseAdmin } from '@/supabase-admin'
+import { createSupabaseAuthClient } from '@/supabase'
 import { hash } from '@/utils/crypto'
 import { emailSchema } from '@/validations/email'
 
@@ -135,7 +135,7 @@ export const server = {
       }
 
       try {
-        const supabase = createSupabaseClient()
+        const supabase = createSupabaseAuthClient()
         // Enviar el magic link usando Supabase Auth
         const { error } = await supabase.auth.signInWithOtp({
           email,
@@ -193,14 +193,9 @@ export const server = {
         .max(15, 'El código del cupón es demasiado largo'),
     }),
     async handler({ coupon }, ctx) {
-      const supabase = createSupabaseClient()
-      // check we have a user logged in before validating the coupon
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser()
+      const user = ctx.locals.user
 
-      if (authError || !user) {
+      if (!user) {
         throw new ActionError({
           code: 'UNAUTHORIZED',
           message: 'Debes iniciar sesión para validar cupones',

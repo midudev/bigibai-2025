@@ -3,22 +3,17 @@ import Layout from '@/layouts/Layout.astro'
 import CouponInput from '@/components/CouponInput.astro'
 import Header from '@/sections/Header.astro'
 
-import { createSupabaseClient } from '@/supabase'
+import { supabaseAdmin } from '@/supabase-admin'
 
-const supabase = createSupabaseClient()
-const {
-  data: { user },
-} = await supabase.auth.getUser()
-
-if (!user) {
+if (!Astro.locals.user) {
   return Astro.redirect('/registro')
 }
 
 // Obtener el número de cupones validados por el usuario
-const { data: userCoupons, error: couponsError } = await supabase
+const { data: userCoupons, error: couponsError } = await supabaseAdmin
   .from('coupons')
   .select('used_at')
-  .eq('used_by', user.id)
+  .eq('used_by', Astro.locals.user.id)
   .eq('is_used', true)
 
 const totalCoupons = userCoupons?.length || 0
