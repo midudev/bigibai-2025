@@ -221,9 +221,7 @@ if (!allowAccess) {
   </style>
 
   <script>
-    import { supabase } from '@/supabase'
     import { actions, isInputError } from 'astro:actions'
-    import { throwConfetti } from '@/utils/confetti'
 
     // Elementos del DOM
     const magicLinkForm = document.getElementById('magic-link-form') as HTMLFormElement
@@ -231,8 +229,6 @@ if (!allowAccess) {
     const magicLinkText = document.getElementById('magic-link-text') as HTMLSpanElement
     const magicLinkSpinner = document.getElementById('magic-link-spinner') as HTMLElement
     const message = document.getElementById('message') as HTMLDivElement
-
-    let currentUser: any = null
 
     // Función para mostrar mensajes
     function showMessage(text: string, isError = false) {
@@ -329,48 +325,6 @@ if (!allowAccess) {
       }
     })
 
-    // Función para manejar el código del magic link
-    async function handleMagicLinkCallback() {
-      const urlParams = new URLSearchParams(window.location.search)
-      const code = urlParams.get('code')
-
-      if (!code) return
-
-      try {
-        showMessage('Iniciando sesión...', false)
-
-        // Intercambiar el código por una sesión
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-        if (error) {
-          console.error('[MAGIC_LINK_EXCHANGE_ERROR]', error)
-          showMessage('Error al iniciar sesión. El enlace puede haber expirado.', true)
-
-          // Limpiar la URL
-          window.history.replaceState({}, document.title, window.location.pathname)
-          return
-        }
-
-        if (data?.session) {
-          showMessage('¡Sesión iniciada correctamente! Redirigiendo...', false)
-
-          // Limpiar la URL antes de redirigir
-          window.history.replaceState({}, document.title, window.location.pathname)
-
-          // Redirigir al dashboard después de un breve delay
-          setTimeout(() => {
-            window.location.href = '/dashboard'
-          }, 1000)
-        }
-      } catch (error) {
-        console.error('[MAGIC_LINK_CALLBACK_ERROR]', error)
-        showMessage('Error inesperado al iniciar sesión.', true)
-
-        // Limpiar la URL
-        window.history.replaceState({}, document.title, window.location.pathname)
-      }
-    }
-
     // Función para manejar errores de URL
     function handleUrlErrors() {
       const urlParams = new URLSearchParams(window.location.search)
@@ -398,9 +352,6 @@ if (!allowAccess) {
 
     // Inicializar la UI
     document.addEventListener('DOMContentLoaded', async () => {
-      // Primero verificar si hay un código de magic link
-      await handleMagicLinkCallback()
-
       // Luego manejar otros errores
       handleUrlErrors()
     })
