@@ -1,24 +1,25 @@
 ---
-import Layout from "@/layouts/Layout.astro"
-import CouponInput from "@/components/CouponInput.astro"
-import Header from "@/sections/Header.astro"
+import Layout from '@/layouts/Layout.astro'
+import CouponInput from '@/components/CouponInput.astro'
+import Header from '@/sections/Header.astro'
 
-import { supabase } from "@/supabase"
+import { createSupabaseClient } from '@/supabase'
 
+const supabase = createSupabaseClient()
 const {
   data: { user },
 } = await supabase.auth.getUser()
 
 if (!user) {
-  return Astro.redirect("/registro")
+  return Astro.redirect('/registro')
 }
 
 // Obtener el número de cupones validados por el usuario
 const { data: userCoupons, error: couponsError } = await supabase
-  .from("coupons")
-  .select("used_at")
-  .eq("used_by", user.id)
-  .eq("is_used", true)
+  .from('coupons')
+  .select('used_at')
+  .eq('used_by', user.id)
+  .eq('is_used', true)
 
 const totalCoupons = userCoupons?.length || 0
 ---
@@ -37,8 +38,7 @@ const totalCoupons = userCoupons?.length || 0
             {
               totalCoupons > 0 && (
                 <span>
-                  Has validado {totalCoupons}{" "}
-                  {totalCoupons === 1 ? "cupón" : "cupones"}
+                  Has validado {totalCoupons} {totalCoupons === 1 ? 'cupón' : 'cupones'}
                 </span>
               )
             }

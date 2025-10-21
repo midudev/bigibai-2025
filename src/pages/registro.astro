@@ -6,7 +6,8 @@ import Button from '@/components/Button.astro'
 
 import GoogleIcon from '@/icons/google.svg'
 
-import { supabase } from '@/supabase'
+import { createSupabaseClient } from '@/supabase'
+const supabase = createSupabaseClient()
 
 const {
   data: { user },
@@ -225,9 +226,11 @@ if (!allowAccess) {
   </style>
 
   <script>
-    import { supabase } from '@/supabase'
+    import { createSupabaseClient } from '@/supabase'
     import { actions, isInputError } from 'astro:actions'
     import { throwConfetti } from '@/utils/confetti'
+
+    const supabase = createSupabaseClient()
 
     // Elementos del DOM
     const magicLinkForm = document.getElementById('magic-link-form') as HTMLFormElement

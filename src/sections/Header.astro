@@ -1,11 +1,12 @@
 ---
 import Avatar from '@/components/Avatar.astro'
 import Button from '@/components/Button.astro'
-import { supabase } from '@/supabase'
+import { createSupabaseClient } from '@/supabase'
 import { supabaseAdmin } from '@/supabase-admin'
 import TicketIcon from '@/icons/ticket.svg'
 
 // get session from supabase
+const supabase = createSupabaseClient()
 const userResponse = await supabase.auth.getUser()
 
 const user = userResponse?.data?.user

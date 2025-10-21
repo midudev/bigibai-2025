@@ -1,4 +1,4 @@
-import { supabase } from '@/supabase'
+import { createSupabaseClient } from '@/supabase'
 import { type APIRoute } from 'astro'
 
 const allowedPaths = ['/dashboard', '/registro', '/']
@@ -8,6 +8,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const next = url.searchParams.get('next') || '/registro'
   const safePath = allowedPaths.includes(next) ? next : '/registro'
   const providerType = url.searchParams.get('type') || 'google'
+
+  const supabase = createSupabaseClient()
 
   if (!code) {
     return redirect('/registro?error=no_code')
