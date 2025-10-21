@@ -9,8 +9,6 @@ export const GET: APIRoute = async ({ request, url, cookies, redirect }) => {
   const safePath = allowedPaths.includes(next) ? next : '/registro'
   const providerType = url.searchParams.get('type') || 'google'
 
-  console.log({ code, next, safePath, providerType })
-
   if (!code) {
     return redirect('/registro?error=no_code')
   }
