@@ -1,9 +1,9 @@
 ---
-import Avatar from "@/components/Avatar.astro"
-import Button from "@/components/Button.astro"
-import { supabase } from "@/supabase"
-import { supabaseAdmin } from "@/supabase-admin"
-import TicketIcon from "@/icons/ticket.svg"
+import Avatar from '@/components/Avatar.astro'
+import Button from '@/components/Button.astro'
+import { supabase } from '@/supabase'
+import { supabaseAdmin } from '@/supabase-admin'
+import TicketIcon from '@/icons/ticket.svg'
 
 // get session from supabase
 const userResponse = await supabase.auth.getUser()
@@ -13,15 +13,12 @@ const user = userResponse?.data?.user
 console.log(user)
 
 const rawDisplayName =
-  user?.user_metadata?.full_name ??
-  user?.user_metadata?.name ??
-  user?.email ??
-  "Usuario"
+  user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? 'Usuario'
 
 const displayName =
-  typeof rawDisplayName === "string" && rawDisplayName.trim().length > 0
+  typeof rawDisplayName === 'string' && rawDisplayName.trim().length > 0
     ? rawDisplayName
-    : "Usuario"
+    : 'Usuario'
 
 const fallbackInitial = displayName.trim().charAt(0).toUpperCase()
 
@@ -35,10 +32,10 @@ const avatarUrl =
 let participationCount = 0
 if (user) {
   const { data: coupons } = await supabaseAdmin
-    .from("coupons")
-    .select("id")
-    .eq("used_by", user.id)
-    .eq("is_used", true)
+    .from('coupons')
+    .select('id')
+    .eq('used_by', user.id)
+    .eq('is_used', true)
 
   console.log({ coupons })
 
@@ -47,7 +44,7 @@ if (user) {
 
 // Verificar la página actual
 const currentPath = Astro.url.pathname
-const isRegistroPage = currentPath === "/registro"
+const isRegistroPage = currentPath === '/registro'
 ---
 
 <header class="overflow-hidden pt-24 pb-5" aria-label="Big Ibai">
@@ -83,14 +80,17 @@ const isRegistroPage = currentPath === "/registro"
               />
               <div class="relative flex items-center justify-center px-2">
                 <TicketIcon class="text-brand absolute h-8 w-8 opacity-20 transition-transform group-hover:scale-110" />
-                <span class="text-brand relative z-10 text-sm font-bold transition-colors group-hover:text-white">
+                <span
+                  id="header-participation-count"
+                  class="text-brand relative z-10 text-sm font-bold transition-colors group-hover:text-white"
+                >
                   {participationCount}
                 </span>
               </div>
             </a>
             <div id="participation-tooltip" role="tooltip">
               {participationCount === 1
-                ? "1 participación"
+                ? '1 participación'
                 : `${participationCount} participaciones`}
               <div id="tooltip-arrow" />
             </div>
@@ -194,11 +194,7 @@ const isRegistroPage = currentPath === "/registro"
     transform: translate(-50%, -50%);
     width: 60%;
     height: 60%;
-    background: radial-gradient(
-      circle,
-      rgba(248, 177, 52, 0.4) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle, rgba(248, 177, 52, 0.4) 0%, transparent 70%);
     filter: blur(40px);
     animation: glow 3s ease-in-out infinite;
     pointer-events: none;
