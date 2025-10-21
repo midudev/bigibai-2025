@@ -137,6 +137,8 @@ import Button from '@/components/Button.astro'
 </form>
 
 <script>
+  import { throwConfetti } from '@/utils/confetti'
+
   document.addEventListener('astro:page-load', () => {
     const couponInputs = document.querySelectorAll('.coupon-input') as NodeListOf<HTMLInputElement>
     const hiddenInput = document.getElementById('coupon-value') as HTMLInputElement
@@ -247,6 +249,7 @@ import Button from '@/components/Button.astro'
             showMessage(error.message || 'Error al validar el cupón', true)
           } else if (data) {
             showMessage(data.message || '¡Cupón validado correctamente!', false)
+            throwConfetti()
 
             // Limpiar el formulario
             couponInputs.forEach((input) => {
