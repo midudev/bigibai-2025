@@ -1,20 +1,18 @@
 ---
-import SubscribeForm from "@/newsletter/components/SubscribeForm.astro";
+import SubscribeForm from '@/newsletter/components/SubscribeForm.astro'
 ---
 
-<main
-  class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4"
->
+<main class="mx-auto flex max-w-4xl flex-col items-center justify-center gap-4 px-4 py-20">
   <p
-    class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up"
+    class="fade-in-up mb-10 text-center text-xl text-balance text-white/80"
     style="animation-delay: 0.2s;"
     aria-live="off"
   >
-    ¿Listos para celebrar las Navidades juntos de nuevo? Descubre la nueva
-    edición de Big Ibai y mucho más próximamente.
+    ¿Listos para celebrar las Navidades juntos de nuevo? Descubre la nueva edición de Big Ibai y
+    mucho más próximamente.
   </p>
   <h2
-    class="text-5xl font-normal text-white text-center fade-in-up"
+    class="fade-in-up text-shadow-title text-center text-5xl font-normal text-white"
     style="animation-delay: 0.4s;"
     role="contentinfo"
     aria-label="¿Quieres que te avisemos?"
@@ -24,18 +22,3 @@ import SubscribeForm from "@/newsletter/components/SubscribeForm.astro";
   <!--<p class="text-xl text-white/80 text-center text-balance mb-10"  aria-live="off">Unete a los mas de <span class="text-brand font-bold text-3xl newsletter-count"><span id="newsletter-count"></span> reals</span> que ya están suscritos.</p>-->
   <SubscribeForm />
 </main>
-
-<script>
-  import { actions } from "astro:actions";
-
-  const count = document.getElementById("newsletter-count");
-
-  const updateNewsletterCount = async () => {
-    const currentCount: any = await actions.getNewsletterCount();
-    if (count) {
-      count.textContent = currentCount.data.count.toLocaleString() || "1000";
-    }
-  };
-
-  updateNewsletterCount();
-</script>
