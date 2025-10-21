@@ -137,9 +137,9 @@ export const server = {
       try {
         // Enviar el magic link usando Supabase Auth
         const { error } = await supabase.auth.signInWithOtp({
-          email: email,
+          email,
           options: {
-            emailRedirectTo: `${ctx.url.origin}/registro`,
+            emailRedirectTo: `${ctx.url.origin}/api/auth/callback`,
           },
         });
 
