@@ -10,8 +10,6 @@ const userResponse = await supabase.auth.getUser()
 
 const user = userResponse?.data?.user
 
-console.log(user)
-
 const rawDisplayName =
   user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? 'Usuario'
 
@@ -89,9 +87,11 @@ const isRegistroPage = currentPath === '/registro'
               </div>
             </a>
             <div id="participation-tooltip" role="tooltip">
-              {participationCount === 1
-                ? '1 participación'
-                : `${participationCount} participaciones`}
+              {participationCount === 0
+                ? 'No tienes ninguna participación'
+                : participationCount === 1
+                  ? 'Tienes 1 participación'
+                  : `Tienes ${participationCount} participaciones`}
               <div id="tooltip-arrow" />
             </div>
             <form action="/api/auth/signout" method="post" data-astro-reload>
@@ -242,14 +242,14 @@ const isRegistroPage = currentPath === '/registro'
   }
 </style>
 
-<!-- <script>
-  import { computePosition, flip, shift, offset, arrow } from "@floating-ui/dom"
+<script>
+  import { computePosition, flip, shift, offset, arrow } from '@floating-ui/dom'
 
-  console.log("hola")
+  console.log('hola')
 
-  const badge = document.getElementById("participation-badge")
-  const tooltip = document.getElementById("participation-tooltip")
-  const arrowElement = document.getElementById("tooltip-arrow")
+  const badge = document.getElementById('participation-badge')
+  const tooltip = document.getElementById('participation-tooltip')
+  const arrowElement = document.getElementById('tooltip-arrow')
 
   console.log({
     badge,
@@ -262,13 +262,8 @@ const isRegistroPage = currentPath === '/registro'
       if (!badge || !tooltip || !arrowElement) return
 
       computePosition(badge, tooltip, {
-        placement: "bottom",
-        middleware: [
-          offset(8),
-          flip(),
-          shift({ padding: 5 }),
-          arrow({ element: arrowElement }),
-        ],
+        placement: 'bottom',
+        middleware: [offset(8), flip(), shift({ padding: 5 }), arrow({ element: arrowElement })],
       }).then(({ x, y, placement, middlewareData }) => {
         if (!tooltip || !arrowElement) return
 
@@ -280,40 +275,40 @@ const isRegistroPage = currentPath === '/registro'
         const { x: arrowX, y: arrowY } = middlewareData.arrow || {}
 
         const staticSide = {
-          top: "bottom",
-          right: "left",
-          bottom: "top",
-          left: "right",
-        }[placement.split("-")[0]]
+          top: 'bottom',
+          right: 'left',
+          bottom: 'top',
+          left: 'right',
+        }[placement.split('-')[0]]
 
         Object.assign(arrowElement.style, {
-          left: arrowX != null ? `${arrowX}px` : "",
-          top: arrowY != null ? `${arrowY}px` : "",
-          right: "",
-          bottom: "",
-          [staticSide as string]: "-4px",
+          left: arrowX != null ? `${arrowX}px` : '',
+          top: arrowY != null ? `${arrowY}px` : '',
+          right: '',
+          bottom: '',
+          [staticSide as string]: '-4px',
         })
       })
     }
 
     function showTooltip() {
       if (!tooltip) return
-      tooltip.style.display = "block"
+      tooltip.style.display = 'block'
       updateTooltip()
     }
 
     function hideTooltip() {
       if (!tooltip) return
-      tooltip.style.display = "none"
+      tooltip.style.display = 'none'
     }
 
     ;[
-      ["mouseenter", showTooltip],
-      ["mouseleave", hideTooltip],
-      ["focus", showTooltip],
-      ["blur", hideTooltip],
+      ['mouseenter', showTooltip],
+      ['mouseleave', hideTooltip],
+      ['focus', showTooltip],
+      ['blur', hideTooltip],
     ].forEach(([event, listener]) => {
       badge.addEventListener(event as string, listener as EventListener)
     })
   }
-</script> -->
+</script>
