@@ -1,0 +1,59 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import CouponInput from '@/components/CouponInput.astro'
+import Header from '@/sections/Header.astro'
+
+import { supabaseAdmin } from '@/supabase-admin'
+
+if (!Astro.locals.user) {
+  return Astro.redirect('/registro')
+}
+
+// Obtener el número de cupones validados por el usuario
+const { data: userCoupons, error: couponsError } = await supabaseAdmin
+  .from('coupons')
+  .select('used_at')
+  .eq('used_by', Astro.locals.user.id)
+  .eq('is_used', true)
+
+const totalCoupons = userCoupons?.length || 0
+---
+
+<Layout>
+  <div class="flex min-h-screen flex-col">
+    <Header participationCount={totalCoupons} />
+
+    <main class="flex flex-1 flex-col items-center justify-center px-4 py-8">
+      <div id="coupon-section" class="space-y-6">
+        <div class="text-center">
+          <h2 class="text-shadow-title text-3xl text-balance">
+            Introduce tu código de cupón para participar
+          </h2>
+          <div id="coupon-count" class="text-brand mt-4 text-lg font-semibold">
+            {
+              totalCoupons > 0 && (
+                <span>
+                  Has validado {totalCoupons} {totalCoupons === 1 ? 'cupón' : 'cupones'}
+                </span>
+              )
+            }
+          </div>
+        </div>
+
+        <CouponInput />
+      </div>
+
+      <div id="message-container" class="mt-6">
+        <div
+          id="message"
+          class="invisible relative mx-10 block translate-y-3 scale-90 cursor-crosshair rounded-lg bg-gradient-to-bl from-yellow-400 to-orange-300 px-5 py-2 text-center text-sm font-semibold opacity-0 shadow ring-4 shadow-amber-200 ring-white/20 transition duration-300 hover:scale-105"
+        >
+        </div>
+      </div>
+
+      <p class="text-white/70">
+        Aquí mostrar la tabla con las participaciones actuales del usuario
+      </p>
+    </main>
+  </div>
+</Layout>

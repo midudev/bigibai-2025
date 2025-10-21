@@ -8,13 +8,10 @@ type ErrorCodes = 'INVALID_FORMAT_DATA' | 'UNCERTAIN'
 export default class DecryptRuntimeError extends Error {
   code: ErrorCodes
 
-  constructor(
-    code: ErrorCodes,
-    message: string
-  ) {
+  constructor(code: ErrorCodes, message: string) {
     super(message)
     this.name = 'DecryptRuntimeError'
-    this.code = code.trim().toUpperCase() as ErrorCodes;
+    this.code = code.trim().toUpperCase() as ErrorCodes
 
     Object.setPrototypeOf(this, DecryptRuntimeError.prototype)
   }
@@ -22,7 +19,7 @@ export default class DecryptRuntimeError extends Error {
   log(): this {
     // use chalk to make it colorful [pnpm i chalk]
     console.error(
-    `
+      `
     [!] ${this.name}: | ${this.code} |...
       └── [+] Message: "${this.message}"
     `

@@ -23,11 +23,11 @@
 
 ## 📎 Descripción:
 
-BigIbai 2025 **(&copy; Salad Brands SL.)** es un evento anual organizado por [Ibai Llanos][twitter-ibai-llanos] que combina un calendario de adviento interactivo con sorteos, contenidos exclusivos y experiencias para los ***reals***. Esta web es el proyecto oficial desarrollado de forma abierta por la comunidad de Midudev.
+BigIbai 2025 **(&copy; Salad Brands SL.)** es un evento anual organizado por [Ibai Llanos][twitter-ibai-llanos] que combina un calendario de adviento interactivo con sorteos, contenidos exclusivos y experiencias para los **_reals_**. Esta web es el proyecto oficial desarrollado de forma abierta por la comunidad de Midudev.
 
-Este repositorio contiene el desarrollo ***open source*** de la web oficial de BigIbai 2025.  
+Este repositorio contiene el desarrollo **_open source_** de la web oficial de BigIbai 2025.
 
-El proyecto se construye en stream, a través de la plataforma [Twitch](https://www.twitch.tv/midudev "Twitch de Midudev") & [Youtube](https://www.youtube.com/midudev "Youtube de Midudev"), de manera colaborativa por la comunidad de Migel Ángel Durán ~ *@midudev*.
+El proyecto se construye en stream, a través de la plataforma [Twitch](https://www.twitch.tv/midudev 'Twitch de Midudev') & [Youtube](https://www.youtube.com/midudev 'Youtube de Midudev'), de manera colaborativa por la comunidad de Migel Ángel Durán ~ _@midudev_.
 
 <p align="right">
     (<strong><a href="#readme-top">regresar</a></strong>)
@@ -46,7 +46,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     </summary>
 
 - 📎 <a href="#readme-top" title="Ir a la Descripción">Descripción</a>
-- 🗂️ <a href="#readme-index" title="Ir al Índice"><strong>Índice</strong></a>  <span><strong>< Usted está aquí ></strong></span>
+- 🗂️ <a href="#readme-index" title="Ir al Índice"><strong>Índice</strong></a> <span><strong>< Usted está aquí ></strong></span>
 - 🚀 <a href="#readme-stack" title="Ir al Stack Tecnologico">Tech Stack</a>
 - ☝️🖥️ <a href="#readme-contribute" title="Ir a Contribuir">¿Cómo Contribuir?</a>
 - 🧑🖥️ <a href="#readme-clone" title="Ir a Clonar Repositorio">Desarrollo Local</a>
@@ -84,9 +84,9 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 > [!IMPORTANT]
 > ¡Toda ayuda es bienvenida! Si quieres formar parte de la construcción, adelante.
 
-1. Haga un [Fork][how-to-fork-tutorial] de este repositorio.
+1.  Haga un [Fork][how-to-fork-tutorial] de este repositorio.
 
-2. Cree una rama para su feature:
+2.  Cree una rama para su feature:
 
     ```bash
     git checkout -b {rama}/{nombre-de-implementación}
@@ -98,7 +98,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     **Le aconsejamos seguir el siguiente patrón al nombrar una rama para su feature:**
 
     | {rama}    | Utilidad                |
-    |-----------|-------------------------|
+    | --------- | ----------------------- |
     | feat/     | nueva feature           |
     | refactor/ | refactorizado           |
     | chore/    | tareas de mantenimiento |
@@ -107,7 +107,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     | test/     | testing                 |
     | style/    | cambíos de estilo       |
 
-3. Ánexe sus cambios a su Fork:
+3.  Ánexe sus cambios a su Fork:
+
     ```bash
     # Añadir todos los archivos.
     git add .
@@ -116,21 +117,22 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     git add src/components/A.astro, public/b.svg, c.ts
     ```
 
-4. Confirme los cambios con un mensaje:
+4.  Confirme los cambios con un mensaje:
 
     ```bash
     git commit -m "{rama}: {describa su cambio brevemente}"
     ```
 
-5. Realice Push a su rama:
+5.  Realice Push a su rama:
 
-    ```bash
-    git push origin {rama}/{nombre-de-implementación}
-    ```
-> [!WARNING]
-> Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
+        ```bash
+        git push origin {rama}/{nombre-de-implementación}
+        ```
 
-6. Abra un Pull Request & explique claramente qué hizo...
+    > [!WARNING]
+    > Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
+
+6.  Abra un Pull Request & explique claramente qué hizo...
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
@@ -152,23 +154,23 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 <br>
 
 - **Linux/MacOS:**
-    ```bash
-    git clone https://github.com/midudev/bigibai-2025.git &&
-    cd bigibai-2025 &&
-    CP .env.example .env &&
-    pnpm install &&
-    pnpm run dev &&
-    open "http://localhost:4321"
-    ```
+  ```bash
+  git clone https://github.com/midudev/bigibai-2025.git &&
+  cd bigibai-2025 &&
+  CP .env.example .env &&
+  pnpm install &&
+  pnpm run dev &&
+  open "http://localhost:4321"
+  ```
 - **Windows:**
-    ```powershell
-    git clone https://github.com/midudev/bigibai-2025.git &&
-    cd bigibai-2025 &&
-    copy .env.example .env &&
-    pnpm install &&
-    pnpm run dev &&
-    Start-Process "http://localhost:4321"
-    ```
+  ```powershell
+  git clone https://github.com/midudev/bigibai-2025.git &&
+  cd bigibai-2025 &&
+  copy .env.example .env &&
+  pnpm install &&
+  pnpm run dev &&
+  Start-Process "http://localhost:4321"
+  ```
 
 </details>
 
@@ -176,33 +178,34 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 
 1. Clone el repositorio:
 
-    ```bash
-    git clone https://github.com/midudev/bigibai-2025.git
-    ```
+   ```bash
+   git clone https://github.com/midudev/bigibai-2025.git
+   ```
+
 2. Entre en el repositorio:
-  
+
    ```bash
     cd bigibai-2025
    ```
 
 3. Instale las dependencias:
 
-    ```bash
-    pnpm install
-    ```
+   ```bash
+   pnpm install
+   ```
 
 4. Configure el archivo .env:
 
-    ```bash
-    # Linux/MacOS:
-    cp .env.example .env
+   ```bash
+   # Linux/MacOS:
+   cp .env.example .env
 
-    # Windows:
-    copy .env.example .env
-    ```
+   # Windows:
+   copy .env.example .env
+   ```
 
 > [!NOTE]
-> Recuerde establecer correctamente las credenciales correspondientes en el archivo **.env** si requiere un buen funcionamiento del *backend*, de lo contrario solamente renderizará el *frontend*.
+> Recuerde establecer correctamente las credenciales correspondientes en el archivo **.env** si requiere un buen funcionamiento del _backend_, de lo contrario solamente renderizará el _frontend_.
 
 5. Setup Supabase (opcional)
 
@@ -243,13 +246,13 @@ Si prefiere usar Supabase en la nube en lugar de local:
 
 6. Inicie el servidor en modo desarrollo:
 
-    ```bash
-    pnpm run dev
-    ```
+   ```bash
+   pnpm run dev
+   ```
 
 7. Abra el navegador en la siguiente URL:
 
-    ==> [http://localhost:4321](http://localhost:4321) 
+   ==> [http://localhost:4321](http://localhost:4321)
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
@@ -271,6 +274,7 @@ Si prefiere usar Supabase en la nube en lugar de local:
 </div>
 
 <!-- Repository Links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/midudev/bigibai-2025.svg?style=for-the-badge
 [contributors-url]: https://github.com/midudev/bigibai-2025/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/midudev/bigibai-2025.svg?style=for-the-badge
@@ -279,24 +283,28 @@ Si prefiere usar Supabase en la nube en lugar de local:
 [stars-url]: https://github.com/midudev/bigibai-2025/stargazers
 [issues-shield]: https://img.shields.io/github/issues/midudev/bigibai-2025.svg?style=for-the-badge
 [issues-url]: https://github.com/midudev/bigibai-2025/issues
+
 <!-- Repository Links -->
 
 <!-- Tech Stack Links -->
+
 [astro-url]: https://astro.build/
 [typescript-url]: https://www.typescriptlang.org/
 [tailwind-url]: https://tailwindcss.com/
 [midu-animations-url]: https://tailwindcss-animations.vercel.app/
 [supabase-url]: https://supabase.com/
 [pnpm-url]: https://pnpm.io/installation
-
 [astro-badge]: https://img.shields.io/badge/Astro-fff?style=for-the-badge&logo=astro&logoColor=bd303a&color=352563
 [typescript-badge]: https://img.shields.io/badge/Typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white&color=blue
 [tailwind-badge]: https://img.shields.io/badge/Tailwind-ffffff?style=for-the-badge&logo=tailwindcss&logoColor=38bdf8
 [midu-animations-badge]: https://img.shields.io/badge/@midudev/tailwind-animations-ff69b4?style=for-the-badge&logo=node.js&logoColor=white&color=blue
 [supabase-badge]: https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white
+
 <!-- Tech Stack Links -->
 
 <!-- Another Links -->
+
 [twitter-ibai-llanos]: https://www.x.com/IbaiLlanos
 [how-to-fork-tutorial]: https://youtu.be/watch?v=niPExbK8lSw&t=2135s
+
 <!-- Another Links -->
