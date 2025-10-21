@@ -1,5 +1,5 @@
 ---
-import Button from "@/components/Button.astro"
+import Button from '@/components/Button.astro'
 ---
 
 <form id="coupon-form" class="space-y-6">
@@ -48,11 +48,7 @@ import Button from "@/components/Button.astro"
       </div>
 
       <!-- Separador -->
-      <div
-        class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl"
-      >
-        -
-      </div>
+      <div class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl">-</div>
 
       <!-- Segundo grupo: XXXX -->
       <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="1">
@@ -91,11 +87,7 @@ import Button from "@/components/Button.astro"
       </div>
 
       <!-- Separador -->
-      <div
-        class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl"
-      >
-        -
-      </div>
+      <div class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl">-</div>
 
       <!-- Tercer grupo: XXXX -->
       <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="2">
@@ -140,33 +132,30 @@ import Button from "@/components/Button.astro"
   </div>
 
   <div class="mx-auto w-full max-w-xl">
-    <Button type="submit" variant="brand" size="lg" class="w-full">
-      Validar cupón
-    </Button>
+    <Button type="submit" variant="brand" size="lg" class="w-full"> Validar cupón </Button>
   </div>
 </form>
 
 <script>
-  document.addEventListener("astro:page-load", () => {
-    const couponInputs = document.querySelectorAll(
-      ".coupon-input"
-    ) as NodeListOf<HTMLInputElement>
-    const hiddenInput = document.getElementById(
-      "coupon-value"
-    ) as HTMLInputElement
+  document.addEventListener('astro:page-load', () => {
+    const couponInputs = document.querySelectorAll('.coupon-input') as NodeListOf<HTMLInputElement>
+    const hiddenInput = document.getElementById('coupon-value') as HTMLInputElement
+    const headerParticipationCount = document.getElementById(
+      'header-participation-count'
+    ) as HTMLDivElement
 
     // Función para actualizar el valor oculto
     function updateHiddenInput() {
       const values = Array.from(couponInputs).map((input) => input.value)
-      const couponValue = `${values.slice(0, 4).join("")}-${values.slice(4, 8).join("")}-${values.slice(8, 12).join("")}`
+      const couponValue = `${values.slice(0, 4).join('')}-${values.slice(4, 8).join('')}-${values.slice(8, 12).join('')}`
       hiddenInput.value = couponValue
     }
 
     // Manejar input en cada caja
     couponInputs.forEach((input, index) => {
-      input.addEventListener("input", (e) => {
+      input.addEventListener('input', (e) => {
         const target = e.target as HTMLInputElement
-        let value = target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+        let value = target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
         // Solo permitir un carácter
         if (value.length > 1) {
@@ -184,22 +173,22 @@ import Button from "@/components/Button.astro"
       })
 
       // Manejar backspace
-      input.addEventListener("keydown", (e) => {
+      input.addEventListener('keydown', (e) => {
         const target = e.target as HTMLInputElement
 
-        if (e.key === "Backspace" && !target.value && index > 0) {
+        if (e.key === 'Backspace' && !target.value && index > 0) {
           couponInputs[index - 1].focus()
         }
       })
 
       // Manejar paste
-      input.addEventListener("paste", (e) => {
+      input.addEventListener('paste', (e) => {
         e.preventDefault()
-        const pastedData = e.clipboardData?.getData("text") || ""
-        const cleaned = pastedData.toUpperCase().replace(/[^A-Z0-9]/g, "")
+        const pastedData = e.clipboardData?.getData('text') || ''
+        const cleaned = pastedData.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
         // Distribuir los caracteres pegados en los inputs
-        cleaned.split("").forEach((char, i) => {
+        cleaned.split('').forEach((char, i) => {
           const targetIndex = index + i
           if (targetIndex < couponInputs.length) {
             couponInputs[targetIndex].value = char
@@ -207,10 +196,7 @@ import Button from "@/components/Button.astro"
         })
 
         // Mover el foco al siguiente input disponible
-        const nextIndex = Math.min(
-          index + cleaned.length,
-          couponInputs.length - 1
-        )
+        const nextIndex = Math.min(index + cleaned.length, couponInputs.length - 1)
         couponInputs[nextIndex].focus()
 
         updateHiddenInput()
@@ -223,13 +209,11 @@ import Button from "@/components/Button.astro"
     }
 
     // Manejar el submit del formulario
-    const couponForm = document.getElementById("coupon-form") as HTMLFormElement
-    const messageContainer = document.getElementById(
-      "message"
-    ) as HTMLDivElement
+    const couponForm = document.getElementById('coupon-form') as HTMLFormElement
+    const messageContainer = document.getElementById('message') as HTMLDivElement
 
     if (couponForm) {
-      couponForm.addEventListener("submit", async (e) => {
+      couponForm.addEventListener('submit', async (e) => {
         e.preventDefault()
 
         const couponValue = hiddenInput.value.trim()
@@ -237,16 +221,13 @@ import Button from "@/components/Button.astro"
         // Validar que el cupón esté completo
         if (couponValue.length !== 14) {
           // XXXX-XXXX-XXXX = 14 caracteres
-          showMessage(
-            "Por favor, completa todos los caracteres del cupón",
-            true
-          )
+          showMessage('Por favor, completa todos los caracteres del cupón', true)
           return
         }
 
         try {
           // Importar actions dinámicamente
-          const { actions } = await import("astro:actions")
+          const { actions } = await import('astro:actions')
 
           // Deshabilitar el botón durante la validación
           const submitButton = couponForm.querySelector(
@@ -254,7 +235,7 @@ import Button from "@/components/Button.astro"
           ) as HTMLButtonElement
           if (submitButton) {
             submitButton.disabled = true
-            submitButton.textContent = "Validando..."
+            submitButton.textContent = 'Validando...'
           }
 
           // Llamar a la action
@@ -263,15 +244,15 @@ import Button from "@/components/Button.astro"
           })
 
           if (error) {
-            showMessage(error.message || "Error al validar el cupón", true)
+            showMessage(error.message || 'Error al validar el cupón', true)
           } else if (data) {
-            showMessage(data.message || "¡Cupón validado correctamente!", false)
+            showMessage(data.message || '¡Cupón validado correctamente!', false)
 
             // Limpiar el formulario
             couponInputs.forEach((input) => {
-              input.value = ""
+              input.value = ''
             })
-            hiddenInput.value = ""
+            hiddenInput.value = ''
 
             // Focus en el primer input
             if (couponInputs.length > 0) {
@@ -279,23 +260,25 @@ import Button from "@/components/Button.astro"
             }
 
             // Actualizar el contador de cupones si existe
-            const couponCount = document.getElementById("coupon-count")
+            const couponCount = document.getElementById('coupon-count')
             if (couponCount && data.totalCoupons) {
-              couponCount.textContent = `Has validado ${data.totalCoupons} ${data.totalCoupons === 1 ? "cupón" : "cupones"}`
+              couponCount.textContent = `Has validado ${data.totalCoupons} ${data.totalCoupons === 1 ? 'cupón' : 'cupones'}`
+            }
+
+            // Actualizar el contador en el header si existe
+            if (headerParticipationCount && data.totalCoupons) {
+              headerParticipationCount.textContent = data.totalCoupons.toString()
             }
           }
 
           // Rehabilitar el botón
           if (submitButton) {
             submitButton.disabled = false
-            submitButton.textContent = "Validar cupón"
+            submitButton.textContent = 'Validar cupón'
           }
         } catch (error) {
-          console.error("Error al validar el cupón:", error)
-          showMessage(
-            "Error al validar el cupón. Por favor, inténtalo de nuevo.",
-            true
-          )
+          console.error('Error al validar el cupón:', error)
+          showMessage('Error al validar el cupón. Por favor, inténtalo de nuevo.', true)
 
           // Rehabilitar el botón
           const submitButton = couponForm.querySelector(
@@ -303,7 +286,7 @@ import Button from "@/components/Button.astro"
           ) as HTMLButtonElement
           if (submitButton) {
             submitButton.disabled = false
-            submitButton.textContent = "Validar cupón"
+            submitButton.textContent = 'Validar cupón'
           }
         }
       })
@@ -314,59 +297,41 @@ import Button from "@/components/Button.astro"
       if (!messageContainer) return
 
       messageContainer.textContent = text
-      messageContainer.classList.remove(
-        "invisible",
-        "opacity-0",
-        "translate-y-3",
-        "scale-90"
-      )
-      messageContainer.classList.add(
-        "opacity-100",
-        "translate-y-0",
-        "scale-100"
-      )
+      messageContainer.classList.remove('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
+      messageContainer.classList.add('opacity-100', 'translate-y-0', 'scale-100')
 
       if (isError) {
         messageContainer.classList.remove(
-          "from-yellow-400",
-          "to-orange-300",
-          "shadow-amber-200",
-          "text-black"
+          'from-yellow-400',
+          'to-orange-300',
+          'shadow-amber-200',
+          'text-black'
         )
         messageContainer.classList.add(
-          "from-red-400",
-          "to-pink-600",
-          "shadow-pink-400",
-          "text-white"
+          'from-red-400',
+          'to-pink-600',
+          'shadow-pink-400',
+          'text-white'
         )
       } else {
         messageContainer.classList.remove(
-          "from-red-400",
-          "to-pink-600",
-          "shadow-pink-400",
-          "text-white"
+          'from-red-400',
+          'to-pink-600',
+          'shadow-pink-400',
+          'text-white'
         )
         messageContainer.classList.add(
-          "from-yellow-400",
-          "to-orange-300",
-          "shadow-amber-200",
-          "text-black"
+          'from-yellow-400',
+          'to-orange-300',
+          'shadow-amber-200',
+          'text-black'
         )
       }
 
       // Ocultar el mensaje después de 5 segundos
       setTimeout(() => {
-        messageContainer.classList.add(
-          "invisible",
-          "opacity-0",
-          "translate-y-3",
-          "scale-90"
-        )
-        messageContainer.classList.remove(
-          "opacity-100",
-          "translate-y-0",
-          "scale-100"
-        )
+        messageContainer.classList.add('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
+        messageContainer.classList.remove('opacity-100', 'translate-y-0', 'scale-100')
       }, 5000)
     }
   })
