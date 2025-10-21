@@ -1,4 +1,4 @@
-import { supabase } from '@/supabase'
+import { supabaseBrowserClient as supabase } from '@/supabase'
 import { encrypt, hash } from '@/utils/crypto'
 
 const ERROR_CODE_ALREADY_EXISTS = '23505'
