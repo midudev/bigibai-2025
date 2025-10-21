@@ -13,6 +13,7 @@
     "@astrojs/vercel": "8.2.10",
     "@floating-ui/dom": "1.7.4",
     "@midudev/tailwind-animations": "0.2.0",
+    "@supabase/ssr": "0.7.0",
     "@supabase/supabase-js": "2.76.1",
     "@tailwindcss/vite": "4.1.15",
     "@upstash/ratelimit": "2.0.6",
