@@ -4,6 +4,12 @@ import Button from '@/components/Button.astro'
 import { supabaseAdmin } from '@/supabase-admin'
 import TicketIcon from '@/icons/ticket.svg'
 
+interface Props {
+  participationCount: number
+}
+
+let { participationCount } = Astro.props
+
 const user = Astro.locals.user
 
 const rawDisplayName =
@@ -23,8 +29,7 @@ const avatarUrl =
   null
 
 // Obtener el número de participaciones del usuario
-let participationCount = 0
-if (user) {
+if (typeof participationCount === 'undefined' && user) {
   const { data: coupons } = await supabaseAdmin
     .from('coupons')
     .select('id')
@@ -268,17 +273,9 @@ const isRegistroPage = currentPath === '/registro'
 <script>
   import { computePosition, flip, shift, offset, arrow } from '@floating-ui/dom'
 
-  console.log('hola')
-
   const badge = document.getElementById('participation-badge')
   const tooltip = document.getElementById('participation-tooltip')
   const arrowElement = document.getElementById('tooltip-arrow')
-
-  console.log({
-    badge,
-    tooltip,
-    arrowElement,
-  })
 
   if (badge && tooltip && arrowElement) {
     function updateTooltip() {
