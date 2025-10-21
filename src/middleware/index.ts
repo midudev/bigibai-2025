@@ -1,24 +1,28 @@
 import { defineMiddleware } from 'astro:middleware'
-import { createSupabaseAuthClient } from '@/supabase'
+import { createClient } from '@/supabase'
 
 const protectedRoutes = ['/dashboard']
 const redirectRoutes = ['/registro']
 
-export const onRequest = defineMiddleware(async ({ url, redirect, locals }, next) => {
-  const supabase = createSupabaseAuthClient()
-  const { data, error } = await supabase.auth.getUser()
-  if (error) console.error(error.message)
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { pathname } = context.url
 
-  const user = data.user
-  locals.user = user
+  const supabase = createClient({
+    request: context.request,
+    cookies: context.cookies,
+  })
 
-  if (protectedRoutes.includes(url.pathname) && !user) {
-    return redirect('/sign-in')
+  const { data } = await supabase.auth.getUser()
+
+  if (!data.user && protectedRoutes.includes(pathname)) {
+    return context.redirect('/registro')
   }
 
-  if (redirectRoutes.includes(url.pathname) && user) {
-    return redirect('/account')
+  if (data.user && redirectRoutes.includes(pathname)) {
+    return context.redirect('/dashboard')
   }
+
+  context.locals.user = data.user
 
   return next()
 })
