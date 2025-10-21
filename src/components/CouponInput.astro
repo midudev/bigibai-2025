@@ -272,6 +272,15 @@ import Button from '@/components/Button.astro'
             if (headerParticipationCount && data.totalCoupons) {
               headerParticipationCount.textContent = data.totalCoupons.toString()
             }
+
+            // Actualizar el texto del tooltip
+            const participationTooltip = document.getElementById('participation-tooltip')
+            if (participationTooltip && data.totalCoupons !== undefined) {
+              participationTooltip.textContent =
+                data.totalCoupons === 1
+                  ? `Tienes ${data.totalCoupons} participación`
+                  : `Tienes ${data.totalCoupons} participaciones`
+            }
           }
 
           // Rehabilitar el botón
