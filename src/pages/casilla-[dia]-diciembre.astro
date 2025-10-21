@@ -1,16 +1,16 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Footer from "@/sections/Footer.astro";
-import Header from "@/sections/Header.astro";
-import Countdown from "@/components/Countdown.astro";
-import { cells } from "@/data/days-data";
+import Layout from '@/layouts/Layout.astro'
+import Footer from '@/sections/Footer.astro'
+import Header from '@/sections/Header.astro'
+import Countdown from '@/components/Countdown.astro'
+import { cells } from '@/data/days-data'
 
 export interface Props {
-  description: string;
+  description: string
 }
 
-const { description } = Astro.props;
-const { params } = Astro;
+const { description } = Astro.props
+const { params } = Astro
 
 export function getStaticPaths() {
   return cells.map((cell) => {
@@ -21,8 +21,8 @@ export function getStaticPaths() {
       props: {
         description: cell.description,
       },
-    };
-  });
+    }
+  })
 }
 ---
 
@@ -30,9 +30,7 @@ export function getStaticPaths() {
   <div class="flex min-h-screen flex-col">
     <Header />
     <div class="flex flex-1">
-      <main
-        class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4"
-      >
+      <main class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4">
         <Countdown day={params.dia} />
         <p
           class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up"

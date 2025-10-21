@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 @plugin "@midudev/tailwind-animations";
 
@@ -23,24 +23,24 @@
 }
 
 @font-face {
-  font-family: "Century";
-  src: url("/fonts/century.woff2") format("woff2");
+  font-family: 'Century';
+  src: url('/fonts/century.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Century";
-  src: url("/fonts/century-bold.woff2") format("woff2");
+  font-family: 'Century';
+  src: url('/fonts/century-bold.woff2') format('woff2');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Heavy";
-  src: url("/fonts/heavy.woff2") format("woff2");
+  font-family: 'Heavy';
+  src: url('/fonts/heavy.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -50,7 +50,7 @@ h1,
 h2,
 .md-container h1,
 .md-container h2 {
-  font-family: "Heavy", sans-serif;
+  font-family: 'Heavy', sans-serif;
 }
 
 h3,
@@ -61,7 +61,7 @@ h6,
 .md-container h4,
 .md-container h5,
 .md-container h6 {
-  font-family: "Century", sans-serif;
+  font-family: 'Century', sans-serif;
 }
 
 .md-container {

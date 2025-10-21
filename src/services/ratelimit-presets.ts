@@ -1,9 +1,9 @@
-import { checkRateLimit } from "./ratelimit";
+import { checkRateLimit } from './ratelimit'
 
-const ONE_MINUTE = 60_000;
-const ONE_HOUR = 60 * ONE_MINUTE;
+const ONE_MINUTE = 60_000
+const ONE_HOUR = 60 * ONE_MINUTE
 
-const bucket = (prefix: string, id: string) => `${prefix}:${id}`;
+const bucket = (prefix: string, id: string) => `${prefix}:${id}`
 
 /**
  * Presets comunes de rate limiting para diferentes casos de uso
@@ -13,15 +13,13 @@ export const RateLimitPresets = {
    * Para APIs públicas sensibles (login, registro, etc.)
    * 5 intentos por hora
    */
-  strict: (identifier: string) =>
-    checkRateLimit({ identifier, limit: 5, windowMs: ONE_HOUR }),
+  strict: (identifier: string) => checkRateLimit({ identifier, limit: 5, windowMs: ONE_HOUR }),
 
   /**
    * Para APIs de uso normal
    * 60 requests por minuto
    */
-  moderate: (identifier: string) =>
-    checkRateLimit({ identifier, limit: 60, windowMs: ONE_MINUTE }),
+  moderate: (identifier: string) => checkRateLimit({ identifier, limit: 60, windowMs: ONE_MINUTE }),
 
   /**
    * Para APIs de alto tráfico
@@ -34,8 +32,7 @@ export const RateLimitPresets = {
    * Para protección anti-spam
    * 10 requests por minuto
    */
-  antiSpam: (identifier: string) =>
-    checkRateLimit({ identifier, limit: 10, windowMs: ONE_MINUTE }),
+  antiSpam: (identifier: string) => checkRateLimit({ identifier, limit: 10, windowMs: ONE_MINUTE }),
 
   /**
    * Para operaciones costosas (envío de emails, procesamiento pesado, etc.)
@@ -54,7 +51,7 @@ export const RateLimitPresets = {
    */
   email: (emailId: string) =>
     checkRateLimit({
-      identifier: bucket("email", emailId),
+      identifier: bucket('email', emailId),
       limit: 5,
       windowMs: ONE_HOUR,
     }),
@@ -65,11 +62,11 @@ export const RateLimitPresets = {
    */
   ip: (ipAddr: string) =>
     checkRateLimit({
-      identifier: bucket("ip", ipAddr),
+      identifier: bucket('ip', ipAddr),
       limit: 15,
       windowMs: ONE_HOUR,
     }),
-} as const;
+} as const
 
 /**
  * Ejemplo de uso:

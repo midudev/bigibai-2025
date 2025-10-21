@@ -1,4 +1,4 @@
-import { PostgrestError } from "@supabase/supabase-js"
+import { PostgrestError } from '@supabase/supabase-js'
 
 /**
  * Error en el rencuento del Newsletter
@@ -7,10 +7,7 @@ import { PostgrestError } from "@supabase/supabase-js"
 export default class NewsletterCountingError extends Error {
   postgrestError: PostgrestError | null
 
-  constructor(
-    message: string,
-    postgrestError: PostgrestError | null
-  ) {
+  constructor(message: string, postgrestError: PostgrestError | null) {
     super(message)
     this.name = 'NewsletterCountingError'
     this.postgrestError = postgrestError
@@ -21,7 +18,7 @@ export default class NewsletterCountingError extends Error {
   log(): this {
     // use chalk to make it colorful [pnpm i chalk]
     console.error(
-    `
+      `
     [!] ${this.name}: | COUNT_SUSCRIBERS_FAULT |...
       ├── [+] Message: "${this.message}"
       └── [*] Postgrest.sql Error:

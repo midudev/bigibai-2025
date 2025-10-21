@@ -19,9 +19,9 @@ UPSTASH_REDIS_REST_TOKEN=your-redis-token
 import { checkRateLimit } from '@/services/ratelimit'
 
 const rateLimitResult = await checkRateLimit({
-  identifier: 'user@example.com',  // Puede ser email, IP, user ID, etc.
-  limit: 5,                        // Número máximo de requests
-  windowMs: 3_600_000              // Ventana de tiempo en ms (1 hora)
+  identifier: 'user@example.com', // Puede ser email, IP, user ID, etc.
+  limit: 5, // Número máximo de requests
+  windowMs: 3_600_000, // Ventana de tiempo en ms (1 hora)
 })
 
 if (!rateLimitResult.success) {
@@ -39,13 +39,13 @@ import { checkRateLimit, getRateLimitMessage, getTimeRemaining } from '@/service
 const rateLimitResult = await checkRateLimit({
   identifier: email,
   limit: 5,
-  windowMs: 3_600_000
+  windowMs: 3_600_000,
 })
 
 if (!rateLimitResult.success) {
   // Opción 1: Mensaje automático formateado
   throw new Error(getRateLimitMessage(rateLimitResult.reset))
-  
+
   // Opción 2: Obtener tiempo restante para personalizar
   const time = getTimeRemaining(rateLimitResult.reset)
   throw new Error(`Espera ${time.minutes} minutos antes de intentar de nuevo`)
@@ -62,26 +62,26 @@ import { z } from 'astro:schema'
 export const server = {
   myAction: defineAction({
     input: z.object({
-      email: z.string().email()
+      email: z.string().email(),
     }),
     async handler({ email }) {
       // Aplicar rate limiting
       const rateLimitResult = await checkRateLimit({
         identifier: email,
         limit: 10,
-        windowMs: 3_600_000 // 1 hora
+        windowMs: 3_600_000, // 1 hora
       })
 
       if (!rateLimitResult.success) {
         throw new ActionError({
           code: 'TOO_MANY_REQUESTS',
-          message: getRateLimitMessage(rateLimitResult.reset)
+          message: getRateLimitMessage(rateLimitResult.reset),
         })
       }
 
       // Tu lógica aquí...
-    }
-  })
+    },
+  }),
 }
 ```
 
@@ -96,25 +96,25 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const rateLimitResult = await checkRateLimit({
     identifier: clientAddress,
     limit: 100,
-    windowMs: 60_000 // 1 minuto
+    windowMs: 60_000, // 1 minuto
   })
 
   if (!rateLimitResult.success) {
     const time = getTimeRemaining(rateLimitResult.reset)
-    
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Too many requests',
-        message: getRateLimitMessage(rateLimitResult.reset)
-      }), 
-      { 
+        message: getRateLimitMessage(rateLimitResult.reset),
+      }),
+      {
         status: 429,
         headers: {
           'Content-Type': 'application/json',
           'X-RateLimit-Limit': rateLimitResult.limit.toString(),
           'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-          'Retry-After': time.seconds.toString()
-        }
+          'Retry-After': time.seconds.toString(),
+        },
       }
     )
   }
@@ -169,7 +169,7 @@ Si prefieres denegar requests cuando Redis falle (fail closed), puedes modificar
 ```typescript
 } catch (error) {
   console.error("Rate limit error:", error)
-  
+
   // Fail closed: denegar en caso de error
   return {
     success: false,
@@ -200,9 +200,9 @@ import { getTimeRemaining } from '@/services/ratelimit'
 const time = getTimeRemaining(rateLimitResult.reset)
 
 console.log(time.milliseconds) // ej: 58432
-console.log(time.seconds)      // ej: 59
-console.log(time.minutes)      // ej: 1
-console.log(time.hours)        // ej: 1
+console.log(time.seconds) // ej: 59
+console.log(time.minutes) // ej: 1
+console.log(time.hours) // ej: 1
 ```
 
 ### `getRateLimitMessage(reset, customMessage?)`
@@ -217,14 +217,12 @@ const message = getRateLimitMessage(rateLimitResult.reset)
 // "Demasiados intentos. Intenta de nuevo en 5 minutos"
 
 // Mensaje personalizado
-const customMsg = getRateLimitMessage(
-  rateLimitResult.reset,
-  "Has excedido el límite. Espera"
-)
+const customMsg = getRateLimitMessage(rateLimitResult.reset, 'Has excedido el límite. Espera')
 // "Has excedido el límite. Espera en 5 minutos"
 ```
 
 El mensaje se adapta automáticamente:
+
 - Menos de 1 minuto: muestra segundos
 - Entre 1 y 59 minutos: muestra minutos
 - 60 minutos o más: muestra horas

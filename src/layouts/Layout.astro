@@ -1,13 +1,13 @@
 ---
-import "@/global.css"
+import '@/global.css'
 
-import GradientOverlay from "@/components/GradientOverlay.astro"
-import Snowballs from "@/components/Snowballs.astro"
-import { ClientRouter } from "astro:transitions"
+import GradientOverlay from '@/components/GradientOverlay.astro'
+import Snowballs from '@/components/Snowballs.astro'
+import { ClientRouter } from 'astro:transitions'
 
-const defaultTitle = "Big Ibai: Calendario de Adviento con chocolates y premios"
+const defaultTitle = 'Big Ibai: Calendario de Adviento con chocolates y premios'
 const defaultDescription =
-  "Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día."
+  'Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día.'
 
 export interface Props {
   title?: string
@@ -20,7 +20,7 @@ title ??= defaultTitle
 description ??= defaultDescription
 
 // detect if previous page is an internal navigation
-const previousPage = Astro.request.headers.get("referer")
+const previousPage = Astro.request.headers.get('referer')
 const isInternalNavigation = previousPage?.includes(Astro.url.origin)
 ---
 
@@ -68,35 +68,17 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     <meta name="twitter:image:alt" content={title} />
     <meta name="theme-color" content="#4c2d7e" />
 
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/cropped-favicon-16x16.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/cropped-favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="192x192"
-      href="/cropped-favicon-192x192.png"
-    />
+    <link rel="icon" type="image/png" sizes="16x16" href="/cropped-favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/cropped-favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/cropped-favicon-192x192.png" />
     <link rel="apple-touch-icon" href="/cropped-favicon-180x180.png" />
-    <meta
-      name="msapplication-TileImage"
-      content="/cropped-favicon-270x270.png"
-    />
+    <meta name="msapplication-TileImage" content="/cropped-favicon-270x270.png" />
     <ClientRouter />
   </head>
   <body>
     <div
       id="background-mask"
-      class={`min-h-screen w-full ${isInternalNavigation ? "masked unlocked" : ""}`}
+      class={`min-h-screen w-full ${isInternalNavigation ? 'masked unlocked' : ''}`}
     >
       <GradientOverlay />
       <Snowballs />
@@ -120,13 +102,13 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
   }
 
   #background-mask {
-    background-image: url("/fondo.webp");
+    background-image: url('/fondo.webp');
     background-size: cover;
     background-position: top;
     background-repeat: no-repeat;
 
     &.masked {
-      mask-image: url("/lock.svg");
+      mask-image: url('/lock.svg');
       mask-position: center 50%;
       mask-repeat: no-repeat;
       mask-size: 50px;
