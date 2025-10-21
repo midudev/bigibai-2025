@@ -1,4 +1,3 @@
-import { getNewsletterCount } from "@/newsletter/services/getEmails";
 import { saveNewsletterEmail } from "@/newsletter/services/subscribe";
 import { getRateLimitMessage } from "@/services/ratelimit";
 import { RateLimitPresets } from "@/services/ratelimit-presets";
@@ -7,6 +6,7 @@ import { z } from "astro:schema";
 import { supabase } from "@/supabase";
 import { supabaseAdmin } from "@/supabase-admin";
 import { hash } from "@/utils/crypto";
+import { emailSchema } from "@/validations/email";
 
 // Extrae IP real del cliente evitando spoofing básico.
 function getClientIp(ctx: any): string {
@@ -32,65 +32,25 @@ function validateCouponFormat(coupon: string): boolean {
 function normalizeCoupon(coupon: string): string {
   return coupon
     .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, '') // Solo letras, números y guiones
-    .replace(/-+/g, '-'); // Múltiples guiones a uno solo
+    .replace(/[^A-Z0-9-]/g, "") // Solo letras, números y guiones
+    .replace(/-+/g, "-"); // Múltiples guiones a uno solo
 }
 
 export const server = {
   newsletter: defineAction({
     input: z.object({
       // Validaciones de entrada: normaliza y bloquea dominios desechables/typos.
-      email: z
-        .string({
-          required_error: "El email es requerido",
-          invalid_type_error: "El email debe ser un texto",
-        })
-        .trim() // Elimina espacios en blanco
-        .min(1, "El email no puede estar vacío")
-        .email("El formato del email no es válido")
-        .toLowerCase() // Normaliza a minúsculas
-        .max(255, "El email es demasiado largo")
-        // Validación adicional para dominios comunes mal escritos
-        .refine(
-          (email) => {
-            const commonTypos = [
-              "gmial.com",
-              "gmai.com",
-              "yahooo.com",
-              "hotmial.com",
-            ];
-            const domain = email.split("@")[1];
-            return !commonTypos.includes(domain);
-          },
-          { message: "Verifica que el dominio del email esté bien escrito" }
-        )
-        // Validación para evitar emails temporales/desechables
-        .refine(
-          (email) => {
-            const disposable = [
-              "tempmail.com",
-              "throwaway.email",
-              "10minutemail.com",
-              "guerrillamail.com",
-              "mailinator.com",
-              "yopmail.com",
-            ];
-            const domain = email.split("@")[1];
-            return !disposable.includes(domain);
-          },
-          { message: "Por favor, usa un email permanente" }
-        ),
+      email: emailSchema,
     }),
     // Se aplica rate limit compuesto y se devuelve 429 explícito al bloquear.
     async handler({ email }, ctx) {
       // Sanitización adicional en el servidor
-      const sanitizedEmail = email.trim().toLowerCase();
       const ip = getClientIp(ctx);
 
       // Email 5/h, IP 15/h, global 500/h.
       const [byEmail, byIp] = await Promise.all([
-        RateLimitPresets.email(sanitizedEmail),
-        RateLimitPresets.ip(ip)
+        RateLimitPresets.email(email),
+        RateLimitPresets.ip(ip),
       ]);
 
       const failed =
@@ -104,7 +64,7 @@ export const server = {
           bucket: failed.kind,
           reset: failed.res.reset,
           ip,
-          email: sanitizedEmail,
+          email,
         });
 
         // Acción correcta en Actions: lanzar ActionError para 429 consistente.
@@ -114,15 +74,13 @@ export const server = {
         });
       }
 
-      const { success, duplicated, error } = await saveNewsletterEmail(
-        sanitizedEmail
-      );
+      const { success, duplicated, error } = await saveNewsletterEmail(email);
 
       if (!success) {
         // Log de error operativo útil.
         console.error("[NEWSLETTER_SAVE_ERROR]", {
           ip,
-          email: sanitizedEmail,
+          email,
           error,
         });
         throw new ActionError({
@@ -143,15 +101,82 @@ export const server = {
     },
   }),
 
-  getNewsletterCount: defineAction({
-    async handler() {
+  sendMagicLink: defineAction({
+    input: z.object({
+      email: emailSchema,
+    }),
+    async handler({ email }, ctx) {
+      const ip = getClientIp(ctx);
+
+      // Rate limiting estricto para magic links (envío de emails es costoso)
+      // 3 intentos por email cada 5 minutos, 10 intentos por IP cada hora
+      const [byEmail, byIp] = await Promise.all([
+        RateLimitPresets.expensive(email),
+        RateLimitPresets.antiSpam(ip),
+      ]);
+
+      const failed =
+        (!byEmail.success && { kind: "email", res: byEmail }) ||
+        (!byIp.success && { kind: "ip", res: byIp }) ||
+        null;
+
+      if (failed) {
+        console.warn("[RATE_LIMIT_BLOCK_MAGIC_LINK]", {
+          bucket: failed.kind,
+          reset: failed.res.reset,
+          ip,
+          email: email,
+        });
+
+        throw new ActionError({
+          code: "TOO_MANY_REQUESTS",
+          message: getRateLimitMessage(failed.res.reset),
+        });
+      }
+
       try {
-        const count = await getNewsletterCount();
-        return { count };
-      } catch {
+        // Enviar el magic link usando Supabase Auth
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${ctx.url.origin}/api/auth/callback`,
+          },
+        });
+
+        if (error) {
+          console.error("[MAGIC_LINK_ERROR]", {
+            ip,
+            email: email,
+            error: error.message,
+          });
+
+          // No revelar si el email existe o no por seguridad
+          throw new ActionError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "Error al enviar el enlace mágico. Inténtalo de nuevo más tarde.",
+          });
+        }
+
+        return {
+          success: true,
+          message:
+            "¡Revisa tu email! Te hemos enviado un enlace para iniciar sesión",
+        };
+      } catch (error) {
+        if (error instanceof ActionError) {
+          throw error;
+        }
+
+        console.error("[MAGIC_LINK_UNEXPECTED_ERROR]", {
+          ip,
+          email: email,
+          error,
+        });
+
         throw new ActionError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Error al obtener el conteo de suscriptores",
+          message: "Error inesperado al procesar la solicitud",
         });
       }
     },
@@ -170,7 +195,10 @@ export const server = {
     }),
     async handler({ coupon }, ctx) {
       // check we have a user logged in before validating the coupon
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
       if (authError || !user) {
         throw new ActionError({
@@ -180,15 +208,11 @@ export const server = {
       }
 
       const ip = getClientIp(ctx);
-      
-      // Rate limiting para validación de cupones
-      const [byIp] = await Promise.all([
-        RateLimitPresets.ip(ip)
-      ]);
 
-      const failed =
-        (!byIp.success && { kind: "ip", res: byIp }) ||
-        null;
+      // Rate limiting para validación de cupones
+      const [byIp] = await Promise.all([RateLimitPresets.ip(ip)]);
+
+      const failed = (!byIp.success && { kind: "ip", res: byIp }) || null;
 
       if (failed) {
         console.warn("[RATE_LIMIT_BLOCK_COUPON]", {
@@ -205,11 +229,12 @@ export const server = {
 
       // Normalizar y validar formato del cupón
       const normalizedCoupon = normalizeCoupon(coupon);
-      
+
       if (!validateCouponFormat(normalizedCoupon)) {
         throw new ActionError({
           code: "BAD_REQUEST",
-          message: "El formato del cupón debe ser XXXX-XXXX-XXXX (solo letras y números)",
+          message:
+            "El formato del cupón debe ser XXXX-XXXX-XXXX (solo letras y números)",
         });
       }
 
@@ -219,21 +244,21 @@ export const server = {
 
         // Buscar el cupón en la base de datos
         const { data: couponData, error: fetchError } = await supabaseAdmin
-          .from('coupons')
-          .select('is_used, used_by, id')
-          .eq('hash', couponHash)
+          .from("coupons")
+          .select("is_used, used_by, id")
+          .eq("hash", couponHash)
           .single();
 
         // Si hay error O no hay datos, el cupón no es válido
         if (fetchError || !couponData) {
           // Si el error es "PGRST116" significa que no se encontró el registro
-          if (fetchError?.code === 'PGRST116') {
+          if (fetchError?.code === "PGRST116") {
             throw new ActionError({
               code: "BAD_REQUEST",
               message: "El cupón no es válido",
             });
           }
-          
+
           // Si hay otro tipo de error, es un error interno
           if (fetchError) {
             console.error("[COUPON_FETCH_ERROR]", {
@@ -264,13 +289,13 @@ export const server = {
 
         // Marcar el cupón como usado
         const { error: updateError } = await supabaseAdmin
-          .from('coupons')
+          .from("coupons")
           .update({
             is_used: true,
             used_at: new Date().toISOString(),
             used_by: user.id,
           })
-          .eq('id', couponData.id);
+          .eq("id", couponData.id);
 
         if (updateError) {
           console.error("[COUPON_UPDATE_ERROR]", {
@@ -287,10 +312,10 @@ export const server = {
 
         // Obtener el número total de cupones validados por este usuario
         const { data: userCoupons, error: countError } = await supabaseAdmin
-          .from('coupons')
-          .select('id')
-          .eq('used_by', user.id)
-          .eq('is_used', true);
+          .from("coupons")
+          .select("id")
+          .eq("used_by", user.id)
+          .eq("is_used", true);
 
         if (countError) {
           console.error("[COUPON_COUNT_ERROR]", {
@@ -306,7 +331,6 @@ export const server = {
           message: "¡Cupón validado correctamente!",
           totalCoupons,
         };
-
       } catch (error) {
         if (error instanceof ActionError) {
           throw error;
