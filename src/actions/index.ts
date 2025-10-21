@@ -4,7 +4,7 @@ import { RateLimitPresets } from '@/services/ratelimit-presets'
 import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { supabaseAdmin } from '@/supabase-admin'
-import { createSupabaseAuthClient } from '@/supabase'
+import { createClient } from '@/supabase'
 import { hash } from '@/utils/crypto'
 import { emailSchema } from '@/validations/email'
 
@@ -135,7 +135,9 @@ export const server = {
       }
 
       try {
-        const supabase = createSupabaseAuthClient()
+        // CRÍTICO: Cliente con acceso a cookies para PKCE
+        const supabase = createClient({ request: ctx.request, cookies: ctx.cookies })
+
         // Enviar el magic link usando Supabase Auth
         const { error } = await supabase.auth.signInWithOtp({
           email,
