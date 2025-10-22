@@ -76,14 +76,16 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     <ClientRouter />
   </head>
   <body>
-    <div
+    <div class="overflow-hidden">
+      <div
       id="background-mask"
       class={`min-h-screen w-full ${isInternalNavigation ? 'masked unlocked' : ''}`}
     >
-      <GradientOverlay />
-      <Snowballs />
-      <div class="relative z-2">
-        <slot />
+        <GradientOverlay />
+        <Snowballs />
+        <div class="relative z-2">
+          <slot />
+        </div>
       </div>
     </div>
   </body>

@@ -3,7 +3,7 @@ import Layout from '@/layouts/Layout.astro'
 
 import Footer from '@/sections/Footer.astro'
 import BackToHome from '@/components/BackToHome.astro'
-import LegalNotice from '@/content/legal/aviso-legal.md'
+import BasesLegalesContent from '@/content/legal/bases-legales.md'
 ---
 
 <Layout>
@@ -13,11 +13,11 @@ import LegalNotice from '@/content/legal/aviso-legal.md'
     <main
       class="relative z-10 md-container"
       role="contentinfo"
-      aria-label="Aviso Legal"
+      aria-label="Bases Legales de la Promoción"
       aria-live="assertive"
     >
       <BackToHome />
-      <LegalNotice />
+      <BasesLegalesContent />
     </main>
   </section>
   <Footer />

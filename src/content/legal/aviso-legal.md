@@ -99,14 +99,14 @@ SALAD BRANDS se reserva el derecho a denegar o retirar el acceso a este Sitio We
 
 10.4.- SALAD BRANDS podrá modificar en todo o en parte y en cualquier momento las condiciones aquí determinadas, y dichas modificaciones tendrán vigencia desde el mismo momento de su publicación en este Sitio Web.
 
-### 11. Espacios con acceso restringido.
+### 11. Espacios con acceso restringido
 
 El acceso a ciertos apartados de este sitio Web está protegido por código de usuario y contraseña (que deberá establecer al cumplimentar el formulario de registro), siendo estas sus credenciales y respecto a las cuales, el usuario adquiere los siguientes compromisos:
 
 Las credenciales de acceso son personales e intransferibles, identifican al usuario en el sitio Web siendo responsabilidad del mismo mantenerlas en secreto. Por tanto, el usuario será responsable de todas las acciones que se realicen con sus credenciales de acceso.
 El usuario comunicará a SALAD BRANDS cualquier uso no autorizado de sus credenciales o cualquier otro incidente de seguridad tan pronto como tenga conocimiento del mismo.
 
-### 12. Redes sociales.
+### 12. Redes sociales
 
 SALAD BRANDS puede estar presente, actualmente o en el futuro, en redes sociales de Internet, donde considere oportuno establecer presencia.
 

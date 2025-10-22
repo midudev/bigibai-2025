@@ -17,7 +17,7 @@ function shouldSkipAuth(pathname: string): boolean {
   }
 
   // Skip rutas públicas que nunca necesitan auth
-  const publicRoutes = ['/aviso-legal', '/politica-de-cookies', '/privacidad']
+  const publicRoutes = ['/aviso-legal', '/bases-legales', '/politica-de-cookies', '/privacidad']
 
   return publicRoutes.includes(pathname)
 }
