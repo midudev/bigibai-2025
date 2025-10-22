@@ -65,13 +65,13 @@ const { totalCoupons } = Astro.props
         aria-hidden="true"
       >
       </div>
-      <div class="relative px-4 py-8 flex items-center justify-center mb-4 sm:mb-0 sm:py-0">
+      <div class="relative px-4 py-8 flex items-center justify-center mb-4 sm:mb-0 sm:py-0" id="ticket-content">
         {
           totalCoupons > 0 ? (
             <div class="space-y-2 text-center">
               <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70">
-                Ya tienes <span class="text-brand">{totalCoupons}</span>{' '}
-                {totalCoupons === 1 ? 'participación' : 'participaciones'}
+                Ya tienes <span class="text-brand" id="ticket-coupon-count">{totalCoupons}</span>{' '}
+                <span id="ticket-coupon-text">{totalCoupons === 1 ? 'participación' : 'participaciones'}</span>
               </p>
               <p class="text-white/60 text-xs md:text-sm px-2">
                 Ingresa un código arriba para seguir sumando participaciones en el sorteo
