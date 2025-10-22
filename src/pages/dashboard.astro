@@ -4,6 +4,7 @@ import CouponInput from '@/components/CouponInput.astro'
 import Header from '@/sections/Header.astro'
 
 import { supabaseAdmin } from '@/supabase-admin'
+import TicketContainer from '@/components/TicketContainer.astro'
 
 if (!Astro.locals.user) {
   return Astro.redirect('/registro')
@@ -51,9 +52,7 @@ const totalCoupons = userCoupons?.length || 0
         </div>
       </div>
 
-      <p class="text-white/70">
-        Aquí mostrar la tabla con las participaciones actuales del usuario
-      </p>
+      <TicketContainer totalCoupons={totalCoupons} />
     </main>
   </div>
 </Layout>
