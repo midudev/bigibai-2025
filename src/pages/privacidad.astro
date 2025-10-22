@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 
 import Footer from '@/sections/Footer.astro'
+import BackToHome from '@/components/BackToHome.astro'
 import Privacy from '@/content/legal/privacidad.md'
 ---
 
@@ -15,6 +16,7 @@ import Privacy from '@/content/legal/privacidad.md'
       aria-label="Política de Privacidad"
       aria-live="assertive"
     >
+      <BackToHome />
       <Privacy />
     </main>
   </section>

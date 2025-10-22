@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 
 import Footer from '@/sections/Footer.astro'
+import BackToHome from '@/components/BackToHome.astro'
 import CookiePolicy from '@/content/legal/politica-de-cookies.md'
 ---
 
@@ -15,6 +16,7 @@ import CookiePolicy from '@/content/legal/politica-de-cookies.md'
       aria-label="Política de Cookies"
       aria-live="assertive"
     >
+      <BackToHome />
       <CookiePolicy />
     </main>
   </section>
