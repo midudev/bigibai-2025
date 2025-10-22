@@ -51,6 +51,7 @@ h2,
 .md-container h1,
 .md-container h2 {
   font-family: 'Heavy', sans-serif;
+  font-weight: 400;
 }
 
 h3,
