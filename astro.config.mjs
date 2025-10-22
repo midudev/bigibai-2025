@@ -22,7 +22,4 @@ export default defineConfig({
       },
     },
   },
-  experimental: {
-    csp: true,
-  },
 })
