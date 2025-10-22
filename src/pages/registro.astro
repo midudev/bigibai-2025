@@ -8,23 +8,12 @@ import GoogleIcon from '@/icons/google.svg'
 
 const user = Astro.locals.user
 
-// si el usuario está logueado, redirigir a la página de dashboard
-if (user) {
-  return Astro.redirect('/dashboard')
-}
-
-// BORRAR ESTO:
-// Comprueba si tiene un query parameter para permitir el acceso a la página
-const allowAccess = Astro.url.searchParams.get(import.meta.env.ALLOW_ACCESS_QUERY_PARAM) === 'true'
-
-if (!allowAccess) {
-  return Astro.redirect('/')
-}
+if (user) return Astro.redirect('/dashboard')
 ---
 
 <Layout>
   <div class="flex min-h-screen flex-col">
-    <Header />
+    <Header participationCount={0} />
 
     <main class="flex flex-1 items-center justify-center px-4 py-8">
       <div class="mx-auto w-full max-w-md">
@@ -110,7 +99,7 @@ if (!allowAccess) {
 
                 <div
                   id="message"
-                  class="invisible translate-y-2 scale-95 rounded-lg bg-gradient-to-r p-3 text-center text-sm font-medium opacity-0 transition-all duration-300"
+                  class="invisible translate-y-2 scale-95 rounded-lg bg-linear-to-r p-3 text-center text-sm font-medium opacity-0 transition-all duration-300"
                 />
               </form>
             </div>
