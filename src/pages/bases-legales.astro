@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 
 import Footer from '@/sections/Footer.astro'
+import BackToHome from '@/components/BackToHome.astro'
 import BasesLegalesContent from '@/content/legal/bases-legales.md'
 ---
 
@@ -15,6 +16,7 @@ import BasesLegalesContent from '@/content/legal/bases-legales.md'
       aria-label="Bases Legales de la Promoción"
       aria-live="assertive"
     >
+      <BackToHome />
       <BasesLegalesContent />
     </main>
   </section>
