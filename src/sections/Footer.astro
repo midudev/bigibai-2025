@@ -1,6 +1,6 @@
-<footer class="pt-10 text-white pb-4 footer-fade-in">
+<footer class="pt-10 text-white pb-4 footer-fade-in relative">
   <div
-    class="w-full max-w-xl mx-auto p-4 flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center"
+    class="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center"
   >
     <a href="/" class="footer-logo">
       <img
@@ -27,6 +27,12 @@
         <li class="footer-link-item" style="animation-delay: 0.3s;">
           <a
             class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
+            href="/bases-legales">Bases Legales</a
+          >
+        </li>
+        <li class="footer-link-item" style="animation-delay: 0.4s;">
+          <a
+            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
             href="/politica-de-cookies">Política de Cookies</a
           >
         </li>
@@ -34,7 +40,7 @@
     </nav>
   </div>
 
-  <div class="text-center footer-copyright">
+  <div class="text-center footer-copyright text-yellow-200">
     <small
       class="hover:text-yellow-300 transition-colors duration-300"
       role="contentinfo"
@@ -48,30 +54,13 @@
 </footer>
 
 <style>
-  @keyframes fadeInFooter {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .footer-fade-in {
-    animation: fadeInFooter 0.6s ease-out;
+  footer {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(0, 0, 0, 0.95) 100%
+    );
   }
 
   .footer-logo {
@@ -99,9 +88,5 @@
 
   .footer-link:hover::after {
     width: 100%;
-  }
-
-  .footer-copyright {
-    animation: fadeInFooter 0.8s ease-out 0.4s backwards;
   }
 </style>
