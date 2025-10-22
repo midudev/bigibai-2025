@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 
 import Footer from '@/sections/Footer.astro'
+import BackToHome from '@/components/BackToHome.astro'
 import LegalNotice from '@/content/legal/aviso-legal.md'
 ---
 
@@ -15,6 +16,7 @@ import LegalNotice from '@/content/legal/aviso-legal.md'
       aria-label="Aviso Legal"
       aria-live="assertive"
     >
+      <BackToHome />
       <LegalNotice />
     </main>
   </section>
