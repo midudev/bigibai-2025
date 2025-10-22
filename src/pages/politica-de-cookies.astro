@@ -1,20 +1,22 @@
 ---
-import Layout from "@/layouts/Layout.astro"
+import Layout from '@/layouts/Layout.astro'
 
-import Footer from "@/sections/Footer.astro"
-import CookiePolicy from "@/content/legal/politica-de-cookies.md"
+import Footer from '@/sections/Footer.astro'
+import CookiePolicy from '@/content/legal/politica-de-cookies.md'
 ---
 
 <Layout>
-    <section class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0">
-        <main 
-        class="relative z-10 md-container"
-        role="contentinfo"
-        aria-label="Política de Cookies"
-        aria-live="assertive"
-        >
-            <CookiePolicy />
-        </main>
-    </section>
-    <Footer />
+  <section
+    class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0"
+  >
+    <main
+      class="relative z-10 md-container"
+      role="contentinfo"
+      aria-label="Política de Cookies"
+      aria-live="assertive"
+    >
+      <CookiePolicy />
+    </main>
+  </section>
+  <Footer />
 </Layout>

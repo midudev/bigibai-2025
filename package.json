@@ -6,23 +6,29 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "prettier": "prettier --write ."
   },
   "dependencies": {
-    "@astrojs/node": "9.4.5",
     "@astrojs/sitemap": "3.6.0",
-    "@astrojs/vercel": "8.2.9",
+    "@astrojs/vercel": "8.2.10",
+    "@floating-ui/dom": "1.7.4",
     "@midudev/tailwind-animations": "0.2.0",
-    "@supabase/supabase-js": "2.75.0",
-    "@tailwindcss/vite": "4.1.14",
+    "@supabase/ssr": "0.7.0",
+    "@supabase/supabase-js": "2.76.1",
+    "@tailwindcss/vite": "4.1.15",
     "@upstash/ratelimit": "2.0.6",
-    "@upstash/redis": "1.35.5",
-    "astro": "5.14.3",
+    "@upstash/redis": "1.35.6",
+    "astro": "5.14.7",
     "canvas-confetti": "1.9.3",
-    "tailwindcss": "4.1.14"
+    "tailwindcss": "4.1.15"
   },
   "devDependencies": {
     "@tailwindcss/typography": "0.5.19",
-    "@types/canvas-confetti": "1.9.0"
+    "@types/canvas-confetti": "1.9.0",
+    "prettier": "3.6.2",
+    "prettier-plugin-astro": "0.14.1",
+    "prettier-plugin-tailwindcss": "0.7.1",
+    "typescript": "5.9.3"
   }
 }

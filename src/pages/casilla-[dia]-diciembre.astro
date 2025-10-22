@@ -1,15 +1,16 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Footer from "@/sections/Footer.astro";
-import Header from "@/sections/Header.astro";
-import { cells } from "@/data/days-data";
+import Layout from '@/layouts/Layout.astro'
+import Footer from '@/sections/Footer.astro'
+import Header from '@/sections/Header.astro'
+import Countdown from '@/components/Countdown.astro'
+import { cells } from '@/data/days-data'
 
 export interface Props {
-  title: string;
-  description: string;
+  description: string
 }
 
-const { title, description } = Astro.props;
+const { description } = Astro.props
+const { params } = Astro
 
 export function getStaticPaths() {
   return cells.map((cell) => {
@@ -18,29 +19,19 @@ export function getStaticPaths() {
         dia: cell.day,
       },
       props: {
-        title: cell.title,
         description: cell.description,
       },
-    };
-  });
+    }
+  })
 }
 ---
 
-<Layout title={title} description={description}>
+<Layout description={description}>
   <div class="flex min-h-screen flex-col">
     <Header />
     <div class="flex flex-1">
-      <main
-        class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4"
-      >
-        <h2
-          class="text-5xl font-normal text-white text-center fade-in-up tracking-wide"
-          style="animation-delay: 0.4s;"
-          role="contentinfo"
-          aria-label={title}
-        >
-          {title}
-        </h2>
+      <main class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4">
+        <Countdown day={params.dia} />
         <p
           class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up"
           style="animation-delay: 0.2s;"

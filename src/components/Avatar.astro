@@ -1,0 +1,71 @@
+---
+interface Props {
+  class?: string
+  src?: string
+  alt?: string
+  size?: 'sm' | 'md' | 'lg'
+  fallback?: string
+}
+
+const {
+  class: className = '',
+  src,
+  alt = 'Avatar',
+  size = 'md',
+  fallback = '?',
+} = Astro.props as Props
+
+const sizeMap = {
+  sm: 32,
+  md: 40,
+  lg: 48,
+} as const
+
+const dimension = sizeMap[size] ?? sizeMap.md
+---
+
+<span
+  class:list={['avatar', className]}
+  style={`--avatar-size: ${dimension}px`}
+  aria-hidden={src ? 'true' : 'false'}
+>
+  {
+    src ? (
+      <img
+        src={src}
+        alt={alt}
+        width={dimension}
+        height={dimension}
+        loading="lazy"
+        onerror="this.onerror=null; this.src='/fallback-avatar.webp'"
+      />
+    ) : (
+      <span class="avatar" aria-label={alt}>
+        {fallback}
+      </span>
+    )
+  }
+</span>
+
+<style>
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    font-size: calc(var(--avatar-size) * 0.45);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

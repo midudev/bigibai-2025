@@ -1,0 +1,57 @@
+---
+const { day, title } = Astro.props
+---
+
+<h2
+  class="md:text-6xl text-4xl font-normal text-center fade-in-up tracking-wide"
+  style="animation-delay: 0.4s;"
+  role="contentinfo"
+  aria-label={title}
+>
+  Faltan <span
+    id="countdown"
+    class="block md:text-7xl text-5xl"
+    aria-live="polite"
+    aria-atomic="true"></span> para abrir la casilla <span class="md:text-7xl text-5xl">{day}</span>
+</h2>
+
+<script define:vars={{ day }}>
+  const countdownElement = document.getElementById('countdown')
+  const targetDay = Number.parseInt(day, 10)
+
+  const getTargetDate = () => {
+    const now = new Date()
+    const target = new Date(now.getFullYear(), 11, targetDay, 0, 0, 0, 0)
+    if (target <= now) {
+      target.setFullYear(target.getFullYear() + 1)
+    }
+    return target
+  }
+
+  const targetDate = getTargetDate()
+
+  const updateCountdown = () => {
+    const now = new Date()
+    const diffMs = targetDate.getTime() - now.getTime()
+
+    if (diffMs <= 0) {
+      countdownElement.textContent = '00d 00h 00m 00s'
+      return
+    }
+
+    const seconds = Math.floor(diffMs / 1000)
+    const days = Math.floor(seconds / 86400)
+    const hours = Math.floor((seconds % 86400) / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+
+    countdownElement.textContent = `${days}d ${hours
+      .toString()
+      .padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${secs
+      .toString()
+      .padStart(2, '0')}s`
+  }
+
+  updateCountdown()
+  setInterval(updateCountdown, 1000)
+</script>

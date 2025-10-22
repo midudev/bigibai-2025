@@ -8,10 +8,7 @@ type ErrorCodes = 'UNDEFINED_ECRYPTION_SECRET' | 'ENCRYPTION_SECRET_LENGTH' | 'U
 export default class EncryptRuntimeError extends Error {
   code: ErrorCodes
 
-  constructor(
-    code: ErrorCodes,
-    message: string
-  ) {
+  constructor(code: ErrorCodes, message: string) {
     super(message)
     this.name = 'EncryptRuntimeError'
     this.code = code.trim().toUpperCase() as ErrorCodes
@@ -26,9 +23,7 @@ export default class EncryptRuntimeError extends Error {
     console.error(`
     [!] ${this.name}: | ${this.code} |...
       └── [+] Message: "${this.message}"
-    ${secret != '<undefined>' ?
-    `       └── [*] On: /.env ==> ENCRYPTION_SECRET=${secret}`
-    : ''}
+    ${secret != '<undefined>' ? `       └── [*] On: /.env ==> ENCRYPTION_SECRET=${secret}` : ''}
     `)
     return this
   }
