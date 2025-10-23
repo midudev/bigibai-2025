@@ -15,13 +15,13 @@ const { isLoggedIn, participationCount } = Astro.props
     <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
 
     <div
-      class="bento-card group col-span-1 overflow-hidden md:col-span-2 flex p-4"
+      class="bento-card group col-span-1 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-4"
       style="animation-delay: 0.1s;"
     >
       <img
         src="/hero.webp"
         alt="Imagen que explica que en la casilla de atrás hay código para canjear y participar"
-        class="h-auto w-[400px] object-contain"
+        class="h-auto w-[300px] md:w-[150px] lg:w-[250px] object-contain mx-auto"
         loading="eager"
       />
       <div class="relative z-10 flex flex-1 flex-col items-start justify-center gap-6">
@@ -79,7 +79,7 @@ const { isLoggedIn, participationCount } = Astro.props
           <img
             src="/calendario-producto.webp"
             alt="Calendario Big Ibai 2025"
-            class="h-auto w-52 object-contain transition-transform duration-300 group-hover:scale-110 -mt-40"
+            class="h-auto w-52 object-contain transition-transform duration-300 group-hover:scale-110 mt-0 md:-mt-40"
             loading="eager"
           />
         </div>
@@ -92,13 +92,13 @@ const { isLoggedIn, participationCount } = Astro.props
             Calendario Big Ibai 2025
           </h3>
 
-          <p class="text-base text-white/80 md:text-lg text-balance text-center">
+          <p class="text-base md:hidden text-white/80 md:text-lg text-balance text-center">
             Consigue tu calendario en los mejores supermercados
           </p>
 
           <Button variant="secondary" size="lg" class="w-full">
             <a href="#tiendas" class="flex items-center justify-center gap-2">
-              ¿Dónde lo puedo comprar?
+              ¿Dónde lo compro?
             </a>
           </Button>
         </div>
