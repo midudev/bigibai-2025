@@ -6,16 +6,6 @@ const redirectRoutes = ['/registro']
 
 // Rutas que no necesitan verificación de autenticación
 function shouldSkipAuth(pathname: string): boolean {
-  // Skip assets estáticos
-  if (pathname.startsWith('/_') || (pathname.includes('.') && !pathname.endsWith('.html'))) {
-    return true
-  }
-
-  // Skip APIs de autenticación (ya manejan su propia auth)
-  if (pathname.startsWith('/api/auth/')) {
-    return true
-  }
-
   // Skip rutas públicas que nunca necesitan auth
   const publicRoutes = ['/aviso-legal', '/bases-legales', '/politica-de-cookies', '/privacidad']
 
