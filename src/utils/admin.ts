@@ -1,4 +1,4 @@
-const ADMIN_IDS = import.meta.env.ADMIN_IDS.split(',')
+const ADMIN_IDS = import.meta.env.ADMIN_USERS_IDS.split(',')
 /**
  * Verifica si un email tiene permisos de administrador
  */
