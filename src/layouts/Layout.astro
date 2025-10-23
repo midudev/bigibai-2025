@@ -74,13 +74,15 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     <meta name="msapplication-TileImage" content="/cropped-favicon-270x270.png" />
     <ClientRouter />
   </head>
-  <body class="overflow-hidden">
-    <div id="mask" class={isInternalNavigation ? 'unlocked' : ''}>
-      <div id="background">
-        <GradientOverlay />
-        <Snowballs />
-        <div class="relative z-2">
-          <slot />
+  <body>
+    <div class="overflow-hidden">
+      <div id="mask" class={isInternalNavigation ? 'unlocked' : ''}>
+        <div id="background">
+          <GradientOverlay />
+          <Snowballs />
+          <div class="relative z-2">
+            <slot />
+          </div>
         </div>
       </div>
     </div>
@@ -118,6 +120,8 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     mask-position: center center;
     mask-repeat: no-repeat;
     mask-size: 50px;
+    overflow-y: scroll;
+    position: fixed;
     inset: 0;
     &.animated {
       animation: lock-reveal 3s forwards ease-in-out;
