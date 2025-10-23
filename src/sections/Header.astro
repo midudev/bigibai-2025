@@ -42,6 +42,7 @@ if (typeof participationCount === 'undefined' && user) {
 // Verificar la página actual
 const currentPath = Astro.url.pathname
 const isRegistroPage = currentPath === '/registro'
+const isHomePage = currentPath === '/'
 ---
 
 <header class="overflow-x-clip pt-24 pb-5" aria-label="Big Ibai">
@@ -109,14 +110,43 @@ const isRegistroPage = currentPath === '/registro'
   </div>
 
   <div class="logo-container relative mx-auto flex justify-center">
-    <div class="logo-wrapper relative z-10 mx-auto max-w-xl w-full px-4 md:px-0">
-      <img class="logo-main" src="/logo-a.svg" alt="bigibai logo" />
-      <img
-        class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
-        src="/logo-a.svg"
-        alt="bigibai logo"
-      />
-    </div>
+    {
+      !isHomePage ? (
+        <a href="/" class="logo-link-wrapper group relative mx-auto max-w-xl w-full px-4 md:px-0">
+          {/* Flecha y texto que aparece al hacer hover */}
+          <div class="back-arrow-container">
+            <span class="back-text">Ir al inicio</span>
+            <svg
+              class="back-arrow scale-x-[-1]"
+              xml:space="preserve"
+              width="40"
+              height="40"
+              viewBox="0 0 369.698 369.698"
+            >
+              <path d="M361.771 147.464c-.612 0-.612 0 0 0 .611-2.448.611-4.284-.612-6.732-29.988-41.004-75.888-72.828-119.952-97.308-2.448-1.224-5.508 0-6.731 1.836-3.673-1.224-8.568.612-8.568 5.508-1.225 15.912-.612 33.048.612 49.572C123.703 84.428-34.805 158.48 6.811 282.104c0 0 0 .612.612.612-1.836 1.836-1.836 5.508 0 7.956 6.12 7.956 15.3 15.3 23.256 22.032 4.896 4.283 15.912 17.136 23.868 12.852h.612c25.704 3.672 50.796-1.836 76.5-5.508 1.836 0 3.06-1.224 3.672-2.448 2.448.612 4.896-1.224 4.896-3.672 1.224-47.124 43.452-69.156 85.68-70.992 2.448 0 4.284-2.448 4.896-4.284.612.612 1.836 1.225 2.448 1.225-.612 1.836.612 3.672 1.836 4.896-1.224 1.836-1.836 4.896.612 6.12 7.956 6.732 17.748 10.404 25.704 17.748 1.836 1.836 5.508 2.448 7.956 1.225 26.928-17.748 53.855-36.108 76.5-58.752 12.852-14.077 36.108-45.902 15.912-63.65zM130.435 307.808c-1.224-.611-2.448-.611-3.672-.611-23.868 3.672-47.124 9.792-71.604 7.344h-.612c-1.224-1.836-3.672-3.061-4.896-4.284-4.284-3.06-8.568-6.732-12.852-10.404l-12.852-11.016c24.48 1.224 48.96.612 72.828-3.061 2.448-.611 3.672-1.836 4.284-3.06 1.224-.612 1.836-1.836 1.836-3.06 7.344-59.364 69.156-83.232 123.012-82.62 0 .611 0 1.224-.612 1.836-.612 9.18-2.448 23.256.612 33.048-42.84-6.12-100.98 28.764-95.472 75.888zm97.92-124.236c-53.244-3.06-137.7 25.704-134.641 89.965-25.092 1.836-50.796 2.447-75.888 3.672C-6.041 162.764 128.599 95.444 227.131 113.192v.612c.612 6.12 9.181 6.12 9.792 0 1.836-19.584 3.061-40.392 1.836-59.976 37.332 29.376 77.725 54.468 108.324 91.8-36.72 25.704-71.604 54.468-105.264 84.457-.612-4.284-1.225-9.181-1.836-13.464-.612-5.509-1.225-11.628-1.836-17.137 0-2.447-1.225-4.283-3.061-5.508 1.226-3.672-1.223-9.792-6.731-10.404zm86.904 36.72c-11.628 9.792-24.479 18.359-37.332 27.54-4.283 3.06-9.18 6.12-13.464 9.18-1.224.612-15.3-8.568-21.42-12.24 37.944-28.151 74.052-58.14 111.384-86.904 3.672 26.928-18.972 45.289-39.168 62.424z" />
+            </svg>
+          </div>
+
+          <div class="logo-wrapper relative z-10 w-full">
+            <img class="logo-main w-full" src="/logo-a.svg" alt="bigibai logo" />
+            <img
+              class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
+              src="/logo-a.svg"
+              alt="bigibai logo"
+            />
+          </div>
+        </a>
+      ) : (
+        <div class="logo-wrapper relative z-10 mx-auto max-w-xl w-full px-4 md:px-0">
+          <img class="logo-main" src="/logo-a.svg" alt="bigibai logo" />
+          <img
+            class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
+            src="/logo-a.svg"
+            alt="bigibai logo"
+          />
+        </div>
+      )
+    }
   </div>
 </header>
 
@@ -194,6 +224,77 @@ const isRegistroPage = currentPath === '/registro'
     mask-position: center;
     pointer-events: none;
     z-index: 2;
+  }
+
+  /* Estilos para el enlace del logo */
+  .logo-link-wrapper {
+    display: block;
+    position: relative;
+    cursor: pointer;
+  }
+
+  /* Contenedor de la flecha y texto */
+  .back-arrow-container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    rotate: 25deg;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    opacity: 0;
+    z-index: 1;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  /* La flecha */
+  .back-arrow {
+    fill: #f9b233;
+    filter: drop-shadow(0 0 10px rgba(249, 178, 51, 0.5));
+    transform: translateX(-10px);
+  }
+
+  /* El texto */
+  .back-text {
+    font-weight: bold;
+    color: #f9b233;
+    text-shadow: 0 0 10px rgba(249, 178, 51, 0.5);
+    white-space: nowrap;
+    font-size: 0.8rem;
+  }
+
+  /* Al hacer hover en el enlace */
+  .logo-link-wrapper:hover .back-arrow-container {
+    opacity: 1;
+    left: -60px;
+    top: -50px;
+    rotate: 15deg;
+  }
+
+  .logo-link-wrapper:hover .logo-wrapper {
+    transform: translateX(10px);
+    filter: drop-shadow(0 0 20px rgba(248, 177, 52, 0.2));
+  }
+
+  /* Ajuste para que el logo no se anime con float cuando está en hover */
+  .logo-link-wrapper .logo-wrapper {
+    animation: float 5s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(248, 177, 52, 0.4));
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (max-width: 768px) {
+    .back-arrow {
+      width: 30px;
+      height: 30px;
+    }
+
+    .back-text {
+      font-size: 0.875rem;
+    }
   }
 
   .logo-main {
