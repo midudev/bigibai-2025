@@ -56,7 +56,8 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         data-retail="eroski"
       >
         <span
-          class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          style="background-color: #f97316;"
           aria-hidden="true"></span>
         <img
           class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
@@ -69,7 +70,8 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         data-retail="corte-ingles"
       >
         <span
-          class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          style="background-color: #10b981;"
           aria-hidden="true"></span>
         <img
           class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
@@ -82,7 +84,8 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         data-retail="carrefour"
       >
         <span
-          class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          style="background-color: #0f468f;"
           aria-hidden="true"></span>
         <img
           class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
@@ -95,7 +98,8 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         data-retail="alcampo"
       >
         <span
-          class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          style="background-color: #ef4444;"
           aria-hidden="true"></span>
         <img
           class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
@@ -146,10 +150,10 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   } as const
 
   const colors: Record<string, string> = {
-    A: '#0099ff', // Eroski
-    B: '#10b981', // El Corte Inglés
-    C: '#0f468f', // Carrefour
-    D: '#ef4444', // Alcampo
+    A: '#f97316', // Eroski - Naranja
+    B: '#10b981', // El Corte Inglés - Verde
+    C: '#0f468f', // Carrefour - Azul oscuro
+    D: '#ef4444', // Alcampo - Rojo
   } as const
 
   // Función para generar colores consistentes por retail
