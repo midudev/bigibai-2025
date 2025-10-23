@@ -112,31 +112,47 @@ h2 {
     textGlow 3s ease-in-out infinite;
 }
 
-/* Estilos para la View Transition */
-::view-transition-old(root) {
-  animation: fadeOut 0.8s ease-in-out;
+/* Desactivar las animaciones por defecto de Astro */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
 }
 
+/* Solo animar la nueva página con la máscara */
 ::view-transition-new(root) {
   animation: svgMaskReveal 0.8s ease-in-out;
 }
 
-@keyframes fadeOut {
+/* Mantener la página antigua visible sin fade */
+::view-transition-old(root) {
+  z-index: 1;
+  animation: darken 0.5s ease-in-out;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+@keyframes darken {
+  from {
+    filter: saturate(1);
+  }
   to {
+    filter: saturate(0);
     opacity: 0;
   }
 }
 
 @keyframes svgMaskReveal {
   from {
-    mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 51.1 84.79"><path d="m1.03 84.79 11.7-36.64c-.03-.6-3.13-2.46-3.84-3.06C-8.24 30.59.92 1.52 23.25.07c27.6-1.8 38.42 33.62 15.1 47.47l-.07.36 11.74 36.9H1.03Z" fill="black"/></svg>');
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 51.1 84.79"><path d="m1.03 84.79 11.7-36.64c-.03-.6-3.13-2.46-3.84-3.06C-8.24 30.59.92 1.52 23.25.07c27.6-1.8 38.42 33.62 15.1 47.47l-.07.36 11.74 36.9H1.03Z" fill="black"/></svg>');
     mask-size: 0% 0%;
     mask-position: center;
     mask-repeat: no-repeat;
   }
   to {
-    mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 51.1 84.79"><path d="m1.03 84.79 11.7-36.64c-.03-.6-3.13-2.46-3.84-3.06C-8.24 30.59.92 1.52 23.25.07c27.6-1.8 38.42 33.62 15.1 47.47l-.07.36 11.74 36.9H1.03Z" fill="black"/></svg>');
-    mask-size: 500% 500%;
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 51.1 84.79"><path d="m1.03 84.79 11.7-36.64c-.03-.6-3.13-2.46-3.84-3.06C-8.24 30.59.92 1.52 23.25.07c27.6-1.8 38.42 33.62 15.1 47.47l-.07.36 11.74 36.9H1.03Z" fill="black"/></svg>');
+    mask-size: 700% 700%;
     mask-position: center;
     mask-repeat: no-repeat;
   }

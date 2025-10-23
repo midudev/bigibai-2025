@@ -110,10 +110,10 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   } as const
 
   const colors: Record<string, string> = {
-    A: '#10b981', // Verde - Eroski
-    B: '#ef4444', // Rojo - El Corte Inglés
-    C: '#3b82f6', // Azul - Carrefour
-    D: '#f59e0b', // Naranja - Alcampo
+    A: '#0099ff', // Eroski
+    B: '#10b981', // El Corte Inglés
+    C: '#0f468f', // Carrefour
+    D: '#ef4444', // Alcampo
   } as const
 
   // Función para generar colores consistentes por retail
@@ -254,8 +254,8 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
       })
 
       console.log('Mapa inicializado correctamente')
-    } catch (error) {
-      console.error('Error al inicializar el mapa:', error)
+    } catch {
+      console.error('Error al inicializar el mapa.')
     }
   }
 </script>
