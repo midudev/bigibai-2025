@@ -4,8 +4,6 @@ import Header from '@/sections/Header.astro'
 import { supabaseAdmin } from '@/supabase-admin'
 import { isAdmin } from '@/utils/admin'
 
-const TOTAL_COUPONS = Number(import.meta.env.TOTAL_COUPONS)
-
 // Verificar que el usuario esté autenticado
 if (!Astro.locals.user) {
   return Astro.redirect('/404')
@@ -24,8 +22,6 @@ const { count: totalCouponsUsed } = await supabaseAdmin
   .from('coupons')
   .select('*', { count: 'exact', head: true })
   .eq('is_used', true)
-
-const availableCoupons = TOTAL_COUPONS - (totalCouponsUsed ?? 0)
 
 // 3. Calcular media de cupones por usuario
 // Obtener todos los usuarios únicos que han usado al menos un cupón
@@ -99,17 +95,6 @@ const totalUserCoupons = userCoupons?.length || 0
                 {averageCouponsPerUser.toFixed(2)}
               </h3>
               <p class="mt-2 text-white/80">Media cupones/usuario</p>
-            </div>
-          </div>
-
-          <!-- Cupones disponibles -->
-          <div class="bento-card group overflow-hidden" style="animation-delay: 0.4s;">
-            <div class="flex flex-col items-center justify-center p-8 text-center">
-              <div class="mb-4 text-6xl">✨</div>
-              <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
-                {availableCoupons || 0}
-              </h3>
-              <p class="mt-2 text-white/80">Cupones disponibles</p>
             </div>
           </div>
         </div>
