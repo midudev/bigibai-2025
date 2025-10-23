@@ -6,6 +6,8 @@ const DEFAULT_LONGITUDE = '2.154007'
 const ipLatitude = Astro.request.headers.get('x-vercel-ip-latitude') ?? DEFAULT_LATITUDE
 const ipLongitude = Astro.request.headers.get('x-vercel-ip-longitude') ?? DEFAULT_LONGITUDE
 
+console.log(Astro.request.headers)
+
 // Leer y parsear el CSV
 const csvPath = '/coordenadas.csv'
 const response = await fetch(new URL(csvPath, Astro.url.origin))
