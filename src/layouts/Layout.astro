@@ -78,9 +78,9 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
   <body>
     <div class="overflow-hidden">
       <div
-      id="background-mask"
-      class={`min-h-screen w-full ${isInternalNavigation ? 'masked unlocked' : ''}`}
-    >
+        id="background-mask"
+        class={`min-h-screen w-full ${isInternalNavigation ? 'masked unlocked' : ''}`}
+      >
         <GradientOverlay />
         <Snowballs />
         <div class="relative z-2">
@@ -98,6 +98,7 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
 
   html,
   body {
+    scroll-behavior: smooth;
     margin: 0;
     width: 100%;
     height: 100%;
@@ -128,6 +129,17 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
 
     100% {
       mask-size: 2000vh;
+    }
+  }
+
+  @prefers-reduced-motion {
+    #background-mask {
+      animation: none;
+    }
+
+    html,
+    body {
+      scroll-behavior: auto;
     }
   }
 </style>
