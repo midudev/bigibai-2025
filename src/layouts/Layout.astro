@@ -19,7 +19,6 @@ let { title, description } = Astro.props
 title ??= defaultTitle
 description ??= defaultDescription
 
-// detect if previous page is an internal navigation
 const previousPage = Astro.request.headers.get('referer')
 const isInternalNavigation = previousPage?.includes(Astro.url.origin)
 ---
@@ -75,12 +74,9 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     <meta name="msapplication-TileImage" content="/cropped-favicon-270x270.png" />
     <ClientRouter />
   </head>
-  <body>
-    <div class="overflow-hidden">
-      <div
-        id="background-mask"
-        class={`min-h-screen w-full ${isInternalNavigation ? 'masked unlocked' : ''}`}
-      >
+  <body class="overflow-hidden">
+    <div id="mask" class={isInternalNavigation ? 'unlocked' : ''}>
+      <div id="background">
         <GradientOverlay />
         <Snowballs />
         <div class="relative z-2">
@@ -104,37 +100,38 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     height: 100%;
   }
 
-  #background-mask {
+  #background {
     background-image: url('/fondo.webp');
     background-size: cover;
     background-position: top;
     background-repeat: no-repeat;
-
-    &.masked {
-      mask-image: url('/lock.svg');
-      mask-position: center 50%;
-      mask-repeat: no-repeat;
-      mask-size: 50px;
-    }
-
-    &.unlocked {
-      animation: lock-reveal 3s forwards ease-in-out;
-    }
   }
 
   @keyframes lock-reveal {
-    0% {
-      mask-size: 50px;
-    }
-
     100% {
       mask-size: 2000vh;
     }
   }
 
+  #mask {
+    mask-image: url('/lock.svg');
+    mask-position: center center;
+    mask-repeat: no-repeat;
+    mask-size: 50px;
+    position: fixed;
+    inset: 0;
+    &.animated {
+      animation: lock-reveal 3s forwards ease-in-out;
+    }
+    &.unlocked {
+      position: relative;
+      mask-size: 2000vh;
+    }
+  }
+
   @prefers-reduced-motion {
-    #background-mask {
-      animation: none;
+    #mask {
+      animation: none !important;
     }
 
     html,
@@ -143,3 +140,8 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     }
   }
 </style>
+
+<script>
+  const maskEl = document.querySelector('#mask')
+  maskEl?.classList.add('animated')
+</script>
