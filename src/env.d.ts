@@ -17,4 +17,8 @@ declare global {
       user: null | User
     }
   }
+
+  interface Window {
+    L: any
+  }
 }
