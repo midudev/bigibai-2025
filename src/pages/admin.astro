@@ -1,0 +1,164 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Header from '@/sections/Header.astro'
+import { supabaseAdmin } from '@/supabase-admin'
+import { isAdmin } from '@/utils/admin'
+
+const TOTAL_COUPONS = 255000
+
+// Verificar que el usuario esté autenticado
+if (!Astro.locals.user) {
+  return Astro.redirect('/404')
+}
+
+// Verificar que el email del usuario esté en la lista de admins
+const userEmail = Astro.locals.user.email
+if (!isAdmin(userEmail)) {
+  return Astro.redirect('/404')
+}
+
+// Obtener estadísticas generales
+
+// 1. Total de cupones usados
+const { count: totalCouponsUsed } = await supabaseAdmin
+  .from('coupons')
+  .select('*', { count: 'exact', head: true })
+  .eq('is_used', true)
+
+const availableCoupons = TOTAL_COUPONS - (totalCouponsUsed ?? 0)
+
+// 3. Calcular media de cupones por usuario
+// Obtener todos los usuarios únicos que han usado al menos un cupón
+const { data: usersWithCoupons } = await supabaseAdmin
+  .from('coupons')
+  .select('used_by')
+  .eq('is_used', true)
+  .not('used_by', 'is', null)
+
+// Usar Set para obtener usuarios únicos de forma más simple
+const uniqueUsersCount = new Set(usersWithCoupons?.map((c) => c.used_by)).size
+
+// Calcular la media
+const averageCouponsPerUser = uniqueUsersCount > 0 ? (totalCouponsUsed || 0) / uniqueUsersCount : 0
+
+// Obtener cupones del usuario actual para el header
+const { data: userCoupons } = await supabaseAdmin
+  .from('coupons')
+  .select('used_at')
+  .eq('used_by', Astro.locals.user.id)
+  .eq('is_used', true)
+
+const totalUserCoupons = userCoupons?.length || 0
+---
+
+<Layout title="Panel de Administración - Big Ibai 2025">
+  <div class="flex min-h-screen flex-col">
+    <Header participationCount={totalUserCoupons} />
+
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-12 md:py-20">
+      <div class="space-y-8">
+        <!-- Encabezado -->
+        <div class="text-center">
+          <h1 class="text-shadow-title text-4xl font-bold text-white md:text-5xl lg:text-6xl">
+            Panel de Administración
+          </h1>
+          <p class="mt-4 text-lg text-white/80 md:text-xl">
+            Bienvenido, {userEmail}
+          </p>
+        </div>
+
+        <!-- Estadísticas generales -->
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <!-- Total de usuarios -->
+          <div class="bento-card group overflow-hidden" style="animation-delay: 0.1s;">
+            <div class="flex flex-col items-center justify-center p-8 text-center">
+              <div class="mb-4 text-6xl">👥</div>
+              <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
+                {uniqueUsersCount}
+              </h3>
+              <p class="mt-2 text-white/80">Usuarios con cupones</p>
+            </div>
+          </div>
+
+          <!-- Cupones usados -->
+          <div class="bento-card group overflow-hidden" style="animation-delay: 0.2s;">
+            <div class="flex flex-col items-center justify-center p-8 text-center">
+              <div class="mb-4 text-6xl">🎫</div>
+              <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
+                {totalCouponsUsed || 0}
+              </h3>
+              <p class="mt-2 text-white/80">Cupones usados</p>
+            </div>
+          </div>
+
+          <!-- Media de cupones por usuario -->
+          <div class="bento-card group overflow-hidden" style="animation-delay: 0.3s;">
+            <div class="flex flex-col items-center justify-center p-8 text-center">
+              <div class="mb-4 text-6xl">📊</div>
+              <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
+                {averageCouponsPerUser.toFixed(2)}
+              </h3>
+              <p class="mt-2 text-white/80">Media cupones/usuario</p>
+            </div>
+          </div>
+
+          <!-- Cupones disponibles -->
+          <div class="bento-card group overflow-hidden" style="animation-delay: 0.4s;">
+            <div class="flex flex-col items-center justify-center p-8 text-center">
+              <div class="mb-4 text-6xl">✨</div>
+              <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
+                {availableCoupons || 0}
+              </h3>
+              <p class="mt-2 text-white/80">Cupones disponibles</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .bento-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(0, 41, 107, 0.7) 100%);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    animation: fadeInScale 0.6s ease-out;
+    animation-fill-mode: both;
+    transition: all 0.3s ease;
+  }
+
+  .bento-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+    transform: translateY(-4px);
+  }
+
+  .bento-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1.5rem;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+</style>
