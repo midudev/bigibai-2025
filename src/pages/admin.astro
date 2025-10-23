@@ -63,7 +63,7 @@ const totalUserCoupons = userCoupons?.length || 0
             Panel de Administración
           </h1>
           <p class="mt-4 text-lg text-white/80 md:text-xl">
-            Bienvenido, {userEmail}
+            Bienvenido, {Astro.locals.user.user_metadata.full_name}
           </p>
         </div>
 
