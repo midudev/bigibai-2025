@@ -1,24 +1,159 @@
 ---
-import SubscribeForm from '@/newsletter/components/SubscribeForm.astro'
+import Button from '@/components/Button.astro'
+
+interface Props {
+  isLoggedIn: boolean
+  participationCount: number
+}
+
+const { isLoggedIn, participationCount } = Astro.props
 ---
 
-<main class="mx-auto flex max-w-4xl flex-col items-center justify-center gap-4 px-4 py-20">
-  <p
-    class="fade-in-up mb-10 text-center text-xl text-balance text-white/80"
-    style="animation-delay: 0.2s;"
-    aria-live="off"
-  >
-    ¿Listos para celebrar las Navidades juntos de nuevo? Descubre la nueva edición de Big Ibai y
-    mucho más próximamente.
-  </p>
-  <h2
-    class="fade-in-up text-shadow-title text-center text-5xl font-normal text-white"
-    style="animation-delay: 0.4s;"
-    role="contentinfo"
-    aria-label="¿Quieres que te avisemos?"
-  >
-    ¿Quieres que te avisemos?
-  </h2>
-  <!--<p class="text-xl text-white/80 text-center text-balance mb-10"  aria-live="off">Unete a los mas de <span class="text-brand font-bold text-3xl newsletter-count"><span id="newsletter-count"></span> reals</span> que ya están suscritos.</p>-->
-  <SubscribeForm />
+<main class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20">
+  <!-- Bento Grid -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+    <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
+
+    <div
+      class="bento-card group col-span-1 overflow-hidden md:col-span-2 flex p-4"
+      style="animation-delay: 0.1s;"
+    >
+      <img
+        src="/hero.webp"
+        alt="Imagen que explica que en la casilla de atrás hay código para canjear y participar"
+        class="h-auto w-[400px] object-contain"
+        loading="eager"
+      />
+      <div class="relative z-10 flex flex-1 flex-col items-start justify-center gap-6">
+        <div
+          class="relative flex h-full flex-col justify-between p-8 md:flex-col md:items-center md:p-12"
+        >
+          {
+            !isLoggedIn ? (
+              <>
+                <div class="space-y-4 flex justify-center items-center flex-col">
+                  <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance">
+                    Inicia sesión para empezar
+                  </h2>
+                  <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
+                    Entra y valida tu código del calendario de adviento para participar en los
+                    sorteos
+                  </p>
+                </div>
+
+                <Button href="/registro" variant="brand" size="lg" class="mt-4 mx-auto">
+                  ¡Inicia sesión ahora!
+                </Button>
+              </>
+            ) : (
+              <>
+                <div class="space-y-4 flex justify-center items-center flex-col">
+                  <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance">
+                    {participationCount === 0
+                      ? '¡Aún no tienes participaciones!'
+                      : participationCount === 1
+                        ? '¡Tienes 1 participación!'
+                        : `¡Tienes ${participationCount} participaciones!`}
+                  </h2>
+                  <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
+                    {participationCount === 0
+                      ? 'Valida tu primer código del calendario para empezar a participar en los sorteos'
+                      : 'Sigue validando códigos del calendario para aumentar tus oportunidades de ganar'}
+                  </p>
+                </div>
+
+                <Button href="/dashboard" variant="brand" size="lg" class="mt-4 mx-auto">
+                  {participationCount === 0 ? '¡Validar mi primer código!' : 'Validar más códigos'}
+                </Button>
+              </>
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-card group col-span-1" style="animation-delay: 0.2s;">
+      <div class="relative flex h-full min-h-[400px] flex-col justify-between p-8 md:p-10">
+        <!-- Imagen del producto -->
+        <div class="mb-6 flex flex-1 items-center justify-center">
+          <img
+            src="/calendario-producto.webp"
+            alt="Calendario Big Ibai 2025"
+            class="h-auto w-52 object-contain transition-transform duration-300 group-hover:scale-110 -mt-40"
+            loading="eager"
+          />
+        </div>
+
+        <!-- Contenido -->
+        <div class="space-y-4">
+          <h3
+            class="text-shadow-title text-2xl font-bold text-white md:text-3xl text-balance text-center"
+          >
+            Calendario Big Ibai 2025
+          </h3>
+
+          <p class="text-base text-white/80 md:text-lg text-balance text-center">
+            Consigue tu calendario en los mejores supermercados
+          </p>
+
+          <Button variant="secondary" size="lg" class="w-full">
+            <a href="#tiendas" class="flex items-center justify-center gap-2">
+              ¿Dónde lo puedo comprar?
+            </a>
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .bento-card {
+      position: relative;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(0, 41, 107, 0.7) 100%);
+      border-radius: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      animation: fadeInScale 0.6s ease-out;
+      animation-fill-mode: both;
+      transition: all 0.3s ease;
+    }
+
+    .bento-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+      transform: translateY(-4px);
+    }
+
+    .bento-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 1.5rem;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .bento-card {
+        min-height: 350px;
+      }
+    }
+  </style>
 </main>
