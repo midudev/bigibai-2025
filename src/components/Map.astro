@@ -1,0 +1,365 @@
+---
+const DEFAULT_LATITUDE = '41.390205'
+const DEFAULT_LONGITUDE = '2.154007'
+
+// Leer la request de Astro y recuperar los headers x-vercel-ip-latitude y x-vercel-ip-longitude
+const ipLatitude = Astro.request.headers.get('x-vercel-ip-latitude') ?? DEFAULT_LATITUDE
+const ipLongitude = Astro.request.headers.get('x-vercel-ip-longitude') ?? DEFAULT_LONGITUDE
+
+// Leer y parsear el CSV
+const csvPath = '/coordenadas.csv'
+const response = await fetch(new URL(csvPath, Astro.url.origin))
+const csvText = await response.text()
+
+// Parsear CSV
+const lines = csvText.split('\n')
+
+// Encontrar índices de las columnas que necesitamos
+const [retailIndex, ensenaIndex, ciudadIndex, provinciaIndex, direccionIndex, latIndex, lonIndex] =
+  [0, 1, 2, 3, 4, 5, 6]
+
+const retailDictionary: Record<string, string> = {
+  A: 'Eroski',
+  B: 'El Corte Inglés',
+  C: 'Carrefour',
+  D: 'Alcampo',
+} as const
+
+// Colores asignados a cada retail
+const retailColors: Record<string, string> = {
+  A: '#0099ff', // Azul Claro - Eroski
+  B: '#10b981', // Verde - El Corte Inglés
+  C: '#0f468f', // Azul Oscuro - Carrefour
+  D: '#ef4444', // Rojo - Alcampo
+} as const
+
+const retailImages: Record<string, string> = {
+  A: '/eroski-logo.webp',
+  B: '/el-corte-ingles-logo.webp',
+  C: '/carrefour-logo.webp',
+  D: '/alcampo-logo.webp',
+} as const
+
+// Parsear datos
+const locations = lines
+  .slice(1)
+  .filter((line) => line.trim())
+  .map((line) => {
+    const cols = line.split(';')
+    const lat = parseFloat(cols[latIndex])
+    const lon = parseFloat(cols[lonIndex])
+
+    // Filtrar coordenadas inválidas
+    if (isNaN(lat) || isNaN(lon)) return null
+
+    return {
+      lat,
+      lon,
+      ciudad: cols[ciudadIndex]?.trim() || '',
+      provincia: cols[provinciaIndex]?.trim() || '',
+      ensena: cols[ensenaIndex]?.trim() || '',
+      direccion: cols[direccionIndex]?.trim() || '',
+      retail: cols[retailIndex]?.trim() || '',
+    }
+  })
+  .filter((loc): loc is NonNullable<typeof loc> => loc !== null)
+
+// Obtener lista única de retails para la leyenda
+const uniqueRetails = [...new Set(locations.map((loc) => loc.retail))].sort()
+
+// Función para obtener el color según el retail
+function getColorForRetail(retail: string): string {
+  return retailColors[retail] || '#6366f1' // Color por defecto: Índigo
+}
+
+function getRetailName(retail: string): string {
+  return retailDictionary[retail] || retail
+}
+
+function getImageForRetail(retail: string): string {
+  return retailImages[retail] || '/images/retail-default.png'
+}
+
+// Determinar el centro del mapa
+// Prioridad: 1) Ubicación del usuario (IP), 2) Promedio de ubicaciones, 3) Centro de España
+let centerLat: number
+let centerLon: number
+let initialZoom: number
+
+if (ipLatitude && ipLongitude) {
+  // Usar la ubicación del usuario basada en IP
+  centerLat = parseFloat(ipLatitude)
+  centerLon = parseFloat(ipLongitude)
+  initialZoom = 11
+} else {
+  // Fallback: Centro de España
+  centerLat = 40.4168
+  centerLon = -3.7038
+  initialZoom = 6
+}
+
+// Indicar si tenemos ubicación del usuario
+const hasUserLocation = !!(ipLatitude && ipLongitude)
+---
+
+<div class="space-y-4">
+  <!-- Mapa -->
+  <div id="map" class="w-full h-[600px] rounded-lg shadow-lg border border-white/20"></div>
+
+  <!-- Leyenda de colores -->
+  <div class="bg-black/20 backdrop-blur-md rounded-lg p-4 border border-white/20">
+    <div class="flex flex-wrap gap-3 justify-center" id="legend">
+      {
+        uniqueRetails.map((retail) => (
+          <div class="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full">
+            <div
+              class="w-3 h-3 rounded-full"
+              style={`background-color: ${getColorForRetail(retail)}`}
+            />
+            <img
+              src={getImageForRetail(retail)}
+              alt={getRetailName(retail)}
+              style="width: 100px; height: 40px; object-fit: contain;"
+            />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+
+<!-- Leaflet JS -->
+<script
+  is:inline
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+
+<script define:vars={{ locations, centerLat, centerLon, initialZoom, hasUserLocation }}>
+  document.addEventListener('astro:page-load', () => {})
+
+  // Diccionario de retail
+  const retailDictionary = {
+    A: 'Eroski',
+    B: 'El Corte Inglés',
+    C: 'Carrefour',
+    D: 'Alcampo',
+  }
+
+  const retailImages = {
+    A: '/eroski-logo.webp',
+    B: '/el-corte-ingles-logo.webp',
+    C: '/carrefour-logo.webp',
+    D: '/alcampo-logo.webp',
+  }
+
+  // Función para generar colores consistentes por retail
+  function getColorForRetail(retail) {
+    const colors = {
+      A: '#10b981', // Verde - Eroski
+      B: '#ef4444', // Rojo - El Corte Inglés
+      C: '#3b82f6', // Azul - Carrefour
+      D: '#f59e0b', // Naranja - Alcampo
+    }
+    return colors[retail] || '#6366f1' // Color por defecto: Índigo
+  }
+
+  function getImageForRetail(retail) {
+    return retailImages[retail] || '/images/retail-default.png'
+  }
+
+  // Función para obtener el nombre del retail
+  function getRetailName(retail) {
+    return retailDictionary[retail] || retail
+  }
+
+  // Función para inicializar el mapa
+  function initMap() {
+    console.log('Inicializando mapa con', locations.length, 'ubicaciones')
+    console.log('Centro del mapa:', centerLat, centerLon, 'Zoom:', initialZoom)
+
+    try {
+      // Inicializar el mapa con el zoom apropiado
+      const map = L.map('map').setView([centerLat, centerLon], initialZoom)
+      // quitar atribución de Leaflet
+      map.attributionControl.setPrefix('')
+
+      // Añadir capa de OpenStreetMap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map)
+
+      // Si tenemos la ubicación del usuario, añadir un marcador especial
+      if (hasUserLocation) {
+        const userIcon = L.divIcon({
+          html: `
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4" fill="#fff"/>
+            </svg>
+          `,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+          className: 'user-location-marker',
+        })
+
+        L.marker([centerLat, centerLon], { icon: userIcon })
+          .addTo(map)
+          .bindPopup(
+            '<div style="text-align: center; padding: 8px;"><strong style="color: #3b82f6;">📍 Tu ubicación</strong></div>',
+            { className: 'user-popup' }
+          )
+
+        // Añadir un círculo de radio alrededor de la ubicación del usuario
+        L.circle([centerLat, centerLon], {
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.1,
+          radius: 20000, // 20km de radio
+        }).addTo(map)
+      }
+
+      // Añadir marcadores para cada ubicación
+      locations.forEach((location) => {
+        const color = getColorForRetail(location.retail)
+        const retailName = getRetailName(location.retail)
+        const retailImage = getImageForRetail(location.retail)
+
+        // Crear marcador con icono SVG personalizado
+        const svgIcon = `
+          <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.2 0 0 7.2 0 16c0 11.2 16 24 16 24s16-12.8 16-24c0-8.8-7.2-16-16-16z" 
+                  fill="${color}" stroke="#fff" stroke-width="2"/>
+            <circle cx="16" cy="15" r="5" fill="#fff"/>
+          </svg>
+        `
+
+        const customIcon = L.divIcon({
+          html: svgIcon,
+          iconSize: [32, 40],
+          iconAnchor: [16, 40],
+          popupAnchor: [0, -40],
+          className: 'custom-marker',
+        })
+
+        const marker = L.marker([location.lat, location.lon], { icon: customIcon }).addTo(map)
+
+        // Crear popup con información mejorada
+        const popupContent = `
+          <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 220px;">
+            <img src="${retailImage}" alt="${retailName}" style="width: 100%; height: 100%; object-fit: contain; max-width: 80px; margin-bottom: 8px;" />
+            <div style="padding: 4px 0;">
+              <div style="margin-bottom: 8px;">
+                <svg style="display: inline-block; vertical-align: middle; margin-right: 6px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span style="font-size: 13px; color: #333; font-weight: 500;">${location.direccion}</span>
+              </div>
+              ${
+                location.ciudad && location.provincia
+                  ? `<div style="font-size: 12px; color: #666;">
+                ${location.ciudad}, ${location.provincia}
+              </div>`
+                  : ''
+              }
+            </div>
+          </div>
+        `
+
+        marker.bindPopup(popupContent, {
+          maxWidth: 300,
+          className: 'custom-popup',
+        })
+      })
+
+      console.log('Mapa inicializado correctamente')
+    } catch (error) {
+      console.error('Error al inicializar el mapa:', error)
+    }
+  }
+
+  // Iniciar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMap)
+  } else {
+    initMap()
+  }
+</script>
+
+<style>
+  #map {
+    z-index: 0;
+  }
+
+  /* Asegurar que los controles de Leaflet sean visibles */
+  :global(.leaflet-control-zoom) {
+    border: 2px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 8px !important;
+  }
+
+  :global(.leaflet-control-zoom a) {
+    color: #333 !important;
+  }
+
+  /* Estilo mejorado para los popups */
+  :global(.leaflet-popup-content-wrapper) {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    padding: 12px;
+  }
+
+  :global(.leaflet-popup-content) {
+    margin: 0;
+  }
+
+  :global(.leaflet-popup-tip) {
+    border-radius: 2px;
+  }
+
+  /* Estilo para los marcadores personalizados */
+  :global(.custom-marker) {
+    background: none;
+    border: none;
+  }
+
+  :global(.custom-marker svg) {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: transform 0.2s ease;
+  }
+
+  :global(.custom-marker:hover svg) {
+    transform: scale(1.1);
+  }
+
+  /* Estilo para el marcador de ubicación del usuario */
+  :global(.user-location-marker) {
+    background: none;
+    border: none;
+  }
+
+  :global(.user-location-marker svg) {
+    filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.5));
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+</style>
