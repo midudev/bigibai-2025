@@ -1,38 +1,14 @@
-import { createClient } from '@/supabase'
 import { type APIRoute } from 'astro'
 
-const csvPath = '/coordenadas.csv'
 let locations: any[] = []
 
 // Encontrar índices de las columnas que necesitamos
 const [retailIndex, ensenaIndex, ciudadIndex, provinciaIndex, direccionIndex, latIndex, lonIndex] =
   [0, 1, 2, 3, 4, 5, 6]
 
-const retailDictionary: Record<string, string> = {
-  A: 'Eroski',
-  B: 'El Corte Inglés',
-  C: 'Carrefour',
-  D: 'Alcampo',
-} as const
-
-// Colores asignados a cada retail
-const retailColors: Record<string, string> = {
-  A: '#0099ff', // Azul Claro - Eroski
-  B: '#10b981', // Verde - El Corte Inglés
-  C: '#0f468f', // Azul Oscuro - Carrefour
-  D: '#ef4444', // Rojo - Alcampo
-} as const
-
-const retailImages: Record<string, string> = {
-  A: '/eroski-logo.webp',
-  B: '/el-corte-ingles-logo.webp',
-  C: '/carrefour-logo.webp',
-  D: '/alcampo-logo.webp',
-} as const
-
 export const GET: APIRoute = async ({ url }) => {
   if (locations.length === 0) {
-    const response = await fetch(new URL(csvPath, url.origin))
+    const response = await fetch('http://bigibai.com/coordenadas.csv')
     const csvText = await response.text()
     // Parsear CSV
     const lines = csvText.split('\n')
