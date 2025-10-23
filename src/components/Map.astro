@@ -144,8 +144,6 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   crossorigin=""></script>
 
 <script define:vars={{ locations, centerLat, centerLon, initialZoom, hasUserLocation }}>
-  document.addEventListener('astro:page-load', () => {})
-
   // Diccionario de retail
   const retailDictionary = {
     A: 'Eroski',
@@ -180,6 +178,10 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   function getRetailName(retail) {
     return retailDictionary[retail] || retail
   }
+
+  document.addEventListener('astro:page-load', () => {
+    initMap()
+  })
 
   // Función para inicializar el mapa
   function initMap() {
@@ -289,12 +291,7 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
     }
   }
 
-  // Iniciar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMap)
-  } else {
-    initMap()
-  }
+  initMap()
 </script>
 
 <style>
