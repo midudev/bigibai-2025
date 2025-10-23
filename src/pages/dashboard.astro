@@ -30,15 +30,6 @@ const totalCoupons = userCoupons?.length || 0
           <h2 class="text-shadow-title text-3xl text-balance">
             Introduce tu código de cupón para participar
           </h2>
-          <div id="coupon-count" class="text-brand mt-4 text-lg font-semibold">
-            {
-              totalCoupons > 0 && (
-                <span>
-                  Has validado {totalCoupons} {totalCoupons === 1 ? 'cupón' : 'cupones'}
-                </span>
-              )
-            }
-          </div>
         </div>
 
         <CouponInput />
