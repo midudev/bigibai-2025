@@ -1,0 +1,198 @@
+---
+import ArrowUp from '@/icons/arrow-up.svg'
+
+interface Props {
+  totalCoupons: number
+}
+
+const { totalCoupons } = Astro.props
+---
+
+<section class="mt-4 w-full sm:w-[80%] max-w-xl px-4 font-sans" aria-labelledby="participation-status">
+  <article
+    class:list={["ticket-card rounded-lg [box-shadow:0_10px_40px_rgba(0, 0, 0, 0.4)] group relative bg-gradient-to-br from-purple-900/40 via-purple-800/30 to-pink-900/40 backdrop-blur transition-all duration-500 cursor-crosshair",
+    "hover:from-purple-800/60 hover:via-purple-800/50 hover:to-pink-900/60",
+      "sm:hover:scale-110 sm:hover:translate-y-[-10px] sm:hover:rotate-2"
+    ]}
+    role="region"
+    aria-label="Ticket de participación en el sorteo"
+  >
+    <div class="relative z-10 grid grid-cols-1 sm:grid-cols-[.5fr_auto_1fr] gap-4 sm:gap-0">
+      <div
+        class="px-4 py-8 sm:px-0 sm:py-0 flex items-center justify-center z-0 relative overflow-hidden border-b border-dashed border-brand/20 sm:border-none"
+        role="img"
+        aria-label="Ilustraciones decorativas de los personajes del sorteo"
+      >
+        <div class="relative inline-block">
+          <img
+            src="/galleta.webp"
+            alt=""
+            aria-hidden="true"
+            class="character-left absolute top-0 left-0 -mb-10 w-32 sm:w-auto z-[5] opacity-0 transition-all duration-[600ms]"
+            style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);"
+            loading="lazy"
+            width="128"
+            height="128"
+          />
+
+          <img
+            src="/bigibai.webp"
+            alt=""
+            aria-hidden="true"
+            class="character-center relative -mb-10 sm:-mb-10 w-32 sm:w-auto z-10 transition-transform duration-500"
+            style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);"
+            loading="lazy"
+            width="128"
+            height="128"
+          />
+
+          <img
+            src="/snowman.webp"
+            alt=""
+            aria-hidden="true"
+            class="character-right absolute top-0 right-0 -mb-10 sm:-mb-10 w-32 sm:w-auto z-[5] opacity-0 transition-all duration-[600ms]"
+            style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);"
+            loading="lazy"
+            width="128"
+            height="128"
+          />
+        </div>
+      </div>
+      <div
+        class="hidden sm:block w-0.5 h-full bg-[repeating-linear-gradient(to_bottom,transparent_0px,transparent_4px,rgba(248,177,52,0.3)_4px,rgba(248,177,52,0.3)_8px)] z-3"
+        role="separator"
+        aria-orientation="vertical"
+        aria-hidden="true"
+      >
+      </div>
+      <div class="relative px-4 py-8 flex items-center justify-center mb-4 sm:mb-0 sm:py-0" id="ticket-content">
+        {
+          totalCoupons > 0 ? (
+            <div class="space-y-2 text-center">
+              <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70">
+                Ya tienes <span class="text-brand" id="ticket-coupon-count">{totalCoupons}</span>{' '}
+                <span id="ticket-coupon-text">{totalCoupons === 1 ? 'participación' : 'participaciones'}</span>
+              </p>
+              <p class="text-white/60 text-xs md:text-sm px-2">
+                Ingresa un código arriba para seguir sumando participaciones en el sorteo
+              </p>
+              <p class="flex items-center justify-center gap-2 text-xs text-brand/80 mx-auto">
+                <ArrowUp aria-hidden="true" class="h-2.5 w-2.5 animate-bounce" />
+                <span>Introduce un nuevo código</span>
+              </p>
+            </div>
+          ) : (
+            <div class="space-y-2 text-center">
+              <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70 font-sans">
+                Aún no tienes participaciones
+              </p>
+              <p class="text-white/60 text-xs md:text-sm px-2">
+                Ingresa un código de cupón arriba para comenzar a participar en el sorteo
+              </p>
+              <p class="flex items-center justify-center gap-2 text-xs text-brand/80 mx-auto">
+                <ArrowUp aria-hidden="true" class="h-2.5 w-2.5 animate-bounce" />
+                <span>Introduce tu primer cupón</span>
+              </p>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </article>
+</section>
+
+<style>
+  @media (max-width: 639px) {
+    .ticket-card {
+      -webkit-mask:
+        radial-gradient(circle 8px at 15% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 35% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 50% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 65% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 85% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 15% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 35% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 50% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 65% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 85% 100%, transparent 0, transparent 8px, black 8px);
+      -webkit-mask-composite: source-in;
+      -webkit-mask-composite: intersect;
+
+      mask:
+        radial-gradient(circle 8px at 15% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 35% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 50% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 65% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 85% 0, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 15% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 35% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 50% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 65% 100%, transparent 0, transparent 8px, black 8px),
+        radial-gradient(circle 8px at 85% 100%, transparent 0, transparent 8px, black 8px);
+      mask-composite: intersect;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .ticket-card {
+      -webkit-mask:
+        radial-gradient(circle 10px at 0 15%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 35%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 50%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 65%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 85%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 15%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 35%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 50%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 65%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 85%, transparent 0, transparent 10px, black 10px);
+      -webkit-mask-composite: source-in;
+      -webkit-mask-composite: intersect;
+
+      mask:
+        radial-gradient(circle 10px at 0 15%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 35%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 50%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 65%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 0 85%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 15%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 35%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 50%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 65%, transparent 0, transparent 10px, black 10px),
+        radial-gradient(circle 10px at 100% 85%, transparent 0, transparent 10px, black 10px);
+      mask-composite: intersect;
+    }
+  
+
+  .character-left {
+    transform: translate(0, 0) rotate(0deg) scale(0.6);
+  }
+
+  .character-right {
+    transform: translate(0, 0) rotate(0deg) scale(0.6);
+  }
+
+  .ticket-card:hover .character-center {
+    transform: translateY(-10%) scale(1.05);
+  }
+
+  .ticket-card:hover .character-left {
+    opacity: 0.8;
+    transform: translate(-40%, -15%) rotate(-12deg) scale(0.75);
+  }
+
+  .ticket-card:hover .character-right {
+    opacity: 0.8;
+    transform: translate(40%, -15%) rotate(12deg) scale(0.75);
+  }
+
+  @media (max-width: 639px) {
+    .ticket-card:hover .character-left {
+      transform: translate(-30%, -10%) rotate(-10deg) scale(0.7);
+    }
+
+    .ticket-card:hover .character-right {
+      transform: translate(30%, -10%) rotate(10deg) scale(0.7);
+    }
+  }
+</style>

@@ -4,6 +4,7 @@ import CouponInput from '@/components/CouponInput.astro'
 import Header from '@/sections/Header.astro'
 
 import { supabaseAdmin } from '@/supabase-admin'
+import TicketContainer from '@/components/TicketContainer.astro'
 
 if (!Astro.locals.user) {
   return Astro.redirect('/registro')
@@ -50,6 +51,8 @@ const totalCoupons = userCoupons?.length || 0
         >
         </div>
       </div>
+
+      <TicketContainer totalCoupons={totalCoupons} />
     </main>
   </div>
 </Layout>

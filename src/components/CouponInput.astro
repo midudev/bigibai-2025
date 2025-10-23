@@ -153,6 +153,43 @@ import Button from '@/components/Button.astro'
       hiddenInput.value = couponValue
     }
 
+    // Función para actualizar el ticket
+    function updateTicket(totalCoupons: number) {
+      const ticketContent = document.getElementById('ticket-content')
+      if (!ticketContent) return
+
+      const ticketCouponCount = document.getElementById('ticket-coupon-count')
+      const ticketCouponText = document.getElementById('ticket-coupon-text')
+
+      // Si el usuario tiene cupones
+      if (totalCoupons > 0) {
+        // Si ya existe el contenido con cupones, solo actualizar los números
+        if (ticketCouponCount && ticketCouponText) {
+          ticketCouponCount.textContent = totalCoupons.toString()
+          ticketCouponText.textContent = totalCoupons === 1 ? 'participación' : 'participaciones'
+        } else {
+          // Si no existe (era el estado sin cupones), reemplazar todo el contenido
+          ticketContent.innerHTML = `
+            <div class="space-y-2 text-center">
+              <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70">
+                Ya tienes <span class="text-brand" id="ticket-coupon-count">${totalCoupons}</span> 
+                <span id="ticket-coupon-text">${totalCoupons === 1 ? 'participación' : 'participaciones'}</span>
+              </p>
+              <p class="text-white/60 text-xs md:text-sm px-2">
+                Ingresa un código arriba para seguir sumando participaciones en el sorteo
+              </p>
+              <p class="flex items-center justify-center gap-2 text-xs text-brand/80 mx-auto">
+                <svg aria-hidden="true" class="h-2.5 w-2.5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                <span>Introduce un nuevo código</span>
+              </p>
+            </div>
+          `
+        }
+      }
+    }
+
     // Manejar input en cada caja
     couponInputs.forEach((input, index) => {
       input.addEventListener('input', (e) => {
@@ -281,6 +318,9 @@ import Button from '@/components/Button.astro'
                   ? `Tienes ${data.totalCoupons} participación`
                   : `Tienes ${data.totalCoupons} participaciones`
             }
+
+            // Actualizar el ticket
+            updateTicket(data.totalCoupons)
           }
 
           // Rehabilitar el botón
