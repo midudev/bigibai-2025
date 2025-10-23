@@ -30,7 +30,7 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 
 <section class="space-y-4" aria-labelledby="map-title">
   <h2 id="map-title" class="sr-only">Mapa de tiendas donde comprar el Calendario Big Ibai</h2>
-  
+
   <!-- Mapa -->
   <div
     id="map"
@@ -45,27 +45,63 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   </div>
 
   <!-- Leyenda de colores -->
-  <aside 
+  <aside
     class="legend-container relative bg-gradient-to-br from-purple-500/50 to-[#00296b]/70 rounded-3xl border border-white/10 backdrop-blur-md p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)]"
     aria-label="Leyenda de tiendas por color"
   >
     <h3 class="sr-only">Leyenda de tiendas</h3>
     <ul class="flex flex-wrap gap-3 justify-center" id="legend" role="list">
-      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="eroski">
-        <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
-        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/eroski-logo.webp" alt="Eroski" />
+      <li
+        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+        data-retail="eroski"
+      >
+        <span
+          class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          aria-hidden="true"></span>
+        <img
+          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+          src="/eroski-logo.webp"
+          alt="Eroski"
+        />
       </li>
-      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="corte-ingles">
-        <span class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
-        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/el-corte-ingles-logo.webp" alt="El Corte Inglés" />
+      <li
+        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+        data-retail="corte-ingles"
+      >
+        <span
+          class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          aria-hidden="true"></span>
+        <img
+          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+          src="/el-corte-ingles-logo.webp"
+          alt="El Corte Inglés"
+        />
       </li>
-      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="carrefour">
-        <span class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
-        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/carrefour-logo.webp" alt="Carrefour" />
+      <li
+        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+        data-retail="carrefour"
+      >
+        <span
+          class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          aria-hidden="true"></span>
+        <img
+          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+          src="/carrefour-logo.webp"
+          alt="Carrefour"
+        />
       </li>
-      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="alcampo">
-        <span class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
-        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/alcampo-logo.webp" alt="Alcampo" />
+      <li
+        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+        data-retail="alcampo"
+      >
+        <span
+          class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+          aria-hidden="true"></span>
+        <img
+          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+          src="/alcampo-logo.webp"
+          alt="Alcampo"
+        />
       </li>
     </ul>
   </aside>
