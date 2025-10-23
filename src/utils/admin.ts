@@ -1,17 +1,8 @@
-/**
- * Lista de emails autorizados para acceder al panel de administración
- */
-export const ADMIN_EMAILS = [
-  'miduga@gmail.com',
-  'peman.apg@gmail.com',
-  'adriansatue@gmail.com',
-  'alvarez.fing@gmail.com',
-]
-
+const ADMIN_IDS = import.meta.env.ADMIN_IDS.split(',')
 /**
  * Verifica si un email tiene permisos de administrador
  */
-export function isAdmin(email: string | undefined): boolean {
-  if (!email) return false
-  return ADMIN_EMAILS.includes(email)
+export function isAdmin(id: string | undefined): boolean {
+  if (!id) return false
+  return ADMIN_IDS.includes(id)
 }
