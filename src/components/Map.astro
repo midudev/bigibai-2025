@@ -28,11 +28,15 @@ if (ipLatitude && ipLongitude) {
 const hasUserLocation = !!(ipLatitude && ipLongitude)
 ---
 
-<div class="space-y-4">
+<section class="space-y-4" aria-labelledby="map-title">
+  <h2 id="map-title" class="sr-only">Mapa de tiendas donde comprar el Calendario Big Ibai</h2>
+  
   <!-- Mapa -->
   <div
     id="map"
-    class="w-full h-[600px] rounded-lg shadow-lg border border-white/20"
+    class="w-full h-[600px] rounded-lg shadow-lg border-2 border-brand/30"
+    role="application"
+    aria-label="Mapa interactivo mostrando ubicaciones de tiendas"
     data-has-user-location={hasUserLocation}
     data-center-lat={centerLat}
     data-center-lon={centerLon}
@@ -41,31 +45,31 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   </div>
 
   <!-- Leyenda de colores -->
-  <div class="bg-black/20 backdrop-blur-md rounded-lg p-4 border border-white/20">
-    <div class="flex flex-wrap gap-3 justify-center" id="legend">
-      <div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
-        <div class="w-3 h-3 rounded-full" style="background-color: #0099ff"></div>
-        <img class="w-20 h-10 object-contain" src="/eroski-logo.webp" alt="Eroski" />
-      </div><div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
-        <div class="w-3 h-3 rounded-full" style="background-color: #10b981"></div>
-        <img
-          class="w-20 h-10 object-contain"
-          src="/el-corte-ingles-logo.webp"
-          alt="El Corte Inglés"
-        />
-      </div><div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
-        <div class="w-3 h-3 rounded-full" style="background-color: #0f468f"></div>
-        <img class="w-20 h-10 object-contain" src="/carrefour-logo.webp" alt="Carrefour" />
-      </div><div
-        class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full"
-        data-astro-cid-kbkfje74=""
-      >
-        <div class="w-3 h-3 rounded-full" style="background-color: #ef4444"></div>
-        <img class="w-20 h-10 object-contain" src="/alcampo-logo.webp" alt="Alcampo" />
-      </div>
-    </div>
-  </div>
-</div>
+  <aside 
+    class="legend-container relative bg-gradient-to-br from-purple-500/50 to-[#00296b]/70 rounded-3xl border border-white/10 backdrop-blur-md p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)]"
+    aria-label="Leyenda de tiendas por color"
+  >
+    <h3 class="sr-only">Leyenda de tiendas</h3>
+    <ul class="flex flex-wrap gap-3 justify-center" id="legend" role="list">
+      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="eroski">
+        <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
+        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/eroski-logo.webp" alt="Eroski" />
+      </li>
+      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="corte-ingles">
+        <span class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
+        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/el-corte-ingles-logo.webp" alt="El Corte Inglés" />
+      </li>
+      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="carrefour">
+        <span class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
+        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/carrefour-logo.webp" alt="Carrefour" />
+      </li>
+      <li class="legend-item group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white" data-retail="alcampo">
+        <span class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]" aria-hidden="true"></span>
+        <img class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105" src="/alcampo-logo.webp" alt="Alcampo" />
+      </li>
+    </ul>
+  </aside>
+</section>
 
 <!-- Leaflet CSS -->
 <link
@@ -146,11 +150,11 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
       // quitar atribución de Leaflet
       map.attributionControl.setPrefix('')
 
-      // Añadir capa de OpenStreetMap
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Añadir capa de mapa con estilo personalizado (CartoDB Voyager - colores suaves y modernos)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 20,
       }).addTo(map)
 
       // Si tenemos la ubicación del usuario, añadir un marcador especial
@@ -158,7 +162,7 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         const userIcon = L.divIcon({
           html: `
             <svg width="24" height="24" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+              <circle cx="12" cy="12" r="10" fill="#f8b134" stroke="#fff" stroke-width="2"/>
               <circle cx="12" cy="12" r="4" fill="#fff"/>
             </svg>
           `,
@@ -170,15 +174,15 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         L.marker([centerLat, centerLon], { icon: userIcon })
           .addTo(map)
           .bindPopup(
-            '<div style="text-align: center; padding: 8px;"><strong style="color: #3b82f6;">📍 Tu ubicación</strong></div>',
+            '<div style="text-align: center; padding: 8px;"><strong style="color: #f8b134;">📍 Tu ubicación</strong></div>',
             { className: 'user-popup' }
           )
 
         // Añadir un círculo de radio alrededor de la ubicación del usuario
         L.circle([centerLat, centerLon], {
-          color: '#3b82f6',
-          fillColor: '#3b82f6',
-          fillOpacity: 0.1,
+          color: '#f8b134',
+          fillColor: '#f8b134',
+          fillOpacity: 0.15,
           radius: 20000, // 20km de radio
         }).addTo(map)
       }
@@ -189,20 +193,27 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         const retailName = getRetailName(location.retail)
         const retailImage = getImageForRetail(location.retail)
 
-        // Crear marcador con icono SVG personalizado
+        // Crear marcador con la caja del calendario
         const svgIcon = `
-          <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 0C7.2 0 0 7.2 0 16c0 11.2 16 24 16 24s16-12.8 16-24c0-8.8-7.2-16-16-16z" 
-                  fill="${color}" stroke="#fff" stroke-width="2"/>
-            <circle cx="16" cy="15" r="5" fill="#fff"/>
-          </svg>
+          <div class="marker-container relative w-[45px] h-[55px]">
+            <!-- Sombra del marcador -->
+            <div class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-[30px] h-2 bg-[radial-gradient(ellipse,rgba(0,0,0,0.3)_0%,transparent_70%)]"></div>
+            
+            <!-- Contenedor de la caja con borde de color -->
+            <div class="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500/50 to-[#00296b]/70 overflow-hidden flex items-center justify-center" style="border: 2px solid ${color};">
+              <img src="/calendario-producto-small.webp" alt="Calendario Big Ibai" class="w-[90%] h-[90%] object-contain" />
+            </div>
+            
+            <!-- Brillo superior -->
+            <div class="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/15 to-transparent rounded-t-lg pointer-events-none"></div>
+          </div>
         `
 
         const customIcon = L.divIcon({
           html: svgIcon,
-          iconSize: [32, 40],
-          iconAnchor: [16, 40],
-          popupAnchor: [0, -40],
+          iconSize: [45, 55],
+          iconAnchor: [22.5, 55],
+          popupAnchor: [0, -55],
           className: 'custom-marker',
         })
 
@@ -210,19 +221,24 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 
         // Crear popup con información mejorada
         const popupContent = `
-          <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 220px;">
-            <img src="${retailImage}" alt="${retailName}" style="width: 100%; height: 100%; object-fit: contain; max-width: 80px; margin-bottom: 8px;" />
-            <div style="padding: 4px 0;">
-              <div style="margin-bottom: 8px;">
-                <svg style="display: inline-block; vertical-align: middle; margin-right: 6px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2">
+          <div class="font-sans min-w-[220px] text-center">
+            <!-- Logo con fondo para mejor contraste -->
+            <div class="mb-3 p-3 bg-white/95 rounded-xl shadow-md">
+              <img src="${retailImage}" alt="${retailName}" class="w-full h-auto object-contain max-w-[100px] mx-auto" />
+            </div>
+            
+            <!-- Información de ubicación con mejor contraste -->
+            <div class="p-3 bg-black/40 rounded-lg" style="border-top: 2px solid ${color};">
+              <div class="mb-2 flex items-start justify-center gap-2">
+                <svg class="flex-shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f8b134" stroke-width="2.5">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                <span style="font-size: 13px; color: #333; font-weight: 500;">${location.direccion}</span>
+                <span class="text-sm text-white font-semibold leading-relaxed" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);">${location.direccion}</span>
               </div>
               ${
                 location.ciudad && location.provincia
-                  ? `<div style="font-size: 12px; color: #666;">
+                  ? `<div class="text-[13px] text-brand font-medium mt-1.5" style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
                 ${location.ciudad}, ${location.provincia}
               </div>`
                   : ''
@@ -245,33 +261,116 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 </script>
 
 <style>
-  #map {
-    z-index: 0;
+  /* Efecto de brillo en la leyenda (no se puede hacer con Tailwind) */
+  .legend-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1.5rem;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   /* Asegurar que los controles de Leaflet sean visibles */
   :global(.leaflet-control-zoom) {
-    border: 2px solid rgba(0, 0, 0, 0.2) !important;
-    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.5) 0%,
+      rgba(0, 41, 107, 0.7) 100%
+    ) !important;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
   }
 
   :global(.leaflet-control-zoom a) {
-    color: #333 !important;
+    color: #fff !important;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.3s ease;
   }
 
-  /* Estilo mejorado para los popups */
+  :global(.leaflet-control-zoom a:hover) {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #f8b134 !important;
+  }
+
+  /* Estilo mejorado para los popups - estilo bento-card */
   :global(.leaflet-popup-content-wrapper) {
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    padding: 12px;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+    padding: 16px;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.5) 0%,
+      rgba(0, 41, 107, 0.7) 100%
+    ) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+  }
+
+  :global(.leaflet-popup-content-wrapper::before) {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1.5rem;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  :global(.leaflet-popup-content-wrapper::after) {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      transparent 0px,
+      transparent 4px,
+      rgba(255, 255, 255, 0.1) 4px,
+      rgba(255, 255, 255, 0.1) 8px
+    );
   }
 
   :global(.leaflet-popup-content) {
     margin: 0;
+    color: #fff;
   }
 
   :global(.leaflet-popup-tip) {
     border-radius: 2px;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.5) 0%,
+      rgba(0, 41, 107, 0.7) 100%
+    ) !important;
+    backdrop-filter: blur(10px);
+  }
+
+  :global(.leaflet-popup-close-button) {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 20px !important;
+    transition: all 0.3s ease;
+  }
+
+  :global(.leaflet-popup-close-button:hover) {
+    color: #f8b134 !important;
   }
 
   /* Estilo para los marcadores personalizados */
@@ -280,13 +379,34 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
     border: none;
   }
 
-  :global(.custom-marker svg) {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    transition: transform 0.2s ease;
+  :global(.custom-marker .marker-container) {
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
   }
 
-  :global(.custom-marker:hover svg) {
-    transform: scale(1.1);
+  :global(.custom-marker:hover .marker-container) {
+    transform: translateY(-8px) scale(1.08);
+  }
+
+  /* Animación de la imagen dentro */
+  :global(.custom-marker:hover img) {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+
+  /* Animación de la sombra */
+  :global(.custom-marker:hover .marker-container > div:first-child) {
+    width: 35px !important;
+    opacity: 0.5;
+  }
+
+  /* Transiciones suaves para todos los elementos internos */
+  :global(.custom-marker .marker-container > div) {
+    transition: all 0.3s ease;
+  }
+
+  :global(.custom-marker img) {
+    transition: all 0.3s ease;
   }
 
   /* Estilo para el marcador de ubicación del usuario */
@@ -296,17 +416,19 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   }
 
   :global(.user-location-marker svg) {
-    filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.5));
-    animation: pulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 8px rgba(248, 177, 52, 0.6));
+    animation: userPulse 2s ease-in-out infinite;
   }
 
-  @keyframes pulse {
+  @keyframes userPulse {
     0%,
     100% {
       opacity: 1;
+      transform: scale(1);
     }
     50% {
-      opacity: 0.6;
+      opacity: 0.7;
+      transform: scale(1.1);
     }
   }
 </style>
