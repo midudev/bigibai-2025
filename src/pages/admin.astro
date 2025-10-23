@@ -4,7 +4,7 @@ import Header from '@/sections/Header.astro'
 import { supabaseAdmin } from '@/supabase-admin'
 import { isAdmin } from '@/utils/admin'
 
-const TOTAL_COUPONS = 255000
+const TOTAL_COUPONS = Number(import.meta.env.TOTAL_COUPONS)
 
 // Verificar que el usuario esté autenticado
 if (!Astro.locals.user) {
@@ -12,8 +12,8 @@ if (!Astro.locals.user) {
 }
 
 // Verificar que el email del usuario esté en la lista de admins
-const userEmail = Astro.locals.user.email
-if (!isAdmin(userEmail)) {
+const userId = Astro.locals.user.id
+if (!isAdmin(userId)) {
   return Astro.redirect('/404')
 }
 
