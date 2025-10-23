@@ -98,10 +98,163 @@ const totalUserCoupons = userCoupons?.length || 0
             </div>
           </div>
         </div>
+
+        <!-- Sección de validación de cupones -->
+        <div class="bento-card overflow-hidden" style="animation-delay: 0.4s;">
+          <div class="p-8">
+            <h2 class="text-shadow-title mb-6 text-center text-3xl font-bold text-white">
+              Validar Cupón
+            </h2>
+            <p class="mb-6 text-center text-white/80">
+              Introduce el código de un cupón para verificar si ha sido usado
+            </p>
+
+            <form id="coupon-validation-form" class="mx-auto max-w-md space-y-4">
+              <div>
+                <input
+                  type="text"
+                  id="coupon-input"
+                  name="coupon"
+                  placeholder="Código del cupón"
+                  class="w-full rounded-lg border border-white/20 bg-black/30 px-4 py-3 text-white placeholder-white/50 backdrop-blur-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="w-full rounded-lg bg-brand px-6 py-3 font-bold text-black transition-all hover:scale-105 hover:brightness-110 active:scale-95"
+              >
+                Validar Cupón
+              </button>
+            </form>
+
+            <!-- Resultado de la búsqueda -->
+            <div id="coupon-result" class="mt-6 hidden">
+              <!-- Contenedor para el resultado -->
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
 </Layout>
+
+<script>
+  const form = document.getElementById('coupon-validation-form') as HTMLFormElement
+  const resultDiv = document.getElementById('coupon-result') as HTMLDivElement
+  const couponInput = document.getElementById('coupon-input') as HTMLInputElement
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+
+    const coupon = couponInput.value.trim()
+    if (!coupon) return
+
+    // Mostrar loading
+    resultDiv.classList.remove('hidden')
+    resultDiv.innerHTML = `
+      <div class="rounded-lg bg-white/5 p-6 text-center backdrop-blur-sm">
+        <div class="mb-4 text-4xl">⏳</div>
+        <p class="text-white/80">Buscando cupón...</p>
+      </div>
+    `
+
+    try {
+      const response = await fetch(
+        `/api/admin/validate-coupon?coupon=${encodeURIComponent(coupon)}`
+      )
+      const data = await response.json()
+
+      if (!response.ok) {
+        resultDiv.innerHTML = `
+          <div class="rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30">
+            <div class="mb-4 text-center text-4xl">❌</div>
+            <p class="text-center text-white font-bold">${data.error || 'Error al buscar el cupón'}</p>
+          </div>
+        `
+        return
+      }
+
+      if (!data.is_used) {
+        resultDiv.innerHTML = `
+          <div class="rounded-lg bg-yellow-500/20 p-6 backdrop-blur-sm border border-yellow-500/30">
+            <div class="mb-4 text-center text-4xl">⚠️</div>
+            <h3 class="mb-2 text-center text-xl font-bold text-white">Cupón no usado</h3>
+            <p class="text-center text-white/80">Este cupón existe pero aún no ha sido utilizado</p>
+            <div class="mt-4 text-center">
+              <p class="text-sm text-white/60">ID: ${data.id}</p>
+            </div>
+          </div>
+        `
+      } else {
+        const usedDate = new Date(data.used_at)
+        const formattedDate = usedDate.toLocaleString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+
+        resultDiv.innerHTML = `
+          <div class="rounded-lg bg-green-500/20 p-6 backdrop-blur-sm border border-green-500/30">
+            <div class="mb-4 text-center text-4xl">✅</div>
+            <h3 class="mb-4 text-center text-xl font-bold text-white">Cupón usado</h3>
+            
+            <div class="space-y-3 text-white/90">
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span class="font-semibold">ID del cupón:</span>
+                <span class="font-mono text-sm">${data.id}</span>
+              </div>
+              
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span class="font-semibold">Usuario ID:</span>
+                <span class="font-mono text-sm">${data.used_by}</span>
+              </div>
+              
+              ${
+                data.user_email
+                  ? `
+                <div class="flex justify-between border-b border-white/10 pb-2">
+                  <span class="font-semibold">Email:</span>
+                  <span class="text-sm">${data.user_email}</span>
+                </div>
+              `
+                  : ''
+              }
+              
+              ${
+                data.user_name
+                  ? `
+                <div class="flex justify-between border-b border-white/10 pb-2">
+                  <span class="font-semibold">Nombre:</span>
+                  <span class="text-sm">${data.user_name}</span>
+                </div>
+              `
+                  : ''
+              }
+              
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span class="font-semibold">Usado el:</span>
+                <span class="text-sm">${formattedDate}</span>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      resultDiv.innerHTML = `
+        <div class="rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30">
+          <div class="mb-4 text-center text-4xl">❌</div>
+          <p class="text-center text-white font-bold">Error al validar el cupón</p>
+          <p class="mt-2 text-center text-sm text-white/70">Inténtalo de nuevo más tarde</p>
+        </div>
+      `
+    }
+  })
+</script>
 
 <style>
   .bento-card {
@@ -128,10 +281,6 @@ const totalUserCoupons = userCoupons?.length || 0
     border-radius: 1.5rem;
     padding: 1px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
   }
