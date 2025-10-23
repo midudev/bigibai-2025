@@ -3,6 +3,16 @@ import Layout from '@/layouts/Layout.astro'
 import Header from '@/sections/Header.astro'
 import Hero from '@/sections/Hero.astro'
 import Footer from '@/sections/Footer.astro'
+
+// si no tiene usuario, redirect a /registro
+if (!Astro.locals.user) {
+  return Astro.redirect('/registro')
+}
+
+// si tiene usuario, redirect a /dashboard
+if (Astro.locals.user) {
+  return Astro.redirect('/dashboard')
+}
 ---
 
 <Layout>
