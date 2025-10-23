@@ -8,80 +8,6 @@ const ipLongitude = Astro.request.headers.get('x-vercel-ip-longitude') ?? DEFAUL
 
 console.log(Astro.request.headers)
 
-// Leer y parsear el CSV
-const csvPath = '/coordenadas.csv'
-const response = await fetch(new URL(csvPath, Astro.url.origin))
-const csvText = await response.text()
-
-// Parsear CSV
-const lines = csvText.split('\n')
-
-// Encontrar índices de las columnas que necesitamos
-const [retailIndex, ensenaIndex, ciudadIndex, provinciaIndex, direccionIndex, latIndex, lonIndex] =
-  [0, 1, 2, 3, 4, 5, 6]
-
-const retailDictionary: Record<string, string> = {
-  A: 'Eroski',
-  B: 'El Corte Inglés',
-  C: 'Carrefour',
-  D: 'Alcampo',
-} as const
-
-// Colores asignados a cada retail
-const retailColors: Record<string, string> = {
-  A: '#0099ff', // Azul Claro - Eroski
-  B: '#10b981', // Verde - El Corte Inglés
-  C: '#0f468f', // Azul Oscuro - Carrefour
-  D: '#ef4444', // Rojo - Alcampo
-} as const
-
-const retailImages: Record<string, string> = {
-  A: '/eroski-logo.webp',
-  B: '/el-corte-ingles-logo.webp',
-  C: '/carrefour-logo.webp',
-  D: '/alcampo-logo.webp',
-} as const
-
-// Parsear datos
-const locations = lines
-  .slice(1)
-  .filter((line) => line.trim())
-  .map((line) => {
-    const cols = line.split(';')
-    const lat = parseFloat(cols[latIndex])
-    const lon = parseFloat(cols[lonIndex])
-
-    // Filtrar coordenadas inválidas
-    if (isNaN(lat) || isNaN(lon)) return null
-
-    return {
-      lat,
-      lon,
-      ciudad: cols[ciudadIndex]?.trim() || '',
-      provincia: cols[provinciaIndex]?.trim() || '',
-      ensena: cols[ensenaIndex]?.trim() || '',
-      direccion: cols[direccionIndex]?.trim() || '',
-      retail: cols[retailIndex]?.trim() || '',
-    }
-  })
-  .filter((loc): loc is NonNullable<typeof loc> => loc !== null)
-
-// Obtener lista única de retails para la leyenda
-const uniqueRetails = [...new Set(locations.map((loc) => loc.retail))].sort()
-
-// Función para obtener el color según el retail
-function getColorForRetail(retail: string): string {
-  return retailColors[retail] || '#6366f1' // Color por defecto: Índigo
-}
-
-function getRetailName(retail: string): string {
-  return retailDictionary[retail] || retail
-}
-
-function getImageForRetail(retail: string): string {
-  return retailImages[retail] || '/images/retail-default.png'
-}
-
 // Determinar el centro del mapa
 // Prioridad: 1) Ubicación del usuario (IP), 2) Promedio de ubicaciones, 3) Centro de España
 let centerLat: number
@@ -106,26 +32,39 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 
 <div class="space-y-4">
   <!-- Mapa -->
-  <div id="map" class="w-full h-[600px] rounded-lg shadow-lg border border-white/20"></div>
+  <div
+    id="map"
+    class="w-full h-[600px] rounded-lg shadow-lg border border-white/20"
+    data-has-user-location={hasUserLocation}
+    data-center-lat={centerLat}
+    data-center-lon={centerLon}
+    data-initial-zoom={initialZoom}
+  >
+  </div>
 
   <!-- Leyenda de colores -->
   <div class="bg-black/20 backdrop-blur-md rounded-lg p-4 border border-white/20">
     <div class="flex flex-wrap gap-3 justify-center" id="legend">
-      {
-        uniqueRetails.map((retail) => (
-          <div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
-            <div
-              class="w-3 h-3 rounded-full"
-              style={`background-color: ${getColorForRetail(retail)}`}
-            />
-            <img
-              src={getImageForRetail(retail)}
-              alt={getRetailName(retail)}
-              style="width: 100px; height: 40px; object-fit: contain;"
-            />
-          </div>
-        ))
-      }
+      <div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
+        <div class="w-3 h-3 rounded-full" style="background-color: #0099ff"></div>
+        <img class="w-20 h-10 object-contain" src="/eroski-logo.webp" alt="Eroski" />
+      </div><div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
+        <div class="w-3 h-3 rounded-full" style="background-color: #10b981"></div>
+        <img
+          class="w-20 h-10 object-contain"
+          src="/el-corte-ingles-logo.webp"
+          alt="El Corte Inglés"
+        />
+      </div><div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full">
+        <div class="w-3 h-3 rounded-full" style="background-color: #0f468f"></div>
+        <img class="w-20 h-10 object-contain" src="/carrefour-logo.webp" alt="Carrefour" />
+      </div><div
+        class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full"
+        data-astro-cid-kbkfje74=""
+      >
+        <div class="w-3 h-3 rounded-full" style="background-color: #ef4444"></div>
+        <img class="w-20 h-10 object-contain" src="/alcampo-logo.webp" alt="Alcampo" />
+      </div>
     </div>
   </div>
 </div>
@@ -145,50 +84,63 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>
 
-<script define:vars={{ locations, centerLat, centerLon, initialZoom, hasUserLocation }}>
+<script>
+  const L = window.L
+  const $map = document.querySelector('#map') as HTMLDivElement
+  const centerLat = $map.dataset.centerLat
+  const centerLon = $map.dataset.centerLon
+  const initialZoom = $map.dataset.initialZoom
+  const hasUserLocation = $map.dataset.hasUserLocation
+
   // Diccionario de retail
-  const retailDictionary = {
+  const retailDictionary: Record<string, string> = {
     A: 'Eroski',
     B: 'El Corte Inglés',
     C: 'Carrefour',
     D: 'Alcampo',
-  }
+  } as const
 
-  const retailImages = {
+  const retailImages: Record<string, string> = {
     A: '/eroski-logo.webp',
     B: '/el-corte-ingles-logo.webp',
     C: '/carrefour-logo.webp',
     D: '/alcampo-logo.webp',
-  }
+  } as const
+
+  const colors: Record<string, string> = {
+    A: '#10b981', // Verde - Eroski
+    B: '#ef4444', // Rojo - El Corte Inglés
+    C: '#3b82f6', // Azul - Carrefour
+    D: '#f59e0b', // Naranja - Alcampo
+  } as const
 
   // Función para generar colores consistentes por retail
-  function getColorForRetail(retail) {
-    const colors = {
-      A: '#10b981', // Verde - Eroski
-      B: '#ef4444', // Rojo - El Corte Inglés
-      C: '#3b82f6', // Azul - Carrefour
-      D: '#f59e0b', // Naranja - Alcampo
-    }
+  function getColorForRetail(retail: string): string {
     return colors[retail] || '#6366f1' // Color por defecto: Índigo
   }
 
-  function getImageForRetail(retail) {
+  function getImageForRetail(retail: string): string {
     return retailImages[retail] || '/images/retail-default.png'
   }
 
   // Función para obtener el nombre del retail
-  function getRetailName(retail) {
+  function getRetailName(retail: string): string {
     return retailDictionary[retail] || retail
   }
+
+  let locations: any[] = []
 
   document.addEventListener('astro:page-load', () => {
     initMap()
   })
 
   // Función para inicializar el mapa
-  function initMap() {
-    console.log('Inicializando mapa con', locations.length, 'ubicaciones')
-    console.log('Centro del mapa:', centerLat, centerLon, 'Zoom:', initialZoom)
+  async function initMap() {
+    // fetch locations if needed
+    if (locations.length === 0) {
+      const response = await fetch('/api/locations')
+      locations = await response.json()
+    }
 
     try {
       // Inicializar el mapa con el zoom apropiado
