@@ -3,10 +3,8 @@ const DEFAULT_LATITUDE = '41.390205'
 const DEFAULT_LONGITUDE = '2.154007'
 
 // Leer la request de Astro y recuperar los headers x-vercel-ip-latitude y x-vercel-ip-longitude
-const ipLatitude = Astro.request.headers.get('x-vercel-ip-latitude') ?? DEFAULT_LATITUDE
-const ipLongitude = Astro.request.headers.get('x-vercel-ip-longitude') ?? DEFAULT_LONGITUDE
-
-console.log(Astro.request.headers)
+const ipLatitude = Astro.request.headers.get('cf-iplatitude') ?? DEFAULT_LATITUDE
+const ipLongitude = Astro.request.headers.get('cf-iplongitude') ?? DEFAULT_LONGITUDE
 
 // Determinar el centro del mapa
 // Prioridad: 1) Ubicación del usuario (IP), 2) Promedio de ubicaciones, 3) Centro de España
