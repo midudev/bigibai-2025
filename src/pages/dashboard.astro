@@ -43,7 +43,12 @@ const totalCoupons = userCoupons?.length || 0
         </div>
       </div>
 
-      <TicketContainer totalCoupons={totalCoupons} />
+      <section
+        class="mt-4 w-full sm:w-[80%] max-w-xl px-4 font-sans"
+        aria-labelledby="participation-status"
+      >
+        <TicketContainer totalCoupons={totalCoupons} />
+      </section>
     </main>
   </div>
 </Layout>
