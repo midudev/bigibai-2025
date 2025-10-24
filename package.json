@@ -11,17 +11,17 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "3.6.0",
-    "@astrojs/vercel": "8.2.10",
+    "@astrojs/vercel": "9.0.0",
     "@floating-ui/dom": "1.7.4",
     "@midudev/tailwind-animations": "0.2.0",
     "@supabase/ssr": "0.7.0",
     "@supabase/supabase-js": "2.76.1",
-    "@tailwindcss/vite": "4.1.15",
+    "@tailwindcss/vite": "4.1.16",
     "@upstash/ratelimit": "2.0.6",
     "@upstash/redis": "1.35.6",
-    "astro": "5.14.7",
+    "astro": "5.15.1",
     "canvas-confetti": "1.9.3",
-    "tailwindcss": "4.1.15"
+    "tailwindcss": "4.1.16"
   },
   "devDependencies": {
     "@tailwindcss/typography": "0.5.19",
