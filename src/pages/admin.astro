@@ -132,8 +132,79 @@ const totalUserCoupons = userCoupons?.length || 0
               </form>
 
               <!-- Resultado de la búsqueda -->
-              <div id="coupon-result" class="mt-6 hidden">
-                <!-- Contenedor para el resultado -->
+              <div id="coupon-result" class="mt-6">
+                <!-- Loading -->
+                <div
+                  id="coupon-loading"
+                  class="hidden rounded-lg bg-white/5 p-6 text-center backdrop-blur-sm"
+                >
+                  <div class="mb-4 text-4xl">⏳</div>
+                  <p class="text-white/80">Buscando cupón...</p>
+                </div>
+
+                <!-- Error -->
+                <div
+                  id="coupon-error"
+                  class="hidden rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30"
+                >
+                  <div class="mb-4 text-center text-4xl">❌</div>
+                  <p id="coupon-error-message" class="text-center text-white font-bold"></p>
+                </div>
+
+                <!-- Cupón no usado -->
+                <div
+                  id="coupon-unused"
+                  class="hidden rounded-lg bg-yellow-500/20 p-6 backdrop-blur-sm border border-yellow-500/30"
+                >
+                  <div class="mb-4 text-center text-4xl">⚠️</div>
+                  <h3 class="mb-2 text-center text-xl font-bold text-white">Cupón no usado</h3>
+                  <p class="text-center text-white/80">
+                    Este cupón existe pero aún no ha sido utilizado
+                  </p>
+                  <div class="mt-4 text-center">
+                    <p class="text-sm text-white/60">ID: <span id="coupon-unused-id"></span></p>
+                  </div>
+                </div>
+
+                <!-- Cupón usado -->
+                <div
+                  id="coupon-used"
+                  class="hidden rounded-lg bg-green-500/20 p-6 backdrop-blur-sm border border-green-500/30"
+                >
+                  <div class="mb-4 text-center text-4xl">✅</div>
+                  <h3 class="mb-4 text-center text-xl font-bold text-white">Cupón usado</h3>
+
+                  <div class="space-y-3 text-white/90">
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">ID del cupón:</span>
+                      <span id="coupon-used-id" class="font-mono text-sm"></span>
+                    </div>
+
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">Usuario ID:</span>
+                      <span id="coupon-used-by" class="font-mono text-sm"></span>
+                    </div>
+
+                    <div id="coupon-used-email-row" class="hidden">
+                      <div class="flex justify-between border-b border-white/10 pb-2">
+                        <span class="font-semibold">Email:</span>
+                        <span id="coupon-used-email" class="text-sm"></span>
+                      </div>
+                    </div>
+
+                    <div id="coupon-used-name-row" class="hidden">
+                      <div class="flex justify-between border-b border-white/10 pb-2">
+                        <span class="font-semibold">Nombre:</span>
+                        <span id="coupon-used-name" class="text-sm"></span>
+                      </div>
+                    </div>
+
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">Usado el:</span>
+                      <span id="coupon-used-date" class="text-sm"></span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -169,8 +240,87 @@ const totalUserCoupons = userCoupons?.length || 0
               </form>
 
               <!-- Resultado de la búsqueda -->
-              <div id="user-result" class="mt-6 hidden">
-                <!-- Contenedor para el resultado -->
+              <div id="user-result" class="mt-6">
+                <!-- Loading -->
+                <div
+                  id="user-loading"
+                  class="hidden rounded-lg bg-white/5 p-6 text-center backdrop-blur-sm"
+                >
+                  <div class="mb-4 text-4xl">⏳</div>
+                  <p class="text-white/80">Buscando usuario...</p>
+                </div>
+
+                <!-- Error -->
+                <div
+                  id="user-error"
+                  class="hidden rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30"
+                >
+                  <div class="mb-4 text-center text-4xl">❌</div>
+                  <p id="user-error-message" class="text-center text-white font-bold"></p>
+                </div>
+
+                <!-- Usuario encontrado -->
+                <div
+                  id="user-found"
+                  class="hidden rounded-lg bg-blue-500/20 p-6 backdrop-blur-sm border border-blue-500/30"
+                >
+                  <div class="mb-4 text-center text-4xl">👤</div>
+                  <h3 class="mb-4 text-center text-xl font-bold text-white">Usuario encontrado</h3>
+
+                  <div class="space-y-3 text-white/90">
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">ID:</span>
+                      <span id="user-id" class="font-mono text-sm"></span>
+                    </div>
+
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">Email:</span>
+                      <span id="user-email" class="text-sm"></span>
+                    </div>
+
+                    <div id="user-name-row" class="hidden">
+                      <div class="flex justify-between border-b border-white/10 pb-2">
+                        <span class="font-semibold">Nombre:</span>
+                        <span id="user-name" class="text-sm"></span>
+                      </div>
+                    </div>
+
+                    <div id="user-provider-row" class="hidden">
+                      <div class="flex justify-between border-b border-white/10 pb-2">
+                        <span class="font-semibold">Proveedor:</span>
+                        <span id="user-provider" class="text-sm"></span>
+                      </div>
+                    </div>
+
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">Creado:</span>
+                      <span id="user-created" class="text-sm"></span>
+                    </div>
+
+                    <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">Último acceso:</span>
+                      <span id="user-last-signin" class="text-sm"></span>
+                    </div>
+
+                    <div class="flex justify-between pb-2">
+                      <span class="font-semibold">Email verificado:</span>
+                      <span id="user-email-verified" class="text-sm"></span>
+                    </div>
+                  </div>
+
+                  <!-- Cupones del usuario -->
+                  <div id="user-coupons-section" class="mt-4 border-t border-white/20 pt-4">
+                    <h4 class="mb-3 text-center font-semibold text-white">
+                      Cupones usados (<span id="user-coupons-count">0</span>)
+                    </h4>
+                    <div id="user-coupons-list" class="max-h-60 space-y-2 overflow-y-auto">
+                      <!-- Los cupones se agregarán aquí dinámicamente -->
+                    </div>
+                    <div id="user-no-coupons" class="hidden text-center">
+                      <p class="text-white/60">No ha usado ningún cupón</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -181,9 +331,32 @@ const totalUserCoupons = userCoupons?.length || 0
 </Layout>
 
 <script>
-  const form = document.getElementById('coupon-validation-form') as HTMLFormElement
-  const resultDiv = document.getElementById('coupon-result') as HTMLDivElement
-  const couponInput = document.getElementById('coupon-input') as HTMLInputElement
+  const $ = document.querySelector.bind(document)
+  const form = $('#coupon-validation-form') as HTMLFormElement
+  const couponInput = $('#coupon-input') as HTMLInputElement
+
+  // Elementos para cupón
+  const couponLoading = $('#coupon-loading') as HTMLDivElement
+  const couponError = $('#coupon-error') as HTMLDivElement
+  const couponErrorMessage = $('#coupon-error-message') as HTMLParagraphElement
+  const couponUnused = $('#coupon-unused') as HTMLDivElement
+  const couponUnusedId = $('#coupon-unused-id') as HTMLSpanElement
+  const couponUsed = $('#coupon-used') as HTMLDivElement
+  const couponUsedId = $('#coupon-used-id') as HTMLSpanElement
+  const couponUsedBy = $('#coupon-used-by') as HTMLSpanElement
+  const couponUsedEmailRow = $('#coupon-used-email-row') as HTMLDivElement
+  const couponUsedEmail = $('#coupon-used-email') as HTMLSpanElement
+  const couponUsedNameRow = $('#coupon-used-name-row') as HTMLDivElement
+  const couponUsedName = $('#coupon-used-name') as HTMLSpanElement
+  const couponUsedDate = $('#coupon-used-date') as HTMLSpanElement
+
+  // Función para ocultar todos los estados de cupón
+  function hideAllCouponStates() {
+    couponLoading.classList.add('hidden')
+    couponError.classList.add('hidden')
+    couponUnused.classList.add('hidden')
+    couponUsed.classList.add('hidden')
+  }
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -192,13 +365,8 @@ const totalUserCoupons = userCoupons?.length || 0
     if (!coupon) return
 
     // Mostrar loading
-    resultDiv.classList.remove('hidden')
-    resultDiv.innerHTML = `
-      <div class="rounded-lg bg-white/5 p-6 text-center backdrop-blur-sm">
-        <div class="mb-4 text-4xl">⏳</div>
-        <p class="text-white/80">Buscando cupón...</p>
-      </div>
-    `
+    hideAllCouponStates()
+    couponLoading.classList.remove('hidden')
 
     try {
       const response = await fetch(
@@ -206,28 +374,21 @@ const totalUserCoupons = userCoupons?.length || 0
       )
       const data = await response.json()
 
+      hideAllCouponStates()
+
       if (!response.ok) {
-        resultDiv.innerHTML = `
-          <div class="rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30">
-            <div class="mb-4 text-center text-4xl">❌</div>
-            <p class="text-center text-white font-bold">${data.error || 'Error al buscar el cupón'}</p>
-          </div>
-        `
+        // Mostrar error
+        couponErrorMessage.textContent = data.error || 'Error al buscar el cupón'
+        couponError.classList.remove('hidden')
         return
       }
 
       if (!data.is_used) {
-        resultDiv.innerHTML = `
-          <div class="rounded-lg bg-yellow-500/20 p-6 backdrop-blur-sm border border-yellow-500/30">
-            <div class="mb-4 text-center text-4xl">⚠️</div>
-            <h3 class="mb-2 text-center text-xl font-bold text-white">Cupón no usado</h3>
-            <p class="text-center text-white/80">Este cupón existe pero aún no ha sido utilizado</p>
-            <div class="mt-4 text-center">
-              <p class="text-sm text-white/60">ID: ${data.id}</p>
-            </div>
-          </div>
-        `
+        // Mostrar cupón no usado
+        couponUnusedId.textContent = String(data.id || '')
+        couponUnused.classList.remove('hidden')
       } else {
+        // Mostrar cupón usado
         const usedDate = new Date(data.used_at)
         const formattedDate = usedDate.toLocaleString('es-ES', {
           year: 'numeric',
@@ -237,68 +398,63 @@ const totalUserCoupons = userCoupons?.length || 0
           minute: '2-digit',
         })
 
-        resultDiv.innerHTML = `
-          <div class="rounded-lg bg-green-500/20 p-6 backdrop-blur-sm border border-green-500/30">
-            <div class="mb-4 text-center text-4xl">✅</div>
-            <h3 class="mb-4 text-center text-xl font-bold text-white">Cupón usado</h3>
-            
-            <div class="space-y-3 text-white/90">
-              <div class="flex justify-between border-b border-white/10 pb-2">
-                <span class="font-semibold">ID del cupón:</span>
-                <span class="font-mono text-sm">${data.id}</span>
-              </div>
-              
-              <div class="flex justify-between border-b border-white/10 pb-2">
-                <span class="font-semibold">Usuario ID:</span>
-                <span class="font-mono text-sm">${data.used_by}</span>
-              </div>
-              
-              ${
-                data.user_email
-                  ? `
-                <div class="flex justify-between border-b border-white/10 pb-2">
-                  <span class="font-semibold">Email:</span>
-                  <span class="text-sm">${data.user_email}</span>
-                </div>
-              `
-                  : ''
-              }
-              
-              ${
-                data.user_name
-                  ? `
-                <div class="flex justify-between border-b border-white/10 pb-2">
-                  <span class="font-semibold">Nombre:</span>
-                  <span class="text-sm">${data.user_name}</span>
-                </div>
-              `
-                  : ''
-              }
-              
-              <div class="flex justify-between border-b border-white/10 pb-2">
-                <span class="font-semibold">Usado el:</span>
-                <span class="text-sm">${formattedDate}</span>
-              </div>
-            </div>
-          </div>
-        `
+        couponUsedId.textContent = String(data.id || '')
+        couponUsedBy.textContent = String(data.used_by || '')
+        couponUsedDate.textContent = formattedDate
+
+        // Mostrar u ocultar campos opcionales
+        if (data.user_email) {
+          couponUsedEmail.textContent = String(data.user_email)
+          couponUsedEmailRow.classList.remove('hidden')
+        } else {
+          couponUsedEmailRow.classList.add('hidden')
+        }
+
+        if (data.user_name) {
+          couponUsedName.textContent = String(data.user_name)
+          couponUsedNameRow.classList.remove('hidden')
+        } else {
+          couponUsedNameRow.classList.add('hidden')
+        }
+
+        couponUsed.classList.remove('hidden')
       }
     } catch (error) {
       console.error('Error:', error)
-      resultDiv.innerHTML = `
-        <div class="rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30">
-          <div class="mb-4 text-center text-4xl">❌</div>
-          <p class="text-center text-white font-bold">Error al validar el cupón</p>
-          <p class="mt-2 text-center text-sm text-white/70">Inténtalo de nuevo más tarde</p>
-        </div>
-      `
+      hideAllCouponStates()
+      couponErrorMessage.textContent = 'Error al validar el cupón. Inténtalo de nuevo más tarde.'
+      couponError.classList.remove('hidden')
     }
   })
 
   // Script para búsqueda de usuario
-  const userForm = document.getElementById('user-search-form') as HTMLFormElement
-  const userResultDiv = document.getElementById('user-result') as HTMLDivElement
-  const emailInput = document.getElementById('user-email-input') as HTMLInputElement
+  const userForm = $('#user-search-form') as HTMLFormElement
+  const emailInput = $('#user-email-input') as HTMLInputElement
+
+  // Elementos para usuario
+  const userLoading = $('#user-loading') as HTMLDivElement
+  const userError = $('#user-error') as HTMLDivElement
+  const userErrorMessage = $('#user-error-message') as HTMLParagraphElement
+  const userFound = $('#user-found') as HTMLDivElement
+  const userId = $('#user-id') as HTMLSpanElement
+  const userEmail = $('#user-email') as HTMLSpanElement
+  const userNameRow = $('#user-name-row') as HTMLDivElement
+  const userName = $('#user-name') as HTMLSpanElement
+  const userProviderRow = $('#user-provider-row') as HTMLDivElement
+  const userProvider = $('#user-provider') as HTMLSpanElement
+  const userCreated = $('#user-created') as HTMLSpanElement
+  const userLastSignin = $('#user-last-signin') as HTMLSpanElement
+  const userEmailVerified = $('#user-email-verified') as HTMLSpanElement
+  const userCouponsCount = $('#user-coupons-count') as HTMLSpanElement
+  const userCouponsList = $('#user-coupons-list') as HTMLDivElement
+  const userNoCoupons = $('#user-no-coupons') as HTMLDivElement
+
+  // Función para ocultar todos los estados de usuario
+  function hideAllUserStates() {
+    userLoading.classList.add('hidden')
+    userError.classList.add('hidden')
+    userFound.classList.add('hidden')
+  }
 
   userForm?.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -307,28 +463,23 @@ const totalUserCoupons = userCoupons?.length || 0
     if (!email) return
 
     // Mostrar loading
-    userResultDiv.classList.remove('hidden')
-    userResultDiv.innerHTML = `
-      <div class="rounded-lg bg-white/5 p-6 text-center backdrop-blur-sm">
-        <div class="mb-4 text-4xl">⏳</div>
-        <p class="text-white/80">Buscando usuario...</p>
-      </div>
-    `
+    hideAllUserStates()
+    userLoading.classList.remove('hidden')
 
     try {
       const response = await fetch(`/api/admin/search-user?email=${encodeURIComponent(email)}`)
       const data = await response.json()
 
+      hideAllUserStates()
+
       if (!response.ok) {
-        userResultDiv.innerHTML = `
-          <div class="rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30">
-            <div class="mb-4 text-center text-4xl">❌</div>
-            <p class="text-center text-white font-bold">${data.error || 'Error al buscar el usuario'}</p>
-          </div>
-        `
+        // Mostrar error
+        userErrorMessage.textContent = data.error || 'Error al buscar el usuario'
+        userError.classList.remove('hidden')
         return
       }
 
+      // Formatear fechas
       const createdDate = new Date(data.created_at)
       const formattedCreatedDate = createdDate.toLocaleString('es-ES', {
         year: 'numeric',
@@ -348,109 +499,73 @@ const totalUserCoupons = userCoupons?.length || 0
           })
         : 'Nunca'
 
-      // Generar lista de cupones si existen
-      let couponsHtml = ''
-      if (data.coupons && data.coupons.length > 0) {
-        couponsHtml = `
-          <div class="mt-4 border-t border-white/20 pt-4">
-            <h4 class="mb-3 text-center font-semibold text-white">Cupones usados (${data.coupons.length})</h4>
-            <div class="max-h-60 space-y-2 overflow-y-auto">
-              ${data.coupons
-                .map((coupon: any) => {
-                  const usedDate = new Date(coupon.used_at).toLocaleString('es-ES', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                  return `
-                    <div class="rounded bg-white/5 p-3">
-                      <div class="flex justify-between text-xs text-white/70">
-                        <span>ID: ${coupon.id}</span>
-                        <span>${usedDate}</span>
-                      </div>
-                    </div>
-                  `
-                })
-                .join('')}
-            </div>
-          </div>
-        `
+      // Actualizar datos del usuario
+      userId.textContent = String(data.id || '')
+      userEmail.textContent = String(data.email || '')
+      userCreated.textContent = formattedCreatedDate
+      userLastSignin.textContent = lastSignIn
+      userEmailVerified.textContent = data.email_confirmed_at ? '✅ Sí' : '❌ No'
+
+      // Mostrar u ocultar campos opcionales
+      if (data.name) {
+        userName.textContent = String(data.name)
+        userNameRow.classList.remove('hidden')
       } else {
-        couponsHtml = `
-          <div class="mt-4 border-t border-white/20 pt-4 text-center">
-            <p class="text-white/60">No ha usado ningún cupón</p>
-          </div>
-        `
+        userNameRow.classList.add('hidden')
       }
 
-      userResultDiv.innerHTML = `
-        <div class="rounded-lg bg-blue-500/20 p-6 backdrop-blur-sm border border-blue-500/30">
-          <div class="mb-4 text-center text-4xl">👤</div>
-          <h3 class="mb-4 text-center text-xl font-bold text-white">Usuario encontrado</h3>
-          
-          <div class="space-y-3 text-white/90">
-            <div class="flex justify-between border-b border-white/10 pb-2">
-              <span class="font-semibold">ID:</span>
-              <span class="font-mono text-sm">${data.id}</span>
-            </div>
-            
-            <div class="flex justify-between border-b border-white/10 pb-2">
-              <span class="font-semibold">Email:</span>
-              <span class="text-sm">${data.email}</span>
-            </div>
-            
-            ${
-              data.name
-                ? `
-              <div class="flex justify-between border-b border-white/10 pb-2">
-                <span class="font-semibold">Nombre:</span>
-                <span class="text-sm">${data.name}</span>
-              </div>
-            `
-                : ''
-            }
-            
-            ${
-              data.provider
-                ? `
-              <div class="flex justify-between border-b border-white/10 pb-2">
-                <span class="font-semibold">Proveedor:</span>
-                <span class="text-sm">${data.provider}</span>
-              </div>
-            `
-                : ''
-            }
-            
-            <div class="flex justify-between border-b border-white/10 pb-2">
-              <span class="font-semibold">Creado:</span>
-              <span class="text-sm">${formattedCreatedDate}</span>
-            </div>
-            
-            <div class="flex justify-between border-b border-white/10 pb-2">
-              <span class="font-semibold">Último acceso:</span>
-              <span class="text-sm">${lastSignIn}</span>
-            </div>
-            
-            <div class="flex justify-between pb-2">
-              <span class="font-semibold">Email verificado:</span>
-              <span class="text-sm">${data.email_confirmed_at ? '✅ Sí' : '❌ No'}</span>
-            </div>
-          </div>
+      if (data.provider) {
+        userProvider.textContent = String(data.provider)
+        userProviderRow.classList.remove('hidden')
+      } else {
+        userProviderRow.classList.add('hidden')
+      }
 
-          ${couponsHtml}
-        </div>
-      `
+      // Manejar cupones
+      userCouponsList.innerHTML = '' // Limpiar lista anterior
+
+      if (data.coupons && data.coupons.length > 0) {
+        userCouponsCount.textContent = String(data.coupons.length)
+        userNoCoupons.classList.add('hidden')
+
+        // Crear elementos de cupones de forma segura
+        data.coupons.forEach((coupon: any) => {
+          const usedDate = new Date(coupon.used_at).toLocaleString('es-ES', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+
+          const couponDiv = document.createElement('div')
+          couponDiv.className = 'rounded bg-white/5 p-3'
+
+          const couponContent = document.createElement('div')
+          couponContent.className = 'flex justify-between text-xs text-white/70'
+
+          const couponId = document.createElement('span')
+          couponId.textContent = `ID: ${coupon.id || ''}`
+
+          const couponDate = document.createElement('span')
+          couponDate.textContent = usedDate
+
+          couponContent.appendChild(couponId)
+          couponContent.appendChild(couponDate)
+          couponDiv.appendChild(couponContent)
+          userCouponsList.appendChild(couponDiv)
+        })
+      } else {
+        userCouponsCount.textContent = '0'
+        userNoCoupons.classList.remove('hidden')
+      }
+
+      userFound.classList.remove('hidden')
     } catch (error) {
       console.error('Error:', error)
-      userResultDiv.innerHTML = `
-        <div class="rounded-lg bg-red-500/20 p-6 backdrop-blur-sm border border-red-500/30">
-          <div class="mb-4 text-center text-4xl">❌</div>
-          <p class="text-center text-white font-bold">Error al buscar el usuario</p>
-          <p class="mt-2 text-center text-sm text-white/70">Inténtalo de nuevo más tarde</p>
-        </div>
-      `
+      hideAllUserStates()
+      userErrorMessage.textContent = 'Error al buscar el usuario. Inténtalo de nuevo más tarde.'
+      userError.classList.remove('hidden')
     }
   })
 </script>
