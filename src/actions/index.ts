@@ -140,6 +140,7 @@ export const server = {
       }
 
       const ip = getClientIp(ctx)
+      console.log({ ip })
 
       // Rate limiting para validación de cupones
       const [byIp] = await Promise.all([RateLimitPresets.ip(ip)])
