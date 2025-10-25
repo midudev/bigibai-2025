@@ -12,8 +12,8 @@ function getClientIp(ctx: any): string {
   const h = ctx?.request?.headers
   const first = (v?: string | null) => v?.split(',')[0]?.trim()
   return (
-    first(h?.get('x-vercel-forwarded-for')) ||
     first(h?.get('cf-connecting-ip')) ||
+    first(h?.get('x-vercel-forwarded-for')) ||
     first(h?.get('x-real-ip')) ||
     first(h?.get('x-forwarded-for')) ||
     (ctx as any)?.clientAddress ||
