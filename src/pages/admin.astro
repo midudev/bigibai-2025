@@ -15,34 +15,29 @@ if (!isAdmin(userId)) {
   return Astro.redirect('/404')
 }
 
-// Obtener estadísticas generales
+// Obtener estadísticas generales en paralelo
+const [
+  { count: totalCouponsUsed },
+  { data: uniqueUsersCount },
+  { data: averageCouponsPerUser },
+  { data: userCoupons },
+] = await Promise.all([
+  // 1. Total de cupones usados
+  supabaseAdmin.from('coupons').select('*', { count: 'exact', head: true }).eq('is_used', true),
 
-// 1. Total de cupones usados
-const { count: totalCouponsUsed } = await supabaseAdmin
-  .from('coupons')
-  .select('*', { count: 'exact', head: true })
-  .eq('is_used', true)
+  // 2. Total de usuarios con cupones
+  supabaseAdmin.rpc('total_unique_users_with_coupons'),
 
-// 3. Calcular media de cupones por usuario
-// Obtener todos los usuarios únicos que han usado al menos un cupón
-const { data: usersWithCoupons } = await supabaseAdmin
-  .from('coupons')
-  .select('used_by')
-  .eq('is_used', true)
-  .not('used_by', 'is', null)
+  // 3. Calcular media de cupones por usuario
+  supabaseAdmin.rpc('avg_coupons_per_user'),
 
-// Usar Set para obtener usuarios únicos de forma más simple
-const uniqueUsersCount = new Set(usersWithCoupons?.map((c) => c.used_by)).size
-
-// Calcular la media
-const averageCouponsPerUser = uniqueUsersCount > 0 ? (totalCouponsUsed || 0) / uniqueUsersCount : 0
-
-// Obtener cupones del usuario actual para el header
-const { data: userCoupons } = await supabaseAdmin
-  .from('coupons')
-  .select('used_at')
-  .eq('used_by', Astro.locals.user.id)
-  .eq('is_used', true)
+  // 4. Obtener cupones del usuario actual para el header
+  supabaseAdmin
+    .from('coupons')
+    .select('used_at')
+    .eq('used_by', Astro.locals.user.id)
+    .eq('is_used', true),
+])
 
 const totalUserCoupons = userCoupons?.length || 0
 ---

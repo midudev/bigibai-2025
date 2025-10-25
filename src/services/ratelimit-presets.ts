@@ -11,9 +11,9 @@ const bucket = (prefix: string, id: string) => `${prefix}:${id}`
 export const RateLimitPresets = {
   /**
    * Para APIs públicas sensibles (login, registro, etc.)
-   * 5 intentos por hora
+   * 10 intentos por hora
    */
-  strict: (identifier: string) => checkRateLimit({ identifier, limit: 5, windowMs: ONE_HOUR }),
+  strict: (identifier: string) => checkRateLimit({ identifier, limit: 10, windowMs: ONE_HOUR }),
 
   /**
    * Para APIs de uso normal
@@ -30,9 +30,9 @@ export const RateLimitPresets = {
 
   /**
    * Para protección anti-spam
-   * 10 requests por minuto
+   * 3 requests por minuto
    */
-  antiSpam: (identifier: string) => checkRateLimit({ identifier, limit: 10, windowMs: ONE_MINUTE }),
+  antiSpam: (identifier: string) => checkRateLimit({ identifier, limit: 3, windowMs: ONE_MINUTE }),
 
   /**
    * Para operaciones costosas (envío de emails, procesamiento pesado, etc.)
