@@ -216,16 +216,16 @@ const totalUserCoupons = userCoupons?.length || 0
                 Buscar Usuario
               </h2>
               <p class="mb-6 text-center text-white/80">
-                Introduce el email de un usuario para ver su información
+                Introduce el email o ID de un usuario para ver su información
               </p>
 
               <form id="user-search-form" class="mx-auto max-w-md space-y-4">
                 <div>
                   <input
-                    type="email"
-                    id="user-email-input"
-                    name="email"
-                    placeholder="Email del usuario"
+                    type="text"
+                    id="user-query-input"
+                    name="query"
+                    placeholder="Email o ID del usuario"
                     class="w-full rounded-lg border border-white/20 bg-black/30 px-4 py-3 text-white placeholder-white/50 backdrop-blur-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
                     required
                   />
@@ -429,7 +429,7 @@ const totalUserCoupons = userCoupons?.length || 0
 
   // Script para búsqueda de usuario
   const userForm = $('#user-search-form') as HTMLFormElement
-  const emailInput = $('#user-email-input') as HTMLInputElement
+  const queryInput = $('#user-query-input') as HTMLInputElement
 
   // Elementos para usuario
   const userLoading = $('#user-loading') as HTMLDivElement
@@ -459,15 +459,15 @@ const totalUserCoupons = userCoupons?.length || 0
   userForm?.addEventListener('submit', async (e) => {
     e.preventDefault()
 
-    const email = emailInput.value.trim()
-    if (!email) return
+    const query = queryInput.value.trim()
+    if (!query) return
 
     // Mostrar loading
     hideAllUserStates()
     userLoading.classList.remove('hidden')
 
     try {
-      const response = await fetch(`/api/admin/search-user?email=${encodeURIComponent(email)}`)
+      const response = await fetch(`/api/admin/search-user?query=${encodeURIComponent(query)}`)
       const data = await response.json()
 
       hideAllUserStates()
@@ -507,19 +507,11 @@ const totalUserCoupons = userCoupons?.length || 0
       userEmailVerified.textContent = data.email_confirmed_at ? '✅ Sí' : '❌ No'
 
       // Mostrar u ocultar campos opcionales
-      if (data.name) {
-        userName.textContent = String(data.name)
-        userNameRow.classList.remove('hidden')
-      } else {
-        userNameRow.classList.add('hidden')
-      }
+      if (data.name) userName.textContent = String(data.name)
+      userNameRow.classList.toggle('hidden', !data.name)
 
-      if (data.provider) {
-        userProvider.textContent = String(data.provider)
-        userProviderRow.classList.remove('hidden')
-      } else {
-        userProviderRow.classList.add('hidden')
-      }
+      if (data.provider) userProvider.textContent = String(data.provider)
+      userProviderRow.classList.toggle('hidden', !data.provider)
 
       // Manejar cupones
       userCouponsList.innerHTML = '' // Limpiar lista anterior

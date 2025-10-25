@@ -19,29 +19,45 @@ export const GET: APIRoute = async ({ request, locals }) => {
     })
   }
 
-  // Obtener el email del usuario de la query
+  // Obtener el parámetro de búsqueda (email o ID)
   const url = new URL(request.url)
-  const email = url.searchParams.get('email')
+  const query = url.searchParams.get('query')
 
-  if (!email) {
-    return new Response(JSON.stringify({ error: 'Email no proporcionado' }), {
+  if (!query) {
+    return new Response(JSON.stringify({ error: 'Email o ID no proporcionado' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     })
   }
 
   try {
-    // Buscar el usuario ID por email usando la función RPC
-    const { data: userId, error: rpcError } = await supabaseAdmin.rpc('get_user_id_by_email', {
-      p_email: email,
-    })
+    let userId: string | null = null
 
-    if (rpcError) {
-      console.error('Error al buscar usuario por email:', rpcError)
-      return new Response(JSON.stringify({ error: 'Error al buscar usuario' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      })
+    // Detectar si es un UUID (ID de usuario) o un email
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const isUUID = uuidRegex.test(query)
+
+    if (isUUID) {
+      // Si es un UUID, usarlo directamente
+      userId = query
+    } else {
+      // Si no es UUID, asumir que es un email y buscar el usuario
+      const { data: foundUserId, error: rpcError } = await supabaseAdmin.rpc(
+        'get_user_id_by_email',
+        {
+          p_email: query,
+        }
+      )
+
+      if (rpcError) {
+        console.error('Error al buscar usuario por email:', rpcError)
+        return new Response(JSON.stringify({ error: 'Error al buscar usuario' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+
+      userId = foundUserId
     }
 
     if (!userId) {
@@ -78,13 +94,19 @@ export const GET: APIRoute = async ({ request, locals }) => {
     }
 
     // Preparar la respuesta con la información del usuario
+    const metadata = user.user_metadata ?? {}
     const userData = {
       id: user.id,
       email: user.email,
       name:
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        user.user_metadata?.display_name ||
+        metadata.full_name ||
+        metadata.name ||
+        metadata.display_name ||
+        (metadata.first_name && metadata.last_name
+          ? `${metadata.first_name} ${metadata.last_name}`
+          : null) ||
+        metadata.first_name ||
+        metadata.last_name ||
         null,
       provider: user.app_metadata?.provider || null,
       created_at: user.created_at,
