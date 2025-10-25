@@ -40,6 +40,13 @@ const [
 ])
 
 const totalUserCoupons = userCoupons?.length || 0
+
+// Calcular porcentaje de cupones reclamados
+const totalCouponsAvailable = parseInt(import.meta.env.TOTAL_COUPONS || '0')
+const claimedPercentage =
+  totalCouponsAvailable > 0
+    ? (((totalCouponsUsed || 0) / totalCouponsAvailable) * 100).toFixed(1)
+    : '0.0'
 ---
 
 <Layout title="Panel de Administración - Big Ibai 2025">
@@ -92,12 +99,23 @@ const totalUserCoupons = userCoupons?.length || 0
               <p class="mt-2 text-white/80">Media cupones/usuario</p>
             </div>
           </div>
+
+          <!-- Porcentaje de cupones reclamados -->
+          <div class="bento-card group overflow-hidden" style="animation-delay: 0.4s;">
+            <div class="flex flex-col items-center justify-center p-8 text-center">
+              <div class="mb-4 text-6xl">📈</div>
+              <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
+                {claimedPercentage}%
+              </h3>
+              <p class="mt-2 text-white/80">Cupones reclamados</p>
+            </div>
+          </div>
         </div>
 
         <!-- Grid de búsquedas -->
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <!-- Sección de validación de cupones -->
-          <div class="bento-card overflow-hidden" style="animation-delay: 0.4s;">
+          <div class="bento-card overflow-hidden" style="animation-delay: 0.5s;">
             <div class="p-8">
               <h2 class="text-shadow-title mb-6 text-center text-3xl font-bold text-white">
                 Validar Cupón
@@ -212,7 +230,7 @@ const totalUserCoupons = userCoupons?.length || 0
           </div>
 
           <!-- Sección de búsqueda de usuario -->
-          <div class="bento-card overflow-hidden" style="animation-delay: 0.5s;">
+          <div class="bento-card overflow-hidden" style="animation-delay: 0.6s;">
             <div class="p-8">
               <h2 class="text-shadow-title mb-6 text-center text-3xl font-bold text-white">
                 Buscar Usuario
