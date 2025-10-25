@@ -35,7 +35,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Buscar el cupón por hash
     const { data: coupon, error: couponError } = await supabaseAdmin
       .from('coupons')
-      .select('id, hash, is_used, used_at, used_by')
+      .select('id, hash, is_used, used_at, used_by, used_ip')
       .eq('hash', hash(couponCode))
       .single()
 
@@ -82,6 +82,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         is_used: true,
         used_at: coupon.used_at,
         used_by: coupon.used_by,
+        used_ip: coupon.used_ip,
         ...userData,
       }),
       {

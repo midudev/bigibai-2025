@@ -203,6 +203,13 @@ const totalUserCoupons = userCoupons?.length || 0
                       <span class="font-semibold">Usado el:</span>
                       <span id="coupon-used-date" class="text-sm"></span>
                     </div>
+
+                    <div id="coupon-used-ip-row" class="hidden">
+                      <div class="flex justify-between pb-2">
+                        <span class="font-semibold">IP:</span>
+                        <span id="coupon-used-ip" class="font-mono text-sm"></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -349,6 +356,8 @@ const totalUserCoupons = userCoupons?.length || 0
   const couponUsedNameRow = $('#coupon-used-name-row') as HTMLDivElement
   const couponUsedName = $('#coupon-used-name') as HTMLSpanElement
   const couponUsedDate = $('#coupon-used-date') as HTMLSpanElement
+  const couponUsedIpRow = $('#coupon-used-ip-row') as HTMLDivElement
+  const couponUsedIp = $('#coupon-used-ip') as HTMLSpanElement
 
   // Función para ocultar todos los estados de cupón
   function hideAllCouponStates() {
@@ -356,6 +365,7 @@ const totalUserCoupons = userCoupons?.length || 0
     couponError.classList.add('hidden')
     couponUnused.classList.add('hidden')
     couponUsed.classList.add('hidden')
+    couponUsedIpRow.classList.add('hidden')
   }
 
   form?.addEventListener('submit', async (e) => {
@@ -416,6 +426,9 @@ const totalUserCoupons = userCoupons?.length || 0
         } else {
           couponUsedNameRow.classList.add('hidden')
         }
+
+        if (data.used_ip) couponUsedIp.textContent = String(data.used_ip)
+        couponUsedIpRow.classList.toggle('hidden', !data.used_ip)
 
         couponUsed.classList.remove('hidden')
       }

@@ -1,4 +1,3 @@
-import { saveNewsletterEmail } from '@/newsletter/services/subscribe'
 import { getRateLimitMessage } from '@/services/ratelimit'
 import { RateLimitPresets } from '@/services/ratelimit-presets'
 import { ActionError, defineAction } from 'astro:actions'
@@ -37,70 +36,6 @@ function normalizeCoupon(coupon: string): string {
 }
 
 export const server = {
-  newsletter: defineAction({
-    input: z.object({
-      // Validaciones de entrada: normaliza y bloquea dominios desechables/typos.
-      email: emailSchema,
-    }),
-    // Se aplica rate limit compuesto y se devuelve 429 explícito al bloquear.
-    async handler({ email }, ctx) {
-      // Sanitización adicional en el servidor
-      const ip = getClientIp(ctx)
-
-      // Email 5/h, IP 15/h, global 500/h.
-      const [byEmail, byIp] = await Promise.all([
-        RateLimitPresets.email(email),
-        RateLimitPresets.ip(ip),
-      ])
-
-      const failed =
-        (!byEmail.success && { kind: 'email', res: byEmail }) ||
-        (!byIp.success && { kind: 'ip', res: byIp }) ||
-        null
-
-      if (failed) {
-        // Log útil: bucket que bloqueó y cuándo reinicia.
-        console.warn('[RATE_LIMIT_BLOCK]', {
-          bucket: failed.kind,
-          reset: failed.res.reset,
-          ip,
-          email,
-        })
-
-        // Acción correcta en Actions: lanzar ActionError para 429 consistente.
-        throw new ActionError({
-          code: 'TOO_MANY_REQUESTS',
-          message: getRateLimitMessage(failed.res.reset),
-        })
-      }
-
-      const { success, duplicated, error } = await saveNewsletterEmail(email)
-
-      if (!success) {
-        // Log de error operativo útil.
-        console.error('[NEWSLETTER_SAVE_ERROR]', {
-          ip,
-          email,
-          error,
-        })
-        throw new ActionError({
-          code: 'BAD_REQUEST',
-          message: error ?? 'Error al guardar el email en la newsletter',
-        })
-      }
-
-      if (duplicated) {
-        // Mantener BAD_REQUEST para UX actual, pero con mensaje claro.
-        throw new ActionError({
-          code: 'BAD_REQUEST',
-          message: '¡Este usuario ya estaba en la newsletter!',
-        })
-      }
-
-      return { success: true, message: '¡Te has suscrito a la newsletter!' }
-    },
-  }),
-
   sendMagicLink: defineAction({
     input: z.object({
       email: emailSchema,
@@ -290,6 +225,7 @@ export const server = {
             is_used: true,
             used_at: new Date().toISOString(),
             used_by: user.id,
+            used_ip: ip,
           })
           .eq('id', couponData.id)
 
