@@ -13,7 +13,6 @@ export const GET: APIRoute = async ({ request, url, cookies, redirect }) => {
     return redirect('/registro?error=no_code')
   }
 
-  // CRÍTICO: Cliente con acceso a cookies para PKCE
   const supabase = createClient({ request, cookies })
 
   try {

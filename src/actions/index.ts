@@ -70,7 +70,6 @@ export const server = {
       }
 
       try {
-        // CRÍTICO: Cliente con acceso a cookies para PKCE
         const supabase = createClient({ request: ctx.request, cookies: ctx.cookies })
 
         // Enviar el magic link usando Supabase Auth
