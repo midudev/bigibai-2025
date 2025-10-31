@@ -125,9 +125,9 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 
 5.  Realice Push a su rama:
 
-        ```bash
-        git push origin {rama}/{nombre-de-implementación}
-        ```
+    ```bash
+    git push origin {rama}/{nombre-de-implementación}
+    ```
 
     > [!WARNING]
     > Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
