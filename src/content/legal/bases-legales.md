@@ -166,4 +166,4 @@ Las presentes Bases Legales se regirán e interpretarán de acuerdo con su propi
 
 ---
 
-**Última actualización:** Octubre 2025
+**Última actualización:** Noviembre 2025
