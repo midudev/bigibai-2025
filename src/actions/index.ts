@@ -43,8 +43,7 @@ export const server = {
     async handler({ email }, ctx) {
       const ip = getClientIp(ctx)
 
-      // Rate limiting estricto para magic links (envío de emails es costoso)
-      // 3 intentos por email cada 5 minutos, 10 intentos por IP cada hora
+      // Rate limiting estricto para magic links
       const [byEmail, byIp] = await Promise.all([
         RateLimitPresets.expensive(email),
         RateLimitPresets.antiSpam(ip),
