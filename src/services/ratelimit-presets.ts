@@ -30,9 +30,9 @@ export const RateLimitPresets = {
 
   /**
    * Para protección anti-spam
-   * 3 requests por minuto
+   * 5 requests por minuto
    */
-  antiSpam: (identifier: string) => checkRateLimit({ identifier, limit: 3, windowMs: ONE_MINUTE }),
+  antiSpam: (identifier: string) => checkRateLimit({ identifier, limit: 5, windowMs: ONE_MINUTE }),
 
   /**
    * Para operaciones costosas (envío de emails, procesamiento pesado, etc.)

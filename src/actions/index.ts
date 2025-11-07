@@ -60,7 +60,6 @@ export const server = {
           bucket: failed.kind,
           reset: failed.res.reset,
           ip,
-          email: email,
         })
 
         throw new ActionError({
@@ -83,7 +82,6 @@ export const server = {
         if (error) {
           console.error('[MAGIC_LINK_ERROR]', {
             ip,
-            email: email,
             error: error.message,
           })
 
@@ -105,7 +103,6 @@ export const server = {
 
         console.error('[MAGIC_LINK_UNEXPECTED_ERROR]', {
           ip,
-          email: email,
           error,
         })
 
@@ -139,18 +136,24 @@ export const server = {
       }
 
       const ip = getClientIp(ctx)
-      console.log({ ip })
 
-      // Rate limiting para validación de cupones
-      const [byIp] = await Promise.all([RateLimitPresets.ip(ip)])
+      // Rate limiting para validación de cupones (por IP y por usuario)
+      const [byIp, byUser] = await Promise.all([
+        RateLimitPresets.ip(ip),
+        RateLimitPresets.antiSpam(user.id),
+      ])
 
-      const failed = (!byIp.success && { kind: 'ip', res: byIp }) || null
+      const failed =
+        (!byIp.success && { kind: 'ip', res: byIp }) ||
+        (!byUser.success && { kind: 'user', res: byUser }) ||
+        null
 
       if (failed) {
         console.warn('[RATE_LIMIT_BLOCK_COUPON]', {
           bucket: failed.kind,
           reset: failed.res.reset,
           ip,
+          userId: user.id,
         })
 
         throw new ActionError({
@@ -170,56 +173,10 @@ export const server = {
       }
 
       try {
-        // Generar hash del cupón para buscar en la base de datos
         const couponHash = hash(normalizedCoupon)
 
-        // Buscar el cupón en la base de datos
-        const { data: couponData, error: fetchError } = await supabaseAdmin
-          .from('coupons')
-          .select('is_used, used_by, id')
-          .eq('hash', couponHash)
-          .single()
-
-        // Si hay error O no hay datos, el cupón no es válido
-        if (fetchError || !couponData) {
-          // Si el error es "PGRST116" significa que no se encontró el registro
-          if (fetchError?.code === 'PGRST116') {
-            throw new ActionError({
-              code: 'BAD_REQUEST',
-              message: 'El cupón no es válido',
-            })
-          }
-
-          // Si hay otro tipo de error, es un error interno
-          if (fetchError) {
-            console.error('[COUPON_FETCH_ERROR]', {
-              ip,
-              coupon: normalizedCoupon,
-              error: fetchError,
-            })
-            throw new ActionError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message: 'Error al verificar el cupón',
-            })
-          }
-
-          // Si no hay error pero tampoco hay datos
-          throw new ActionError({
-            code: 'BAD_REQUEST',
-            message: 'El cupón no es válido',
-          })
-        }
-
-        // Verificar si el cupón ya está usado
-        if (couponData.is_used) {
-          throw new ActionError({
-            code: 'BAD_REQUEST',
-            message: 'Este cupón ya ha sido utilizado',
-          })
-        }
-
-        // Marcar el cupón como usado
-        const { error: updateError } = await supabaseAdmin
+        // Marcar el cupón como usado solo si está disponible
+        const { data: couponData, error: updateError } = await supabaseAdmin
           .from('coupons')
           .update({
             is_used: true,
@@ -227,18 +184,47 @@ export const server = {
             used_by: user.id,
             used_ip: ip,
           })
-          .eq('id', couponData.id)
+          .eq('hash', couponHash)
+          .eq('is_used', false)
+          .select('id')
+          .single()
 
-        if (updateError) {
-          console.error('[COUPON_UPDATE_ERROR]', {
-            ip,
-            userId: user.id,
-            couponId: couponData.id,
-            error: updateError,
-          })
+        if (updateError || !couponData) {
+          if (updateError?.code === 'PGRST116') {
+            const { data: existingCoupon } = await supabaseAdmin
+              .from('coupons')
+              .select('is_used')
+              .eq('hash', couponHash)
+              .single()
+
+            if (existingCoupon?.is_used) {
+              throw new ActionError({
+                code: 'BAD_REQUEST',
+                message: 'Este cupón ya ha sido utilizado',
+              })
+            }
+
+            throw new ActionError({
+              code: 'BAD_REQUEST',
+              message: 'El cupón no es válido',
+            })
+          }
+
+          if (updateError) {
+            console.error('[COUPON_UPDATE_ERROR]', {
+              ip,
+              coupon: normalizedCoupon,
+              error: updateError,
+            })
+            throw new ActionError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Error al verificar el cupón',
+            })
+          }
+
           throw new ActionError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Error al marcar el cupón como usado',
+            code: 'BAD_REQUEST',
+            message: 'El cupón no es válido',
           })
         }
 

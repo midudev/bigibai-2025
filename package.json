@@ -15,13 +15,13 @@
     "@floating-ui/dom": "1.7.4",
     "@midudev/tailwind-animations": "0.2.0",
     "@supabase/ssr": "0.7.0",
-    "@supabase/supabase-js": "2.76.1",
-    "@tailwindcss/vite": "4.1.16",
-    "@upstash/ratelimit": "2.0.6",
+    "@supabase/supabase-js": "2.80.0",
+    "@tailwindcss/vite": "4.1.17",
+    "@upstash/ratelimit": "2.0.7",
     "@upstash/redis": "1.35.6",
-    "astro": "5.15.1",
-    "canvas-confetti": "1.9.3",
-    "tailwindcss": "4.1.16"
+    "astro": "5.15.4",
+    "canvas-confetti": "1.9.4",
+    "tailwindcss": "4.1.17"
   },
   "devDependencies": {
     "@tailwindcss/typography": "0.5.19",
