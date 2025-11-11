@@ -125,9 +125,9 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 
 5.  Realice Push a su rama:
 
-        ```bash
-        git push origin {rama}/{nombre-de-implementación}
-        ```
+    ```bash
+    git push origin {rama}/{nombre-de-implementación}
+    ```
 
     > [!WARNING]
     > Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
@@ -157,7 +157,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
   ```bash
   git clone https://github.com/midudev/bigibai-2025.git &&
   cd bigibai-2025 &&
-  CP .env.example .env &&
+  cp .env.example .env &&
   pnpm install &&
   pnpm run dev &&
   open "http://localhost:4321"
