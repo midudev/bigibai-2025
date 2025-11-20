@@ -1,0 +1,972 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Button from '@/components/Button.astro'
+
+const MOCK_DATA = {
+  day: 1,
+  prize: 'Cirque du Soleil',
+  anagram: 'RQEIUC UD LLEOIS',
+  answer: 'CIRQUE DU SOLEIL',
+  hint: 'Un espectáculo que desafía la gravedad y te deja sin aliento',
+  videoUrl: '/video-premio-mock.mp4', // Mock
+}
+---
+
+<Layout title="Casilla Mock - Big Ibai" description="Prototipo del flujo de casillas">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+  ></script>
+
+  <div class="flex min-h-screen flex-col">
+    <div id="casilla-flow" class="flex-1 relative">
+      <!-- Pantalla 1: Animación de apertura con calendario -->
+      <div id="screen-opening" class="screen active">
+        <div class="opening-animation relative">
+          <canvas id="confetti-canvas" class="confetti-canvas w-full h-full"></canvas>
+          <div id="calendar-container" class="calendar-container">
+            <img
+              id="calendar-image"
+              src="/calendar.webp"
+              alt="Calendario Big Ibai"
+              class="calendar-image"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Pantalla 2: Adivina el premio -->
+      <div id="screen-guess" class="screen">
+        <div class="screen-content">
+          <div class="text-center mb-8">
+            <h1
+              class="text-4xl md:text-5xl text-brand font-bold mb-4 uppercase"
+              style="font-family: 'Heavy', sans-serif; text-shadow: var(--text-shadow-title);"
+            >
+              ¿Adivina el premio<br />del día {MOCK_DATA.day}?
+            </h1>
+            <p class="text-white/70 text-lg">Resuelve el anagrama para descubrirlo</p>
+          </div>
+
+          <model-viewer
+            id="ibai-model"
+            src="/models/ibai2.glb"
+            autoplay
+            camera-orbit="0deg 90deg 1.2m"
+            field-of-view="90deg"
+            disable-zoom
+            camera-controls
+            class="w-[250px] h-[250px] mx-auto"
+            style="transform: translateY(-30px)"></model-viewer>
+
+          <div class="flex flex-col gap-4 mt-12">
+            <Button id="btn-start-game" variant="brand" size="lg" class="w-full">
+              ¡Empezar el reto!
+            </Button>
+
+            <Button id="btn-help" variant="secondary" size="lg" class="w-full">
+              <span>?</span>
+              Ver reglas
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pantalla 3: Juego - Anagrama -->
+      <div id="screen-game" class="screen">
+        <div class="screen-content">
+          <!-- Contador de tiempo/puntos -->
+          <div class="game-header">
+            <div class="timer-display">
+              <div class="text-center">
+                <span id="timer-seconds" class="text-5xl font-bold text-brand">0</span>
+                <span class="text-sm text-white/60 block mt-1">segundos</span>
+              </div>
+              <div class="text-center">
+                <span id="timer-points" class="text-3xl font-bold text-white">500</span>
+                <span class="text-sm text-white/60 block mt-1">puntos</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Anagrama -->
+          <div class="anagram-container">
+            <h2
+              class="text-2xl text-white mb-6 text-center font-bold uppercase"
+              style="font-family: 'Heavy', sans-serif;"
+            >
+              Resuelve el anagrama:
+            </h2>
+            <div class="anagram-letters">
+              {
+                MOCK_DATA.anagram
+                  .split('')
+                  .map((letter) => <span class="anagram-letter">{letter}</span>)
+              }
+            </div>
+          </div>
+
+          <!-- Input de respuesta -->
+          <div class="answer-input-container">
+            <input
+              type="text"
+              id="answer-input"
+              placeholder="Escribe tu respuesta..."
+              maxlength={MOCK_DATA.answer.length}
+              autocomplete="off"
+              class="answer-input"
+            />
+            <div id="feedback" class="feedback hidden"></div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="game-actions">
+            <Button id="btn-hint" variant="secondary" size="lg" class="w-full">
+              💡 Pista de Ibai
+            </Button>
+
+            <Button id="btn-submit" variant="brand" size="lg" class="w-full">
+              Enviar respuesta
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pantalla 4: Video del premio -->
+      <div id="screen-video" class="screen">
+        <div class="screen-content">
+          <div class="video-container">
+            <video id="prize-video" class="w-full h-auto rounded-lg" playsinline muted>
+              <source src={MOCK_DATA.videoUrl} type="video/mp4" />
+            </video>
+
+            <div class="video-overlay">
+              <div class="prize-reveal">
+                <h2
+                  class="text-4xl text-brand font-bold mb-4 uppercase"
+                  style="font-family: 'Heavy', sans-serif; text-shadow: var(--text-shadow-title);"
+                >
+                  ¡Lo conseguiste!
+                </h2>
+                <p
+                  class="text-2xl text-white font-bold mb-2 uppercase"
+                  style="font-family: 'Heavy', sans-serif;"
+                >
+                  2 entradas para el
+                </p>
+                <p
+                  class="text-5xl text-brand font-bold uppercase"
+                  style="font-family: 'Heavy', sans-serif; text-shadow: var(--text-shadow-title);"
+                >
+                  {MOCK_DATA.prize}
+                </p>
+                <p class="text-white/60 mt-6">
+                  Sorteo de todas estas locuras<br />
+                  el <strong class="text-brand">24/12</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resultado y compartir -->
+          <div class="result-section">
+            <div class="score-display">
+              <p class="text-lg text-white/70">Tu puntuación:</p>
+              <p id="final-score" class="text-6xl text-brand font-bold">500</p>
+              <p class="text-sm text-white/60">puntos</p>
+            </div>
+
+            <div class="share-actions">
+              <Button variant="secondary" size="md" class="flex-1"> 📋 Copiar enlace </Button>
+              <Button variant="secondary" size="md" class="flex-1"> 📤 Compartir </Button>
+            </div>
+
+            <div class="next-day-message">
+              <p class="text-white/70">🎄 Vuelve mañana para el siguiente reto</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sheet inferior: Pista de Ibai -->
+      <div id="hint-sheet" class="sheet">
+        <div class="sheet-content">
+          <div class="sheet-handle"></div>
+          <h3
+            class="text-2xl text-brand font-bold mb-4 uppercase"
+            style="font-family: 'Heavy', sans-serif;"
+          >
+            Pista de Ibai
+          </h3>
+          <p class="text-white/90 text-lg mb-6">{MOCK_DATA.hint}</p>
+
+          <div class="audio-player mb-6">
+            <Button id="play-audio" variant="secondary" size="lg" class="w-full">
+              ▶️ Reproducir audio (0:10)
+            </Button>
+          </div>
+
+          <Button id="close-hint" variant="brand" size="lg" class="w-full"> Cerrar </Button>
+        </div>
+        <div class="sheet-backdrop"></div>
+      </div>
+
+      <!-- Modal: Reglas -->
+      <div id="help-modal" class="modal">
+        <div class="modal-content">
+          <h3
+            class="text-2xl text-brand font-bold mb-4 uppercase"
+            style="font-family: 'Heavy', sans-serif;"
+          >
+            ¿Cómo jugar?
+          </h3>
+          <ul class="text-white/90 space-y-3 text-left">
+            <li>• Resuelve el anagrama para descubrir el premio del día</li>
+            <li>• Empiezas con <strong>500 puntos</strong></li>
+            <li>• Pierdes <strong>1 punto por segundo</strong> (mínimo 10)</li>
+            <li>• Usa la pista de Ibai si te atascas</li>
+            <li>• ¡Sé rápido para conseguir más puntos!</li>
+          </ul>
+          <Button id="close-help" variant="brand" size="lg" class="w-full mt-6"> Entendido </Button>
+        </div>
+        <div class="modal-backdrop"></div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  /* Contenedor principal */
+  #casilla-flow {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Oscurecer el fondo más durante el flujo de casillas */
+  #casilla-flow::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Pantallas */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .screen-content {
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Pantalla 1: Animación de apertura */
+  .opening-animation {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .confetti-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .calendar-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+  }
+
+  .calendar-image {
+    max-width: 90%;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.8));
+  }
+
+  .calendar-image.animating {
+    animation: shakeZoomAndFade 6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes shakeZoomAndFade {
+    /* Fase 1: Agitación lateral (0-40%) */
+    0% {
+      transform: scale(1) rotate(0deg) translateX(0);
+      transform-origin: center center;
+      filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.8)) brightness(1) saturate(1);
+      opacity: 1;
+    }
+    3% {
+      transform: scale(1) rotate(-4deg) translateX(-25px);
+      transform-origin: center center;
+    }
+    6% {
+      transform: scale(1) rotate(4deg) translateX(25px);
+      transform-origin: center center;
+    }
+    9% {
+      transform: scale(1) rotate(-4deg) translateX(-25px);
+      transform-origin: center center;
+    }
+    12% {
+      transform: scale(1) rotate(4deg) translateX(25px);
+      transform-origin: center center;
+    }
+    15% {
+      transform: scale(1) rotate(-4deg) translateX(-25px);
+      transform-origin: center center;
+    }
+    18% {
+      transform: scale(1) rotate(4deg) translateX(25px);
+      transform-origin: center center;
+    }
+    21% {
+      transform: scale(1) rotate(-3deg) translateX(-20px);
+      transform-origin: center center;
+    }
+    24% {
+      transform: scale(1) rotate(3deg) translateX(20px);
+      transform-origin: center center;
+    }
+    27% {
+      transform: scale(1) rotate(-3deg) translateX(-20px);
+      transform-origin: center center;
+    }
+    30% {
+      transform: scale(1) rotate(3deg) translateX(20px);
+      transform-origin: center center;
+    }
+    33% {
+      transform: scale(1) rotate(-2deg) translateX(-15px);
+      transform-origin: center center;
+    }
+    36% {
+      transform: scale(1) rotate(2deg) translateX(15px);
+      transform-origin: center center;
+    }
+    39% {
+      transform: scale(1) rotate(-2deg) translateX(-15px);
+      transform-origin: center center;
+    }
+    40% {
+      transform: scale(1) rotate(0deg) translateX(0);
+      transform-origin: center center;
+      filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.8)) brightness(1) saturate(1);
+      opacity: 1;
+    }
+
+    /* Fase 2: Pausa y cambio de origen (40-45%) */
+    45% {
+      transform: scale(1) rotate(0deg) translateX(0);
+      transform-origin: 82% 78%;
+      filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.8)) brightness(1) saturate(1);
+      opacity: 1;
+    }
+
+    /* Fase 3: Zoom hacia la casilla 1 (45-75%) */
+    100% {
+      transform: scale(10) rotate(0deg) translateX(0);
+      transform-origin: 82% 78%;
+      filter: drop-shadow(0 20px 60px rgba(248, 177, 52, 0.8)) brightness(1) saturate(1);
+      opacity: 1;
+    }
+
+    /* Fase 4: Convertir a amarillo brand (75-85%) */
+    85% {
+      filter: drop-shadow(0 30px 80px rgba(248, 177, 52, 1)) brightness(2) saturate(0)
+        hue-rotate(10deg);
+      opacity: 1;
+    }
+
+    /* Fase 5: Fade out (85-100%) */
+    100% {
+      transform: scale(10) rotate(0deg) translateX(0);
+      transform-origin: 82% 78%;
+
+      opacity: 0;
+    }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Modelo 3D */
+  model-viewer {
+    --poster-color: transparent;
+  }
+
+  /* Pantalla 2: Adivina */
+  .prize-teaser {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border: 2px dashed rgba(248, 177, 52, 0.4);
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Pantalla 3: Juego */
+  .game-header {
+    margin-bottom: 2rem;
+  }
+
+  .timer-display {
+    display: flex;
+    justify-content: space-around;
+    gap: 2rem;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 2px solid rgba(248, 177, 52, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .anagram-container {
+    margin: 2rem 0;
+  }
+
+  .anagram-letters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+
+  .anagram-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: rgba(248, 177, 52, 0.2);
+    border: 2px solid rgba(248, 177, 52, 0.5);
+    border-radius: 0.5rem;
+    color: var(--color-brand);
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .answer-input-container {
+    margin: 2rem 0;
+  }
+
+  .answer-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(248, 177, 52, 0.4);
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1.25rem;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .answer-input:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 32px rgba(248, 177, 52, 0.2);
+  }
+
+  .answer-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .feedback {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .feedback.correct {
+    background: rgba(92, 137, 72, 0.3);
+    color: #6ade6a;
+    border: 1px solid #6ade6a;
+  }
+
+  .feedback.incorrect {
+    background: rgba(220, 38, 38, 0.3);
+    color: #fca5a5;
+    border: 1px solid #fca5a5;
+    animation: shake 0.5s;
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-10px);
+    }
+    75% {
+      transform: translateX(10px);
+    }
+  }
+
+  .game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  /* Pantalla 4: Video */
+  .video-container {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  .video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .result-section {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 2px solid rgba(248, 177, 52, 0.3);
+  }
+
+  .score-display {
+    margin-bottom: 2rem;
+  }
+
+  .share-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .next-day-message {
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(248, 177, 52, 0.2);
+  }
+
+  /* Sheet (Pista) */
+  .sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sheet.active {
+    transform: translateY(0);
+  }
+
+  .sheet-content {
+    position: relative;
+    z-index: 102;
+    background: rgba(20, 20, 30, 0.98);
+    backdrop-filter: blur(20px);
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+    border-top: 3px solid rgba(248, 177, 52, 0.4);
+    padding: 2rem;
+    max-height: 75vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .sheet-handle {
+    width: 3rem;
+    height: 0.25rem;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 1rem;
+    margin: 0 auto 1.5rem;
+  }
+
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 101;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sheet.active .sheet-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Modal (Reglas) */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-content {
+    position: relative;
+    z-index: 102;
+    background: rgba(20, 20, 30, 0.98);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(248, 177, 52, 0.4);
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 101;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .anagram-letter {
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 1.25rem;
+    }
+
+    .timer-display {
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    #timer-seconds,
+    #final-score {
+      font-size: 2.5rem;
+    }
+
+    #timer-points {
+      font-size: 2rem;
+    }
+
+    .answer-input {
+      font-size: 1rem;
+    }
+
+    h1 {
+      font-size: 2rem !important;
+    }
+
+    .prize-reveal h2 {
+      font-size: 2rem !important;
+    }
+
+    .prize-reveal p:last-of-type {
+      font-size: 2.5rem !important;
+    }
+  }
+
+  /* Mejoras de accesibilidad */
+  .answer-input:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+</style>
+
+<script>
+  import confetti from 'canvas-confetti'
+
+  // Datos del juego
+  const MOCK_DATA = {
+    day: 1,
+    prize: 'Cirque du Soleil',
+    anagram: 'RQEIUC UD LLEOIS',
+    answer: 'CIRQUE DU SOLEIL',
+    hint: 'Un espectáculo que desafía la gravedad y te deja sin aliento',
+    videoUrl: '/video-premio-mock.mp4',
+  }
+
+  // Estados del juego
+  let currentScreen = 'opening'
+  let gameTimer: number | null = null
+  let elapsedSeconds = 0
+  let currentPoints = 500
+
+  // Elementos del DOM
+  const screens = {
+    opening: document.getElementById('screen-opening'),
+    guess: document.getElementById('screen-guess'),
+    game: document.getElementById('screen-game'),
+    video: document.getElementById('screen-video'),
+  }
+
+  const hintSheet = document.getElementById('hint-sheet')
+  const helpModal = document.getElementById('help-modal')
+  const answerInput = document.getElementById('answer-input') as HTMLInputElement | null
+  const feedback = document.getElementById('feedback')
+  const timerSeconds = document.getElementById('timer-seconds')
+  const timerPoints = document.getElementById('timer-points')
+  const finalScore = document.getElementById('final-score')
+
+  // Configurar canvas de confetti
+  const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement | null
+  const myConfetti = canvas
+    ? confetti.create(canvas, {
+        resize: true,
+        useWorker: true,
+      })
+    : null
+
+  // Función para lanzar confetti navideño
+  function launchChristmasConfetti() {
+    if (!myConfetti) return
+
+    const duration = 3000
+    const animationEnd = Date.now() + duration
+    const defaults = {
+      startVelocity: 30,
+      spread: 360,
+      ticks: 60,
+      zIndex: 1,
+    }
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min
+    }
+
+    const interval = setInterval(function () {
+      const timeLeft = animationEnd - Date.now()
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval)
+      }
+
+      const particleCount = 50 * (timeLeft / duration)
+
+      // Confetti desde los lados
+      myConfetti!({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#f8b134', '#ff0000', '#00ff00', '#ffffff', '#ffd700'],
+      })
+      myConfetti!({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#f8b134', '#ff0000', '#00ff00', '#ffffff', '#ffd700'],
+      })
+    }, 250)
+  }
+
+  // Iniciar confetti al cargar
+  launchChristmasConfetti()
+
+  // Iniciar animación del calendario
+  const calendarImage = document.getElementById('calendar-image')
+  if (calendarImage) {
+    calendarImage.classList.add('animating')
+  }
+
+  // Función para cambiar de pantalla
+  function showScreen(screenName: keyof typeof screens) {
+    Object.values(screens).forEach((screen) => screen?.classList.remove('active'))
+    screens[screenName]?.classList.add('active')
+    currentScreen = screenName
+  }
+
+  // Pantalla 1: Auto-avanzar después de 6s (duración de la animación)
+  setTimeout(() => {
+    showScreen('guess')
+  }, 6000)
+
+  // Pantalla 2: Botón empezar juego
+  document.getElementById('btn-start-game')?.addEventListener('click', () => {
+    showScreen('game')
+    startGame()
+  })
+
+  // Pantalla 2: Botón ayuda
+  document.getElementById('btn-help')?.addEventListener('click', () => {
+    helpModal?.classList.add('active')
+  })
+
+  document.getElementById('close-help')?.addEventListener('click', () => {
+    helpModal?.classList.remove('active')
+  })
+
+  // Pantalla 3: Iniciar juego
+  function startGame() {
+    elapsedSeconds = 0
+    currentPoints = 500
+    updateTimer()
+
+    gameTimer = setInterval(() => {
+      elapsedSeconds++
+      currentPoints = Math.max(10, 500 - elapsedSeconds)
+      updateTimer()
+    }, 1000) as unknown as number
+
+    answerInput?.focus()
+  }
+
+  function updateTimer() {
+    if (timerSeconds) timerSeconds.textContent = String(elapsedSeconds)
+    if (timerPoints) timerPoints.textContent = String(currentPoints)
+  }
+
+  function stopGame() {
+    if (gameTimer) {
+      clearInterval(gameTimer)
+      gameTimer = null
+    }
+  }
+
+  // Pantalla 3: Pista de Ibai
+  document.getElementById('btn-hint')?.addEventListener('click', () => {
+    hintSheet?.classList.add('active')
+  })
+
+  document.getElementById('close-hint')?.addEventListener('click', () => {
+    hintSheet?.classList.remove('active')
+  })
+
+  document.querySelector('.sheet-backdrop')?.addEventListener('click', () => {
+    hintSheet?.classList.remove('active')
+  })
+
+  // Pantalla 3: Validar respuesta
+  function checkAnswer() {
+    const userAnswer = answerInput?.value.trim().toUpperCase()
+    const correctAnswer = MOCK_DATA.answer.toUpperCase()
+
+    if (!userAnswer) return
+
+    if (userAnswer === correctAnswer) {
+      // Correcto
+      feedback?.classList.remove('hidden', 'incorrect')
+      feedback?.classList.add('correct')
+      if (feedback) feedback.textContent = '¡Correcto! 🎉'
+
+      stopGame()
+
+      // Avanzar a video después de 1.5s
+      setTimeout(() => {
+        if (finalScore) finalScore.textContent = currentPoints.toString()
+        showScreen('video')
+        playPrizeVideo()
+      }, 1500)
+    } else {
+      // Incorrecto
+      feedback?.classList.remove('hidden', 'correct')
+      feedback?.classList.add('incorrect')
+      if (feedback) feedback.textContent = '❌ Respuesta incorrecta. ¡Inténtalo de nuevo!'
+
+      // Vibración si está disponible
+      if (navigator.vibrate) {
+        navigator.vibrate(200)
+      }
+
+      // Limpiar feedback después de 3s
+      setTimeout(() => {
+        feedback?.classList.add('hidden')
+      }, 3000)
+    }
+  }
+
+  document.getElementById('btn-submit')?.addEventListener('click', checkAnswer)
+
+  answerInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      checkAnswer()
+    }
+  })
+
+  // Pantalla 4: Reproducir video
+  function playPrizeVideo() {
+    const video = document.getElementById('prize-video')
+    if (video && video instanceof HTMLVideoElement) {
+      // En un caso real, aquí cargaríamos el video
+      // video.play()
+      // Mock: solo mostramos la overlay
+    }
+  }
+
+  // Botón de audio (mock)
+  document.getElementById('play-audio')?.addEventListener('click', (e) => {
+    const btn = e.target
+    if (btn && btn instanceof HTMLElement) {
+      btn.textContent = '⏸️ Pausar audio'
+      setTimeout(() => {
+        btn.textContent = '▶️ Reproducir audio (0:10)'
+      }, 10000)
+    }
+  })
+
+  // Cleanup al salir
+  window.addEventListener('beforeunload', () => {
+    stopGame()
+  })
+</script>
