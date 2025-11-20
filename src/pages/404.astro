@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 import Footer from '@/sections/Footer.astro'
 import Header from '@/sections/Header.astro'
+import Button from '@/components/Button.astro'
 ---
 
 <Layout>
@@ -15,14 +16,13 @@ import Header from '@/sections/Header.astro'
         >
           Big Ibai aún no ha llegado a estas tierras
         </h1>
-        <a
+        <Button
           href="/"
-          title="Volver al Inicio"
-          class="px-6 py-3 bg-brand hover:bg-yellow-400 text-black/80 font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
-          role="link"
+          size="lg"
           aria-label="Volver al inicio"
-          aria-live="assertive">Volver al Inicio</a
         >
+          Volver al Inicio
+        </Button>
       </section>
     </div>
     <Footer />
