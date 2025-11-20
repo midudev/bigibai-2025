@@ -1,0 +1,182 @@
+---
+import Button from '@/components/Button.astro'
+---
+
+<section class="relative w-full overflow-hidden py-20 md:py-32">
+  <div class="mx-auto flex w-full max-w-7xl flex-col items-center px-4 md:flex-row md:gap-12">
+    <!-- Text Content Left (Desktop) / Top (Mobile) -->
+    <div class="flex flex-1 flex-col items-center text-center md:items-start md:text-left z-10">
+      <h2
+        class="font-heavy text-left! text-4xl font-bold text-brand md:text-7xl lg:text-8xl mb-2 drop-shadow-lg uppercase leading-[42px]!"
+      >
+        Las 24 <span class="text-2xl md:text-4xl lg:text-5xl">chocolatinas</span>
+      </h2>
+      <p class="font-century text-xl text-white/90 md:text-2xl max-w-md text-balance mb-8">
+        Únicas e irrepetibles.
+      </p>
+
+      <!-- Desktop List -->
+      <div class="hidden md:flex flex-col space-y-8 mt-8 w-full">
+        <div class="flex flex-col items-start gap-2 group">
+          <p
+            class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
+          >
+            <span class="text-brand pr-1 text-sm -mt-1">◆</span> Diseñadas para que recordemos los mejores
+            momentos de Ibai.
+          </p>
+        </div>
+
+        <div class="flex flex-col items-start gap-2 group">
+          <p
+            class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
+          >
+            <span class="text-brand pr-2 text-sm -mt-1">◆</span>Ediciones exclusivas que solo
+            probarás 1 vez.
+          </p>
+        </div>
+
+        <div class="flex flex-col items-start gap-2 group">
+          <p
+            class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
+          >
+            <span class="text-brand pr-1 -mt-1 text-sm">◆</span> Algunos placeres, los verdaderamente
+            especiales, existen precisamente por eso: porque no duran para siempre.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Chocolates + Sabor -->
+    <div class="flex flex-[2] flex-col items-center w-full z-10">
+      <!-- Floating Chocolates Row -->
+      <div
+        class="relative w-full flex items-center justify-center gap-8 md:gap-12 perspective-1000 my-10 md:my-0 min-h-[400px] md:min-h-[500px]"
+      >
+        <!-- Chocolate A Group -->
+        <div class="relative z-20 flex flex-col items-center">
+          <img
+            src="/chocolate_a.webp"
+            alt="Chocolatina Big Ibai diseño A"
+            class="w-64 md:w-96 lg:w-[16rem] object-contain drop-shadow-2xl floating-chocolate-a"
+          />
+          <p
+            class="font-handwriting text-2xl md:text-3xl text-white/90 text-center transform -rotate-6 text-shadow-black text-shadow-2xs leading-none"
+            style="font-family: 'Brush Script MT', cursive;"
+          >
+            El calcetín de <br />
+            <span class="text-brand">YouTube</span>
+          </p>
+        </div>
+
+        <!-- Chocolate B Group -->
+        <div class="relative z-10 flex flex-col items-center">
+          <img
+            src="/chocolate_b.webp"
+            alt="Chocolatina Big Ibai diseño B"
+            class="w-64 md:w-96 lg:w-[16rem] object-contain drop-shadow-2xl floating-chocolate-b"
+          />
+          <p
+            class="font-handwriting text-2xl md:text-3xl text-white/90 text-center transform rotate-6 text-shadow-black text-shadow-2xs leading-none"
+            style="font-family: 'Brush Script MT', cursive;"
+          >
+            El cinturón de <br />
+            <span class="text-brand">La Velada</span>
+          </p>
+        </div>
+
+        <!-- Decorative Elements -->
+        <div
+          class="absolute inset-0 bg-brand/20 blur-[100px] rounded-full mix-blend-screen animate-pulse pointer-events-none"
+        >
+        </div>
+      </div>
+
+      <!-- Desktop Sabor Box (Horizontal) -->
+      <div
+        class="hidden md:flex flex-row items-center gap-8 bg-black/40 backdrop-blur-sm p-8 rounded-xl border border-white/20 w-full max-w-4xl transform hover:scale-105 transition-transform duration-300 mt-4"
+      >
+        <h4 class="font-heavy text-3xl text-brand shrink-0">SABOR</h4>
+        <p class="font-century text-white/80 text-lg leading-snug text-pretty">
+          Bajo una cobertura suave de chocolate con leche, se esconde un corazón cremoso de relleno
+          de leche, pensado para derretirse justo cuando el sabor y la textura alcanzan su punto
+          perfecto.
+        </p>
+      </div>
+    </div>
+
+    <!-- Mobile Description (Sabor) -->
+    <div class="md:hidden w-full mt-8 px-4">
+      <div class="bg-black/40 backdrop-blur-sm p-6 rounded-xl border border-white/20 w-full">
+        <h4 class="font-heavy text-2xl text-brand mb-2 text-center">SABOR</h4>
+        <p class="font-century text-white/80 text-lg leading-relaxed text-center text-pretty">
+          Bajo una cobertura suave de chocolate con leche, se esconde un corazón cremoso de relleno
+          de leche.
+        </p>
+      </div>
+    </div>
+
+    <!-- Mobile List -->
+    <div class="md:hidden w-full mt-8 px-4 flex flex-col items-center text-center space-y-8">
+      <div class="flex flex-col items-center gap-2 group">
+        <p
+          class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs"
+        >
+          <span class="text-brand pr-1 text-sm -mt-1">◆</span> Diseñadas para que recordemos los mejores
+          momentos de Ibai.
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center gap-2 group">
+        <p
+          class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs"
+        >
+          <span class="text-brand pr-2 text-sm -mt-1">◆</span>Ediciones exclusivas que solo probarás
+          1 vez.
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center gap-2 group">
+        <p
+          class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-pretty text-shadow-black text-shadow-2xs"
+        >
+          <span class="text-brand pr-1 -mt-1 text-sm">◆</span> Algunos placeres, los verdaderamente especiales,
+          existen precisamente por eso: porque no duran para siempre.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  @keyframes float-a {
+    0%,
+    100% {
+      transform: rotate(-10deg) translateY(0px);
+    }
+    50% {
+      transform: rotate(-5deg) translateY(-20px);
+    }
+  }
+
+  @keyframes float-b {
+    0%,
+    100% {
+      transform: rotate(10deg) translateY(0px);
+    }
+    50% {
+      transform: rotate(15deg) translateY(25px);
+    }
+  }
+
+  .floating-chocolate-a {
+    animation: float-a 6s ease-in-out infinite;
+  }
+
+  .floating-chocolate-b {
+    animation: float-b 7s ease-in-out infinite reverse;
+  }
+</style>
