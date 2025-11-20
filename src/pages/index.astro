@@ -6,6 +6,7 @@ import Footer from '@/sections/Footer.astro'
 import Chocolates from '@/sections/Chocolates.astro'
 import Map from '@/components/Map.astro'
 import { supabaseAdmin } from '@/supabase-admin'
+import Clicker from '@/components/Clicker.astro'
 
 // Verificar si el usuario está logueado
 const user = Astro.locals.user
@@ -42,8 +43,18 @@ if (user) {
       <Map />
     </section>
 
-    <!-- Sección de chocolates -->
-    <section id="chocolates" class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20"></section>
+    <!-- Sección con juego de clicker -->
+    <section id="clicker" class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20">
+      <div class="mb-8 text-center">
+        <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl mb-4">
+          Juego de clicker
+        </h2>
+        <p class="text-shadow-title text-white mb-4">
+          Si has llegado hasta aquí, te has ganado una recompensa
+        </p>
+      </div>
+      <Clicker />
+    </section>
 
     <Footer />
   </div>
