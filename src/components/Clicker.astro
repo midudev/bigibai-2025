@@ -62,9 +62,7 @@
       <img class="trophy-img" src="/game-trophy.png" alt="Trofeo" />
     </div>
 
-    <p id="choco-modal-desc" style="font-size: 0.7rem; margin-bottom: 20px; color: #ccc;">
-      Elige una mejora para tu guante:
-    </p>
+    <p id="choco-modal-desc">Elige una mejora para tu guante:</p>
 
     <div id="choco-upgrade-options" class="upgrade-grid">
       <button class="upgrade-btn" data-upgrade="str"><span>💪</span>+FUERZA</button>
@@ -450,12 +448,12 @@
   updateUI()
 </script>
 
-<link
-  href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-  rel="stylesheet"
-/>
-
 <style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
   #choco-game-container {
     --bg-color: #3e2723;
     --ui-color: #5d4037;
@@ -464,6 +462,7 @@
     --accent-green: #76ff03;
     --accent-red: #ff1744;
     --accent-gold: #ffd700;
+
     color: var(--text-color);
     font-family: 'Press Start 2P', cursive;
     width: 100%;
@@ -485,6 +484,12 @@
     h2 {
       font-family: 'Press Start 2P', cursive;
     }
+  }
+
+  #choco-modal-desc {
+    font-size: 0.7rem;
+    margin-bottom: 20px;
+    color: #ccc;
   }
 
   /* Pantalla de Inicio */
