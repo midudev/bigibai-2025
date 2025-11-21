@@ -67,6 +67,21 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     <meta name="twitter:image:alt" content={title} />
     <meta name="theme-color" content="#4c2d7e" />
 
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Big Ibai",
+        "url": "https://www.bigibai.com",
+        "description": "Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día.",
+        "author": {
+          "@type": "Person",
+          "name": "Ibai Llanos",
+          "url": "https://twitter.com/IbaiLlanos"
+        }
+      }
+    </script>
+
     <link rel="icon" type="image/png" sizes="16x16" href="/cropped-favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/cropped-favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/cropped-favicon-192x192.png" />
