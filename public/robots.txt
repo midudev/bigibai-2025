@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://bigibai.com/sitemap-index.xml
+Sitemap: https://www.bigibai.com/sitemap-index.xml
