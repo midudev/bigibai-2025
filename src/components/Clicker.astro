@@ -1,0 +1,874 @@
+<div id="choco-game-container">
+  <div id="choco-start-screen">
+    <h1>CHOCO<br />BOXER</h1>
+    <img
+      class="max-w-[100px]"
+      id="choco-start-glove"
+      src="https://www.bigibai.com/pixel-glove.png"
+      alt="Guante"
+    />
+    <button class="start-btn">INICIAR JUEGO</button>
+  </div>
+
+  <div class="top-ui">
+    <span>NVL <span id="choco-level-display" style="color: var(--accent-gold)">1</span></span>
+    <span>KO: <span id="choco-kills-display">0</span></span>
+  </div>
+
+  <div class="bars-wrapper">
+    <div class="bar-container">
+      <span class="bar-label">TU VIDA</span>
+      <div id="choco-hp-bar" class="bar-fill"></div>
+    </div>
+    <div class="bar-container" style="border-color: #4a148c;">
+      <span class="bar-label">ENEMIGO</span>
+      <div id="choco-enemy-hp-bar" class="bar-fill"></div>
+    </div>
+    <div class="bar-container" style="border-color: #2e7d32;">
+      <span class="bar-label">EXP</span>
+      <div id="choco-exp-bar" class="bar-fill"></div>
+    </div>
+  </div>
+
+  <div class="battle-arena">
+    <img
+      id="choco-hero"
+      class="sprite"
+      src="https://www.bigibai.com/pixel-glove.png"
+      alt="Guante de Boxeo"
+    />
+    <img
+      id="choco-enemy"
+      class="sprite"
+      src="https://bigibai.com/enemies/001_1.png"
+      alt="Enemigo"
+    />
+
+    <div class="stats-panel">
+      <div>⚔️ FUERZA: <span id="choco-stat-str">10</span></div>
+      <div>🎯 CRIT: <span id="choco-stat-crit">5</span>%</div>
+      <div>🧛 VAMP: <span id="choco-stat-lifesteal">0</span>%</div>
+    </div>
+
+    <div class="floating-text"></div>
+  </div>
+
+  <div id="choco-levelup-modal">
+    <h2 id="choco-modal-title">¡SUBES DE NIVEL!</h2>
+
+    <!-- Contenedor del Trofeo -->
+    <div id="victory-trophy-container" class="victory-visuals">
+      <div class="sunburst"></div>
+      <img class="trophy-img" src="/game-trophy.png" alt="Trofeo" />
+    </div>
+
+    <p id="choco-modal-desc" style="font-size: 0.7rem; margin-bottom: 20px; color: #ccc;">
+      Elige una mejora para tu guante:
+    </p>
+
+    <div id="choco-upgrade-options" class="upgrade-grid">
+      <button class="upgrade-btn" data-upgrade="str"><span>💪</span>+FUERZA</button>
+      <button class="upgrade-btn" data-upgrade="hp"><span>🍫</span>+VIDA MAX</button>
+      <button class="upgrade-btn" data-upgrade="crit"><span>⚡</span>+CRÍTICO</button>
+      <button class="upgrade-btn" data-upgrade="lifesteal"><span>🩸</span>+ROBO VIDA</button>
+    </div>
+
+    <button id="choco-reset-btn" class="upgrade-btn" style="display: none; width: 50%;"
+      >REINICIAR</button
+    >
+  </div>
+</div>
+
+<script>
+  const $ = (selector: string) => document.querySelector(selector)
+
+  // --- CONSTANTE DE NIVEL DE VICTORIA ---
+  const WIN_LEVEL = 10
+
+  const state = {
+    level: 1,
+    exp: 0,
+    expToNext: 100,
+    kills: 0,
+    isPaused: true,
+    isGameOver: false,
+    gameStarted: false,
+    totalEnemies: 31,
+  }
+
+  const player = {
+    maxHp: 100,
+    hp: 100,
+    str: 5,
+    crit: 5,
+    lifesteal: 0,
+    el: $('#choco-hero'),
+  }
+
+  const enemy = {
+    maxHp: 40,
+    hp: 40,
+    damage: 2,
+    el: $('#choco-enemy'),
+  }
+
+  const bgMusic = new Audio('/combat.mp3')
+  bgMusic.loop = true
+  bgMusic.volume = 0.2
+
+  const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+  function playSound(type: string) {
+    if (audioCtx.state === 'suspended') audioCtx.resume()
+    const osc = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.connect(gain)
+    gain.connect(audioCtx.destination)
+    const now = audioCtx.currentTime
+
+    if (type === 'hit') {
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(150, now)
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.1)
+      gain.gain.setValueAtTime(0.1, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1)
+      osc.start(now)
+      osc.stop(now + 0.1)
+    } else if (type === 'crit') {
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(400, now)
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.2)
+      gain.gain.setValueAtTime(0.1, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+      osc.start(now)
+      osc.stop(now + 0.2)
+    } else if (type === 'levelup') {
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(440, now)
+      osc.frequency.setValueAtTime(554, now + 0.1)
+      osc.frequency.setValueAtTime(659, now + 0.2)
+      gain.gain.setValueAtTime(0.1, now)
+      gain.gain.linearRampToValueAtTime(0, now + 0.5)
+      osc.start(now)
+      osc.stop(now + 0.5)
+    }
+  }
+
+  function startGame() {
+    $('#choco-start-screen').style.display = 'none'
+    state.gameStarted = true
+    state.isPaused = false
+    bgMusic.play().catch((e) => console.log('Audio autoplay bloqueado:', e))
+    spawnEnemy()
+    updateUI()
+    enemyAttackLoop()
+  }
+
+  let lastClick = 0
+  function handleInput(e: MouseEvent | TouchEvent) {
+    if (!state.gameStarted) return
+    const now = Date.now()
+    if (now - lastClick < 50) return
+    lastClick = now
+
+    let clientX, clientY
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX
+      clientY = e.touches[0].clientY
+    } else {
+      clientX = e.clientX
+      clientY = e.clientY
+    }
+
+    const enemyRect = enemy.el.getBoundingClientRect()
+    const textX = enemyRect.left + enemyRect.width / 2
+    const textY = enemyRect.top + enemyRect.height / 3
+
+    playerAttack(textX, textY)
+  }
+
+  function playerAttack(x: number, y: number) {
+    if (state.isPaused || state.isGameOver) return
+
+    player.el.classList.remove('punch')
+    void player.el.offsetWidth
+    player.el.classList.add('punch')
+
+    let isCrit = Math.random() * 100 < player.crit
+    let dmg = Math.floor(player.str * (isCrit ? 2.5 : 1))
+    playSound(isCrit ? 'crit' : 'hit')
+
+    enemy.hp -= dmg
+    createFloatingText(dmg.toString(), x, y, isCrit)
+
+    if (player.lifesteal > 0) {
+      let heal = Math.ceil(dmg * (player.lifesteal / 100))
+      if (heal > 0 && player.hp < player.maxHp) {
+        player.hp = Math.min(player.hp + heal, player.maxHp)
+        createFloatingText('+' + heal, x, y - 30, false, '#76ff03')
+      }
+    }
+
+    if (enemy.hp <= 0) {
+      enemyDefeated()
+    } else {
+      updateUI()
+      enemy.el.classList.remove('hit-anim')
+      void enemy.el.offsetWidth
+      enemy.el.classList.add('hit-anim')
+    }
+  }
+
+  function enemyDefeated() {
+    state.kills++
+    let xpGain = Math.floor(20 * (1 + state.level * 0.2))
+    state.exp += xpGain
+
+    enemy.el.classList.add('dead')
+
+    setTimeout(() => {
+      // Mantener el enemigo oculto mientras se cambia
+      enemy.el.style.opacity = '0'
+      enemy.el.classList.remove('dead')
+      enemy.el.classList.remove('hit-anim')
+
+      if (state.exp >= state.expToNext) {
+        levelUp()
+      } else {
+        spawnEnemy()
+      }
+    }, 400)
+
+    updateUI()
+  }
+
+  function spawnEnemy() {
+    let scaling = 1 + state.kills * 0.05
+
+    enemy.maxHp = Math.floor(40 * scaling * (1 + state.level * 0.5))
+    enemy.hp = enemy.maxHp
+    enemy.damage = Math.floor(2 + state.level)
+
+    let enemyIndex = (state.kills % state.totalEnemies) + 1
+
+    let formattedId = String(enemyIndex).padStart(3, '0')
+    let imageUrl = `https://bigibai.com/enemies/${formattedId}_1.png`
+    enemy.el.src = imageUrl
+
+    let newSize = Math.min(80, 30 + state.level * 2)
+    enemy.el.style.width = newSize + '%'
+
+    // Restaurar la opacidad después de cambiar la imagen
+    setTimeout(() => {
+      enemy.el.style.opacity = '1'
+    }, 50)
+
+    updateUI()
+  }
+
+  function enemyAttackLoop() {
+    if (!state.isPaused && !state.isGameOver && enemy.hp > 0 && state.gameStarted) {
+      player.hp -= enemy.damage
+      const container = $('#choco-game-container')
+      container.style.borderColor = '#ff1744'
+      setTimeout(() => (container.style.borderColor = '#d7ccc8'), 100)
+
+      if (player.hp <= 0) {
+        player.hp = 0
+        triggerGameOver()
+      }
+      updateUI()
+    }
+    setTimeout(enemyAttackLoop, 1000)
+  }
+
+  function levelUp() {
+    state.level++
+    state.exp = 0
+    state.expToNext = Math.floor(state.expToNext * 1.4)
+    player.hp = player.maxHp
+
+    // Comprobar si hemos ganado según la constante WIN_LEVEL
+    if (state.level > WIN_LEVEL) {
+      triggerVictory()
+      return
+    }
+
+    state.isPaused = true
+    playSound('levelup')
+    $('#choco-modal-title').innerText = '¡SUBES DE NIVEL!'
+    $('#choco-modal-title').style.color = 'var(--accent-gold)'
+    $('#choco-modal-desc').innerText = '¡Hora del postre! Mejora tus stats:'
+
+    // Asegurarnos de que el trofeo no se ve
+    $('#victory-trophy-container').style.display = 'none'
+    $('#choco-upgrade-options').style.display = 'grid'
+    $('#choco-reset-btn').style.display = 'none'
+    $('#choco-levelup-modal').style.display = 'flex'
+  }
+
+  function chooseUpgrade(type: string) {
+    if (type === 'str') player.str += 3
+    if (type === 'hp') {
+      player.maxHp += 30
+      player.hp = player.maxHp
+    }
+    if (type === 'crit') player.crit += 2
+    if (type === 'lifesteal') player.lifesteal += 2
+
+    $('#choco-levelup-modal').style.display = 'none'
+    state.isPaused = false
+    spawnEnemy()
+    updateUI()
+  }
+
+  function triggerVictory() {
+    state.isGameOver = true
+    $('#choco-modal-title').innerText = '¡ERES EL CAMPEÓN!'
+    $('#choco-modal-title').style.color = '#76ff03'
+    $('#choco-modal-desc').innerHTML =
+      `Has alcanzado el NIVEL ${state.level}.<br>¡Eres el rey del chocolate!`
+
+    // Mostrar trofeo y ocultar opciones
+    $('#victory-trophy-container').style.display = 'flex'
+    $('#choco-upgrade-options').style.display = 'none'
+
+    $('#choco-reset-btn').style.display = 'block'
+    $('#choco-reset-btn').innerText = 'JUGAR DE NUEVO'
+    $('#choco-levelup-modal').style.display = 'flex'
+    playSound('levelup')
+  }
+
+  function triggerGameOver() {
+    state.isGameOver = true
+    $('#choco-modal-title').innerText = 'GAME OVER'
+    $('#choco-modal-title').style.color = 'var(--accent-red)'
+    $('#choco-modal-desc').innerText =
+      `Sobreviviste ${state.level} niveles y comiste ${state.kills} bichos.`
+
+    $('#victory-trophy-container').style.display = 'none'
+    $('#choco-upgrade-options').style.display = 'none'
+
+    $('#choco-reset-btn').style.display = 'block'
+    $('#choco-reset-btn').innerText = 'REINICIAR'
+    $('#choco-levelup-modal').style.display = 'flex'
+  }
+
+  function resetGame() {
+    state.level = 1
+    state.exp = 0
+    state.expToNext = 100
+    state.kills = 0
+    state.isGameOver = false
+    state.isPaused = false
+
+    player.maxHp = 100
+    player.hp = 100
+    player.str = 5
+    player.crit = 5
+    player.lifesteal = 0
+
+    enemy.maxHp = 40
+    enemy.damage = 2
+
+    $('#victory-trophy-container').style.display = 'none'
+    $('#choco-levelup-modal').style.display = 'none'
+
+    spawnEnemy()
+    updateUI()
+    bgMusic.currentTime = 0
+    bgMusic.play()
+  }
+
+  function updateUI() {
+    $('#choco-hp-bar').style.width = (player.hp / player.maxHp) * 100 + '%'
+    $('#choco-enemy-hp-bar').style.width = (enemy.hp / enemy.maxHp) * 100 + '%'
+    $('#choco-exp-bar').style.width = (state.exp / state.expToNext) * 100 + '%'
+    $('#choco-level-display').innerText = state.level
+    $('#choco-kills-display').innerText = state.kills
+    $('#choco-stat-str').innerText = player.str
+    $('#choco-stat-crit').innerText = player.crit
+    $('#choco-stat-lifesteal').innerText = player.lifesteal
+  }
+
+  function createFloatingText(
+    text: string,
+    x: number,
+    y: number,
+    isCrit: boolean,
+    overrideColor?: string
+  ) {
+    const el = document.createElement('div')
+    el.className = 'floating-text'
+    el.innerText = text
+
+    // Obtener la posición relativa al área de batalla
+    const battleArena = $('.battle-arena')!
+    const arenaRect = battleArena.getBoundingClientRect()
+
+    // Añadir variación aleatoria en la posición (±30px horizontal, ±20px vertical)
+    const randomX = (Math.random() - 0.5) * 60
+    const randomY = (Math.random() - 0.5) * 40
+
+    el.style.left = x - arenaRect.left + randomX + 'px'
+    el.style.top = y - arenaRect.top + randomY + 'px'
+
+    // Añadir rotación aleatoria leve (±15 grados)
+    const randomRotation = (Math.random() - 0.5) * 30
+    el.style.setProperty('--random-rotation', `${randomRotation}deg`)
+
+    if (overrideColor) {
+      el.style.color = overrideColor
+    } else if (isCrit) {
+      el.style.color = '#ffeb3b'
+      el.style.fontSize = '2.5rem'
+      el.innerText += '!'
+    }
+    battleArena.appendChild(el)
+    setTimeout(() => el.remove(), 800)
+  }
+
+  // Event listeners
+  $('.start-btn')!.addEventListener('click', startGame)
+
+  const battleArena = $('.battle-arena')!
+  battleArena?.addEventListener('mousedown', handleInput)
+  battleArena?.addEventListener('touchstart', handleInput)
+
+  // Event delegation para los botones de mejora
+  $('#choco-upgrade-options')!.addEventListener('click', (e: Event) => {
+    const upgradeBtn = e.target.closest('.upgrade-btn')
+    if (upgradeBtn) {
+      const upgradeType = upgradeBtn.dataset.upgrade
+      if (upgradeType) {
+        chooseUpgrade(upgradeType)
+      }
+    }
+  })
+
+  $('#choco-reset-btn')!.addEventListener('click', resetGame)
+
+  updateUI()
+</script>
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  #choco-game-container {
+    --bg-color: #3e2723;
+    --ui-color: #5d4037;
+    --ui-border: #d7ccc8;
+    --text-color: #fff8e1;
+    --accent-green: #76ff03;
+    --accent-red: #ff1744;
+    --accent-gold: #ffd700;
+    color: var(--text-color);
+    font-family: 'Press Start 2P', cursive;
+    width: 100%;
+    touch-action: manipulation;
+    max-width: 600px;
+    max-height: 100vw;
+    aspect-ratio: 1 / 1;
+    background-color: var(--bg-color);
+    position: relative;
+    border: 4px solid var(--ui-border);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    user-select: none;
+    -webkit-user-select: none;
+
+    h1,
+    h2 {
+      font-family: 'Press Start 2P', cursive;
+    }
+  }
+
+  /* Pantalla de Inicio */
+  #choco-start-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #5d4037 0%, #3e2723 100%);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  #choco-start-screen h1 {
+    color: var(--accent-gold);
+    text-shadow: 4px 4px 0 #000;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  #choco-start-glove {
+    image-rendering: pixelated;
+    filter: drop-shadow(5px 5px 0px rgba(0, 0, 0, 0.5));
+    margin-bottom: 30px;
+    animation: floatStart 2s infinite ease-in-out;
+  }
+
+  @keyframes floatStart {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  .start-btn {
+    background: var(--accent-green);
+    color: #000;
+    border: 4px solid #fff;
+    padding: 20px 40px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #33691e;
+    transition: all 0.1s;
+  }
+
+  .start-btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #33691e;
+  }
+
+  /* UI Superior */
+  .top-ui {
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    border-bottom: 2px solid var(--ui-color);
+  }
+
+  .bars-wrapper {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bar-container {
+    background: #222;
+    height: 24px;
+    position: relative;
+    border: 2px solid #000;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.2s ease-out;
+  }
+
+  .bar-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.6rem;
+    z-index: 2;
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  #choco-hp-bar {
+    background: var(--accent-red);
+    width: 100%;
+  }
+  #choco-enemy-hp-bar {
+    background: #ab47bc;
+    width: 100%;
+  }
+  #choco-exp-bar {
+    background: var(--accent-green);
+    width: 0%;
+  }
+
+  /* Arena de Combate */
+  .battle-arena {
+    flex-grow: 1;
+    position: relative;
+    cursor: crosshair;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #4e342e 0%, #3e2723 100%);
+  }
+
+  /* Sprites */
+  .sprite {
+    position: absolute;
+    filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.5));
+    image-rendering: pixelated;
+  }
+
+  #choco-hero {
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: auto;
+    height: 40%;
+    filter: drop-shadow(5px 5px 0px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Contenedor del enemigo */
+  #choco-enemy {
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    width: 30%;
+    transition:
+      width 0.3s ease,
+      opacity 0.15s ease;
+    animation: enemyIdle 2.5s infinite ease-in-out;
+  }
+
+  /* ANIMACIONES ENEMIGO */
+  @keyframes enemyIdle {
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-10px) scale(1.02);
+    }
+  }
+
+  .hit-anim {
+    animation: enemyHit 0.2s !important;
+  }
+
+  @keyframes enemyHit {
+    0% {
+      transform: translateX(-50%) translate(0, 0) rotate(0deg);
+      filter: brightness(1) drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.5));
+    }
+    25% {
+      transform: translateX(-50%) translate(5px, 5px) rotate(5deg);
+      filter: brightness(5) drop-shadow(4px 4px 0px rgba(255, 0, 0, 0.8));
+    }
+    50% {
+      transform: translateX(-50%) translate(-5px, -5px) rotate(-5deg);
+    }
+    75% {
+      transform: translateX(-50%) translate(5px, -5px) rotate(5deg);
+    }
+    100% {
+      transform: translateX(-50%) translate(0, 0) rotate(0deg);
+      filter: brightness(1) drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.5));
+    }
+  }
+
+  .dead {
+    animation: deadAnim 0.4s forwards !important;
+  }
+
+  @keyframes deadAnim {
+    0% {
+      transform: translateX(-50%) scale(1) rotate(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(-50%) scale(0) rotate(180deg);
+      opacity: 0;
+    }
+  }
+
+  .punch {
+    animation: punchAnim 0.1s forwards;
+  }
+
+  @keyframes punchAnim {
+    0% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-50px);
+    }
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  .stats-panel {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 0.6rem;
+    color: #bcaaa4;
+    text-align: left;
+    line-height: 1.6;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  @keyframes floatUp {
+    0% {
+      transform: translate(-50%, -50%) translateY(0) scale(1) rotate(var(--random-rotation));
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) translateY(-60px) scale(1.2) rotate(var(--random-rotation));
+      opacity: 0;
+    }
+  }
+
+  /* ESTILOS DEL TROFEO Y VICTORIA */
+  .victory-visuals {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: none; /* Oculto por defecto */
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .sunburst {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-conic-gradient(
+      from 0deg,
+      var(--accent-gold) 0deg 15deg,
+      transparent 15deg 30deg
+    );
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: sunburstSpin 6s linear infinite;
+    z-index: 1;
+  }
+
+  .trophy-img {
+    position: relative;
+    width: 140px;
+    height: auto;
+    z-index: 2;
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+    animation: trophyPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes sunburstSpin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes trophyPop {
+    0% {
+      transform: scale(0) rotate(-20deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  /* Modales */
+  #choco-levelup-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(46, 26, 17, 0.95);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    text-align: center;
+  }
+
+  #choco-levelup-modal h2 {
+    color: var(--accent-gold);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 0 #000;
+    padding: 0 20px;
+    line-height: 1.5;
+  }
+
+  .upgrade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 90%;
+  }
+
+  .upgrade-btn {
+    background: var(--ui-color);
+    color: var(--text-color);
+    border: 3px solid var(--ui-border);
+    padding: 15px 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.6rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
+  }
+
+  .upgrade-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+  }
+
+  .upgrade-btn span {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+
+  #choco-reset-btn {
+    margin-top: 20px;
+    background: var(--accent-red);
+    border: 3px solid white;
+  }
+</style>
+
+<style is:global>
+  .floating-text {
+    position: absolute;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    pointer-events: none;
+    animation: floatUp 0.8s ease-out forwards;
+    text-shadow: 2px 2px 0 #000;
+    display: block;
+    z-index: 99999999;
+    --random-rotation: 0deg;
+    transform-origin: center center;
+    white-space: nowrap;
+    will-change: transform, opacity;
+  }
+</style>
