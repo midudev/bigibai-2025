@@ -50,7 +50,7 @@ const MOCK_DATA = {
             />
           </div>
 
-          <div class="flex flex-col gap-4 mt-12">
+          <div class="flex flex-col gap-4 mt-12 max-w-sm mx-auto">
             <Button id="btn-start-game" variant="brand" size="lg" class="w-full">
               ¡Empezar el reto!
             </Button>
@@ -61,7 +61,7 @@ const MOCK_DATA = {
       </div>
 
       <!-- Pantalla 3: Juego - Anagrama -->
-      <div id="screen-game" class="screen">
+      <div id="screen-game" class="screen p-4!">
         <div class="screen-content game-layout">
           <!-- Columna Izquierda: Juego -->
           <div class="game-column">
@@ -167,9 +167,8 @@ const MOCK_DATA = {
           </h3>
           <ul class="text-white/90 space-y-3 text-left">
             <li>• Resuelve el anagrama para descubrir el premio del día</li>
-            <li>• Empiezas con <strong>500 puntos</strong></li>
-            <li>• Pierdes <strong>1 punto por segundo</strong> (mínimo 10)</li>
-            <li>• ¡Sé rápido para conseguir más puntos!</li>
+            <li>• Tienes que usar las letras del anagrama para formar la respuesta</li>
+            <li>• Al resolverlo, desbloqueas un logro</li>
           </ul>
           <Button id="close-help" variant="brand" size="lg" class="w-full mt-6"> Entendido </Button>
         </div>
@@ -227,7 +226,8 @@ const MOCK_DATA = {
     position: absolute;
     inset: 0;
     width: 100%;
-    min-height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     display: none; /* Cambiado de flex/opacity para mejor manejo de flujo */
     align-items: center;
     justify-content: center;
@@ -261,7 +261,7 @@ const MOCK_DATA = {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible; /* Changed to visible to prevent zoom clipping */
   }
 
   .confetti-canvas {
@@ -814,19 +814,32 @@ const MOCK_DATA = {
     transform: translateX(-50%) translateY(150%);
     background: #1f1f1f;
     border-radius: 50px; /* Pill shape */
-    padding: 0.5rem 2rem 0.5rem 0.5rem;
+    padding: 0.5rem; /* Initial padding for just the icon */
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0; /* No gap initially */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     z-index: 1000;
     border: 2px solid #2c2c2c;
-    min-width: 350px;
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: fit-content; /* Use fit-content as requested */
+    max-width: 68px; /* Start constrained */
+    height: 68px;
+    overflow: hidden;
+    transition:
+      transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+      max-width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+      /* Transition max-width */ padding 0.5s ease,
+      gap 0.5s ease;
   }
 
   .achievement-notification.show {
     transform: translateX(-50%) translateY(0);
+  }
+
+  .achievement-notification.expanded {
+    max-width: 1000px; /* Large enough to fit any reasonable content */
+    padding: 0.5rem 2rem 0.5rem 0.5rem;
+    gap: 1rem;
   }
 
   .achievement-icon-container {
@@ -847,6 +860,15 @@ const MOCK_DATA = {
   .achievement-content {
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    width: 0;
+    white-space: nowrap;
+    transition: opacity 0.3s ease 0.2s; /* Delay fade in until expanding starts */
+  }
+
+  .achievement-notification.expanded .achievement-content {
+    opacity: 1;
+    width: auto;
   }
 
   .achievement-title {
@@ -861,6 +883,8 @@ const MOCK_DATA = {
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.75rem;
     margin: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 </style>
 
@@ -1226,10 +1250,18 @@ const MOCK_DATA = {
 
       notification.classList.add('show')
 
-      // Ocultar después de 5 segundos
+      // Expandir después de que suba (600ms)
       setTimeout(() => {
-        notification.classList.remove('show')
-      }, 5000)
+        notification.classList.add('expanded')
+      }, 600)
+
+      // Ocultar después de 8 segundos
+      setTimeout(() => {
+        notification.classList.remove('expanded')
+        setTimeout(() => {
+          notification.classList.remove('show')
+        }, 500) // Esperar a que se contraiga para bajar
+      }, 8000)
     }
   }
 
