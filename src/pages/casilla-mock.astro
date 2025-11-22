@@ -82,11 +82,13 @@ const MOCK_DATA = {
                 >
                   Resuelve el anagrama:
                 </h2>
-                <div class="anagram-letters">
+                <div class="anagram-letters" id="anagram-letters">
                   {
-                    MOCK_DATA.anagram
-                      .split('')
-                      .map((letter) => <span class="anagram-letter">{letter}</span>)
+                    MOCK_DATA.anagram.split('').map((letter, index) => (
+                      <span class="anagram-letter" data-index={index} data-letter={letter}>
+                        {letter}
+                      </span>
+                    ))
                   }
                 </div>
               </div>
@@ -550,6 +552,21 @@ const MOCK_DATA = {
     color: var(--color-brand);
     font-size: 1.5rem;
     font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+
+  .anagram-letter:hover:not(.used) {
+    background: rgba(248, 177, 52, 0.3);
+    border-color: var(--color-brand);
+    transform: scale(1.1);
+  }
+
+  .anagram-letter.used {
+    opacity: 0.2;
+    cursor: default;
+    pointer-events: none;
   }
 
   .answer-input-container {
@@ -1062,9 +1079,8 @@ const MOCK_DATA = {
   let currentScreen = 'opening'
   let gameTimer: number | null = null
   let elapsedSeconds = 0
+  let availableLetters: { letter: string; index: number; used: boolean }[] = []
 
-  const hintSheet = document.getElementById('hint-sheet')
-  const helpModal = document.getElementById('help-modal')
   const answerInput = document.getElementById('answer-input') as HTMLInputElement | null
   const feedback = document.getElementById('feedback')
   const timerSeconds = document.getElementById('timer-seconds')
@@ -1169,6 +1185,13 @@ const MOCK_DATA = {
     elapsedSeconds = 0
     updateTimerDisplay()
 
+    // Inicializar letras disponibles
+    availableLetters = MOCK_DATA.anagram.split('').map((letter, index) => ({
+      letter: letter.toUpperCase(),
+      index,
+      used: false,
+    }))
+
     // Enfocar input
     setTimeout(() => {
       answerInput?.focus()
@@ -1180,6 +1203,12 @@ const MOCK_DATA = {
       elapsedSeconds++
       updateTimerDisplay()
     }, 1000) as unknown as number
+
+    // Setup letter click handlers
+    setupLetterClickHandlers()
+
+    // Setup input validation
+    setupInputValidation()
   }
 
   function updateTimerDisplay() {
@@ -1191,6 +1220,83 @@ const MOCK_DATA = {
       clearInterval(gameTimer)
       gameTimer = null
     }
+  }
+
+  function setupLetterClickHandlers() {
+    const letterElements = document.querySelectorAll('.anagram-letter')
+    letterElements.forEach((el) => {
+      el.addEventListener('click', () => {
+        const index = parseInt(el.getAttribute('data-index') || '0')
+        const letter = availableLetters[index]
+
+        if (!letter.used && answerInput) {
+          // Add letter to input
+          answerInput.value += letter.letter
+          // Mark as used
+          letter.used = true
+          el.classList.add('used')
+          // Trigger input event to update validation
+          answerInput.dispatchEvent(new Event('input'))
+        }
+      })
+    })
+  }
+
+  function setupInputValidation() {
+    if (!answerInput) return
+
+    answerInput.addEventListener('input', (e) => {
+      const input = (e.target as HTMLInputElement).value.toUpperCase()
+      const previousValue = answerInput.getAttribute('data-previous-value') || ''
+
+      // Check if user is adding or removing characters
+      if (input.length > previousValue.length) {
+        // Adding character
+        const newChar = input[input.length - 1]
+
+        // Find first available matching letter
+        const availableLetter = availableLetters.find((l) => l.letter === newChar && !l.used)
+
+        if (availableLetter) {
+          // Valid letter, mark as used
+          availableLetter.used = true
+          updateLetterVisuals()
+        } else {
+          // Invalid letter, remove it
+          answerInput.value = previousValue
+          return
+        }
+      } else if (input.length < previousValue.length) {
+        // Removing character
+        const removedChar = previousValue[input.length]
+
+        // Find first used matching letter and mark as available
+        const usedLetter = [...availableLetters]
+          .reverse()
+          .find((l) => l.letter === removedChar && l.used)
+
+        if (usedLetter) {
+          usedLetter.used = false
+          updateLetterVisuals()
+        }
+      }
+
+      // Store current value for next comparison
+      answerInput.setAttribute('data-previous-value', input)
+    })
+  }
+
+  function updateLetterVisuals() {
+    availableLetters.forEach((letter) => {
+      const el = document.querySelector(`[data-index="${letter.index}"]`)
+      if (el) {
+        if (letter.used) {
+          el.classList.add('used')
+        } else {
+          el.classList.remove('used')
+        }
+      }
+    })
   }
 
   function checkAnswer() {
