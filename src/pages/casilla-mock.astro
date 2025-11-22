@@ -15,10 +15,11 @@ const MOCK_DATA = {
 <Layout title="Casilla Mock - Big Ibai" description="Prototipo del flujo de casillas">
   <div class="flex min-h-screen flex-col">
     <div id="casilla-flow" class="flex-1 relative">
+      <canvas id="confetti-canvas" class="confetti-canvas w-full h-full"></canvas>
+
       <!-- Pantalla 1: Animación de apertura con calendario -->
       <div id="screen-opening" class="screen active">
         <div class="opening-animation relative">
-          <canvas id="confetti-canvas" class="confetti-canvas w-full h-full"></canvas>
           <div class="scene">
             <div class="calendar-wrapper" id="calendarWrapper">
               <img src="/calendar.webp" alt="Calendario" class="bg-image" />
@@ -42,7 +43,11 @@ const MOCK_DATA = {
           </div>
 
           <div class="chocolate-reveal" id="chocolate-reveal">
-            <img src="/chocolatinas/1.webp" alt="Chocolatina" class="chocolate-image" />
+            <img
+              src="/chocolatinas/1.webp"
+              alt="Chocolatina"
+              class="chocolate-image floating-chocolate-a"
+            />
           </div>
 
           <div class="flex flex-col gap-4 mt-12">
@@ -127,11 +132,6 @@ const MOCK_DATA = {
                   Vuelve mañana para desvelar el premio de mañana.
                 </p>
               </div>
-
-              <div class="share-actions w-full flex gap-4">
-                <Button variant="secondary" size="sm" class="flex-1">Copiar</Button>
-                <Button variant="secondary" size="sm" class="flex-1">Compartir</Button>
-              </div>
             </div>
           </div>
 
@@ -175,6 +175,19 @@ const MOCK_DATA = {
         </div>
         <div class="modal-backdrop"></div>
       </div>
+
+      <!-- Notificación de Logro (Xbox Style) -->
+      <div id="achievement-notification" class="achievement-notification">
+        <div class="achievement-icon-container">
+          <img src="/achievement_01.webp" alt="Logro" class="achievement-icon" />
+        </div>
+        <div class="achievement-content">
+          <h4 class="achievement-title">¡Logro desbloqueado!</h4>
+          <p class="achievement-text text-balance">
+            Completa tu primer anagrama y acierta el premio del día.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </Layout>
@@ -213,15 +226,23 @@ const MOCK_DATA = {
   .screen {
     position: absolute;
     inset: 0;
-    display: flex;
+    width: 100%;
+    min-height: 100%;
+    display: none; /* Cambiado de flex/opacity para mejor manejo de flujo */
     align-items: center;
     justify-content: center;
     opacity: 0;
-    pointer-events: none;
     transition: opacity 0.5s ease;
+    padding: 2rem 0; /* Añadido padding vertical para evitar cortes */
+
+    &.opening {
+      padding: 0;
+    }
   }
 
   .screen.active {
+    display: flex; /* Mostrar solo la activa */
+    position: relative; /* Relative para que ocupe espacio y permita scroll */
     opacity: 1;
     pointer-events: auto;
   }
@@ -246,7 +267,7 @@ const MOCK_DATA = {
   .confetti-canvas {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 50; /* Increased z-index to be above everything */
     pointer-events: none;
   }
 
@@ -425,6 +446,20 @@ const MOCK_DATA = {
 
   .chocolate-image:hover {
     transform: rotate(0deg) scale(1.05);
+  }
+
+  @keyframes float-a {
+    0%,
+    100% {
+      transform: rotate(-10deg) translateY(0px);
+    }
+    50% {
+      transform: rotate(-5deg) translateY(-20px);
+    }
+  }
+
+  .floating-chocolate-a {
+    animation: float-a 6s ease-in-out infinite;
   }
 
   /* Pantalla 2: Adivina */
@@ -770,6 +805,63 @@ const MOCK_DATA = {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
   }
+
+  /* Achievement Notification */
+  .achievement-notification {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    background: #1f1f1f;
+    border-radius: 50px; /* Pill shape */
+    padding: 0.5rem 2rem 0.5rem 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    border: 2px solid #2c2c2c;
+    min-width: 350px;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .achievement-notification.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .achievement-icon-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #6ade6a; /* Xbox Green-ish */
+    flex-shrink: 0;
+  }
+
+  .achievement-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .achievement-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .achievement-title {
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .achievement-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    margin: 0;
+  }
 </style>
 
 <script>
@@ -979,7 +1071,7 @@ const MOCK_DATA = {
         return clearInterval(interval)
       }
 
-      const particleCount = 50 * (timeLeft / duration)
+      const particleCount = 100 * (timeLeft / duration)
 
       // Confetti rojo, verde y dorado (navideño)
       myConfetti({
@@ -990,6 +1082,35 @@ const MOCK_DATA = {
         scalar: 1.2, // Hacerlos un poco más grandes
       })
     }, 250)
+  }
+
+  function launchWinConfetti() {
+    if (!myConfetti) return
+
+    const duration = 3000
+    const end = Date.now() + duration
+
+    // Lanza desde las esquinas inferiores
+    ;(function frame() {
+      myConfetti({
+        particleCount: 7,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 1 }, // Esquina inferior izquierda
+        colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+      })
+      myConfetti({
+        particleCount: 7,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 1 }, // Esquina inferior derecha
+        colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+      })
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame)
+      }
+    })()
   }
 
   // Gestión de pantallas
@@ -1052,7 +1173,8 @@ const MOCK_DATA = {
       // Respuesta correcta
       stopGame()
       showFeedback(true, '¡Correcto!')
-      launchChristmasConfetti()
+      launchWinConfetti()
+      showAchievement()
 
       // Mostrar video y resultado
       const videoPlaceholder = document.getElementById('video-placeholder')
@@ -1091,6 +1213,23 @@ const MOCK_DATA = {
       setTimeout(() => {
         feedback.classList.add('hidden')
       }, 2000)
+    }
+  }
+
+  function showAchievement() {
+    const notification = document.getElementById('achievement-notification')
+    if (notification) {
+      // Reproducir sonido
+      const audio = new Audio('/achievement-sound.mp3')
+      audio.volume = 0.5
+      audio.play().catch((e) => console.log('Error playing sound:', e))
+
+      notification.classList.add('show')
+
+      // Ocultar después de 5 segundos
+      setTimeout(() => {
+        notification.classList.remove('show')
+      }, 5000)
     }
   }
 
