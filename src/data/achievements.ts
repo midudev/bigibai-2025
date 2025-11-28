@@ -28,7 +28,7 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     id: 'first-unlocked',
     title: '¿Qué es? ¿Qué es?',
     description: 'Desvela tu primer sorteo',
-    image: '/achievement_04.webp',
+    image: '/pixel-pig-achievement.png',
   },
   'five-unlocked': {
     id: 'five-unlocked',
