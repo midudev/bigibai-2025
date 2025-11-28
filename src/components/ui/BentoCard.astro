@@ -19,12 +19,11 @@ const { class: className, style, ...rest } = Astro.props
     animation: fadeInScale 0.6s ease-out;
     animation-fill-mode: both;
     transition: all 0.3s ease;
-  }
-
-  .bento-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
-    transform: translateY(-4px);
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+      transform: translateY(-4px);
+    }
   }
 
   .bento-card::before {
@@ -32,12 +31,7 @@ const { class: className, style, ...rest } = Astro.props
     position: absolute;
     inset: 0;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0), transparent);
     pointer-events: none;
   }
 
@@ -46,6 +40,7 @@ const { class: className, style, ...rest } = Astro.props
       opacity: 0;
       transform: scale(0.95) translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: scale(1) translateY(0);
