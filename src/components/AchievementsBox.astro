@@ -62,7 +62,7 @@ const allAchievements = Object.values(ACHIEVEMENTS)
                     ? 'scale-100'
                     : 'opacity-60 grayscale hover:opacity-80 hover:grayscale-0',
                 ]}
-                title={isUnlocked ? `Conseguido: ${achievement.title}` : achievement.title}
+                data-tip={isUnlocked ? achievement.descriptionDone : achievement.descriptionDo}
               >
                 <div class="relative group/icon">
                   <img
@@ -74,12 +74,6 @@ const allAchievements = Object.values(ACHIEVEMENTS)
                 </div>
                 <div class="text-center relative">
                   <p class="text-xs font-bold text-white leading-tight mb-1">{achievement.title}</p>
-                  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 opacity-0 group-hover/icon:opacity-100 pointer-events-none transition-opacity duration-200">
-                    <div class="bg-gray-200 text-black text-[10px] px-3 py-2 rounded-lg shadow-lg max-w-[200px] text-center whitespace-normal font-mono">
-                      {achievement.description}
-                    </div>
-                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-200 rotate-45" />
-                  </div>
                 </div>
               </div>
             )
