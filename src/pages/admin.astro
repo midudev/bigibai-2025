@@ -340,6 +340,23 @@ const claimedPercentage =
                       <p class="text-white/60">No ha usado ningún cupón</p>
                     </div>
                   </div>
+
+                  <!-- Logros del usuario -->
+                  <div id="user-achievements-section" class="mt-4 border-t border-white/20 pt-4">
+                    <h4 class="mb-3 text-center font-semibold text-white">Logros del usuario</h4>
+                    <div id="user-achievements-loading" class="hidden text-center py-4">
+                      <p class="text-white/60">Cargando logros...</p>
+                    </div>
+                    <div
+                      id="user-achievements-list"
+                      class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto"
+                    >
+                      <!-- Los logros se agregarán aquí dinámicamente -->
+                    </div>
+                    <div id="user-no-achievements" class="hidden text-center py-4">
+                      <p class="text-white/60">No hay logros disponibles</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -578,6 +595,9 @@ const claimedPercentage =
         userNoCoupons.classList.remove('hidden')
       }
 
+      // Cargar logros del usuario
+      await loadUserAchievements(data.id)
+
       userFound.classList.remove('hidden')
     } catch (error) {
       console.error('Error:', error)
@@ -586,6 +606,137 @@ const claimedPercentage =
       userError.classList.remove('hidden')
     }
   })
+
+  // Elementos para logros
+  const userAchievementsSection = $('#user-achievements-section') as HTMLDivElement
+  const userAchievementsLoading = $('#user-achievements-loading') as HTMLDivElement
+  const userAchievementsList = $('#user-achievements-list') as HTMLDivElement
+  const userNoAchievements = $('#user-no-achievements') as HTMLDivElement
+
+  // Función para cargar logros de un usuario
+  async function loadUserAchievements(userId: string) {
+    if (!userId) return
+
+    // Mostrar loading
+    userAchievementsLoading.classList.remove('hidden')
+    userAchievementsList.classList.add('hidden')
+    userNoAchievements.classList.add('hidden')
+
+    try {
+      const response = await fetch(
+        `/api/admin/user-achievements?userId=${encodeURIComponent(userId)}`
+      )
+      const data = await response.json()
+
+      userAchievementsLoading.classList.add('hidden')
+
+      if (!response.ok) {
+        console.error('Error al cargar logros:', data.error)
+        userNoAchievements.classList.remove('hidden')
+        return
+      }
+
+      if (!data.achievements || data.achievements.length === 0) {
+        userNoAchievements.classList.remove('hidden')
+        return
+      }
+
+      // Limpiar lista anterior
+      userAchievementsList.innerHTML = ''
+
+      // Crear elementos de logros
+      data.achievements.forEach((achievement: any) => {
+        const achievementDiv = document.createElement('div')
+        achievementDiv.className = `rounded-lg border p-3 transition-all ${
+          achievement.unlocked
+            ? 'bg-green-500/20 border-green-500/30'
+            : 'bg-white/5 border-white/10 opacity-60'
+        }`
+
+        const achievementContent = document.createElement('div')
+        achievementContent.className = 'flex flex-col items-center gap-2'
+
+        // Imagen del logro
+        const achievementImg = document.createElement('img')
+        achievementImg.src = achievement.image
+        achievementImg.alt = achievement.title
+        achievementImg.className = `w-12 h-12 object-contain ${
+          achievement.unlocked ? '' : 'grayscale'
+        }`
+
+        // Título del logro
+        const achievementTitle = document.createElement('p')
+        achievementTitle.className = 'text-xs font-bold text-white text-center leading-tight'
+        achievementTitle.textContent = achievement.title
+
+        // Estado y botón
+        const achievementActions = document.createElement('div')
+        achievementActions.className = 'flex flex-col items-center gap-1 w-full'
+
+        const achievementStatus = document.createElement('span')
+        achievementStatus.className = `text-[10px] px-2 py-1 rounded ${
+          achievement.unlocked ? 'bg-green-500/30 text-green-200' : 'bg-gray-500/30 text-gray-300'
+        }`
+        achievementStatus.textContent = achievement.unlocked ? '✅ Desbloqueado' : '🔒 Bloqueado'
+
+        const toggleButton = document.createElement('button')
+        toggleButton.className = `w-full text-xs px-3 py-1.5 rounded font-semibold transition-all ${
+          achievement.unlocked
+            ? 'bg-red-500/80 hover:bg-red-500 text-white'
+            : 'bg-green-500/80 hover:bg-green-500 text-white'
+        }`
+        toggleButton.textContent = achievement.unlocked ? 'Desactivar' : 'Activar'
+        toggleButton.onclick = () =>
+          toggleAchievement(userId, achievement.id, !achievement.unlocked)
+
+        achievementActions.appendChild(achievementStatus)
+        achievementActions.appendChild(toggleButton)
+
+        achievementContent.appendChild(achievementImg)
+        achievementContent.appendChild(achievementTitle)
+        achievementContent.appendChild(achievementActions)
+        achievementDiv.appendChild(achievementContent)
+
+        userAchievementsList.appendChild(achievementDiv)
+      })
+
+      userAchievementsList.classList.remove('hidden')
+    } catch (error) {
+      console.error('Error al cargar logros:', error)
+      userAchievementsLoading.classList.add('hidden')
+      userNoAchievements.classList.remove('hidden')
+    }
+  }
+
+  // Función para activar/desactivar un logro
+  async function toggleAchievement(userId: string, achievementId: string, activate: boolean) {
+    try {
+      const response = await fetch('/api/admin/user-achievements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          achievementId,
+          action: activate ? 'activate' : 'deactivate',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'No se pudo actualizar el logro'}`)
+        return
+      }
+
+      // Recargar logros
+      await loadUserAchievements(userId)
+    } catch (error) {
+      console.error('Error al actualizar logro:', error)
+      alert('Error al actualizar el logro. Inténtalo de nuevo.')
+    }
+  }
 </script>
 
 <style>
