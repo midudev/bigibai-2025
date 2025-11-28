@@ -4,6 +4,7 @@ import '@/global.css'
 import GradientOverlay from '@/components/GradientOverlay.astro'
 import Snowballs from '@/components/Snowballs.astro'
 import { ClientRouter } from 'astro:transitions'
+import AchievementNotification from '@/components/AchievementNotification.astro'
 
 const defaultTitle = 'Big Ibai: Calendario de Adviento con chocolates y premios'
 const defaultDescription =
@@ -101,6 +102,7 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
         </div>
       </div>
     </div>
+    <AchievementNotification />
   </body>
 </html>
 
