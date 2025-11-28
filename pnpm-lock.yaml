@@ -48,7 +48,7 @@ importers:
         specifier: 4.1.17
         version: 4.1.17
       tippy.js:
-        specifier: ^6.3.7
+        specifier: 6.3.7
         version: 6.3.7
     devDependencies:
       '@tailwindcss/typography':
