@@ -2,7 +2,7 @@
   <div id="choco-start-screen">
     <h1>CHOCO<br />BOXER</h1>
     <img
-      class="max-w-[100px]"
+      class="max-w-[80px] md:max-w-[100px]"
       id="choco-start-glove"
       src="https://www.bigibai.com/pixel-glove.png"
       alt="Guante"
@@ -107,7 +107,7 @@
     maxHp: 40,
     hp: 40,
     damage: 2,
-    el: $('#choco-enemy'),
+    el: $('#choco-enemy') as HTMLImageElement,
   }
 
   const bgMusic = new Audio('/game-music.mp3')
@@ -153,7 +153,7 @@
   }
 
   function startGame() {
-    $('#choco-start-screen').style.display = 'none'
+    ;($('#choco-start-screen') as HTMLDivElement).style.display = 'none'
     state.gameStarted = true
     state.isPaused = false
     bgMusic.play().catch((e) => console.log('Audio autoplay bloqueado:', e))
@@ -168,15 +168,6 @@
     const now = Date.now()
     if (now - lastClick < 50) return
     lastClick = now
-
-    let clientX, clientY
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX
-      clientY = e.touches[0].clientY
-    } else {
-      clientX = e.clientX
-      clientY = e.clientY
-    }
 
     const enemyRect = enemy.el.getBoundingClientRect()
     const textX = enemyRect.left + enemyRect.width / 2
@@ -564,9 +555,13 @@
   #choco-start-screen h1 {
     color: var(--accent-gold);
     text-shadow: 4px 4px 0 #000;
-    font-size: 2rem;
+    font-size: 1rem;
     margin-bottom: 20px;
     line-height: 1.5;
+
+    @media (width >= 768px) {
+      font-size: 2rem;
+    }
   }
 
   #choco-start-glove {
@@ -605,6 +600,20 @@
       &:active {
         transform: translateY(6px);
         box-shadow: 0 0 0 #bb5667;
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 12px 24px;
+      font-size: 0.8rem;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 0 #bb5667;
+      &:hover {
+        box-shadow: 0 4px 0 #bb5667;
+        &:active {
+          transform: translateY(4px);
+          box-shadow: 0 0 0 #bb5667;
+        }
       }
     }
   }
