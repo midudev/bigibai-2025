@@ -289,7 +289,6 @@ const MOCK_DATA = {
     transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: default;
   }
-  }
 
   .calendar-wrapper.shake {
     animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
@@ -949,9 +948,10 @@ const MOCK_DATA = {
       cell.className = 'door-container'
       cell.id = `door-${index}`
 
-      const holeContent = number === 1
-        ? `<img src="/chocolatinas/1.webp" class="door-chocolate" alt="Chocolate" />`
-        : ''
+      const holeContent =
+        number === 1
+          ? `<img src="/chocolatinas/1.webp" class="door-chocolate" alt="Chocolate" />`
+          : ''
 
       cell.innerHTML = `
         <div class="door-hole">${holeContent}</div>
