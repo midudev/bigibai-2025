@@ -44,7 +44,7 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
   },
   'all-unlocked': {
     id: 'all-unlocked',
-    title: 'El ansía viva',
+    title: 'El ansia viva',
     descriptionDo: 'Desvela todos los sorteos',
     descriptionDone: '¡Has desvelado todos los sorteos!',
     image: '/pixel-gift-achievement.png',
