@@ -25,32 +25,30 @@ const { id = 'achievement-notification' } = Astro.props
     transform: translateX(-50%) translateY(150%);
     background: #1f1f1f;
     border-radius: 50px;
-    padding: 0.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     z-index: 1000;
     border: 2px solid #2c2c2c;
-    width: fit-content;
-    max-width: 68px;
+    width: 68px;
     height: 68px;
     overflow: hidden;
     transition:
       transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-      max-width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+      width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
       padding 0.5s ease,
       gap 0.5s ease;
-  }
 
-  .achievement-notification.show {
-    transform: translateX(-50%) translateY(0);
-  }
+    &.show {
+      transform: translateX(-50%) translateY(0);
+    }
 
-  .achievement-notification.expanded {
-    max-width: 1000px;
-    padding: 0.5rem 2rem 0.5rem 0.5rem;
-    gap: 1rem;
+    &.expanded {
+      width: 300px;
+      padding: 0.5rem 2rem 0.5rem 0.5rem;
+    }
   }
 
   .achievement-icon-container {
@@ -71,15 +69,12 @@ const { id = 'achievement-notification' } = Astro.props
   .achievement-content {
     display: flex;
     flex-direction: column;
-    opacity: 0;
-    width: 0;
+    width: 200px;
+    min-width: 200px;
+    flex-shrink: 0;
+    opacity: 1;
     white-space: nowrap;
     transition: opacity 0.3s ease 0.2s;
-  }
-
-  .achievement-notification.expanded .achievement-content {
-    opacity: 1;
-    width: auto;
   }
 
   .achievement-title {
@@ -98,4 +93,3 @@ const { id = 'achievement-notification' } = Astro.props
     overflow: hidden;
   }
 </style>
-
