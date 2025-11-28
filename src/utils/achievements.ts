@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/supabase-admin'
-import { ACHIEVEMENTS } from '@/data/achievements'
+import { ACHIEVEMENTS, type Achievement } from '@/data/achievements'
 
 export async function grantAchievement(userId: string, achievementId: string) {
   if (!ACHIEVEMENTS[achievementId]) {
@@ -30,14 +30,13 @@ export async function grantAchievement(userId: string, achievementId: string) {
 
     // 3. Add new achievement
     currentAchievements[achievementId] = {
-      earned_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     }
 
     // 4. Upsert
     const { error: upsertError } = await supabaseAdmin.from('user_achievements').upsert({
       user_id: userId,
       achievements: currentAchievements,
-      updated_at: new Date().toISOString(),
     })
 
     if (upsertError) {
@@ -45,7 +44,18 @@ export async function grantAchievement(userId: string, achievementId: string) {
       return { success: false, error: upsertError.message }
     }
 
-    return { success: true, new: true }
+    // 5. Return achievement data for notification
+    const achievement = ACHIEVEMENTS[achievementId]
+    return { 
+      success: true, 
+      new: true,
+      achievement: {
+        id: achievement.id,
+        title: achievement.title,
+        description: achievement.description,
+        image: achievement.image,
+      }
+    }
   } catch (error) {
     console.error('Unexpected error granting achievement:', error)
     return { success: false, error: 'Unexpected error' }
