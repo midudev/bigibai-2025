@@ -1,0 +1,20 @@
+---
+import 'tippy.js/dist/tippy.css'
+---
+
+<script>
+  import tippy from 'tippy.js'
+  document.addEventListener('astro:page-load', () => {
+    const tips = document.querySelectorAll('[tip]')
+
+    tips.forEach((t) => {
+      if (t.tagName == 'SPAN' || t.tagName == 'DIV') {
+        t.setAttribute('tabindex', '0')
+      }
+
+      tippy(t, {
+        content: t.attributes.getNamedItem('tip')?.textContent || '',
+      })
+    })
+  })
+</script>
