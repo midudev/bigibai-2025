@@ -46,7 +46,7 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 
   <!-- Leyenda de colores -->
   <aside
-    class="legend-container relative bg-gradient-to-br from-purple-500/50 to-[#00296b]/70 rounded-3xl border border-white/10 backdrop-blur-md p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)]"
+    class="legend-container relative bg-linear-to-br from-purple-500/50 to-[#00296b]/70 rounded-3xl border border-white/10 backdrop-blur-md p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)]"
     aria-label="Leyenda de tiendas por color"
   >
     <h3 class="sr-only">Leyenda de tiendas</h3>
@@ -119,11 +119,29 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   crossorigin=""
 />
 
+<!-- Leaflet MarkerCluster CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  crossorigin=""
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  crossorigin=""
+/>
+
 <!-- Leaflet JS -->
 <script
   is:inline
   src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+
+<!-- Leaflet MarkerCluster JS -->
+<script
+  is:inline
+  src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
   crossorigin=""></script>
 
 <script>
@@ -249,17 +267,58 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         })
       }
 
-      // Función para renderizar los marcadores cercanos
-      let markersLayer = L.layerGroup().addTo(map)
-      function renderNearbyMarkers(centerLat: number, centerLon: number) {
-        markersLayer.clearLayers()
-        let filteredLocations = locations
-        if (hasUserLocation) {
-          filteredLocations = locations.filter((loc) => {
-            return getDistanceKm(Number(centerLat), Number(centerLon), loc.lat, loc.lon) <= 20
+      // Crear el cluster group con configuración personalizada
+      const markersCluster = L.markerClusterGroup({
+        showCoverageOnHover: true,
+        zoomToBoundsOnClick: true,
+        spiderfyOnMaxZoom: true,
+        removeOutsideVisibleBounds: true,
+        animate: true,
+        animateAddingMarkers: false,
+        maxClusterRadius: 60,
+        iconCreateFunction: function (cluster) {
+          const childCount = cluster.getChildCount()
+          let size = 'small'
+          let c = 'cluster-'
+
+          if (childCount < 10) {
+            c += 'small'
+            size = 'small'
+          } else if (childCount < 50) {
+            c += 'medium'
+            size = 'medium'
+          } else {
+            c += 'large'
+            size = 'large'
+          }
+
+          const sizeMap = {
+            small: { width: 50, height: 50, fontSize: '14px' },
+            medium: { width: 60, height: 60, fontSize: '16px' },
+            large: { width: 70, height: 70, fontSize: '18px' },
+          }
+
+          const dimensions = sizeMap[size]
+
+          return L.divIcon({
+            html: `
+              <div class="cluster-icon ${c}" style="width: ${dimensions.width}px; height: ${dimensions.height}px;">
+                <div class="cluster-inner">
+                  <span style="font-size: ${dimensions.fontSize}; font-weight: bold;">${childCount}</span>
+                </div>
+              </div>
+            `,
+            className: 'marker-cluster-custom',
+            iconSize: L.point(dimensions.width, dimensions.height),
           })
-        }
-        filteredLocations.forEach((location) => {
+        },
+      })
+
+      // Función para renderizar los marcadores con clustering
+      function renderMarkersWithClustering() {
+        markersCluster.clearLayers()
+
+        locations.forEach((location) => {
           const color = getColorForRetail(location.retail)
           const retailName = getRetailName(location.retail)
           const retailImage = getImageForRetail(location.retail)
@@ -309,18 +368,14 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
               className: 'custom-popup',
             }
           )
-          markersLayer.addLayer(marker)
+          markersCluster.addLayer(marker)
         })
+
+        map.addLayer(markersCluster)
       }
 
-      // Render inicial
-      renderNearbyMarkers(Number(centerLat), Number(centerLon))
-
-      // Actualizar marcadores al mover el mapa
-      map.on('moveend', function () {
-        const newCenter = map.getCenter()
-        renderNearbyMarkers(newCenter.lat, newCenter.lng)
-      })
+      // Render inicial con clustering
+      renderMarkersWithClustering()
 
       console.log('Mapa inicializado correctamente')
     } catch {
@@ -499,5 +554,92 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
       opacity: 0.7;
       transform: scale(1.1);
     }
+  }
+
+  /* Estilos personalizados para los clusters */
+  :global(.marker-cluster-custom) {
+    background: none !important;
+    border: none !important;
+  }
+
+  :global(.cluster-icon) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  :global(.cluster-icon::before) {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(248, 177, 52, 0.3) 0%, transparent 70%);
+    animation: clusterPulse 2s ease-in-out infinite;
+  }
+
+  :global(.cluster-inner) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(0, 41, 107, 0.9) 100%);
+    border: 3px solid #f8b134;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+  }
+
+  :global(.cluster-small .cluster-inner) {
+    border-width: 2px;
+  }
+
+  :global(.cluster-medium .cluster-inner) {
+    border-width: 3px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  :global(.cluster-large .cluster-inner) {
+    border-width: 4px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, rgba(248, 177, 52, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
+  }
+
+  :global(.marker-cluster-custom:hover .cluster-icon) {
+    transform: scale(1.15);
+  }
+
+  :global(.marker-cluster-custom:hover .cluster-inner) {
+    box-shadow: 0 8px 24px rgba(248, 177, 52, 0.6);
+  }
+
+  @keyframes clusterPulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.2);
+    }
+  }
+
+  /* Estilo para el polígono de cobertura cuando hover */
+  :global(.leaflet-interactive) {
+    stroke: #f8b134;
+    stroke-width: 2;
+    fill: rgba(248, 177, 52, 0.15);
+    stroke-dasharray: 5, 5;
+  }
+
+  /* Animación de entrada para el polígono */
+  :global(.leaflet-overlay-pane svg path) {
+    transition: all 0.3s ease;
   }
 </style>
