@@ -1,4 +1,6 @@
 ---
+import BentoCard from '@/components/ui/BentoCard.astro'
+
 const DEFAULT_LATITUDE = '41.390205'
 const DEFAULT_LONGITUDE = '2.154007'
 
@@ -28,88 +30,92 @@ if (ipLatitude && ipLongitude) {
 const hasUserLocation = !!(ipLatitude && ipLongitude)
 ---
 
-<section class="space-y-4" aria-labelledby="map-title">
-  <h2 id="map-title" class="sr-only">Mapa de tiendas donde comprar el Calendario Big Ibai</h2>
-
-  <!-- Mapa -->
-  <div
-    id="map"
-    class="w-full h-[600px] rounded-lg shadow-lg border-2 border-brand/30"
-    role="application"
-    aria-label="Mapa interactivo mostrando ubicaciones de tiendas"
-    data-has-user-location={hasUserLocation}
-    data-center-lat={centerLat}
-    data-center-lon={centerLon}
-    data-initial-zoom={initialZoom}
-  >
+<BentoCard class="col-span-3 md:col-span-3 p-8" style="animation-delay: 0.2s;">
+  <div class="mb-8 text-center">
+    <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl mb-4">
+      ¿Dónde puedo comprar el calendario?
+    </h2>
   </div>
 
-  <!-- Leyenda de colores -->
-  <aside
-    class="legend-container relative bg-linear-to-br from-purple-500/50 to-[#00296b]/70 rounded-3xl border border-white/10 backdrop-blur-md p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(139,92,246,0.3)]"
-    aria-label="Leyenda de tiendas por color"
-  >
-    <h3 class="sr-only">Leyenda de tiendas</h3>
-    <ul class="flex flex-wrap gap-3 justify-center" id="legend" role="list">
-      <li
-        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
-        data-retail="eroski"
-      >
-        <span
-          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
-          style="background-color: #f97316;"
-          aria-hidden="true"></span>
-        <img
-          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
-          src="/eroski-logo.webp"
-          alt="Eroski"
-        />
-      </li>
-      <li
-        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
-        data-retail="corte-ingles"
-      >
-        <span
-          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
-          style="background-color: #10b981;"
-          aria-hidden="true"></span>
-        <img
-          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
-          src="/el-corte-ingles-logo.webp"
-          alt="El Corte Inglés"
-        />
-      </li>
-      <li
-        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
-        data-retail="carrefour"
-      >
-        <span
-          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
-          style="background-color: #0f468f;"
-          aria-hidden="true"></span>
-        <img
-          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
-          src="/carrefour-logo.webp"
-          alt="Carrefour"
-        />
-      </li>
-      <li
-        class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
-        data-retail="alcampo"
-      >
-        <span
-          class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
-          style="background-color: #ef4444;"
-          aria-hidden="true"></span>
-        <img
-          class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
-          src="/alcampo-logo.webp"
-          alt="Alcampo"
-        />
-      </li>
-    </ul>
-  </aside>
-</section>
+  <section class="space-y-4" aria-labelledby="map-title">
+    <h2 id="map-title" class="sr-only">Mapa de tiendas donde comprar el Calendario Big Ibai</h2>
+
+    <div
+      id="map"
+      class="w-full h-[600px] rounded-lg shadow-lg border-2 border-brand/30"
+      role="application"
+      aria-label="Mapa interactivo mostrando ubicaciones de tiendas"
+      data-has-user-location={hasUserLocation}
+      data-center-lat={centerLat}
+      data-center-lon={centerLon}
+      data-initial-zoom={initialZoom}
+    >
+    </div>
+
+    <!-- Leyenda de colores -->
+    <aside class="legend-container p-6" aria-label="Leyenda de tiendas por color">
+      <h3 class="sr-only">Leyenda de tiendas</h3>
+      <ul class="flex flex-wrap gap-3 justify-center" id="legend" role="list">
+        <li
+          class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+          data-retail="eroski"
+        >
+          <span
+            class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+            style="background-color: #f97316;"
+            aria-hidden="true"></span>
+          <img
+            class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+            src="/eroski-logo.webp"
+            alt="Eroski"
+          />
+        </li>
+        <li
+          class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+          data-retail="corte-ingles"
+        >
+          <span
+            class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+            style="background-color: #10b981;"
+            aria-hidden="true"></span>
+          <img
+            class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+            src="/el-corte-ingles-logo.webp"
+            alt="El Corte Inglés"
+          />
+        </li>
+        <li
+          class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+          data-retail="carrefour"
+        >
+          <span
+            class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+            style="background-color: #0f468f;"
+            aria-hidden="true"></span>
+          <img
+            class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+            src="/carrefour-logo.webp"
+            alt="Carrefour"
+          />
+        </li>
+        <li
+          class="group relative flex items-center gap-3 px-5 py-3 bg-white/95 rounded-2xl transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-white"
+          data-retail="alcampo"
+        >
+          <span
+            class="w-3.5 h-3.5 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.3)]"
+            style="background-color: #ef4444;"
+            aria-hidden="true"></span>
+          <img
+            class="w-20 h-10 object-contain transition-all duration-300 group-hover:scale-105"
+            src="/alcampo-logo.webp"
+            alt="Alcampo"
+          />
+        </li>
+      </ul>
+    </aside>
+  </section>
+</BentoCard>
 
 <!-- Leaflet CSS -->
 <link
@@ -385,22 +391,6 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 </script>
 
 <style>
-  /* Efecto de brillo en la leyenda (no se puede hacer con Tailwind) */
-  .legend-container::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 1.5rem;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
   /* Asegurar que los controles de Leaflet sean visibles */
   :global(.leaflet-control-zoom) {
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
