@@ -227,70 +227,99 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
         }).addTo(map)
       }
 
-      // Añadir marcadores para cada ubicación
-      locations.forEach((location) => {
-        const color = getColorForRetail(location.retail)
-        const retailName = getRetailName(location.retail)
-        const retailImage = getImageForRetail(location.retail)
+      // Filtrar ubicaciones cercanas (dentro de 20km)
+      function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        const R = 6371 // Radio de la tierra en km
+        const dLat = ((lat2 - lat1) * Math.PI) / 180
+        const dLon = ((lon2 - lon1) * Math.PI) / 180
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2)
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return R * c
+      }
 
-        // Crear marcador con la caja del calendario
-        const svgIcon = `
-          <div class="marker-container relative w-[45px] h-[55px]">
-            <!-- Sombra del marcador -->
-            <div class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-[30px] h-2 bg-[radial-gradient(ellipse,rgba(0,0,0,0.3)_0%,transparent_70%)]"></div>
-            
-            <!-- Contenedor de la caja con borde de color -->
-            <div class="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500/50 to-[#00296b]/70 overflow-hidden flex items-center justify-center" style="border: 2px solid ${color};">
-              <img src="/calendario-producto-small.webp" alt="Calendario Big Ibai" class="w-[90%] h-[90%] object-contain" />
-            </div>
-            
-            <!-- Brillo superior -->
-            <div class="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/15 to-transparent rounded-t-lg pointer-events-none"></div>
-          </div>
-        `
-
-        const customIcon = L.divIcon({
-          html: svgIcon,
-          iconSize: [45, 55],
-          iconAnchor: [22.5, 55],
-          popupAnchor: [0, -55],
-          className: 'custom-marker',
+      let filteredLocations = locations
+      if (hasUserLocation) {
+        filteredLocations = locations.filter((loc) => {
+          return getDistanceKm(Number(centerLat), Number(centerLon), loc.lat, loc.lon) <= 20
         })
+      }
 
-        const marker = L.marker([location.lat, location.lon], { icon: customIcon }).addTo(map)
-
-        // Crear popup con información mejorada
-        const popupContent = `
-          <div class="font-sans min-w-[220px] text-center">
-            <!-- Logo con fondo para mejor contraste -->
-            <div class="mb-3 p-3 bg-white/95 rounded-xl shadow-md">
-              <img src="${retailImage}" alt="${retailName}" class="w-full h-auto object-contain max-w-[100px] mx-auto" />
-            </div>
-            
-            <!-- Información de ubicación con mejor contraste -->
-            <div class="p-3 bg-black/40 rounded-lg" style="border-top: 2px solid ${color};">
-              <div class="mb-2 flex items-start justify-center gap-2">
-                <svg class="flex-shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f8b134" stroke-width="2.5">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <span class="text-sm text-white font-semibold leading-relaxed" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);">${location.direccion}</span>
+      // Función para renderizar los marcadores cercanos
+      let markersLayer = L.layerGroup().addTo(map)
+      function renderNearbyMarkers(centerLat: number, centerLon: number) {
+        markersLayer.clearLayers()
+        let filteredLocations = locations
+        if (hasUserLocation) {
+          filteredLocations = locations.filter((loc) => {
+            return getDistanceKm(Number(centerLat), Number(centerLon), loc.lat, loc.lon) <= 20
+          })
+        }
+        filteredLocations.forEach((location) => {
+          const color = getColorForRetail(location.retail)
+          const retailName = getRetailName(location.retail)
+          const retailImage = getImageForRetail(location.retail)
+          const svgIcon = `
+            <div class="marker-container relative w-[45px] h-[55px]">
+              <div class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-[30px] h-2 bg-[radial-gradient(ellipse,rgba(0,0,0,0.3)_0%,transparent_70%)]"></div>
+              <div class="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500/50 to-[#00296b]/70 overflow-hidden flex items-center justify-center" style="border: 2px solid ${color};">
+                <img src="/calendario-producto-small.webp" alt="Calendario Big Ibai" class="w-[90%] h-[90%] object-contain" />
               </div>
-              ${
-                location.ciudad && location.provincia
-                  ? `<div class="text-[13px] text-brand font-medium mt-1.5" style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                ${location.ciudad}, ${location.provincia}
-              </div>`
-                  : ''
-              }
+              <div class="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/15 to-transparent rounded-t-lg pointer-events-none"></div>
             </div>
-          </div>
-        `
-
-        marker.bindPopup(popupContent, {
-          maxWidth: 300,
-          className: 'custom-popup',
+          `
+          const customIcon = L.divIcon({
+            html: svgIcon,
+            iconSize: [45, 55],
+            iconAnchor: [22.5, 55],
+            popupAnchor: [0, -55],
+            className: 'custom-marker',
+          })
+          const marker = L.marker([location.lat, location.lon], { icon: customIcon })
+          marker.bindPopup(
+            `
+            <div class="font-sans min-w-[220px] text-center">
+              <div class="mb-3 p-3 bg-white/95 rounded-xl shadow-md">
+                <img src="${retailImage}" alt="${retailName}" class="w-full h-auto object-contain max-w-[100px] mx-auto" />
+              </div>
+              <div class="p-3 bg-black/40 rounded-lg" style="border-top: 2px solid ${color};">
+                <div class="mb-2 flex items-start justify-center gap-2">
+                  <svg class="flex-shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f8b134" stroke-width="2.5">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span class="text-sm text-white font-semibold leading-relaxed" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);">${location.direccion}</span>
+                </div>
+                ${
+                  location.ciudad && location.provincia
+                    ? `<div class="text-[13px] text-brand font-medium mt-1.5" style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                  ${location.ciudad}, ${location.provincia}
+                </div>`
+                    : ''
+                }
+              </div>
+            </div>
+          `,
+            {
+              maxWidth: 300,
+              className: 'custom-popup',
+            }
+          )
+          markersLayer.addLayer(marker)
         })
+      }
+
+      // Render inicial
+      renderNearbyMarkers(Number(centerLat), Number(centerLon))
+
+      // Actualizar marcadores al mover el mapa
+      map.on('moveend', function () {
+        const newCenter = map.getCenter()
+        renderNearbyMarkers(newCenter.lat, newCenter.lng)
       })
 
       console.log('Mapa inicializado correctamente')
