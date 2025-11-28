@@ -52,7 +52,7 @@ export async function grantAchievement(userId: string, achievementId: string) {
       achievement: {
         id: achievement.id,
         title: achievement.title,
-        description: achievement.description,
+        description: achievement.descriptionDone,
         image: achievement.image,
       }
     }
