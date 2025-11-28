@@ -1,6 +1,7 @@
 ---
 import { ACHIEVEMENTS } from '@/data/achievements'
 import BentoCard from '@/components/ui/BentoCard.astro'
+import Button from '@/components/Button.astro'
 
 interface Props {
   isLoggedIn: boolean
@@ -23,9 +24,14 @@ const allAchievements = Object.values(ACHIEVEMENTS)
     {
       !isLoggedIn ? (
         <div class="relative flex flex-col items-center justify-center min-h-[300px]">
-          <p class="absolute text-lg text-white/80 text-balance px-4 text-center z-10 h-full w-full flex items-center justify-center">
-            Inicia sesión para desbloquear y guardar tus logros
-          </p>
+          <div class="absolute z-10 flex flex-col items-center gap-4 h-full w-full justify-center px-4">
+            <p class="text-lg text-white/80 text-balance text-center">
+              Inicia sesión para desbloquear y guardar tus logros
+            </p>
+            <Button href="/registro" variant="brand" size="lg">
+              Iniciar sesión
+            </Button>
+          </div>
           <div class="grid grid-cols-2 gap-2 w-full mt-12 blur-xs">
             {allAchievements.map((achievement) => (
               <div class="flex flex-col items-center gap-3 p-2 opacity-40 grayscale select-none pointer-events-none">
@@ -36,9 +42,6 @@ const allAchievements = Object.values(ACHIEVEMENTS)
                     class="w-16 h-16 object-contain drop-shadow-lg"
                     loading="lazy"
                   />
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-2xl drop-shadow-md">🔒</span>
-                  </div>
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-bold text-white/60 leading-tight">{achievement.title}</p>
@@ -68,19 +71,14 @@ const allAchievements = Object.values(ACHIEVEMENTS)
                     class="w-16 h-16 object-contain drop-shadow-lg"
                     loading="lazy"
                   />
-                  {!isUnlocked && (
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <span class="text-2xl drop-shadow-md">🔒</span>
-                    </div>
-                  )}
                 </div>
                 <div class="text-center relative">
                   <p class="text-xs font-bold text-white leading-tight mb-1">{achievement.title}</p>
-                  <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-10 opacity-0 group-hover/icon:opacity-100 pointer-events-none transition-opacity duration-200">
-                    <div class="bg-black/90 text-white text-[10px] px-3 py-2 rounded-lg shadow-lg max-w-[200px] text-center whitespace-normal">
+                  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 opacity-0 group-hover/icon:opacity-100 pointer-events-none transition-opacity duration-200">
+                    <div class="bg-gray-200 text-black text-[10px] px-3 py-2 rounded-lg shadow-lg max-w-[200px] text-center whitespace-normal font-mono">
                       {achievement.description}
                     </div>
-                    <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/90 rotate-45" />
+                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-200 rotate-45" />
                   </div>
                 </div>
               </div>
