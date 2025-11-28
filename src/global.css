@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 @plugin "@midudev/tailwind-animations";
+@plugin "@toolwind/corner-shape";
 
 @theme {
   --color-brand: #f8b134;
@@ -9,7 +10,7 @@
   --color-primary: hsl(0, 0, 95%);
   --color-secondary: hsl(0, 0, 60%);
 
-  --text-shadow-title: 0 0 20px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 0, 0, 0.9);
+  --text-shadow-title: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 0, 0, 0.5);
 }
 
 ::selection {
