@@ -285,18 +285,29 @@
 
     state.isPaused = true
     playSound('levelup')
-    $('#choco-modal-title').innerText = '¡SUBES DE NIVEL!'
-    $('#choco-modal-title').style.color = 'var(--accent-gold)'
-    $('#choco-modal-desc').innerText = '¡Hora del postre! ¡Mejora tus stats:'
+
+    const modalTitle = $('#choco-modal-title') as HTMLHeadingElement
+    const modalDesc = $('#choco-modal-desc') as HTMLParagraphElement
+    const victoryTrophyContainer = $('#victory-trophy-container') as HTMLDivElement
+    const upgradeOptions = $('#choco-upgrade-options') as HTMLDivElement
+    const resetBtn = $('#choco-reset-btn') as HTMLButtonElement
+    const levelupModal = $('#choco-levelup-modal') as HTMLDivElement
+
+    modalTitle.textContent = '¡SUBES DE NIVEL!'
+    modalTitle.style.color = 'var(--accent-gold)'
+    modalDesc.textContent = '¡Hora del postre! ¡Mejora tus stats:'
 
     // Asegurarnos de que el trofeo no se ve
-    $('#victory-trophy-container').style.display = 'none'
-    $('#choco-upgrade-options').style.display = 'grid'
-    $('#choco-reset-btn').style.display = 'none'
-    $('#choco-levelup-modal').style.display = 'flex'
+    victoryTrophyContainer.style.display = 'none'
+    upgradeOptions.style.display = 'grid'
+    resetBtn.style.display = 'none'
+    levelupModal.style.display = 'flex'
 
     // Deshabilitar botones temporalmente para evitar clics accidentales
-    const upgradeButtons = document.querySelectorAll('.upgrade-btn')
+    const upgradeButtons = document.querySelectorAll(
+      '.upgrade-btn'
+    ) as NodeListOf<HTMLButtonElement>
+
     upgradeButtons.forEach((btn) => {
       btn.disabled = true
       btn.classList.add('disabled')
