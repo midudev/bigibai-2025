@@ -19,7 +19,7 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
     <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
 
-    <BentoCard class="group col-span-1 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-4">
+    <BentoCard class="group col-span-3 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-4">
       <img
         src="/hero.webp"
         alt="Imagen que explica que en la casilla de atrás hay código para canjear y participar"
@@ -74,7 +74,7 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
       </div>
     </BentoCard>
 
-    <BentoCard class="corner-squircle group col-span-1">
+    <BentoCard class="group col-span-3 md:col-span-1">
       <div class="relative flex h-full min-h-[400px] flex-col justify-between p-8 md:p-10">
         <!-- Imagen del producto -->
         <div class="mb-6 flex flex-1 items-center justify-center">
