@@ -288,6 +288,16 @@ import Button from '@/components/Button.astro'
             showMessage(data.message || '¡Cupón validado correctamente!', false)
             throwConfetti()
 
+            // Mostrar notificación de logro si se ha conseguido uno nuevo
+            if (data.achievement) {
+              const { showAchievement } = await import('@/utils/show-achievement')
+              showAchievement('achievement-notification', {
+                title: data.achievement.title,
+                description: data.achievement.description,
+                icon: data.achievement.image,
+              })
+            }
+
             // Limpiar el formulario
             couponInputs.forEach((input) => {
               input.value = ''
