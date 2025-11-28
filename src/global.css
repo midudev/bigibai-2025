@@ -159,7 +159,7 @@ h2 {
   }
 }
 
-span[tip] {
+span[data-tip], div[data-tip] {
   cursor: help;
   text-decoration-style: dotted;
   text-decoration-line: underline;
