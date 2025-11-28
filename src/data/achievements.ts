@@ -46,12 +46,12 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     id: 'clicker-level-1',
     title: 'Púgil Novato',
     description: 'Has completado el primer nivel en Choco Boxer',
-    image: '/pixel-glove.png', // Reusing existing asset as placeholder
+    image: '/pixel-glove.png',
   },
   'clicker-level-5': {
     id: 'clicker-level-5',
     title: 'Púgil Experto',
     description: 'Has llegado al nivel 5 en Choco Boxer',
-    image: '/pixel-glove.png', // Reusing existing asset as placeholder
+    image: '/pixel-glove-elite.png',
   },
 }
