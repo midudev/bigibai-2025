@@ -93,6 +93,17 @@ export const GET: APIRoute = async ({ request, locals }) => {
       console.error('Error al obtener cupones:', couponsError)
     }
 
+    // Obtener los logros del usuario
+    const { data: userAchievements, error: achievementsError } = await supabaseAdmin
+      .from('user_achievements')
+      .select('achievements')
+      .eq('user_id', user.id)
+      .single()
+
+    if (achievementsError && achievementsError.code !== 'PGRST116') {
+      console.error('Error al obtener logros:', achievementsError)
+    }
+
     // Preparar la respuesta con la información del usuario
     const metadata = user.user_metadata ?? {}
     const userData = {
@@ -113,6 +124,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       email_confirmed_at: user.email_confirmed_at,
       last_sign_in_at: user.last_sign_in_at,
       coupons: coupons || [],
+      achievements: userAchievements?.achievements || {},
     }
 
     return new Response(JSON.stringify(userData), {
