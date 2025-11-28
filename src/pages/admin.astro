@@ -1,6 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro'
 import Header from '@/sections/Header.astro'
+import BentoCard from '@/components/ui/BentoCard.astro'
 import { supabaseAdmin } from '@/supabase-admin'
 import { isAdmin } from '@/utils/admin'
 
@@ -68,7 +69,7 @@ const claimedPercentage =
         <!-- Estadísticas generales -->
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <!-- Total de usuarios -->
-          <div class="bento-card group overflow-hidden" style="animation-delay: 0.1s;">
+          <BentoCard class="group overflow-hidden" style="animation-delay: 0.1s;">
             <div class="flex flex-col items-center justify-center p-8 text-center">
               <div class="mb-4 text-6xl">👥</div>
               <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
@@ -76,10 +77,10 @@ const claimedPercentage =
               </h3>
               <p class="mt-2 text-white/80">Usuarios con cupones</p>
             </div>
-          </div>
+          </BentoCard>
 
           <!-- Cupones usados -->
-          <div class="bento-card group overflow-hidden" style="animation-delay: 0.2s;">
+          <BentoCard class="group overflow-hidden" style="animation-delay: 0.2s;">
             <div class="flex flex-col items-center justify-center p-8 text-center">
               <div class="mb-4 text-6xl">🎟️</div>
               <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
@@ -87,10 +88,10 @@ const claimedPercentage =
               </h3>
               <p class="mt-2 text-white/80">Cupones usados</p>
             </div>
-          </div>
+          </BentoCard>
 
           <!-- Media de cupones por usuario -->
-          <div class="bento-card group overflow-hidden" style="animation-delay: 0.3s;">
+          <BentoCard class="group overflow-hidden" style="animation-delay: 0.3s;">
             <div class="flex flex-col items-center justify-center p-8 text-center">
               <div class="mb-4 text-6xl">📊</div>
               <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
@@ -98,10 +99,10 @@ const claimedPercentage =
               </h3>
               <p class="mt-2 text-white/80">Media cupones/usuario</p>
             </div>
-          </div>
+          </BentoCard>
 
           <!-- Porcentaje de cupones reclamados -->
-          <div class="bento-card group overflow-hidden" style="animation-delay: 0.4s;">
+          <BentoCard class="group overflow-hidden" style="animation-delay: 0.4s;">
             <div class="flex flex-col items-center justify-center p-8 text-center">
               <div class="mb-4 text-6xl">📈</div>
               <h3 class="text-shadow-title text-2xl font-bold text-white md:text-3xl">
@@ -109,13 +110,13 @@ const claimedPercentage =
               </h3>
               <p class="mt-2 text-white/80">Cupones reclamados</p>
             </div>
-          </div>
+          </BentoCard>
         </div>
 
         <!-- Grid de búsquedas -->
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <!-- Sección de validación de cupones -->
-          <div class="bento-card overflow-hidden" style="animation-delay: 0.5s;">
+          <BentoCard class="overflow-hidden" style="animation-delay: 0.5s;">
             <div class="p-8">
               <h2 class="text-shadow-title mb-6 text-center text-3xl font-bold text-white">
                 Validar Cupón
@@ -227,10 +228,10 @@ const claimedPercentage =
                 </div>
               </div>
             </div>
-          </div>
+          </BentoCard>
 
           <!-- Sección de búsqueda de usuario -->
-          <div class="bento-card overflow-hidden" style="animation-delay: 0.6s;">
+          <BentoCard class="overflow-hidden" style="animation-delay: 0.6s;">
             <div class="p-8">
               <h2 class="text-shadow-title mb-6 text-center text-3xl font-bold text-white">
                 Buscar Usuario
@@ -360,7 +361,7 @@ const claimedPercentage =
                 </div>
               </div>
             </div>
-          </div>
+          </BentoCard>
         </div>
       </div>
     </main>
@@ -738,44 +739,3 @@ const claimedPercentage =
     }
   }
 </script>
-
-<style>
-  .bento-card {
-    position: relative;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(0, 41, 107, 0.7) 100%);
-    border-radius: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    animation: fadeInScale 0.6s ease-out;
-    animation-fill-mode: both;
-    transition: all 0.3s ease;
-  }
-
-  .bento-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
-    transform: translateY(-4px);
-  }
-
-  .bento-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 1.5rem;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-</style>
