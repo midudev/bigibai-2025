@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 import Header from '@/sections/Header.astro'
 import BentoCard from '@/components/ui/BentoCard.astro'
+import Button from '@/components/Button.astro'
 import { supabaseAdmin } from '@/supabase-admin'
 import { isAdmin } from '@/utils/admin'
 
@@ -137,12 +138,9 @@ const claimedPercentage =
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  class="w-full rounded-lg bg-brand px-6 py-3 font-bold text-black transition-all hover:scale-105 hover:brightness-110 active:scale-95"
-                >
+                <Button type="submit" variant="brand" size="lg" class="w-full">
                   Validar Cupón
-                </button>
+                </Button>
               </form>
 
               <!-- Resultado de la búsqueda -->
@@ -252,12 +250,9 @@ const claimedPercentage =
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  class="w-full rounded-lg bg-brand px-6 py-3 font-bold text-black transition-all hover:scale-105 hover:brightness-110 active:scale-95"
-                >
+                <Button type="submit" variant="brand" size="lg" class="w-full">
                   Buscar Usuario
-                </button>
+                </Button>
               </form>
 
               <!-- Resultado de la búsqueda -->
@@ -681,10 +676,11 @@ const claimedPercentage =
         achievementStatus.textContent = achievement.unlocked ? '✅ Desbloqueado' : '🔒 Bloqueado'
 
         const toggleButton = document.createElement('button')
-        toggleButton.className = `w-full text-xs px-3 py-1.5 rounded font-semibold transition-all ${
+        toggleButton.type = 'button'
+        toggleButton.className = `w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer transition-[background-color,transform] duration-150 ease-out hover:scale-[1.01] active:scale-[0.99] ${
           achievement.unlocked
-            ? 'bg-red-500/80 hover:bg-red-500 text-white'
-            : 'bg-green-500/80 hover:bg-green-500 text-white'
+            ? 'inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 from-red-500 to-red-500/85 text-white shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter,transform] hover:brightness-110 active:brightness-90 px-4 py-2'
+            : 'inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 from-brand to-brand/85 text-black shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter,transform] hover:brightness-110 active:brightness-90 px-4 py-2'
         }`
         toggleButton.textContent = achievement.unlocked ? 'Desactivar' : 'Activar'
         toggleButton.onclick = () =>
