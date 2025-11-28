@@ -55,7 +55,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
     const allAchievements = Object.values(ACHIEVEMENTS).map((achievement) => ({
       id: achievement.id,
       title: achievement.title,
-      description: achievement.description,
+      descriptionDo: achievement.descriptionDo,
+      descriptionDone: achievement.descriptionDone,
       image: achievement.image,
       unlocked: !!achievements[achievement.id],
       unlockedAt: achievements[achievement.id]?.created_at || null,
