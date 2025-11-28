@@ -1,12 +1,17 @@
 ---
 import Button from '@/components/Button.astro'
+import AchievementsBox from '@/components/AchievementsBox.astro'
+import BentoCard from '@/components/ui/BentoCard.astro'
+import Chocolates from './Chocolates.astro'
+import Map from '@/components/Map.astro'
 
 interface Props {
   isLoggedIn: boolean
   participationCount: number
+  userAchievements: Record<string, { created_at: string }>
 }
 
-const { isLoggedIn, participationCount } = Astro.props
+const { isLoggedIn, participationCount, userAchievements } = Astro.props
 ---
 
 <main class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20">
@@ -14,19 +19,16 @@ const { isLoggedIn, participationCount } = Astro.props
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
     <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
 
-    <div
-      class="bento-card group col-span-1 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-4"
-      style="animation-delay: 0.1s;"
-    >
+    <BentoCard class="group col-span-1 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-4">
       <img
         src="/hero.webp"
         alt="Imagen que explica que en la casilla de atrás hay código para canjear y participar"
-        class="h-auto w-[300px] md:w-[150px] lg:w-[250px] object-contain mx-auto"
+        class="h-auto w-[300px] md:w-[150px] lg:w-[250px] object-contain mx-auto group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6"
         loading="eager"
       />
-      <div class="relative z-10 flex flex-1 flex-col items-start justify-center gap-6">
+      <div class="relative z-10 flex flex-1 flex-col items-start justify-center gap-2">
         <div
-          class="relative flex h-full flex-col justify-between p-8 md:flex-col md:items-center md:p-12"
+          class="relative flex h-full flex-col justify-center gap-6 p-8 md:flex-col md:items-center md:py-0"
         >
           {
             !isLoggedIn ? (
@@ -47,8 +49,8 @@ const { isLoggedIn, participationCount } = Astro.props
               </>
             ) : (
               <>
-                <div class="space-y-4 flex justify-center items-center flex-col">
-                  <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance">
+                <div class="space-y-2 flex justify-center items-center flex-col">
+                  <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-6xl text-balance leading-none!">
                     {participationCount === 0
                       ? '¡Aún no tienes participaciones!'
                       : participationCount === 1
@@ -62,7 +64,7 @@ const { isLoggedIn, participationCount } = Astro.props
                   </p>
                 </div>
 
-                <Button href="/dashboard" variant="brand" size="lg" class="mt-4 mx-auto">
+                <Button href="/dashboard" variant="brand" size="xl" class="mx-auto">
                   {participationCount === 0 ? '¡Validar mi primer código!' : 'Validar más códigos'}
                 </Button>
               </>
@@ -70,9 +72,9 @@ const { isLoggedIn, participationCount } = Astro.props
           }
         </div>
       </div>
-    </div>
+    </BentoCard>
 
-    <div class="bento-card group col-span-1" style="animation-delay: 0.2s;">
+    <BentoCard class="corner-squircle group col-span-1">
       <div class="relative flex h-full min-h-[400px] flex-col justify-between p-8 md:p-10">
         <!-- Imagen del producto -->
         <div class="mb-6 flex flex-1 items-center justify-center">
@@ -103,57 +105,12 @@ const { isLoggedIn, participationCount } = Astro.props
           </Button>
         </div>
       </div>
-    </div>
+    </BentoCard>
+
+    <AchievementsBox isLoggedIn={isLoggedIn} userAchievements={userAchievements} />
+
+    <Chocolates />
+
+    <Map />
   </div>
-
-  <style>
-    .bento-card {
-      position: relative;
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(0, 41, 107, 0.7) 100%);
-      border-radius: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      animation: fadeInScale 0.6s ease-out;
-      animation-fill-mode: both;
-      transition: all 0.3s ease;
-    }
-
-    .bento-card:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
-      transform: translateY(-4px);
-    }
-
-    .bento-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 1.5rem;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-      -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
-    }
-
-    @keyframes fadeInScale {
-      from {
-        opacity: 0;
-        transform: scale(0.95) translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .bento-card {
-        min-height: 350px;
-      }
-    }
-  </style>
 </main>
