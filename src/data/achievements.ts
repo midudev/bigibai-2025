@@ -10,7 +10,7 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     id: 'calendar-redeemed',
     title: '¡Tu primer calendario!',
     description: 'Has canjeado tu primer calendario de adviento.',
-    image: '/achievement_01.webp',
+    image: '/pixel-lock-achievement.png',
   },
   'calendar-two': {
     id: 'calendar-two',
