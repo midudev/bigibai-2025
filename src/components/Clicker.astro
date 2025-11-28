@@ -78,6 +78,7 @@
 </div>
 
 <script>
+  import { actions } from 'astro:actions'
   const $ = (selector: string) => document.querySelector(selector)
 
   const WIN_LEVEL = 10
@@ -295,13 +296,65 @@
     playSound('levelup')
     $('#choco-modal-title').innerText = '¡SUBES DE NIVEL!'
     $('#choco-modal-title').style.color = 'var(--accent-gold)'
-    $('#choco-modal-desc').innerText = '¡Hora del postre! Mejora tus stats:'
+    $('#choco-modal-desc').innerText = '¡Hora del postre! ¡Mejora tus stats:'
 
     // Asegurarnos de que el trofeo no se ve
     $('#victory-trophy-container').style.display = 'none'
     $('#choco-upgrade-options').style.display = 'grid'
     $('#choco-reset-btn').style.display = 'none'
     $('#choco-levelup-modal').style.display = 'flex'
+
+    // Deshabilitar botones temporalmente para evitar clics accidentales
+    const upgradeButtons = document.querySelectorAll('.upgrade-btn')
+    upgradeButtons.forEach((btn) => {
+      btn.disabled = true
+      btn.classList.add('disabled')
+    })
+
+    setTimeout(() => {
+      upgradeButtons.forEach((btn) => {
+        btn.disabled = false
+        btn.classList.remove('disabled')
+      })
+    }, 500)
+
+    // Grant achievement if level > 1 (completed level 1)
+    if (state.level === 2) {
+      actions
+        .grantClickerAchievement({ achievementId: 'clicker-level-1' })
+        .then(async (result) => {
+          if (result.data?.achievement) {
+            const { showAchievement } = await import('@/utils/show-achievement')
+            showAchievement('achievement-notification', {
+              title: result.data.achievement.title,
+              description: result.data.achievement.description,
+              icon: result.data.achievement.image,
+            })
+          }
+        })
+        .catch((error) => {
+          console.error('Error granting achievement:', error)
+        })
+    }
+
+    // Grant achievement if level > 5 (completed level 5)
+    if (state.level === 6) {
+      actions
+        .grantClickerAchievement({ achievementId: 'clicker-level-5' })
+        .then(async (result) => {
+          if (result.data?.achievement) {
+            const { showAchievement } = await import('@/utils/show-achievement')
+            showAchievement('achievement-notification', {
+              title: result.data.achievement.title,
+              description: result.data.achievement.description,
+              icon: result.data.achievement.image,
+            })
+          }
+        })
+        .catch((error) => {
+          console.error('Error granting achievement:', error)
+        })
+    }
   }
 
   function chooseUpgrade(type: string) {
@@ -479,11 +532,11 @@
     overflow: visible;
     user-select: none;
     -webkit-user-select: none;
+  }
 
-    h1,
-    h2 {
-      font-family: 'Press Start 2P', cursive;
-    }
+  #choco-game-container h1,
+  #choco-game-container h2 {
+    font-family: 'Press Start 2P', cursive;
   }
 
   #choco-modal-desc {
@@ -846,6 +899,12 @@
   .upgrade-btn:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+  }
+
+  .upgrade-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 
   .upgrade-btn span {
