@@ -587,20 +587,26 @@
   }
 
   .start-btn {
-    background: var(--accent-green);
+    background: #ffc0cb;
     color: #000;
     border: 4px solid #fff;
     padding: 20px 40px;
     font-family: 'Press Start 2P', cursive;
     font-size: 1.2rem;
     cursor: pointer;
-    box-shadow: 0 6px 0 #33691e;
+    box-shadow: 0 6px 0 #bb5667;
     transition: all 0.1s;
-  }
-
-  .start-btn:active {
-    transform: translateY(6px);
-    box-shadow: 0 0 0 #33691e;
+    &:hover {
+      background: #ffb0c1;
+      box-shadow: 0 6px 0 #bb5667;
+      transform: scale(1.03);
+      cursor: pointer;
+      transition: all 0.1s;
+      &:active {
+        transform: translateY(6px);
+        box-shadow: 0 0 0 #bb5667;
+      }
+    }
   }
 
   /* UI Superior */
