@@ -1,6 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro'
 import Button from '@/components/Button.astro'
+import AchievementNotification from '@/components/AchievementNotification.astro'
 
 const MOCK_DATA = {
   day: 1,
@@ -178,17 +179,7 @@ const MOCK_DATA = {
       </div>
 
       <!-- Notificación de Logro (Xbox Style) -->
-      <div id="achievement-notification" class="achievement-notification">
-        <div class="achievement-icon-container">
-          <img src="/achievement_01.webp" alt="Logro" class="achievement-icon" />
-        </div>
-        <div class="achievement-content">
-          <h4 class="achievement-title">¡Logro desbloqueado!</h4>
-          <p class="achievement-text text-balance">
-            Completa tu primer anagrama y acierta el premio del día.
-          </p>
-        </div>
-      </div>
+      <AchievementNotification />
     </div>
   </div>
 </Layout>
@@ -823,91 +814,11 @@ const MOCK_DATA = {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
   }
-
-  /* Achievement Notification */
-  .achievement-notification {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(150%);
-    background: #1f1f1f;
-    border-radius: 50px;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-    border: 2px solid #2c2c2c;
-    width: fit-content;
-    max-width: 68px;
-    height: 68px;
-    overflow: hidden;
-    transition:
-      transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-      max-width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-      padding 0.5s ease,
-      gap 0.5s ease;
-  }
-
-  .achievement-notification.show {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .achievement-notification.expanded {
-    max-width: 1000px;
-    padding: 0.5rem 2rem 0.5rem 0.5rem;
-    gap: 1rem;
-  }
-
-  .achievement-icon-container {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid #6ade6a;
-    flex-shrink: 0;
-  }
-
-  .achievement-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .achievement-content {
-    display: flex;
-    flex-direction: column;
-    opacity: 0;
-    width: 0;
-    white-space: nowrap;
-    transition: opacity 0.3s ease 0.2s;
-  }
-
-  .achievement-notification.expanded .achievement-content {
-    opacity: 1;
-    width: auto;
-  }
-
-  .achievement-title {
-    color: white;
-    font-weight: bold;
-    font-size: 0.9rem;
-    margin: 0;
-    text-transform: uppercase;
-  }
-
-  .achievement-text {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.75rem;
-    margin: 0;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
 </style>
 
 <script>
   import confetti from 'canvas-confetti'
+  import { showAchievement } from '@/utils/show-achievement'
 
   const $ = document.querySelector.bind(document)
 
@@ -1274,7 +1185,7 @@ const MOCK_DATA = {
       stopGame()
       showFeedback(true, '¡Correcto!')
       launchWinConfetti()
-      showAchievement()
+      showAnagramAchievement()
 
       // Mostrar video y resultado
       const videoPlaceholder = document.getElementById('video-placeholder')
@@ -1315,27 +1226,12 @@ const MOCK_DATA = {
     }
   }
 
-  function showAchievement() {
-    const notification = document.getElementById('achievement-notification')
-    if (notification) {
-      // Reproducir sonido
-      const audio = new Audio('/achievement-sound.mp3')
-      audio.volume = 0.5
-      audio.play().catch((e) => console.log('Error playing sound:', e))
-
-      notification.classList.add('show')
-
-      setTimeout(() => {
-        notification.classList.add('expanded')
-      }, 600)
-
-      setTimeout(() => {
-        notification.classList.remove('expanded')
-        setTimeout(() => {
-          notification.classList.remove('show')
-        }, 500)
-      }, 8000)
-    }
+  function showAnagramAchievement() {
+    showAchievement('achievement-notification', {
+      title: '¡Logro desbloqueado!',
+      description: 'Completa tu primer anagrama y acierta el premio del día.',
+      icon: '/achievement_01.webp',
+    })
   }
 
   // Event Listeners
