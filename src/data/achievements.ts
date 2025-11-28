@@ -16,13 +16,13 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     id: 'calendar-two',
     title: 'El doble de oportunidades',
     description: 'Has canjeado 2 calendarios de adviento.',
-    image: '/achievement_02.webp',
+    image: '/pixel-victory-achievement.png',
   },
   'calendar-lover': {
     id: 'calendar-lover',
     title: 'Amor por el chocolate',
     description: 'Has canjeado 5 calendarios de adviento.',
-    image: '/achievement_03.webp',
+    image: '/pixel-heart-achievement.png',
   },
   'first-unlocked': {
     id: 'first-unlocked',
@@ -34,13 +34,13 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     id: 'five-unlocked',
     title: '¡El quinto!',
     description: 'Desvela tu quinto sorteo',
-    image: '/achievement_05.webp',
+    image: '/pixel-five-achievement.png',
   },
   'all-unlocked': {
     id: 'all-unlocked',
     title: 'El ansía viva',
     description: '¡Desvela todos los sorteos!',
-    image: '/achievement_06.webp',
+    image: '/pixel-gift-achievement.png',
   },
   'clicker-level-1': {
     id: 'clicker-level-1',
