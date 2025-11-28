@@ -18,24 +18,30 @@ const allAchievements = Object.values(ACHIEVEMENTS)
       <h2 class="text-shadow-title text-3xl font-heavy font-bold text-white md:text-5xl">
         Mis Logros
       </h2>
-      {
-        isLoggedIn && (
-          <span class="text-white/60 text-sm">
-            {Object.keys(userAchievements).length} / {allAchievements.length} conseguidos
-          </span>
-        )
-      }
     </div>
 
     {
       !isLoggedIn ? (
-        <div class="flex flex-col items-center justify-center py-8 text-center space-y-4">
-          <p class="text-lg text-white/80">Inicia sesión para desbloquear y guardar tus logros</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-50 blur-sm select-none pointer-events-none">
-            {allAchievements.slice(0, 4).map((achievement) => (
-              <div class="flex flex-col items-center gap-2">
-                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
-                  <span class="text-2xl">🏆</span>
+        <div class="relative flex flex-col items-center justify-center min-h-[300px]">
+          <p class="absolute text-lg text-white/80 text-balance px-4 text-center z-10 h-full w-full flex items-center justify-center">
+            Inicia sesión para desbloquear y guardar tus logros
+          </p>
+          <div class="grid grid-cols-2 gap-2 w-full mt-12 blur-xs">
+            {allAchievements.map((achievement) => (
+              <div class="flex flex-col items-center gap-3 p-2 opacity-40 grayscale select-none pointer-events-none">
+                <div class="relative">
+                  <img
+                    src={achievement.image}
+                    alt={achievement.title}
+                    class="w-16 h-16 object-contain drop-shadow-lg"
+                    loading="lazy"
+                  />
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-2xl drop-shadow-md">🔒</span>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <p class="text-xs font-bold text-white/60 leading-tight">{achievement.title}</p>
                 </div>
               </div>
             ))}
