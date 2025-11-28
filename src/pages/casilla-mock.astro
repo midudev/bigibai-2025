@@ -1230,13 +1230,19 @@ const MOCK_DATA = {
         const letter = availableLetters[index]
 
         if (!letter.used && answerInput) {
+          // Update previous value BEFORE adding letter
+          const currentValue = answerInput.value.toUpperCase()
+          answerInput.setAttribute('data-previous-value', currentValue)
+
           // Add letter to input
           answerInput.value += letter.letter
+
           // Mark as used
           letter.used = true
           el.classList.add('used')
-          // Trigger input event to update validation
-          answerInput.dispatchEvent(new Event('input'))
+
+          // Update the previous value to the new value
+          answerInput.setAttribute('data-previous-value', answerInput.value.toUpperCase())
         }
       })
     })
@@ -1245,13 +1251,16 @@ const MOCK_DATA = {
   function setupInputValidation() {
     if (!answerInput) return
 
+    // Initialize previous value
+    answerInput.setAttribute('data-previous-value', '')
+
     answerInput.addEventListener('input', (e) => {
       const input = (e.target as HTMLInputElement).value.toUpperCase()
       const previousValue = answerInput.getAttribute('data-previous-value') || ''
 
       // Check if user is adding or removing characters
       if (input.length > previousValue.length) {
-        // Adding character
+        // Adding character (typed, not clicked)
         const newChar = input[input.length - 1]
 
         // Find first available matching letter
@@ -1261,28 +1270,33 @@ const MOCK_DATA = {
           // Valid letter, mark as used
           availableLetter.used = true
           updateLetterVisuals()
+          // Update previous value
+          answerInput.setAttribute('data-previous-value', input)
         } else {
           // Invalid letter, remove it
           answerInput.value = previousValue
           return
         }
       } else if (input.length < previousValue.length) {
-        // Removing character
+        // Removing character (backspace/delete)
         const removedChar = previousValue[input.length]
 
-        // Find first used matching letter and mark as available
-        const usedLetter = [...availableLetters]
+        // Find the LAST used matching letter (most recently used)
+        const usedLetterIndex = availableLetters
+          .map((l, idx) => ({ ...l, originalIndex: idx }))
           .reverse()
-          .find((l) => l.letter === removedChar && l.used)
+          .findIndex((l) => l.letter === removedChar && l.used)
 
-        if (usedLetter) {
-          usedLetter.used = false
+        if (usedLetterIndex !== -1) {
+          // Convert reversed index back to original index
+          const originalIndex = availableLetters.length - 1 - usedLetterIndex
+          availableLetters[originalIndex].used = false
           updateLetterVisuals()
         }
-      }
 
-      // Store current value for next comparison
-      answerInput.setAttribute('data-previous-value', input)
+        // Update previous value
+        answerInput.setAttribute('data-previous-value', input)
+      }
     })
   }
 
