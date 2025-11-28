@@ -3,20 +3,22 @@ import BentoCard from '@/components/ui/BentoCard.astro'
 ---
 
 <BentoCard class="group p-8 col-span-3 md:col-span-2 group" style="animation-delay: 0.3s;">
-  <div class="flex flex-col items-center md:flex-row md:gap-12 pt-4">
+  <div class="flex flex-col items-center lg:flex-row lg:gap-12 pt-4 h-full">
     <!-- Text Content Left (Desktop) / Top (Mobile) -->
     <div class="flex flex-1 flex-col items-center text-center md:items-start md:text-left z-10">
       <h2
-        class="font-heavy text-left! text-4xl font-bold text-brand md:text-7xl lg:text-8xl mb-2 uppercase leading-[42px]! text-shadow-title"
+        class="font-heavy text-4xl font-bold text-brand md:text-7xl lg:text-8xl mb-2 uppercase leading-[42px]! text-shadow-title text-center! md:text-left!"
       >
         Las 24 <span class="text-4xl md:text-4xl lg:text-5xl">chocolatinas</span>
       </h2>
-      <p class="font-century text-xl text-white/90 md:text-2xl max-w-md text-balance mb-8">
+      <p
+        class="font-century text-xl text-white/90 md:text-2xl max-w-md text-balance mb-8 mx-0 md:mx-auto lg:mx-0"
+      >
         Únicas e irrepetibles
       </p>
 
       <!-- Desktop List -->
-      <div class="hidden md:flex flex-col space-y-8 mt-8 w-full">
+      <div class="hidden lg:flex flex-col space-y-8 mt-8 w-full">
         <div class="flex flex-col items-start gap-2 group">
           <p
             class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
@@ -50,7 +52,7 @@ import BentoCard from '@/components/ui/BentoCard.astro'
     <div class="flex flex-2 flex-col items-center w-full z-10">
       <!-- Floating Chocolates Row -->
       <div
-        class="relative w-full flex items-center justify-center gap-8 md:gap-12 perspective-1000 my-10 md:my-0 min-h-[400px] md:min-h-[330px]"
+        class="relative w-full flex items-center justify-center gap-8 md:gap-12 perspective-1000 mb-10 md:my-0 min-h-[150px] md:min-h-[330px]"
       >
         <!-- Chocolate A Group -->
         <div class="relative z-20 flex flex-col items-center">
@@ -93,9 +95,9 @@ import BentoCard from '@/components/ui/BentoCard.astro'
 
       <!-- Desktop Sabor Box (Horizontal) -->
       <div
-        class="hidden md:flex flex-row items-center gap-8 bg-black/40 backdrop-blur-sm p-8 rounded-xl border border-white/20 w-full max-w-4xl transform hover:scale-105 transition-transform duration-300 mt-4"
+        class="hidden md:flex flex-row items-start gap-4 xl:gap-8 bg-black/40 backdrop-blur-sm p-4 xl:p-8 rounded-xl border border-white/20 w-full max-w-4xl transform hover:scale-105 transition-transform duration-300 mt-4"
       >
-        <h4 class="font-heavy text-3xl text-brand shrink-0">SABOR</h4>
+        <h4 class="font-heavy text-xl xl:text-3xl text-brand shrink-0">SABOR</h4>
         <p class="font-century text-white/80 text-sm leading-snug text-pretty">
           Bajo una cobertura suave de chocolate con leche, se esconde un corazón cremoso de relleno
           de leche, pensado para derretirse justo cuando el sabor y la textura alcanzan su punto
