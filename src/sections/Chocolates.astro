@@ -1,14 +1,18 @@
-<section class="relative w-full py-6 md:py-8">
-  <div class="mx-auto flex w-full max-w-7xl flex-col items-center px-4 md:flex-row md:gap-12">
+---
+import BentoCard from '@/components/ui/BentoCard.astro'
+---
+
+<BentoCard class="group p-8 col-span-3 md:col-span-2 group" style="animation-delay: 0.3s;">
+  <div class="flex flex-col items-center md:flex-row md:gap-12 pt-4">
     <!-- Text Content Left (Desktop) / Top (Mobile) -->
     <div class="flex flex-1 flex-col items-center text-center md:items-start md:text-left z-10">
       <h2
-        class="font-heavy text-left! text-4xl font-bold text-brand md:text-7xl lg:text-8xl mb-2 drop-shadow-lg uppercase leading-[42px]! text-shadow-2xs text-shadow-black"
+        class="font-heavy text-left! text-4xl font-bold text-brand md:text-7xl lg:text-8xl mb-2 uppercase leading-[42px]! text-shadow-title"
       >
         Las 24 <span class="text-2xl md:text-4xl lg:text-5xl">chocolatinas</span>
       </h2>
       <p class="font-century text-xl text-white/90 md:text-2xl max-w-md text-balance mb-8">
-        Únicas e irrepetibles.
+        Únicas e irrepetibles
       </p>
 
       <!-- Desktop List -->
@@ -18,7 +22,7 @@
             class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
           >
             <span class="text-brand pr-1 text-sm -mt-1">◆</span> Diseñadas para que recordemos los mejores
-            momentos de Ibai.
+            momentos de Ibai
           </p>
         </div>
 
@@ -27,7 +31,7 @@
             class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
           >
             <span class="text-brand pr-2 text-sm -mt-1">◆</span>Ediciones exclusivas que solo
-            probarás 1 vez.
+            probarás 1 vez
           </p>
         </div>
 
@@ -36,7 +40,7 @@
             class="font-century text-white text-lg max-w-xs group-hover:text-brand transition-colors duration-300 text-balance text-shadow-black text-shadow-2xs leading-snug"
           >
             <span class="text-brand pr-1 -mt-1 text-sm">◆</span> Algunos placeres, los verdaderamente
-            especiales, existen precisamente por eso: porque no duran para siempre.
+            especiales, existen precisamente por eso: porque no duran para siempre
           </p>
         </div>
       </div>
@@ -46,14 +50,14 @@
     <div class="flex flex-2 flex-col items-center w-full z-10">
       <!-- Floating Chocolates Row -->
       <div
-        class="relative w-full flex items-center justify-center gap-8 md:gap-12 perspective-1000 my-10 md:my-0 min-h-[400px] md:min-h-[500px]"
+        class="relative w-full flex items-center justify-center gap-8 md:gap-12 perspective-1000 my-10 md:my-0 min-h-[400px] md:min-h-[330px]"
       >
         <!-- Chocolate A Group -->
         <div class="relative z-20 flex flex-col items-center">
           <img
             src="/chocolate_a.webp"
             alt="Chocolatina Big Ibai diseño A"
-            class="w-64 md:w-96 lg:w-[16rem] object-contain drop-shadow-2xl floating-chocolate-a"
+            class="w-64 md:w-96 lg:w-[16rem] object-contain drop-shadow-2xl floating-chocolate-a group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6"
           />
           <p
             class="font-handwriting text-2xl md:text-3xl text-white/90 text-center transform -rotate-6 text-shadow-black text-shadow-2xs leading-none"
@@ -69,7 +73,7 @@
           <img
             src="/chocolate_b.webp"
             alt="Chocolatina Big Ibai diseño B"
-            class="w-64 md:w-96 lg:w-[16rem] object-contain drop-shadow-2xl floating-chocolate-b"
+            class="w-64 md:w-96 lg:w-[16rem] object-contain drop-shadow-2xl floating-chocolate-b group-hover:scale-110 transition-transform duration-300 group-hover:-rotate-6"
           />
           <p
             class="font-handwriting text-2xl md:text-3xl text-white/90 text-center transform rotate-6 text-shadow-black text-shadow-2xs leading-none"
@@ -92,7 +96,7 @@
         class="hidden md:flex flex-row items-center gap-8 bg-black/40 backdrop-blur-sm p-8 rounded-xl border border-white/20 w-full max-w-4xl transform hover:scale-105 transition-transform duration-300 mt-4"
       >
         <h4 class="font-heavy text-3xl text-brand shrink-0">SABOR</h4>
-        <p class="font-century text-white/80 text-lg leading-snug text-pretty">
+        <p class="font-century text-white/80 text-sm leading-snug text-pretty">
           Bajo una cobertura suave de chocolate con leche, se esconde un corazón cremoso de relleno
           de leche, pensado para derretirse justo cuando el sabor y la textura alcanzan su punto
           perfecto.
@@ -141,7 +145,7 @@
       </div>
     </div>
   </div>
-</section>
+</BentoCard>
 
 <style>
   .perspective-1000 {
