@@ -8,7 +8,7 @@ const MOCK_DATA = {
   anagram: 'RQEIUC UD LLEOIS',
   answer: 'CIRQUE DU SOLEIL',
   hint: 'Un espectáculo que desafía la gravedad y te deja sin aliento',
-  videoUrl: '/videos/mock.mp4', // Mock
+  videoUrl: '/videos/mock.mp4',
 }
 ---
 
@@ -230,12 +230,12 @@ const MOCK_DATA = {
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    display: none; /* Cambiado de flex/opacity para mejor manejo de flujo */
+    display: none;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: opacity 0.5s ease;
-    padding: 2rem 0; /* Añadido padding vertical para evitar cortes */
+    padding: 2rem 0;
 
     &.opening {
       padding: 0;
@@ -243,8 +243,8 @@ const MOCK_DATA = {
   }
 
   .screen.active {
-    display: flex; /* Mostrar solo la activa */
-    position: relative; /* Relative para que ocupe espacio y permita scroll */
+    display: flex;
+    position: relative;
     opacity: 1;
     pointer-events: auto;
   }
@@ -263,13 +263,13 @@ const MOCK_DATA = {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: visible; /* Changed to visible to prevent zoom clipping */
+    overflow: visible;
   }
 
   .confetti-canvas {
     position: absolute;
     inset: 0;
-    z-index: 50; /* Increased z-index to be above everything */
+    z-index: 50;
     pointer-events: none;
   }
 
@@ -286,10 +286,9 @@ const MOCK_DATA = {
     position: relative;
     width: 100%;
     transform-style: preserve-3d;
-    /* La transición ahora debe ser fluida para translate y scale */
     transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: default;
-    /* El origen se definirá dinámicamente vía JS */
+  }
   }
 
   .calendar-wrapper.shake {
@@ -356,12 +355,9 @@ const MOCK_DATA = {
     height: 100%;
     backface-visibility: hidden;
     border-radius: 2px;
-    /* Seamless background technique */
     background-image: var(--bg-image);
-    background-size: 400% 600%; /* 4 columns, 6 rows */
-    /* background-position set via JS */
-
-    color: transparent; /* Hide number initially */
+    background-size: 400% 600%;
+    color: transparent;
     text-shadow: none;
     display: flex;
     justify-content: center;
@@ -439,7 +435,7 @@ const MOCK_DATA = {
   }
 
   .chocolate-image {
-    width: 120px; /* Mobile size */
+    width: 120px;
     height: auto;
     filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
     transform: rotate(-5deg);
@@ -448,7 +444,7 @@ const MOCK_DATA = {
 
   @media (min-width: 768px) {
     .chocolate-image {
-      width: 250px; /* Desktop size */
+      width: 250px;
     }
   }
 
@@ -487,7 +483,7 @@ const MOCK_DATA = {
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
     align-items: center;
-    max-width: 1000px; /* Más ancho para 2 columnas */
+    max-width: 1000px;
   }
 
   .game-column,
@@ -836,22 +832,22 @@ const MOCK_DATA = {
     left: 50%;
     transform: translateX(-50%) translateY(150%);
     background: #1f1f1f;
-    border-radius: 50px; /* Pill shape */
-    padding: 0.5rem; /* Initial padding for just the icon */
+    border-radius: 50px;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
-    gap: 0; /* No gap initially */
+    gap: 0;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     z-index: 1000;
     border: 2px solid #2c2c2c;
-    width: fit-content; /* Use fit-content as requested */
-    max-width: 68px; /* Start constrained */
+    width: fit-content;
+    max-width: 68px;
     height: 68px;
     overflow: hidden;
     transition:
       transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
       max-width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-      /* Transition max-width */ padding 0.5s ease,
+      padding 0.5s ease,
       gap 0.5s ease;
   }
 
@@ -860,7 +856,7 @@ const MOCK_DATA = {
   }
 
   .achievement-notification.expanded {
-    max-width: 1000px; /* Large enough to fit any reasonable content */
+    max-width: 1000px;
     padding: 0.5rem 2rem 0.5rem 0.5rem;
     gap: 1rem;
   }
@@ -870,7 +866,7 @@ const MOCK_DATA = {
     height: 50px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid #6ade6a; /* Xbox Green-ish */
+    border: 2px solid #6ade6a;
     flex-shrink: 0;
   }
 
@@ -886,7 +882,7 @@ const MOCK_DATA = {
     opacity: 0;
     width: 0;
     white-space: nowrap;
-    transition: opacity 0.3s ease 0.2s; /* Delay fade in until expanding starts */
+    transition: opacity 0.3s ease 0.2s;
   }
 
   .achievement-notification.expanded .achievement-content {
@@ -953,11 +949,9 @@ const MOCK_DATA = {
       cell.className = 'door-container'
       cell.id = `door-${index}`
 
-      // Contenido del agujero (chocolate si es el día 1)
-      let holeContent = ''
-      if (number === 1) {
-        holeContent = `<img src="/chocolatinas/1.webp" class="door-chocolate" alt="Chocolate" />`
-      }
+      const holeContent = number === 1
+        ? `<img src="/chocolatinas/1.webp" class="door-chocolate" alt="Chocolate" />`
+        : ''
 
       cell.innerHTML = `
         <div class="door-hole">${holeContent}</div>
@@ -977,10 +971,8 @@ const MOCK_DATA = {
       gridLayer.appendChild(cell)
     })
 
-    // Calcular posiciones iniciales
     requestAnimationFrame(updateDoorBackgrounds)
 
-    // Actualizar al redimensionar
     const resizeObserver = new ResizeObserver(() => {
       updateDoorBackgrounds()
     })
@@ -1010,36 +1002,28 @@ const MOCK_DATA = {
     isZoomed = true
     activeDoor = doorElement
 
-    // Obtener coordenadas actuales en la pantalla
     const rect = doorElement.getBoundingClientRect()
     const wrapperRect = wrapper.getBoundingClientRect()
 
-    // Centro de la puerta (relativo al viewport)
     const doorCenterX = rect.left + rect.width / 2
     const doorCenterY = rect.top + rect.height / 2
 
-    // Centro del Wrapper (que está centrado en pantalla)
     const targetCenterX = wrapperRect.left + wrapperRect.width / 2
     const targetCenterY = wrapperRect.top + wrapperRect.height / 2
 
-    // 1. Establecer el punto de anclaje del zoom (Transform Origin)
     const originX = doorCenterX - wrapperRect.left
     const originY = doorCenterY - wrapperRect.top
     wrapper.style.transformOrigin = `${originX}px ${originY}px`
 
-    // 2. Calcular cuánto hay que MOVER el wrapper para que la puerta vaya al centro
     const moveX = targetCenterX - doorCenterX
     const moveY = targetCenterY - doorCenterY
 
-    // 3. Aplicar Transformación: Translate (Mover) + Scale (Zoom)
     wrapper.style.transform = `translate(${moveX}px, ${moveY}px) scale(var(--zoom-scale))`
     wrapper.classList.add('is-zoomed')
 
-    // 4. Abrir puerta y transicionar
     setTimeout(() => {
       doorElement.classList.add('is-open')
 
-      // Transición a la siguiente pantalla después de abrir la puerta
       setTimeout(() => {
         transitionToScreen('guess')
       }, 1000)
@@ -1052,18 +1036,13 @@ const MOCK_DATA = {
 
     const SHAKE_DURATION = 1500
 
-    // 1. Shake inicial
     setTimeout(() => {
       wrapper.classList.add('shake')
-
-      // 2. Confetti durante el shake (Sincronizado)
       launchChristmasConfetti(SHAKE_DURATION)
 
-      // 3. Auto-zoom a la puerta #1
       setTimeout(() => {
         wrapper.classList.remove('shake')
 
-        // Encontrar el índice del día 1
         const dayOneIndex = doorNumbers.indexOf(1)
         if (dayOneIndex !== -1) {
           const doorElement = document.getElementById(`door-${dayOneIndex}`)
@@ -1119,13 +1098,12 @@ const MOCK_DATA = {
 
       const particleCount = 100 * (timeLeft / duration)
 
-      // Confetti rojo, verde y dorado (navideño)
       myConfetti({
         ...defaults,
         particleCount,
         origin: { x: 0.5, y: 0.5 },
         colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
-        scalar: 1.2, // Hacerlos un poco más grandes
+        scalar: 1.2,
       })
     }, 250)
   }
@@ -1136,20 +1114,19 @@ const MOCK_DATA = {
     const duration = 3000
     const end = Date.now() + duration
 
-    // Lanza desde las esquinas inferiores
     ;(function frame() {
       myConfetti({
         particleCount: 7,
         angle: 60,
         spread: 55,
-        origin: { x: 0, y: 1 }, // Esquina inferior izquierda
+        origin: { x: 0, y: 1 },
         colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
       })
       myConfetti({
         particleCount: 7,
         angle: 120,
         spread: 55,
-        origin: { x: 1, y: 1 }, // Esquina inferior derecha
+        origin: { x: 1, y: 1 },
         colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
       })
 
@@ -1159,22 +1136,16 @@ const MOCK_DATA = {
     })()
   }
 
-  // Gestión de pantallas
   function transitionToScreen(screenName: string) {
-    // Ocultar pantalla actual
     if (screens[currentScreen]) {
       screens[currentScreen]?.classList.remove('active')
     }
 
-    // Mostrar nueva pantalla
     if (screens[screenName]) {
       screens[screenName]?.classList.add('active')
       currentScreen = screenName
 
-      // Acciones específicas por pantalla
-      if (screenName === 'guess') {
-        // launchChristmasConfetti() // Opcional: lanzar confetti al entrar
-      } else if (screenName === 'game') {
+      if (screenName === 'game') {
         startGame()
       }
     }
@@ -1185,29 +1156,23 @@ const MOCK_DATA = {
     elapsedSeconds = 0
     updateTimerDisplay()
 
-    // Inicializar letras disponibles
     availableLetters = MOCK_DATA.anagram.split('').map((letter, index) => ({
       letter: letter.toUpperCase(),
       index,
       used: false,
     }))
 
-    // Enfocar input
     setTimeout(() => {
       answerInput?.focus()
     }, 500)
 
-    // Iniciar timer
     if (gameTimer) clearInterval(gameTimer)
     gameTimer = setInterval(() => {
       elapsedSeconds++
       updateTimerDisplay()
     }, 1000) as unknown as number
 
-    // Setup letter click handlers
     setupLetterClickHandlers()
-
-    // Setup input validation
     setupInputValidation()
   }
 
@@ -1230,18 +1195,14 @@ const MOCK_DATA = {
         const letter = availableLetters[index]
 
         if (!letter.used && answerInput) {
-          // Update previous value BEFORE adding letter
           const currentValue = answerInput.value.toUpperCase()
           answerInput.setAttribute('data-previous-value', currentValue)
 
-          // Add letter to input
           answerInput.value += letter.letter
 
-          // Mark as used
           letter.used = true
           el.classList.add('used')
 
-          // Update the previous value to the new value
           answerInput.setAttribute('data-previous-value', answerInput.value.toUpperCase())
         }
       })
@@ -1251,50 +1212,39 @@ const MOCK_DATA = {
   function setupInputValidation() {
     if (!answerInput) return
 
-    // Initialize previous value
     answerInput.setAttribute('data-previous-value', '')
 
     answerInput.addEventListener('input', (e) => {
       const input = (e.target as HTMLInputElement).value.toUpperCase()
       const previousValue = answerInput.getAttribute('data-previous-value') || ''
 
-      // Check if user is adding or removing characters
       if (input.length > previousValue.length) {
-        // Adding character (typed, not clicked)
         const newChar = input[input.length - 1]
 
-        // Find first available matching letter
         const availableLetter = availableLetters.find((l) => l.letter === newChar && !l.used)
 
         if (availableLetter) {
-          // Valid letter, mark as used
           availableLetter.used = true
           updateLetterVisuals()
-          // Update previous value
           answerInput.setAttribute('data-previous-value', input)
         } else {
-          // Invalid letter, remove it
           answerInput.value = previousValue
           return
         }
       } else if (input.length < previousValue.length) {
-        // Removing character (backspace/delete)
         const removedChar = previousValue[input.length]
 
-        // Find the LAST used matching letter (most recently used)
         const usedLetterIndex = availableLetters
           .map((l, idx) => ({ ...l, originalIndex: idx }))
           .reverse()
           .findIndex((l) => l.letter === removedChar && l.used)
 
         if (usedLetterIndex !== -1) {
-          // Convert reversed index back to original index
           const originalIndex = availableLetters.length - 1 - usedLetterIndex
           availableLetters[originalIndex].used = false
           updateLetterVisuals()
         }
 
-        // Update previous value
         answerInput.setAttribute('data-previous-value', input)
       }
     })
@@ -1341,7 +1291,6 @@ const MOCK_DATA = {
         video.play().catch((e) => console.log('Error reproduciendo video:', e))
       }
 
-      // Cambiar vista en columna izquierda
       if (gameActiveContent) gameActiveContent.classList.add('hidden')
       if (gameSuccessContent) gameSuccessContent.classList.remove('hidden')
     } else {
@@ -1376,17 +1325,15 @@ const MOCK_DATA = {
 
       notification.classList.add('show')
 
-      // Expandir después de que suba (600ms)
       setTimeout(() => {
         notification.classList.add('expanded')
       }, 600)
 
-      // Ocultar después de 8 segundos
       setTimeout(() => {
         notification.classList.remove('expanded')
         setTimeout(() => {
           notification.classList.remove('show')
-        }, 500) // Esperar a que se contraiga para bajar
+        }, 500)
       }, 8000)
     }
   }
@@ -1394,11 +1341,8 @@ const MOCK_DATA = {
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
     initCalendar()
-
-    // Iniciar secuencia automática
     startOpeningAnimation()
 
-    // Botones de navegación
     document.getElementById('btn-start-game')?.addEventListener('click', () => {
       transitionToScreen('game')
     })
@@ -1425,7 +1369,6 @@ const MOCK_DATA = {
     document.getElementById('close-hint')?.addEventListener('click', closeSheet)
     backdrop?.addEventListener('click', closeSheet)
 
-    // Modal de reglas
     const modal = document.getElementById('help-modal')
     const modalBackdrop = modal?.querySelector('.modal-backdrop')
 
