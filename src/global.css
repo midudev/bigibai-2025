@@ -158,3 +158,12 @@ h2 {
     mask-repeat: no-repeat;
   }
 }
+
+span[tip] {
+  cursor: help;
+  text-decoration-style: dotted;
+  text-decoration-line: underline;
+  text-decoration-color: blue;
+  text-decoration-thickness: 1.5px;
+  font-weight: 500;
+}
