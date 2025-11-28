@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/supabase-admin'
 import { createClient } from '@/supabase'
 import { hash } from '@/utils/crypto'
 import { emailSchema } from '@/validations/email'
+import { grantAchievement } from '@/utils/achievements'
 
 // Extrae IP real del cliente evitando spoofing básico.
 function getClientIp(ctx: any): string {
@@ -243,10 +244,14 @@ export const server = {
 
         const totalCoupons = userCoupons?.length || 1
 
+        // Grant achievement for redeeming a calendar
+        const achievementResult = await grantAchievement(user.id, 'calendar-redeemed')
+
         return {
           success: true,
           message: '¡Cupón validado correctamente!',
           totalCoupons,
+          achievement: achievementResult.success && achievementResult.new ? achievementResult.achievement : undefined,
         }
       } catch (error) {
         if (error instanceof ActionError) {
@@ -263,6 +268,35 @@ export const server = {
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Error interno al validar el cupón',
         })
+      }
+    },
+  }),
+
+  grantClickerAchievement: defineAction({
+    input: z.object({
+      achievementId: z.string().optional().default('clicker-level-1'),
+    }),
+    async handler({ achievementId }, ctx) {
+      const user = ctx.locals.user
+      if (!user) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'Debes iniciar sesión',
+        })
+      }
+
+      const result = await grantAchievement(user.id, achievementId)
+      if (!result.success) {
+        throw new ActionError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error al guardar el logro',
+        })
+      }
+
+      return { 
+        success: true, 
+        new: result.new,
+        achievement: result.new && result.achievement ? result.achievement : undefined,
       }
     },
   }),
