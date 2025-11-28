@@ -1,0 +1,87 @@
+---
+import { ACHIEVEMENTS } from '@/data/achievements'
+import BentoCard from '@/components/ui/BentoCard.astro'
+
+interface Props {
+  isLoggedIn: boolean
+  userAchievements: Record<string, { created_at: string }>
+}
+
+const { isLoggedIn, userAchievements } = Astro.props
+
+const allAchievements = Object.values(ACHIEVEMENTS)
+---
+
+<BentoCard class="group col-span-3 md:col-span-1 p-8" style="animation-delay: 0.3s;">
+  <div class="flex flex-col gap-6">
+    <div class="flex items-center justify-between flex-col">
+      <h2 class="text-shadow-title text-3xl font-heavy font-bold text-white md:text-5xl">
+        Mis Logros
+      </h2>
+      {
+        isLoggedIn && (
+          <span class="text-white/60 text-sm">
+            {Object.keys(userAchievements).length} / {allAchievements.length} conseguidos
+          </span>
+        )
+      }
+    </div>
+
+    {
+      !isLoggedIn ? (
+        <div class="flex flex-col items-center justify-center py-8 text-center space-y-4">
+          <p class="text-lg text-white/80">Inicia sesión para desbloquear y guardar tus logros</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-50 blur-sm select-none pointer-events-none">
+            {allAchievements.slice(0, 4).map((achievement) => (
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
+                  <span class="text-2xl">🏆</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div class="grid grid-cols-2 gap-2">
+          {allAchievements.map((achievement) => {
+            const isUnlocked = !!userAchievements[achievement.id]
+            return (
+              <div
+                class:list={[
+                  'flex flex-col items-center gap-3 p-2 transition-all duration-300',
+                  isUnlocked
+                    ? 'scale-100'
+                    : 'opacity-60 grayscale hover:opacity-80 hover:grayscale-0',
+                ]}
+                title={isUnlocked ? `Conseguido: ${achievement.title}` : achievement.title}
+              >
+                <div class="relative group/icon">
+                  <img
+                    src={achievement.image}
+                    alt={achievement.title}
+                    class="w-16 h-16 object-contain drop-shadow-lg"
+                    loading="lazy"
+                  />
+                  {!isUnlocked && (
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <span class="text-2xl drop-shadow-md">🔒</span>
+                    </div>
+                  )}
+                </div>
+                <div class="text-center relative">
+                  <p class="text-xs font-bold text-white leading-tight mb-1">{achievement.title}</p>
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-10 opacity-0 group-hover/icon:opacity-100 pointer-events-none transition-opacity duration-200">
+                    <div class="bg-black/90 text-white text-[10px] px-3 py-2 rounded-lg shadow-lg max-w-[200px] text-center whitespace-normal">
+                      {achievement.description}
+                    </div>
+                    <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/90 rotate-45" />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )
+    }
+  </div>
+</BentoCard>
