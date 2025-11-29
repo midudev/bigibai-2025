@@ -328,6 +328,14 @@ const claimedPercentage =
                         <p id="reactivable-status" class="text-xs text-white/60 text-center hidden">
                           ✓ Este cupón puede ser usado de nuevo por cualquier usuario
                         </p>
+                        <Button
+                          id="reset-coupon-btn"
+                          variant="destructive"
+                          size="md"
+                          class="w-full"
+                        >
+                          🔄 Resetear cupón
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -513,6 +521,7 @@ const claimedPercentage =
   const couponActions = $('#coupon-actions') as HTMLDivElement
   const markReactivableBtn = $('#mark-reactivable-btn') as HTMLButtonElement
   const reactivableStatus = $('#reactivable-status') as HTMLParagraphElement
+  const resetCouponBtn = $('#reset-coupon-btn') as HTMLButtonElement
 
   // Variable para almacenar el ID del cupón actual
   let currentCouponId: string | null = null
@@ -819,6 +828,56 @@ const claimedPercentage =
       alert('Error al marcar el cupón como reactivable. Inténtalo de nuevo.')
       markReactivableBtn.disabled = false
       markReactivableBtn.textContent = originalText
+    }
+  })
+
+  // Event listener para resetear cupón
+  resetCouponBtn?.addEventListener('click', async () => {
+    if (!currentCouponId) return
+
+    // Confirmar acción con el usuario
+    if (
+      !confirm(
+        '¿Estás seguro de que quieres resetear este cupón? Esta acción quitará el cupón del usuario y lo dejará disponible para usar de nuevo.'
+      )
+    ) {
+      return
+    }
+
+    const originalText = resetCouponBtn.textContent
+    resetCouponBtn.disabled = true
+    resetCouponBtn.textContent = 'Reseteando...'
+
+    try {
+      const response = await fetch('/api/admin/reset-coupon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ couponId: currentCouponId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'No se pudo resetear el cupón'}`)
+        resetCouponBtn.disabled = false
+        resetCouponBtn.textContent = originalText
+        return
+      }
+
+      // Mostrar mensaje de éxito
+      alert('✅ Cupón reseteado correctamente')
+
+      // Limpiar el formulario y ocultar todos los estados
+      hideAllCouponStates()
+      couponInput.value = ''
+      resetCouponBtn.textContent = originalText
+    } catch (error) {
+      console.error('Error al resetear cupón:', error)
+      alert('Error al resetear el cupón. Inténtalo de nuevo.')
+      resetCouponBtn.disabled = false
+      resetCouponBtn.textContent = originalText
     }
   })
 
