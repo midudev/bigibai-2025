@@ -193,6 +193,22 @@ const claimedPercentage =
                     </div>
 
                     <div class="flex justify-between border-b border-white/10 pb-2">
+                      <span class="font-semibold">Estado:</span>
+                      <span id="coupon-reactivable-badge"></span>
+                    </div>
+
+                    <div id="coupon-is-duplicate-row" class="hidden">
+                      <div class="flex justify-between border-b border-white/10 pb-2">
+                        <span class="font-semibold">Tipo:</span>
+                        <span
+                          class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                        >
+                          📋 Uso duplicado
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="flex justify-between border-b border-white/10 pb-2">
                       <span class="font-semibold">Usuario ID:</span>
                       <span id="coupon-used-by" class="font-mono text-sm"></span>
                     </div>
@@ -230,6 +246,47 @@ const claimedPercentage =
                           <span id="coupon-used-location" class="text-sm"></span>
                           <span class="text-xs text-white/50 italic">(aproximada)</span>
                         </div>
+                      </div>
+                    </div>
+
+                    <!-- Información del uso original (si es duplicado) -->
+                    <div
+                      id="coupon-original-usage"
+                      class="hidden mt-4 pt-4 border-t border-white/20"
+                    >
+                      <h4 class="text-sm font-semibold text-white/80 mb-3">
+                        Primer uso del cupón:
+                      </h4>
+                      <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                          <span class="text-white/60">Usuario ID:</span>
+                          <span id="coupon-original-user" class="font-mono text-xs"></span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-white/60">Fecha:</span>
+                          <span id="coupon-original-date" class="text-xs"></span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-white/60">IP:</span>
+                          <span id="coupon-original-ip" class="font-mono text-xs"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Acciones del cupón -->
+                    <div id="coupon-actions" class="mt-4 pt-4 border-t border-white/20 hidden">
+                      <div class="flex flex-col gap-2">
+                        <Button
+                          id="mark-reactivable-btn"
+                          variant="destructive"
+                          size="md"
+                          class="w-full"
+                        >
+                          ⚠️ Marcar como reactivable
+                        </Button>
+                        <p id="reactivable-status" class="text-xs text-white/60 text-center hidden">
+                          ✓ Este cupón puede ser usado de nuevo por cualquier usuario
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -396,6 +453,18 @@ const claimedPercentage =
   const couponUsedIp = $('#coupon-used-ip') as HTMLSpanElement
   const couponUsedLocationRow = $('#coupon-used-location-row') as HTMLDivElement
   const couponUsedLocation = $('#coupon-used-location') as HTMLSpanElement
+  const couponReactivableBadge = $('#coupon-reactivable-badge') as HTMLSpanElement
+  const couponIsDuplicateRow = $('#coupon-is-duplicate-row') as HTMLDivElement
+  const couponOriginalUsage = $('#coupon-original-usage') as HTMLDivElement
+  const couponOriginalUser = $('#coupon-original-user') as HTMLSpanElement
+  const couponOriginalDate = $('#coupon-original-date') as HTMLSpanElement
+  const couponOriginalIp = $('#coupon-original-ip') as HTMLSpanElement
+  const couponActions = $('#coupon-actions') as HTMLDivElement
+  const markReactivableBtn = $('#mark-reactivable-btn') as HTMLButtonElement
+  const reactivableStatus = $('#reactivable-status') as HTMLParagraphElement
+
+  // Variable para almacenar el ID del cupón actual
+  let currentCouponId: string | null = null
 
   // Función para ocultar todos los estados de cupón
   function hideAllCouponStates() {
@@ -405,6 +474,8 @@ const claimedPercentage =
     couponUsed.classList.add('hidden')
     couponUsedIpRow.classList.add('hidden')
     couponUsedLocationRow.classList.add('hidden')
+    couponActions.classList.add('hidden')
+    currentCouponId = null
   }
 
   // Función para obtener la ubicación de una IP
@@ -505,6 +576,54 @@ const claimedPercentage =
           couponUsedLocationRow.classList.add('hidden')
         }
 
+        // Mostrar si es un duplicado
+        if (data.is_duplicate) {
+          couponIsDuplicateRow.classList.remove('hidden')
+
+          // Mostrar información del uso original
+          if (data.original_usage) {
+            couponOriginalUser.textContent = data.original_usage.used_by || 'N/A'
+            couponOriginalDate.textContent = data.original_usage.used_at
+              ? new Date(data.original_usage.used_at).toLocaleString('es-ES')
+              : 'N/A'
+            couponOriginalIp.textContent = data.original_usage.used_ip || 'N/A'
+            couponOriginalUsage.classList.remove('hidden')
+          }
+        } else {
+          couponIsDuplicateRow.classList.add('hidden')
+          couponOriginalUsage.classList.add('hidden')
+        }
+
+        // Mostrar estado de reactivable
+        if (data.is_reactivable) {
+          couponReactivableBadge.innerHTML =
+            '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-green-500/20 text-green-400 border border-green-500/30">✓ Reactivable</span>'
+        } else if (data.is_duplicate) {
+          couponReactivableBadge.innerHTML =
+            '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/30">Reusado</span>'
+        } else {
+          couponReactivableBadge.innerHTML =
+            '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-red-500/20 text-red-400 border border-red-500/30">Usado</span>'
+        }
+
+        // Configurar acciones del cupón (solo para cupones no duplicados)
+        currentCouponId = String(data.id || '')
+        if (data.is_duplicate) {
+          // Si es un duplicado, no mostrar acciones
+          couponActions.classList.add('hidden')
+        } else {
+          if (data.is_reactivable) {
+            markReactivableBtn.disabled = true
+            markReactivableBtn.classList.add('opacity-50', 'cursor-not-allowed')
+            reactivableStatus.classList.remove('hidden')
+          } else {
+            markReactivableBtn.disabled = false
+            markReactivableBtn.classList.remove('opacity-50', 'cursor-not-allowed')
+            reactivableStatus.classList.add('hidden')
+          }
+          couponActions.classList.remove('hidden')
+        }
+
         couponUsed.classList.remove('hidden')
       }
     } catch (error) {
@@ -512,6 +631,49 @@ const claimedPercentage =
       hideAllCouponStates()
       couponErrorMessage.textContent = 'Error al validar el cupón. Inténtalo de nuevo más tarde.'
       couponError.classList.remove('hidden')
+    }
+  })
+
+  // Event listener para marcar cupón como reactivable
+  markReactivableBtn?.addEventListener('click', async () => {
+    if (!currentCouponId) return
+
+    const originalText = markReactivableBtn.textContent
+    markReactivableBtn.disabled = true
+    markReactivableBtn.textContent = 'Marcando...'
+
+    try {
+      const response = await fetch('/api/admin/mark-coupon-reactivable', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ couponId: currentCouponId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'No se pudo marcar el cupón como reactivable'}`)
+        markReactivableBtn.disabled = false
+        markReactivableBtn.textContent = originalText
+        return
+      }
+
+      // Actualizar UI
+      markReactivableBtn.disabled = true
+      markReactivableBtn.classList.add('opacity-50', 'cursor-not-allowed')
+      markReactivableBtn.textContent = originalText
+      reactivableStatus.classList.remove('hidden')
+
+      // Actualizar badge de estado
+      couponReactivableBadge.innerHTML =
+        '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-green-500/20 text-green-400 border border-green-500/30">✓ Reactivable</span>'
+    } catch (error) {
+      console.error('Error al marcar cupón como reactivable:', error)
+      alert('Error al marcar el cupón como reactivable. Inténtalo de nuevo.')
+      markReactivableBtn.disabled = false
+      markReactivableBtn.textContent = originalText
     }
   })
 
