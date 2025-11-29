@@ -187,6 +187,82 @@ const claimedPercentage =
                   <h3 class="mb-4 text-center text-xl font-bold text-white">Cupón usado</h3>
 
                   <div class="space-y-3 text-white/90">
+                    <div id="coupon-is-duplicate-row" class="hidden mb-4">
+                      <div class="flex justify-center pb-3 border-b border-white/10">
+                        <span
+                          class="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                        >
+                          📋 Este cupón se ha usado dos veces
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Información del uso original (si es duplicado) -->
+                    <div
+                      id="coupon-original-usage"
+                      class="hidden mb-4 pb-4 border-b border-white/20"
+                    >
+                      <h4
+                        class="text-sm font-semibold text-white mb-3 bg-white/5 px-3 py-2 rounded-md"
+                      >
+                        🥇 Primer uso del cupón
+                      </h4>
+                      <div class="space-y-2">
+                        <div class="flex justify-between border-b border-white/10 pb-2">
+                          <span class="font-semibold">ID del cupón:</span>
+                          <span id="coupon-original-id" class="font-mono text-sm"></span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/10 pb-2">
+                          <span class="font-semibold">Estado:</span>
+                          <span id="coupon-original-reactivable-badge"></span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/10 pb-2">
+                          <span class="font-semibold">Usuario ID:</span>
+                          <span id="coupon-original-user" class="font-mono text-sm"></span>
+                        </div>
+                        <div id="coupon-original-email-row" class="hidden">
+                          <div class="flex justify-between border-b border-white/10 pb-2">
+                            <span class="font-semibold">Email:</span>
+                            <span id="coupon-original-email" class="text-sm"></span>
+                          </div>
+                        </div>
+                        <div id="coupon-original-name-row" class="hidden">
+                          <div class="flex justify-between border-b border-white/10 pb-2">
+                            <span class="font-semibold">Nombre:</span>
+                            <span id="coupon-original-name" class="text-sm"></span>
+                          </div>
+                        </div>
+                        <div class="flex justify-between border-b border-white/10 pb-2">
+                          <span class="font-semibold">Usado el:</span>
+                          <span id="coupon-original-date" class="text-sm"></span>
+                        </div>
+                        <div id="coupon-original-ip-row" class="hidden">
+                          <div class="flex justify-between border-b border-white/10 pb-2">
+                            <span class="font-semibold">IP:</span>
+                            <span id="coupon-original-ip" class="font-mono text-sm"></span>
+                          </div>
+                        </div>
+                        <div id="coupon-original-location-row" class="hidden">
+                          <div class="flex justify-between pb-2">
+                            <span class="font-semibold">Ubicación:</span>
+                            <div class="flex flex-col items-end">
+                              <span id="coupon-original-location" class="text-sm"></span>
+                              <span class="text-xs text-white/50 italic">(aproximada)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Información del segundo uso (si es duplicado) -->
+                    <div id="coupon-second-usage" class="hidden mb-4">
+                      <h4
+                        class="text-sm font-semibold text-white mb-3 bg-white/5 px-3 py-2 rounded-md"
+                      >
+                        🥈 Segundo uso del cupón
+                      </h4>
+                    </div>
+
                     <div class="flex justify-between border-b border-white/10 pb-2">
                       <span class="font-semibold">ID del cupón:</span>
                       <span id="coupon-used-id" class="font-mono text-sm"></span>
@@ -195,17 +271,6 @@ const claimedPercentage =
                     <div class="flex justify-between border-b border-white/10 pb-2">
                       <span class="font-semibold">Estado:</span>
                       <span id="coupon-reactivable-badge"></span>
-                    </div>
-
-                    <div id="coupon-is-duplicate-row" class="hidden">
-                      <div class="flex justify-between border-b border-white/10 pb-2">
-                        <span class="font-semibold">Tipo:</span>
-                        <span
-                          class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        >
-                          📋 Uso duplicado
-                        </span>
-                      </div>
                     </div>
 
                     <div class="flex justify-between border-b border-white/10 pb-2">
@@ -245,30 +310,6 @@ const claimedPercentage =
                         <div class="flex flex-col items-end">
                           <span id="coupon-used-location" class="text-sm"></span>
                           <span class="text-xs text-white/50 italic">(aproximada)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Información del uso original (si es duplicado) -->
-                    <div
-                      id="coupon-original-usage"
-                      class="hidden mt-4 pt-4 border-t border-white/20"
-                    >
-                      <h4 class="text-sm font-semibold text-white/80 mb-3">
-                        Primer uso del cupón:
-                      </h4>
-                      <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                          <span class="text-white/60">Usuario ID:</span>
-                          <span id="coupon-original-user" class="font-mono text-xs"></span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span class="text-white/60">Fecha:</span>
-                          <span id="coupon-original-date" class="text-xs"></span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span class="text-white/60">IP:</span>
-                          <span id="coupon-original-ip" class="font-mono text-xs"></span>
                         </div>
                       </div>
                     </div>
@@ -455,10 +496,20 @@ const claimedPercentage =
   const couponUsedLocation = $('#coupon-used-location') as HTMLSpanElement
   const couponReactivableBadge = $('#coupon-reactivable-badge') as HTMLSpanElement
   const couponIsDuplicateRow = $('#coupon-is-duplicate-row') as HTMLDivElement
+  const couponSecondUsage = $('#coupon-second-usage') as HTMLDivElement
   const couponOriginalUsage = $('#coupon-original-usage') as HTMLDivElement
+  const couponOriginalId = $('#coupon-original-id') as HTMLSpanElement
   const couponOriginalUser = $('#coupon-original-user') as HTMLSpanElement
+  const couponOriginalEmail = $('#coupon-original-email') as HTMLSpanElement
+  const couponOriginalEmailRow = $('#coupon-original-email-row') as HTMLDivElement
+  const couponOriginalName = $('#coupon-original-name') as HTMLSpanElement
+  const couponOriginalNameRow = $('#coupon-original-name-row') as HTMLDivElement
   const couponOriginalDate = $('#coupon-original-date') as HTMLSpanElement
   const couponOriginalIp = $('#coupon-original-ip') as HTMLSpanElement
+  const couponOriginalIpRow = $('#coupon-original-ip-row') as HTMLDivElement
+  const couponOriginalLocation = $('#coupon-original-location') as HTMLSpanElement
+  const couponOriginalLocationRow = $('#coupon-original-location-row') as HTMLDivElement
+  const couponOriginalReactivableBadge = $('#coupon-original-reactivable-badge') as HTMLSpanElement
   const couponActions = $('#coupon-actions') as HTMLDivElement
   const markReactivableBtn = $('#mark-reactivable-btn') as HTMLButtonElement
   const reactivableStatus = $('#reactivable-status') as HTMLParagraphElement
@@ -576,22 +627,116 @@ const claimedPercentage =
           couponUsedLocationRow.classList.add('hidden')
         }
 
-        // Mostrar si es un duplicado
-        if (data.is_duplicate) {
+        // Mostrar si es un duplicado (tiene un segundo uso)
+        if (data.is_duplicate && data.duplicate_usage) {
           couponIsDuplicateRow.classList.remove('hidden')
+          couponSecondUsage.classList.remove('hidden')
 
-          // Mostrar información del uso original
-          if (data.original_usage) {
-            couponOriginalUser.textContent = data.original_usage.used_by || 'N/A'
-            couponOriginalDate.textContent = data.original_usage.used_at
-              ? new Date(data.original_usage.used_at).toLocaleString('es-ES')
-              : 'N/A'
-            couponOriginalIp.textContent = data.original_usage.used_ip || 'N/A'
-            couponOriginalUsage.classList.remove('hidden')
+          // Los datos en el nivel superior son del PRIMER uso (original)
+          // Ya se mostraron arriba en las líneas 578-624
+
+          // Ahora mostramos información del PRIMER uso en la sección de "primer uso"
+          couponOriginalId.textContent = String(data.id || '')
+          couponOriginalUser.textContent = String(data.used_by || '')
+          couponOriginalDate.textContent = formattedDate // Ya formateado arriba
+
+          // Email del primer uso
+          if (data.user_email) {
+            couponOriginalEmail.textContent = String(data.user_email)
+            couponOriginalEmailRow.classList.remove('hidden')
+          } else {
+            couponOriginalEmailRow.classList.add('hidden')
+          }
+
+          // Nombre del primer uso
+          if (data.user_name) {
+            couponOriginalName.textContent = String(data.user_name)
+            couponOriginalNameRow.classList.remove('hidden')
+          } else {
+            couponOriginalNameRow.classList.add('hidden')
+          }
+
+          // IP del primer uso
+          if (data.used_ip) {
+            couponOriginalIp.textContent = String(data.used_ip)
+            couponOriginalIpRow.classList.remove('hidden')
+
+            // Obtener y mostrar la ubicación de la IP original
+            couponOriginalLocation.textContent = 'Cargando...'
+            couponOriginalLocationRow.classList.remove('hidden')
+
+            const originalLocation = await getIpLocation(data.used_ip)
+            if (originalLocation) {
+              couponOriginalLocation.textContent = originalLocation
+            } else {
+              couponOriginalLocationRow.classList.add('hidden')
+            }
+          } else {
+            couponOriginalIpRow.classList.add('hidden')
+            couponOriginalLocationRow.classList.add('hidden')
+          }
+
+          // Estado del cupón original (ya no es reactivable después de ser reusado)
+          couponOriginalReactivableBadge.innerHTML =
+            '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-red-500/20 text-red-400 border border-red-500/30">Ya reusado</span>'
+
+          couponOriginalUsage.classList.remove('hidden')
+
+          // Ahora mostramos la información del SEGUNDO uso (duplicate_usage)
+          const duplicateUsage = data.duplicate_usage
+          const duplicateUsedDate = new Date(duplicateUsage.used_at)
+          const duplicateFormattedDate = duplicateUsedDate.toLocaleString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+
+          // Reemplazar los datos del nivel superior con los del segundo uso
+          couponUsedId.textContent = String(duplicateUsage.id || '')
+          couponUsedBy.textContent = String(duplicateUsage.used_by || '')
+          couponUsedDate.textContent = duplicateFormattedDate
+
+          // Email del segundo uso
+          if (duplicateUsage.user_email) {
+            couponUsedEmail.textContent = String(duplicateUsage.user_email)
+            couponUsedEmailRow.classList.remove('hidden')
+          } else {
+            couponUsedEmailRow.classList.add('hidden')
+          }
+
+          // Nombre del segundo uso
+          if (duplicateUsage.user_name) {
+            couponUsedName.textContent = String(duplicateUsage.user_name)
+            couponUsedNameRow.classList.remove('hidden')
+          } else {
+            couponUsedNameRow.classList.add('hidden')
+          }
+
+          // IP del segundo uso
+          if (duplicateUsage.used_ip) {
+            couponUsedIp.textContent = String(duplicateUsage.used_ip)
+            couponUsedIpRow.classList.remove('hidden')
+
+            // Obtener y mostrar la ubicación de la IP del segundo uso
+            couponUsedLocation.textContent = 'Cargando...'
+            couponUsedLocationRow.classList.remove('hidden')
+
+            const duplicateLocation = await getIpLocation(duplicateUsage.used_ip)
+            if (duplicateLocation) {
+              couponUsedLocation.textContent = duplicateLocation
+            } else {
+              couponUsedLocationRow.classList.add('hidden')
+            }
+          } else {
+            couponUsedIpRow.classList.add('hidden')
+            couponUsedLocationRow.classList.add('hidden')
           }
         } else {
           couponIsDuplicateRow.classList.add('hidden')
           couponOriginalUsage.classList.add('hidden')
+          couponSecondUsage.classList.add('hidden')
         }
 
         // Mostrar estado de reactivable
