@@ -502,18 +502,18 @@
   // Event listeners
   $('.start-btn')!.addEventListener('click', startGame)
 
-  const battleArena = $('.battle-arena')!
-  battleArena?.addEventListener('mousedown', handleInput)
-  battleArena?.addEventListener('touchstart', handleInput)
+  const battleArena = $('.battle-arena')! as HTMLDivElement
+  battleArena.addEventListener('mousedown', handleInput)
+  battleArena.addEventListener('touchstart', handleInput)
 
   // Event delegation para los botones de mejora
   $('#choco-upgrade-options')!.addEventListener('click', (e: Event) => {
-    const upgradeBtn = e.target.closest('.upgrade-btn')
-    if (upgradeBtn) {
-      const upgradeType = upgradeBtn.dataset.upgrade
-      if (upgradeType) {
-        chooseUpgrade(upgradeType)
-      }
+    const upgradeBtn = (e.target as HTMLElement).closest('.upgrade-btn') as HTMLButtonElement | null
+    if (!upgradeBtn) return
+
+    const upgradeType = upgradeBtn.dataset.upgrade
+    if (upgradeType) {
+      chooseUpgrade(upgradeType)
     }
   })
 
