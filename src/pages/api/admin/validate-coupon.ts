@@ -35,7 +35,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Buscar el cupón por hash
     const { data: coupon, error: couponError } = await supabaseAdmin
       .from('coupons')
-      .select('id, hash, is_used, used_at, used_by, used_ip, is_reactivable')
+      .select('id, hash, is_used, used_at, used_by, used_ip, is_reactivable, original_hash')
       .eq('hash', hash(couponCode))
       .single()
 
@@ -61,6 +61,18 @@ export const GET: APIRoute = async ({ request, locals }) => {
       )
     }
 
+    // Si es un duplicado, buscar también el original para mostrar info completa
+    let originalUsage = null
+    if (coupon.original_hash) {
+      const { data: original } = await supabaseAdmin
+        .from('coupons')
+        .select('id, used_by, used_at, used_ip')
+        .eq('hash', coupon.original_hash)
+        .single()
+
+      originalUsage = original
+    }
+
     // Si el cupón ha sido usado, obtener información del usuario
     const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(
       coupon.used_by
@@ -84,6 +96,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
         used_by: coupon.used_by,
         used_ip: coupon.used_ip,
         is_reactivable: coupon.is_reactivable || false,
+        is_duplicate: !!coupon.original_hash,
+        original_hash: coupon.original_hash,
+        original_usage: originalUsage,
         ...userData,
       }),
       {
