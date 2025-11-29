@@ -110,11 +110,18 @@
     el: $('#choco-enemy') as HTMLImageElement,
   }
 
-  const bgMusic = new Audio('/game-music.mp3')
-  bgMusic.loop = true
-  bgMusic.volume = 0.2
+  let bgMusic: HTMLAudioElement | null = null
 
   const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+  function initBgMusic(): HTMLAudioElement {
+    if (!bgMusic) {
+      bgMusic = new Audio('/game-music.mp3')
+      bgMusic.loop = true
+      bgMusic.volume = 0.2
+    }
+    return bgMusic
+  }
 
   function playSound(type: string) {
     if (audioCtx.state === 'suspended') audioCtx.resume()
@@ -156,7 +163,9 @@
     ;($('#choco-start-screen') as HTMLDivElement).style.display = 'none'
     state.gameStarted = true
     state.isPaused = false
-    bgMusic.play().catch((e) => console.log('Audio autoplay bloqueado:', e))
+    initBgMusic()
+      .play()
+      .catch((e) => console.log('Audio autoplay bloqueado:', e))
     spawnEnemy()
     updateUI()
     enemyAttackLoop()
@@ -428,8 +437,9 @@
 
     spawnEnemy()
     updateUI()
-    bgMusic.currentTime = 0
-    bgMusic.play()
+    const music = initBgMusic()
+    music.currentTime = 0
+    music.play()
   }
 
   function updateUI() {
