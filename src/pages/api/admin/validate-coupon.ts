@@ -32,13 +32,17 @@ export const GET: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    // Buscar el cupón por hash
-    const { data: coupon, error: couponError } = await supabaseAdmin
+    const couponHash = hash(couponCode)
+    
+    // Buscar el cupón por hash exacto o como duplicado
+    // Primero intentamos con el hash exacto
+    let { data: coupon, error: couponError } = await supabaseAdmin
       .from('coupons')
-      .select('id, hash, is_used, used_at, used_by, used_ip, is_reactivable, original_hash')
-      .eq('hash', hash(couponCode))
+      .select('id, hash, is_used, used_at, used_by, used_ip, is_reactivable')
+      .eq('hash', couponHash)
       .single()
 
+    // Si el cupón no existe, devolver error
     if (couponError || !coupon) {
       return new Response(JSON.stringify({ error: 'Cupón no encontrado' }), {
         status: 404,
@@ -47,7 +51,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     }
 
     // Si el cupón no ha sido usado, devolver solo la info básica
-    if (!coupon.is_used) {
+    if (!coupon?.is_used) {
       return new Response(
         JSON.stringify({
           id: coupon.id,
@@ -61,20 +65,16 @@ export const GET: APIRoute = async ({ request, locals }) => {
       )
     }
 
-    // Si es un duplicado, buscar también el original para mostrar info completa
-    let originalUsage = null
-    if (coupon.original_hash) {
-      const { data: original } = await supabaseAdmin
-        .from('coupons')
-        .select('id, used_by, used_at, used_ip')
-        .eq('hash', coupon.original_hash)
-        .single()
-
-      originalUsage = original
-    }
+    // Si el cupón ha sido usado, buscar si tiene un segundo uso
+    const duplicateHash = `${couponHash}_1`
+    const { data: duplicateCoupon, error: duplicateError } = await supabaseAdmin
+      .from('coupons')
+      .select('id, hash, is_used, used_at, used_by, used_ip')
+      .eq('hash', duplicateHash)
+      .single()
 
     // Si el cupón ha sido usado, obtener información del usuario
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(
+    const { data: user } = await supabaseAdmin.auth.admin.getUserById(
       coupon.used_by
     )
 
@@ -87,6 +87,24 @@ export const GET: APIRoute = async ({ request, locals }) => {
         null,
     }
 
+    let duplicateUserData = {}
+
+    if (duplicateCoupon) {
+      // si el cupon ha sido usado por el duplicado, entonces recuperamos ese usuario también
+      const { data: duplicateUser } = await supabaseAdmin.auth.admin.getUserById(
+        duplicateCoupon.used_by
+      )
+
+      duplicateUserData = {
+        user_email: duplicateUser?.user?.email || null,
+        user_name:
+          duplicateUser?.user?.user_metadata?.full_name ||
+          duplicateUser?.user?.user_metadata?.name ||
+          duplicateUser?.user?.user_metadata?.display_name ||
+          null,
+      }
+    }
+
     return new Response(
       JSON.stringify({
         id: coupon.id,
@@ -96,10 +114,17 @@ export const GET: APIRoute = async ({ request, locals }) => {
         used_by: coupon.used_by,
         used_ip: coupon.used_ip,
         is_reactivable: coupon.is_reactivable || false,
-        is_duplicate: !!coupon.original_hash,
-        original_hash: coupon.original_hash,
-        original_usage: originalUsage,
+        is_duplicate: !!duplicateCoupon,
         ...userData,
+        duplicate_usage: {
+          id: duplicateCoupon?.id || null,
+          hash: duplicateCoupon?.hash || null,
+          is_used: duplicateCoupon?.is_used || false,
+          used_at: duplicateCoupon?.used_at || null,
+          used_by: duplicateCoupon?.used_by || null,
+          used_ip: duplicateCoupon?.used_ip || null,
+          ...duplicateUserData,
+        }
       }),
       {
         status: 200,
