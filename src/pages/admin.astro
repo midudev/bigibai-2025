@@ -217,9 +217,19 @@ const claimedPercentage =
                     </div>
 
                     <div id="coupon-used-ip-row" class="hidden">
-                      <div class="flex justify-between pb-2">
+                      <div class="flex justify-between border-b border-white/10 pb-2">
                         <span class="font-semibold">IP:</span>
                         <span id="coupon-used-ip" class="font-mono text-sm"></span>
+                      </div>
+                    </div>
+
+                    <div id="coupon-used-location-row" class="hidden">
+                      <div class="flex justify-between pb-2">
+                        <span class="font-semibold">Ubicación:</span>
+                        <div class="flex flex-col items-end">
+                          <span id="coupon-used-location" class="text-sm"></span>
+                          <span class="text-xs text-white/50 italic">(aproximada)</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -384,6 +394,8 @@ const claimedPercentage =
   const couponUsedDate = $('#coupon-used-date') as HTMLSpanElement
   const couponUsedIpRow = $('#coupon-used-ip-row') as HTMLDivElement
   const couponUsedIp = $('#coupon-used-ip') as HTMLSpanElement
+  const couponUsedLocationRow = $('#coupon-used-location-row') as HTMLDivElement
+  const couponUsedLocation = $('#coupon-used-location') as HTMLSpanElement
 
   // Función para ocultar todos los estados de cupón
   function hideAllCouponStates() {
@@ -392,6 +404,27 @@ const claimedPercentage =
     couponUnused.classList.add('hidden')
     couponUsed.classList.add('hidden')
     couponUsedIpRow.classList.add('hidden')
+    couponUsedLocationRow.classList.add('hidden')
+  }
+
+  // Función para obtener la ubicación de una IP
+  async function getIpLocation(ip: string): Promise<string | null> {
+    try {
+      const response = await fetch(`https://free.freeipapi.com/api/json/${ip}`)
+      if (!response.ok) return null
+
+      const data = await response.json()
+      const locationParts: string[] = []
+
+      if (data.cityName) locationParts.push(data.cityName)
+      if (data.regionName) locationParts.push(data.regionName)
+      if (data.countryName) locationParts.push(data.countryName)
+
+      return locationParts.length > 0 ? locationParts.join(', ') : null
+    } catch (error) {
+      console.error('Error obteniendo ubicación de IP:', error)
+      return null
+    }
   }
 
   form?.addEventListener('submit', async (e) => {
@@ -453,8 +486,24 @@ const claimedPercentage =
           couponUsedNameRow.classList.add('hidden')
         }
 
-        if (data.used_ip) couponUsedIp.textContent = String(data.used_ip)
-        couponUsedIpRow.classList.toggle('hidden', !data.used_ip)
+        if (data.used_ip) {
+          couponUsedIp.textContent = String(data.used_ip)
+          couponUsedIpRow.classList.remove('hidden')
+
+          // Obtener y mostrar la ubicación de la IP
+          couponUsedLocation.textContent = 'Cargando...'
+          couponUsedLocationRow.classList.remove('hidden')
+
+          const location = await getIpLocation(data.used_ip)
+          if (location) {
+            couponUsedLocation.textContent = location
+          } else {
+            couponUsedLocationRow.classList.add('hidden')
+          }
+        } else {
+          couponUsedIpRow.classList.add('hidden')
+          couponUsedLocationRow.classList.add('hidden')
+        }
 
         couponUsed.classList.remove('hidden')
       }
