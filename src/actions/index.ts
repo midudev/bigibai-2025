@@ -175,8 +175,105 @@ export const server = {
       try {
         const couponHash = hash(normalizedCoupon)
 
-        // Marcar el cupón como usado solo si está disponible
-        const { data: couponData, error: updateError } = await supabaseAdmin
+        // Verificar primero si el cupón existe y su estado
+        const { data: existingCoupon, error: checkError } = await supabaseAdmin
+          .from('coupons')
+          .select('id, is_used, is_reactivable, hash, used_by')
+          .eq('hash', couponHash)
+          .single()
+
+        if (checkError || !existingCoupon) {
+          throw new ActionError({
+            code: 'BAD_REQUEST',
+            message: 'El cupón no es válido o ya ha sido utilizado',
+          })
+        }
+
+        // Si el cupón está usado y NO es reactivable, rechazar
+        if (existingCoupon.is_used && !existingCoupon.is_reactivable) {
+          throw new ActionError({
+            code: 'BAD_REQUEST',
+            message: 'El cupón no es válido o ya ha sido utilizado',
+          })
+        }
+
+        let couponData
+
+        // Si el cupón es reactivable, crear un nuevo registro duplicado
+        if (existingCoupon.is_used && existingCoupon.is_reactivable) {
+          // Validar que el usuario que intenta reutilizar no sea el mismo que lo usó
+          if (existingCoupon.used_by === user.id) {
+            throw new ActionError({
+              code: 'BAD_REQUEST',
+              message: 'Ya has usado este cupón anteriormente',
+            })
+          }
+
+          // Verificar que no exista ya un duplicado
+          const duplicateHash = `${existingCoupon.hash}_1`
+          const { data: existingDuplicate } = await supabaseAdmin
+            .from('coupons')
+            .select('id')
+            .eq('hash', duplicateHash)
+            .single()
+
+          if (existingDuplicate) {
+            throw new ActionError({
+              code: 'BAD_REQUEST',
+              message: 'Este cupón ya ha sido reutilizado el máximo de veces permitidas',
+            })
+          }
+
+          // Crear nuevo registro duplicado y actualizar el original
+          const [insertResult, updateResult] = await Promise.all([
+            supabaseAdmin
+              .from('coupons')
+              .insert({
+                hash: `${existingCoupon.hash}_1`,
+                original_hash: existingCoupon.hash,
+                is_used: true,
+                used_at: new Date().toISOString(),
+                used_by: user.id,
+                used_ip: ip,
+                is_reactivable: false,
+              })
+              .select('id')
+              .single(),
+            // Actualizar el cupón original para que no pueda ser reutilizado de nuevo
+            supabaseAdmin
+              .from('coupons')
+              .update({ is_reactivable: false })
+              .eq('id', existingCoupon.id),
+          ])
+
+          const { data: newCoupon, error: insertError } = insertResult
+          const { error: updateError } = updateResult
+
+          if (insertError || !newCoupon) {
+            console.error('[COUPON_DUPLICATE_ERROR]', {
+              ip,
+              coupon: normalizedCoupon,
+              error: insertError,
+            })
+            throw new ActionError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Error al procesar el cupón',
+            })
+          }
+
+          if (updateError) {
+            console.error('[COUPON_REACTIVABLE_UPDATE_ERROR]', {
+              ip,
+              coupon: normalizedCoupon,
+              error: updateError,
+            })
+            // No lanzamos error aquí porque el cupón duplicado ya se creó exitosamente
+          }
+
+          couponData = newCoupon
+        } else {
+          // Uso normal: actualizar el cupón existente
+          const { data: updatedCoupon, error: updateError } = await supabaseAdmin
           .from('coupons')
           .update({
             is_used: true,
@@ -184,48 +281,24 @@ export const server = {
             used_by: user.id,
             used_ip: ip,
           })
-          .eq('hash', couponHash)
-          .eq('is_used', false)
+          .eq('id', existingCoupon.id)
           .select('id')
           .single()
 
-        if (updateError || !couponData) {
-          if (updateError?.code === 'PGRST116') {
-            const { data: existingCoupon } = await supabaseAdmin
-              .from('coupons')
-              .select('is_used')
-              .eq('hash', couponHash)
-              .single()
-
-            if (existingCoupon?.is_used) {
-              throw new ActionError({
-                code: 'BAD_REQUEST',
-                message: 'Este cupón ya ha sido utilizado',
-              })
-            }
-
-            throw new ActionError({
-              code: 'BAD_REQUEST',
-              message: 'El cupón no es válido',
-            })
-          }
-
-          if (updateError) {
+          if (updateError || !updatedCoupon) {
             console.error('[COUPON_UPDATE_ERROR]', {
               ip,
               coupon: normalizedCoupon,
               error: updateError,
             })
+
             throw new ActionError({
               code: 'INTERNAL_SERVER_ERROR',
               message: 'Error al verificar el cupón',
             })
           }
 
-          throw new ActionError({
-            code: 'BAD_REQUEST',
-            message: 'El cupón no es válido',
-          })
+          couponData = updatedCoupon
         }
 
         // Obtener el número total de cupones validados por este usuario
@@ -242,16 +315,25 @@ export const server = {
           })
         }
 
-        const totalCoupons = userCoupons?.length || 1
+        const totalCoupons = userCoupons?.length ?? 1
 
-        // Grant achievement for redeeming a calendar
-        const achievementResult = await grantAchievement(user.id, 'calendar-redeemed')
+        // Grant achievement based on total coupons redeemed
+        const achievementId = totalCoupons === 1 ? 'calendar-redeemed'
+          : totalCoupons === 2 ? 'calendar-two' 
+          : totalCoupons === 5 ? 'calendar-lover' 
+          : undefined
+
+        let achievementResult
+
+        if (achievementId) {
+          achievementResult = await grantAchievement(user.id, achievementId)
+        }
 
         return {
           success: true,
           message: '¡Cupón validado correctamente!',
           totalCoupons,
-          achievement: achievementResult.success && achievementResult.new ? achievementResult.achievement : undefined,
+          achievement: achievementResult?.success && achievementResult?.new ? achievementResult.achievement : undefined,
         }
       } catch (error) {
         if (error instanceof ActionError) {
