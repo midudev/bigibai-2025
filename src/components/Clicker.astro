@@ -59,7 +59,6 @@
     <!-- Contenedor del Trofeo -->
     <div id="victory-trophy-container" class="victory-visuals">
       <div class="sunburst"></div>
-      <img class="trophy-img" src="/game-end-trophy.png" alt="Trofeo" />
     </div>
 
     <p id="choco-modal-desc">Elige una mejora para tu guante:</p>
@@ -81,7 +80,7 @@
   import { actions } from 'astro:actions'
   const $ = (selector: string) => document.querySelector(selector)
 
-  const WIN_LEVEL = 10
+  const WIN_LEVEL = 1
 
   const state = {
     level: 1,
@@ -390,8 +389,18 @@
     $('#choco-modal-desc').innerHTML =
       `Has alcanzado el NIVEL ${state.level}.<br>¡Eres el rey del chocolate!`
 
+    // Crear y cargar la imagen del trofeo solo cuando se necesita
+    const trophyContainer = $('#victory-trophy-container')
+    if (trophyContainer && !trophyContainer.querySelector('.trophy-img')) {
+      const trophyImg = document.createElement('img')
+      trophyImg.className = 'trophy-img'
+      trophyImg.src = '/game-end-trophy.png'
+      trophyImg.alt = 'Trofeo'
+      trophyContainer.appendChild(trophyImg)
+    }
+
     // Mostrar trofeo y ocultar opciones
-    $('#victory-trophy-container').style.display = 'flex'
+    trophyContainer.style.display = 'flex'
     $('#choco-upgrade-options').style.display = 'none'
 
     $('#choco-reset-btn').style.display = 'block'
@@ -854,7 +863,7 @@
     border-radius: 50%;
     opacity: 0.6;
     animation: sunburstSpin 6s linear infinite;
-    z-index: 1;
+    z-index: -1;
   }
 
   .trophy-img {
