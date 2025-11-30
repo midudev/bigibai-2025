@@ -15,13 +15,16 @@ export interface Props {
 
 const { day, gameData } = Astro.props
 
+const videoUrlBase = gameData?.videoUrl?.replace(/\.(mp4|webm)$/, '') || '/videos/mock'
+
 const GAME_DATA = {
   day: day,
   prize: gameData?.prize || 'Cirque du Soleil',
   anagram: gameData?.anagram || 'RQEIUC UD LLEOLIS',
   answer: gameData?.answer || 'CIRQUE DU SOLEIL',
   hint: gameData?.hint || 'Un espectáculo que desafía la gravedad y te deja sin aliento',
-  videoUrl: gameData?.videoUrl || '/videos/mock.mp4',
+  videoUrlMp4: videoUrlBase + '.mp4',
+  videoUrlWebm: videoUrlBase + '.webm',
 }
 ---
 
@@ -110,7 +113,8 @@ const GAME_DATA = {
         muted
         loop
       >
-        <source src={GAME_DATA.videoUrl} type="video/mp4" />
+        <source src={GAME_DATA.videoUrlWebm} type="video/webm" />
+        <source src={GAME_DATA.videoUrlMp4} type="video/mp4" />
       </video>
     </div>
   </div>
