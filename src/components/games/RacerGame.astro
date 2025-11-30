@@ -316,8 +316,8 @@ const GAME_DATA = {
 
     // Inputs visuales
     let buttons = {
-      left: { x: 40, y: 520, w: 80, h: 80, pressed: false },
-      right: { x: 240, y: 520, w: 80, h: 80, pressed: false },
+      left: { x: 40, y: 550, w: 80, h: 80, pressed: false },
+      right: { x: 240, y: 550, w: 80, h: 80, pressed: false },
       restart: { x: 100, y: 400, w: 160, h: 50 },
     }
 
@@ -330,7 +330,7 @@ const GAME_DATA = {
       canvas.height = INTERNAL_HEIGHT
 
       state.laneWidth = INTERNAL_WIDTH / LANE_COUNT
-      player.y = INTERNAL_HEIGHT - 160
+      player.y = INTERNAL_HEIGHT - 200
 
       window.addEventListener('keydown', handleKey)
       window.addEventListener('keyup', handleKeyUp)
