@@ -130,14 +130,15 @@ const GAME_DATA = {
   }
 </style>
 
-<script is:inline define:vars={{ GAME_DATA }}>
-  console.log('RacerGame: Script cargando')
-  console.log('RacerGame: GAME_DATA =', GAME_DATA)
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+  
   ;(function () {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const TARGET_SCORE = GAME_DATA.targetScore
+    const TARGET_SCORE = 1
     const LANE_COUNT = 3
     const INITIAL_SPEED = 3
     const SPEED_INCREMENT = 0.0005
@@ -307,7 +308,6 @@ const GAME_DATA = {
      * INICIALIZACIÓN
      */
     function initRacerGame() {
-      console.log('RacerGame: Inicializando')
       canvas.width = INTERNAL_WIDTH
       canvas.height = INTERNAL_HEIGHT
 
@@ -336,7 +336,6 @@ const GAME_DATA = {
         requestAnimationFrame(loop)
       })
 
-      console.log('RacerGame: Inicializado correctamente')
     }
 
     function resetGame() {
@@ -349,7 +348,7 @@ const GAME_DATA = {
       
       // Iniciar música de fondo
       bgMusic.currentTime = 0
-      bgMusic.play().catch(e => console.log('Error reproduciendo música:', e))
+      bgMusic.play()
     }
 
     /**
@@ -653,8 +652,6 @@ const GAME_DATA = {
     }
 
     async function onLevelComplete() {
-      console.log('RacerGame: Nivel completado')
-
       // Mostrar video y resultado
       const videoPlaceholder = document.getElementById('video-placeholder')
       const placeholderContent = videoPlaceholder?.querySelector('.placeholder-content')
@@ -670,7 +667,7 @@ const GAME_DATA = {
       if (video) {
         video.classList.remove('hidden')
         video.muted = false
-        video.play().catch((e) => console.log('Error reproduciendo video:', e))
+        video.play()
       }
 
       if (gameActiveContent) gameActiveContent.classList.add('hidden')
@@ -710,12 +707,10 @@ const GAME_DATA = {
       }
 
       // Achievement - Grant "a-todo-gas" achievement
-      const { actions } = await import('astro:actions')
       actions
         .grantGameAchievement({ achievementId: 'a-todo-gas' })
-        .then(async (result) => {
+        .then((result) => {
           if (result.data?.achievement) {
-            const { showAchievement } = await import('@/utils/show-achievement')
             showAchievement('achievement-notification', {
               title: result.data.achievement.title,
               description: result.data.achievement.description,
@@ -729,12 +724,9 @@ const GAME_DATA = {
     }
 
     // Escuchar evento para iniciar el juego
-    console.log('RacerGame: Registrando listener para start-game')
     window.addEventListener('start-game', () => {
-      console.log('RacerGame: Evento start-game recibido!')
       initRacerGame()
     })
 
-    console.log('RacerGame: Script completamente cargado')
   })()
 </script>
