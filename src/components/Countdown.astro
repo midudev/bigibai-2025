@@ -21,10 +21,27 @@ const { day, title } = Astro.props
 
   const getTargetDate = () => {
     const now = new Date()
-    const target = new Date(now.getFullYear(), 11, targetDay, 0, 0, 0, 0)
-    if (target <= now) {
-      target.setFullYear(target.getFullYear() + 1)
+    // Obtener la fecha actual en CET
+    const cetTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
+    const currentYear = cetTime.getFullYear()
+    const currentMonth = cetTime.getMonth()
+
+    // Crear fecha objetivo en diciembre del año actual
+    let targetYear = currentYear
+
+    // Si ya pasó diciembre de este año, usar el siguiente
+    if (currentMonth > 11) {
+      targetYear = currentYear + 1
     }
+    // Si estamos en diciembre pero ya pasó el día objetivo, usar el siguiente año
+    else if (currentMonth === 11 && cetTime.getDate() > targetDay) {
+      targetYear = currentYear + 1
+    }
+
+    // Crear la fecha objetivo a las 00:00:00 CET del día específico de diciembre
+    // CET es UTC+1, así que restamos 1 hora
+    const target = new Date(Date.UTC(targetYear, 11, targetDay, 0, 0, 0, 0) - 1 * 60 * 60 * 1000)
+
     return target
   }
 

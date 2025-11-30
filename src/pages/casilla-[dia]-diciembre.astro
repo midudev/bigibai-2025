@@ -32,10 +32,11 @@ const isAuthenticated = !!user
 // Verificar si el usuario es administrador
 const userIsAdmin = isAdmin(user?.id)
 
-// Verificar si el día ya es accesible
+// Verificar si el día ya es accesible (usando hora CET)
 const today = new Date()
-const currentMonth = today.getMonth() // 0-11 (11 = diciembre)
-const currentDay = today.getDate()
+const cetTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
+const currentMonth = cetTime.getMonth() // 0-11 (11 = diciembre)
+const currentDay = cetTime.getDate()
 
 // Solo es accesible si estamos en diciembre y el día actual es igual o mayor al día de la casilla
 const isDayAccessible = currentMonth === 11 && currentDay >= paramDayNumber
