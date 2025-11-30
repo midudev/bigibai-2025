@@ -51,7 +51,7 @@ const allAchievements = Object.values(ACHIEVEMENTS)
           </div>
         </div>
       ) : (
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
           {allAchievements.map((achievement) => {
             const isUnlocked = !!userAchievements[achievement.id]
             return (
