@@ -652,7 +652,7 @@ const GAME_DATA = {
       requestAnimationFrame(loop)
     }
 
-    function onLevelComplete() {
+    async function onLevelComplete() {
       console.log('RacerGame: Nivel completado')
 
       // Mostrar video y resultado
@@ -709,14 +709,23 @@ const GAME_DATA = {
         })()
       }
 
-      // Achievement
-      if (window.showAchievement) {
-        window.showAchievement('achievement-notification', {
-          title: '¡Logro desbloqueado!',
-          description: 'Completa la carrera y recoge todas las monedas.',
-          icon: '/achievement_01.webp',
+      // Achievement - Grant "a-todo-gas" achievement
+      const { actions } = await import('astro:actions')
+      actions
+        .grantGameAchievement({ achievementId: 'a-todo-gas' })
+        .then(async (result) => {
+          if (result.data?.achievement) {
+            const { showAchievement } = await import('@/utils/show-achievement')
+            showAchievement('achievement-notification', {
+              title: result.data.achievement.title,
+              description: result.data.achievement.description,
+              icon: result.data.achievement.image,
+            })
+          }
         })
-      }
+        .catch((error) => {
+          console.error('Error granting achievement:', error)
+        })
     }
 
     // Escuchar evento para iniciar el juego
