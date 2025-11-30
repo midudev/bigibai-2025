@@ -1,0 +1,30 @@
+---
+export interface Props {
+  prize: string
+}
+
+const { prize } = Astro.props
+---
+
+<div
+  id="game-success-content"
+  class="hidden h-full flex-col justify-center items-center text-center"
+>
+  <h2
+    class="text-4xl text-brand font-bold mb-6 uppercase"
+    style="font-family: 'Heavy', sans-serif;"
+  >
+    ¡Lo conseguiste!
+  </h2>
+  <p class="text-white text-lg mb-2">Has desvelado el premio del día:</p>
+  <p class="text-3xl text-brand font-bold uppercase mb-8">{prize}</p>
+
+  <div class="bg-black/30 p-4 rounded-lg border border-white/10 mb-6 w-full">
+    <p class="text-sm text-white/60 mb-2 text-balance">
+      * Todos los sorteos se harán el 24 de diciembre.
+    </p>
+    <p class="text-sm text-brand/80 font-bold text-balance">
+      Vuelve mañana para desvelar el premio de mañana.
+    </p>
+  </div>
+</div>
