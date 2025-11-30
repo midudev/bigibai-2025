@@ -1,0 +1,721 @@
+---
+import Button from '@/components/Button.astro'
+import AchievementNotification from '@/components/AchievementNotification.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 15,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl || '/videos/mock.mp4',
+}
+---
+
+<div class="screen-content game-layout">
+  <!-- Columna Izquierda: Juego -->
+  <div class="game-column">
+    <div id="game-active-content">
+      <div class="game-canvas-container">
+        <canvas id="racerCanvas"></canvas>
+      </div>
+      <div class="game-instructions">
+        <p class="text-white/70 text-sm text-center">
+          🎮 Usa las flechas del teclado o los botones en pantalla
+        </p>
+        <p class="text-white/70 text-sm text-center">
+          🪙 Recoge {GAME_DATA.targetScore} monedas para ganar
+        </p>
+      </div>
+    </div>
+
+    <!-- Contenido de éxito (Oculto inicialmente) -->
+    <div
+      id="game-success-content"
+      class="hidden h-full flex flex-col justify-center items-center text-center"
+    >
+      <h2
+        class="text-4xl text-brand font-bold mb-6 uppercase"
+        style="font-family: 'Heavy', sans-serif;"
+      >
+        ¡Lo conseguiste!
+      </h2>
+      <p class="text-white text-lg mb-2">Has desvelado el premio del día:</p>
+      <p class="text-3xl text-brand font-bold uppercase mb-8">{GAME_DATA.prize}</p>
+
+      <div class="bg-black/30 p-4 rounded-lg border border-white/10 mb-6 w-full">
+        <p class="text-sm text-white/60 mb-2">* Todos los sorteos se harán el 24 de diciembre.</p>
+        <p class="text-sm text-brand/80 font-bold">
+          Vuelve mañana para desvelar el premio de mañana.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna Derecha: Video Placeholder / Resultado -->
+  <div class="video-column">
+    <div id="video-placeholder" class="video-placeholder h-full">
+      <div class="placeholder-content">
+        <span class="text-6xl mb-4">🎬</span>
+        <p class="text-white/60 text-center">Completa el juego para desbloquear el vídeo</p>
+      </div>
+      <video
+        id="prize-video-racer"
+        class="hidden w-full h-full object-cover rounded-lg"
+        playsinline
+        muted
+        loop
+      >
+        <source src={GAME_DATA.videoUrl} type="video/mp4" />
+      </video>
+    </div>
+  </div>
+</div>
+
+<!-- Notificación de Logro -->
+<AchievementNotification />
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    max-width: 1000px;
+  }
+
+  .game-column,
+  .video-column {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 2px solid rgba(248, 177, 52, 0.3);
+  }
+
+  .game-canvas-container {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    aspect-ratio: 9/16;
+    background: #000;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  #racerCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .game-instructions {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .video-placeholder {
+    aspect-ratio: 9/16;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .game-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ GAME_DATA }}>
+  console.log('RacerGame: Script cargando')
+  console.log('RacerGame: GAME_DATA =', GAME_DATA)
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const TARGET_SCORE = GAME_DATA.targetScore
+    const LANE_COUNT = 3
+    const INITIAL_SPEED = 3
+    const SPEED_INCREMENT = 0.0005
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+
+    /**
+     * SPRITES (DISEÑOS PIXEL ART)
+     */
+    const SPRITES = {
+      car: [
+        [0, 3, 1, 1, 1, 3, 0],
+        [0, 3, 1, 1, 1, 3, 0],
+        [0, 1, 1, 2, 1, 1, 0],
+        [0, 1, 2, 2, 2, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 3, 1, 1, 0],
+        [0, 3, 1, 1, 1, 3, 0],
+        [0, 3, 1, 1, 1, 3, 0],
+        [0, 0, 1, 1, 1, 0, 0],
+      ],
+      coin: [
+        [0, 0, 1, 1, 1, 0, 0],
+        [0, 1, 2, 2, 2, 1, 0],
+        [1, 2, 3, 3, 2, 2, 1],
+        [1, 2, 3, 3, 2, 2, 1],
+        [1, 2, 2, 2, 2, 2, 1],
+        [0, 1, 2, 2, 2, 1, 0],
+        [0, 0, 1, 1, 1, 0, 0],
+      ],
+      arrowLeft: [
+        [0, 0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 1, 1, 1, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0],
+      ],
+      arrowRight: [
+        [0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0, 0],
+      ],
+    }
+
+    const PALETTES = {
+      player: { 1: '#2ecc71', 2: '#27ae60', 3: '#2c3e50' },
+      enemy1: { 1: '#e74c3c', 2: '#c0392b', 3: '#2c3e50' },
+      enemy2: { 1: '#3498db', 2: '#2980b9', 3: '#2c3e50' },
+      coin: { 1: '#f39c12', 2: '#f1c40f', 3: '#ffeaa7' },
+      ui: { 1: '#333333', 2: '#cccccc' },
+    }
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      const now = audioCtx.currentTime
+
+      if (type === 'coin') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(1200, now)
+        osc.frequency.exponentialRampToValueAtTime(1800, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.3, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15)
+
+        osc.start(now)
+        osc.stop(now + 0.15)
+
+        const osc2 = audioCtx.createOscillator()
+        const gain2 = audioCtx.createGain()
+        osc2.connect(gain2)
+        gain2.connect(audioCtx.destination)
+        osc2.type = 'sine'
+        osc2.frequency.setValueAtTime(1800, now + 0.05)
+        gain2.gain.setValueAtTime(0.3, now + 0.05)
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+        osc2.start(now + 0.05)
+        osc2.stop(now + 0.2)
+      } else if (type === 'move') {
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.1)
+
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'crash') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(150, now)
+        osc.frequency.exponentialRampToValueAtTime(20, now + 0.5)
+
+        const lfo = audioCtx.createOscillator()
+        lfo.frequency.value = 50
+        const lfoGain = audioCtx.createGain()
+        lfoGain.gain.value = 500
+        lfo.connect(lfoGain)
+        lfoGain.connect(osc.frequency)
+        lfo.start(now)
+
+        gainNode.gain.setValueAtTime(0.4, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5)
+
+        osc.start(now)
+        osc.stop(now + 0.5)
+        lfo.stop(now + 0.5)
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('racerCanvas')
+    if (!canvas) {
+      console.error('RacerGame: Canvas no encontrado')
+      return
+    }
+    const ctx = canvas.getContext('2d')
+
+    // Estado del juego
+    let state = {
+      status: 'start',
+      score: 0,
+      speed: INITIAL_SPEED,
+      laneOffset: 0,
+      laneWidth: 0,
+      frames: 0,
+    }
+
+    // Entidades
+    let player = { lane: 1, y: 0, animY: 0 }
+    let enemies = []
+    let coins = []
+
+    // Inputs visuales
+    let buttons = {
+      left: { x: 40, y: 520, w: 80, h: 80, pressed: false },
+      right: { x: 240, y: 520, w: 80, h: 80, pressed: false },
+      restart: { x: 100, y: 400, w: 160, h: 50 },
+    }
+
+    /**
+     * INICIALIZACIÓN
+     */
+    function initRacerGame() {
+      console.log('RacerGame: Inicializando')
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      state.laneWidth = INTERNAL_WIDTH / LANE_COUNT
+      player.y = INTERNAL_HEIGHT - 160
+
+      window.addEventListener('keydown', handleKey)
+      window.addEventListener('keyup', handleKeyUp)
+
+      canvas.addEventListener('mousedown', handleInputStart)
+      canvas.addEventListener('mouseup', handleInputEnd)
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          handleInputStart(e.touches[0])
+        },
+        { passive: false }
+      )
+      canvas.addEventListener('touchend', (e) => {
+        e.preventDefault()
+        handleInputEnd()
+      })
+
+      document.fonts.ready.then(function () {
+        requestAnimationFrame(loop)
+      })
+
+      console.log('RacerGame: Inicializado correctamente')
+    }
+
+    function resetGame() {
+      state.status = 'playing'
+      state.score = 0
+      state.speed = INITIAL_SPEED
+      player.lane = 1
+      enemies = []
+      coins = []
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function handleKey(e) {
+      if (state.status !== 'playing') return
+      if (e.key === 'ArrowLeft') {
+        movePlayer(-1)
+        buttons.left.pressed = true
+      }
+      if (e.key === 'ArrowRight') {
+        movePlayer(1)
+        buttons.right.pressed = true
+      }
+    }
+
+    function handleKeyUp(e) {
+      buttons.left.pressed = false
+      buttons.right.pressed = false
+    }
+
+    function getCanvasCoords(event) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      }
+    }
+
+    function handleInputStart(e) {
+      // ACTIVAR AUDIO EN PRIMER CLICK
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+      const pos = getCanvasCoords(e)
+      if (state.status === 'playing') {
+        if (hitTest(pos, buttons.left)) {
+          movePlayer(-1)
+          buttons.left.pressed = true
+        }
+        if (hitTest(pos, buttons.right)) {
+          movePlayer(1)
+          buttons.right.pressed = true
+        }
+      } else if (state.status === 'start' || state.status === 'gameover') {
+        resetGame()
+      }
+    }
+
+    function handleInputEnd() {
+      buttons.left.pressed = false
+      buttons.right.pressed = false
+    }
+
+    function hitTest(pos, btn) {
+      return pos.x >= btn.x && pos.x <= btn.x + btn.w && pos.y >= btn.y && pos.y <= btn.y + btn.h
+    }
+
+    function movePlayer(dir) {
+      const newLane = player.lane + dir
+      if (newLane >= 0 && newLane < LANE_COUNT) {
+        player.lane = newLane
+        playSound('move')
+      }
+    }
+
+    /**
+     * UPDATE LOGIC
+     */
+    function update() {
+      if (state.status !== 'playing') return
+
+      state.frames++
+      state.speed += SPEED_INCREMENT
+      state.laneOffset = (state.laneOffset + state.speed * 4) % 80
+
+      const spawnRateEnemy = Math.max(30, Math.floor(600 / state.speed))
+      const spawnRateCoin = Math.max(20, Math.floor(400 / state.speed))
+
+      if (state.frames % spawnRateEnemy === 0) spawnEnemy()
+      if (state.frames % spawnRateCoin === 0) spawnCoin()
+
+      updateEntities(enemies, state.speed * 4)
+      updateEntities(coins, state.speed * 4)
+      checkCollisions()
+
+      if (state.score >= TARGET_SCORE) {
+        state.status = 'win'
+        setTimeout(onLevelComplete, 500)
+      }
+    }
+
+    function spawnEnemy() {
+      let lane = Math.floor(Math.random() * LANE_COUNT)
+      enemies.push({
+        lane: lane,
+        y: -100,
+        type: Math.random() > 0.5 ? 'enemy1' : 'enemy2',
+      })
+    }
+
+    function spawnCoin() {
+      let lane = Math.floor(Math.random() * LANE_COUNT)
+      if (!enemies.some((e) => e.lane === lane && e.y < 50)) {
+        coins.push({ lane: lane, y: -100 })
+      }
+    }
+
+    function updateEntities(arr, speed) {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        arr[i].y += speed
+        if (arr[i].y > INTERNAL_HEIGHT) arr.splice(i, 1)
+      }
+    }
+
+    function checkCollisions() {
+      const pY = player.y
+      const pH = 70
+
+      // Enemies
+      enemies.forEach((e) => {
+        if (e.lane === player.lane && e.y + 70 > pY + 10 && e.y < pY + pH - 10) {
+          playSound('crash')
+          state.status = 'gameover'
+        }
+      })
+
+      // Coins
+      for (let i = coins.length - 1; i >= 0; i--) {
+        let c = coins[i]
+        if (c.lane === player.lane && c.y + 40 > pY && c.y < pY + pH) {
+          state.score++
+          playSound('coin')
+          coins.splice(i, 1)
+        }
+      }
+    }
+
+    /**
+     * DRAW LOGIC
+     */
+    function draw() {
+      // Fondo
+      ctx.fillStyle = '#333'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      drawRoad()
+
+      // Jugador
+      const pX = player.lane * state.laneWidth + state.laneWidth / 2 - 25
+      drawSprite(ctx, SPRITES.car, pX, player.y, 7, PALETTES.player)
+
+      // Enemigos
+      enemies.forEach((e) => {
+        const x = e.lane * state.laneWidth + state.laneWidth / 2 - 25
+        drawSprite(ctx, SPRITES.car, x, e.y, 7, PALETTES[e.type])
+      })
+
+      // Monedas
+      coins.forEach((c) => {
+        const x = c.lane * state.laneWidth + state.laneWidth / 2 - 15
+        const bob = Math.sin(state.frames * 0.1) * 5
+        drawSprite(ctx, SPRITES.coin, x, c.y + bob, 5, PALETTES.coin)
+      })
+
+      drawUI()
+    }
+
+    function drawRoad() {
+      ctx.fillStyle = '#222'
+      ctx.fillRect(20, 0, INTERNAL_WIDTH - 40, INTERNAL_HEIGHT)
+
+      ctx.fillStyle = '#27ae60'
+      ctx.fillRect(0, 0, 20, INTERNAL_HEIGHT)
+      ctx.fillRect(INTERNAL_WIDTH - 20, 0, 20, INTERNAL_HEIGHT)
+
+      ctx.fillStyle = '#fff'
+      const dashH = 40
+      const gapH = 40
+      const totalH = dashH + gapH
+
+      for (let i = -totalH; i < INTERNAL_HEIGHT; i += totalH) {
+        let y = i + state.laneOffset
+        ctx.fillRect(state.laneWidth - 2, y, 4, dashH)
+        ctx.fillRect(state.laneWidth * 2 - 2, y, 4, dashH)
+      }
+    }
+
+    function drawUI() {
+      ctx.fillStyle = '#fff'
+      ctx.font = '20px "Press Start 2P"'
+      ctx.textAlign = 'center'
+
+      ctx.fillStyle = '#000'
+      ctx.fillText(`${state.score}/${TARGET_SCORE}`, INTERNAL_WIDTH / 2 + 2, 52)
+      ctx.fillStyle = '#fff'
+      ctx.fillText(`${state.score}/${TARGET_SCORE}`, INTERNAL_WIDTH / 2, 50)
+
+      if (state.status === 'playing') {
+        drawButton(buttons.left, SPRITES.arrowLeft)
+        drawButton(buttons.right, SPRITES.arrowRight)
+      }
+
+      if (state.status === 'start') {
+        drawOverlay('ADVENT RACER', 'CLICK PARA JUGAR')
+      } else if (state.status === 'gameover') {
+        drawOverlay('CHOQUE', 'REINTENTAR')
+      } else if (state.status === 'win') {
+        drawOverlay('GANASTE', 'ABRIENDO REGALO...')
+      }
+    }
+
+    function drawButton(btn, sprite) {
+      ctx.fillStyle = btn.pressed ? '#bdc3c7' : '#ecf0f1'
+
+      if (!btn.pressed) {
+        ctx.fillRect(btn.x, btn.y, btn.w, btn.h)
+        ctx.fillStyle = '#95a5a6'
+        ctx.fillRect(btn.x, btn.y + btn.h, btn.w, 8)
+      } else {
+        ctx.fillRect(btn.x, btn.y + 4, btn.w, btn.h)
+      }
+
+      const iconScale = 5
+      const iconW = sprite[0].length * iconScale
+      const iconH = sprite.length * iconScale
+      const iconX = btn.x + (btn.w - iconW) / 2
+      const iconY = btn.y + (btn.h - iconH) / 2 + (btn.pressed ? 4 : 0)
+
+      drawSprite(ctx, sprite, iconX, iconY, iconScale, PALETTES.ui)
+    }
+
+    function drawOverlay(title, subtitle) {
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.fillStyle = '#c0392b'
+      ctx.font = '30px "Press Start 2P"'
+      ctx.fillText(title, INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 - 20 + 4)
+
+      ctx.fillStyle = '#f1c40f'
+      ctx.fillText(title, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '16px "Press Start 2P"'
+        ctx.fillText(subtitle, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+      }
+    }
+
+    function drawSprite(context, matrix, x, y, size, palette) {
+      for (let r = 0; r < matrix.length; r++) {
+        for (let c = 0; c < matrix[r].length; c++) {
+          const pixelVal = matrix[r][c]
+          if (pixelVal !== 0) {
+            context.fillStyle = palette[pixelVal] || '#000'
+            context.fillRect(x + c * size, y + r * size, size, size)
+          }
+        }
+      }
+    }
+
+    function loop() {
+      update()
+      draw()
+      requestAnimationFrame(loop)
+    }
+
+    function onLevelComplete() {
+      console.log('RacerGame: Nivel completado')
+
+      // Mostrar video y resultado
+      const videoPlaceholder = document.getElementById('video-placeholder')
+      const placeholderContent = videoPlaceholder?.querySelector('.placeholder-content')
+      const video = document.getElementById('prize-video-racer')
+
+      const gameActiveContent = document.getElementById('game-active-content')
+      const gameSuccessContent = document.getElementById('game-success-content')
+
+      // Ocultar placeholder y mostrar video
+      if (placeholderContent) {
+        placeholderContent.style.display = 'none'
+      }
+      if (video) {
+        video.classList.remove('hidden')
+        video.muted = false
+        video.play().catch((e) => console.log('Error reproduciendo video:', e))
+      }
+
+      if (gameActiveContent) gameActiveContent.classList.add('hidden')
+      if (gameSuccessContent) gameSuccessContent.classList.remove('hidden')
+
+      // Confetti
+      if (window.confetti) {
+        const canvas = document.getElementById('confetti-canvas')
+        const myConfetti = window.confetti.create(canvas, {
+          resize: true,
+          useWorker: true,
+        })
+
+        const duration = 3000
+        const end = Date.now() + duration
+
+        ;(function frame() {
+          myConfetti({
+            particleCount: 7,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 1 },
+            colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+          })
+          myConfetti({
+            particleCount: 7,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 1 },
+            colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+          })
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame)
+          }
+        })()
+      }
+
+      // Achievement
+      if (window.showAchievement) {
+        window.showAchievement('achievement-notification', {
+          title: '¡Logro desbloqueado!',
+          description: 'Completa la carrera y recoge todas las monedas.',
+          icon: '/achievement_01.webp',
+        })
+      }
+    }
+
+    // Escuchar evento para iniciar el juego
+    console.log('RacerGame: Registrando listener para start-game')
+    window.addEventListener('start-game', () => {
+      console.log('RacerGame: Evento start-game recibido!')
+      initRacerGame()
+    })
+
+    console.log('RacerGame: Script completamente cargado')
+  })()
+</script>

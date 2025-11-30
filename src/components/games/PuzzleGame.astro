@@ -1,0 +1,34 @@
+---
+export interface Props {
+  day: number
+  gameData?: Record<string, any>
+}
+
+const { day, gameData } = Astro.props
+---
+
+<div class="screen active">
+  <div class="screen-content text-center">
+    <h1 class="text-4xl text-brand font-bold mb-4">Puzzle Game</h1>
+    <p class="text-white/70">Día {day} - Próximamente</p>
+    <p class="text-white/50 text-sm mt-4">Este componente de juego será implementado pronto</p>
+  </div>
+</div>
+
+<style>
+  .screen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .screen-content {
+    max-width: 600px;
+    width: 100%;
+  }
+</style>

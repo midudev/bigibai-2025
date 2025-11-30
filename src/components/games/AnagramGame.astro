@@ -1,0 +1,584 @@
+---
+import Button from '@/components/Button.astro'
+import AchievementNotification from '@/components/AchievementNotification.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    anagram?: string
+    answer?: string
+    hint?: string
+    videoUrl?: string
+    prize?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  prize: gameData?.prize || 'Cirque du Soleil',
+  anagram: gameData?.anagram || 'RQEIUC UD LLEOLIS',
+  answer: gameData?.answer || 'CIRQUE DU SOLEIL',
+  hint: gameData?.hint || 'Un espectáculo que desafía la gravedad y te deja sin aliento',
+  videoUrl: gameData?.videoUrl || '/videos/mock.mp4',
+}
+---
+
+<div class="screen-content game-layout">
+  <!-- Columna Izquierda: Juego -->
+  <div class="game-column">
+    <div id="game-active-content">
+      <div class="game-header">
+        <div class="timer-display">
+          <div class="text-center">
+            <span id="timer-seconds" class="text-5xl font-bold text-brand">0</span>
+            <span class="text-sm text-white/60 block mt-1">segundos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="anagram-container">
+        <h2
+          class="text-2xl text-white mb-6 text-center font-bold uppercase"
+          style="font-family: 'Heavy', sans-serif;"
+        >
+          Resuelve el anagrama:
+        </h2>
+        <div class="anagram-letters" id="anagram-letters">
+          {
+            GAME_DATA.anagram.split('').map((letter, index) => (
+              <span class="anagram-letter" data-index={index} data-letter={letter}>
+                {letter}
+              </span>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="answer-input-container">
+        <input
+          type="text"
+          id="answer-input"
+          placeholder="Escribe tu respuesta..."
+          maxlength={GAME_DATA.answer.length}
+          autocomplete="off"
+          class="answer-input"
+        />
+        <div id="feedback" class="feedback hidden"></div>
+      </div>
+
+      <div class="game-actions">
+        <Button id="btn-submit" variant="brand" size="lg" class="w-full"> Enviar respuesta </Button>
+      </div>
+    </div>
+
+    <!-- Contenido de éxito (Oculto inicialmente) -->
+    <div
+      id="game-success-content"
+      class="hidden h-full flex flex-col justify-center items-center text-center"
+    >
+      <h2
+        class="text-4xl text-brand font-bold mb-6 uppercase"
+        style="font-family: 'Heavy', sans-serif;"
+      >
+        ¡Lo conseguiste!
+      </h2>
+      <p class="text-white text-lg mb-2">Has desvelado el premio del día:</p>
+      <p class="text-3xl text-brand font-bold uppercase mb-8">{GAME_DATA.prize}</p>
+
+      <div class="bg-black/30 p-4 rounded-lg border border-white/10 mb-6 w-full">
+        <p class="text-sm text-white/60 mb-2">* Todos los sorteos se harán el 24 de diciembre.</p>
+        <p class="text-sm text-brand/80 font-bold">
+          Vuelve mañana para desvelar el premio de mañana.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna Derecha: Video Placeholder / Resultado -->
+  <div class="video-column">
+    <div id="video-placeholder" class="video-placeholder h-full">
+      <div class="placeholder-content">
+        <span class="text-6xl mb-4">🎬</span>
+        <p class="text-white/60 text-center">Desbloquea el vídeo al resolver el anagrama</p>
+      </div>
+      <video
+        id="prize-video"
+        class="hidden w-full h-full object-cover rounded-lg"
+        playsinline
+        muted
+        loop
+      >
+        <source src={GAME_DATA.videoUrl} type="video/mp4" />
+      </video>
+    </div>
+  </div>
+</div>
+
+<!-- Notificación de Logro -->
+<AchievementNotification />
+
+<style>
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    max-width: 1000px;
+  }
+
+  .game-column,
+  .video-column {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 2px solid rgba(248, 177, 52, 0.3);
+  }
+
+  .video-placeholder {
+    aspect-ratio: 9/16;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .game-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .timer-display {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .anagram-container {
+    margin: 1.5rem 0;
+  }
+
+  .anagram-letters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+
+  .anagram-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: rgba(248, 177, 52, 0.2);
+    border: 2px solid rgba(248, 177, 52, 0.5);
+    border-radius: 0.5rem;
+    color: var(--color-brand);
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+
+  .anagram-letter:hover:not(.used) {
+    background: rgba(248, 177, 52, 0.3);
+    border-color: var(--color-brand);
+    transform: scale(1.1);
+  }
+
+  .anagram-letter.used {
+    opacity: 0.2;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .answer-input-container {
+    margin: 1.5rem 0;
+  }
+
+  .answer-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(248, 177, 52, 0.4);
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1.25rem;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .answer-input:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 32px rgba(248, 177, 52, 0.2);
+  }
+
+  .answer-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .feedback {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .feedback.correct {
+    background: rgba(92, 137, 72, 0.3);
+    color: #6ade6a;
+    border: 1px solid #6ade6a;
+  }
+
+  .feedback.incorrect {
+    background: rgba(220, 38, 38, 0.3);
+    color: #fca5a5;
+    border: 1px solid #fca5a5;
+    animation: shake 0.5s;
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-10px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(10px);
+    }
+  }
+
+  .game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .game-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .anagram-letter {
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 1.25rem;
+    }
+
+    .timer-display {
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    #timer-seconds {
+      font-size: 2.5rem;
+    }
+
+    .answer-input {
+      font-size: 1rem;
+    }
+  }
+
+  .answer-input:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+</style>
+
+<script is:inline define:vars={{ GAME_DATA }}>
+  console.log('AnagramGame: Script cargando')
+  console.log('AnagramGame: GAME_DATA =', GAME_DATA)
+  ;(function () {
+    // Estados del juego
+    let gameTimer = null
+    let elapsedSeconds = 0
+    let availableLetters = []
+
+    const answerInput = document.getElementById('answer-input')
+    const feedback = document.getElementById('feedback')
+    const timerSeconds = document.getElementById('timer-seconds')
+
+    console.log('AnagramGame: Elementos DOM encontrados:', {
+      answerInput: !!answerInput,
+      feedback: !!feedback,
+      timerSeconds: !!timerSeconds,
+    })
+
+    // Configurar canvas de confetti
+    const canvas = document.getElementById('confetti-canvas')
+    let myConfetti = null
+
+    // Intentar crear el confetti si está disponible
+    if (canvas && window.confetti) {
+      myConfetti = window.confetti.create(canvas, {
+        resize: true,
+        useWorker: true,
+      })
+      console.log('AnagramGame: Canvas confetti creado')
+    } else {
+      console.warn('AnagramGame: confetti no disponible aún')
+    }
+
+    function launchWinConfetti() {
+      if (!myConfetti) return
+
+      const duration = 3000
+      const end = Date.now() + duration
+
+      ;(function frame() {
+        myConfetti({
+          particleCount: 7,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 1 },
+          colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+        })
+        myConfetti({
+          particleCount: 7,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 1 },
+          colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+        })
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame)
+        }
+      })()
+    }
+
+    // Lógica del juego
+    function startGame() {
+      console.log('AnagramGame: startGame llamado')
+      elapsedSeconds = 0
+      updateTimerDisplay()
+
+      availableLetters = GAME_DATA.anagram.split('').map((letter, index) => ({
+        letter: letter.toUpperCase(),
+        index,
+        used: false,
+      }))
+
+      console.log('AnagramGame: availableLetters =', availableLetters)
+
+      setTimeout(() => {
+        answerInput?.focus()
+      }, 500)
+
+      if (gameTimer) clearInterval(gameTimer)
+      gameTimer = setInterval(() => {
+        elapsedSeconds++
+        updateTimerDisplay()
+      }, 1000)
+
+      setupLetterClickHandlers()
+      setupInputValidation()
+    }
+
+    function updateTimerDisplay() {
+      if (timerSeconds) timerSeconds.textContent = String(elapsedSeconds)
+    }
+
+    function stopGame() {
+      if (gameTimer) {
+        clearInterval(gameTimer)
+        gameTimer = null
+      }
+    }
+
+    function setupLetterClickHandlers() {
+      const letterElements = document.querySelectorAll('.anagram-letter')
+      letterElements.forEach((el) => {
+        el.addEventListener('click', () => {
+          const index = parseInt(el.getAttribute('data-index') || '0')
+          const letter = availableLetters[index]
+
+          if (!letter.used && answerInput) {
+            const currentValue = answerInput.value.toUpperCase()
+            answerInput.setAttribute('data-previous-value', currentValue)
+
+            answerInput.value += letter.letter
+
+            letter.used = true
+            el.classList.add('used')
+
+            answerInput.setAttribute('data-previous-value', answerInput.value.toUpperCase())
+          }
+        })
+      })
+    }
+
+    function setupInputValidation() {
+      if (!answerInput) return
+
+      answerInput.setAttribute('data-previous-value', '')
+
+      answerInput.addEventListener('input', (e) => {
+        const input = e.target.value.toUpperCase()
+        const previousValue = answerInput.getAttribute('data-previous-value') || ''
+
+        if (input.length > previousValue.length) {
+          const newChar = input[input.length - 1]
+
+          const availableLetter = availableLetters.find((l) => l.letter === newChar && !l.used)
+
+          if (availableLetter) {
+            availableLetter.used = true
+            updateLetterVisuals()
+            answerInput.setAttribute('data-previous-value', input)
+          } else {
+            answerInput.value = previousValue
+            return
+          }
+        } else if (input.length < previousValue.length) {
+          const removedChar = previousValue[input.length]
+
+          const usedLetterIndex = availableLetters
+            .map((l, idx) => ({ ...l, originalIndex: idx }))
+            .reverse()
+            .findIndex((l) => l.letter === removedChar && l.used)
+
+          if (usedLetterIndex !== -1) {
+            const originalIndex = availableLetters.length - 1 - usedLetterIndex
+            availableLetters[originalIndex].used = false
+            updateLetterVisuals()
+          }
+
+          answerInput.setAttribute('data-previous-value', input)
+        }
+      })
+    }
+
+    function updateLetterVisuals() {
+      availableLetters.forEach((letter) => {
+        const el = document.querySelector(`[data-index="${letter.index}"]`)
+        if (el) {
+          if (letter.used) {
+            el.classList.add('used')
+          } else {
+            el.classList.remove('used')
+          }
+        }
+      })
+    }
+
+    function checkAnswer() {
+      if (!answerInput) return
+
+      const userAnswer = answerInput.value.trim().toUpperCase()
+      const correctAnswer = GAME_DATA.answer
+
+      if (userAnswer === correctAnswer) {
+        // Respuesta correcta
+        stopGame()
+        showFeedback(true, '¡Correcto!')
+        launchWinConfetti()
+        showAnagramAchievement()
+
+        // Mostrar video y resultado
+        const videoPlaceholder = document.getElementById('video-placeholder')
+        const placeholderContent = videoPlaceholder?.querySelector('.placeholder-content')
+        const video = document.getElementById('prize-video')
+
+        const gameActiveContent = document.getElementById('game-active-content')
+        const gameSuccessContent = document.getElementById('game-success-content')
+
+        if (placeholderContent) placeholderContent.classList.add('hidden')
+        if (video) {
+          video.classList.remove('hidden')
+          video.muted = false
+          video.play().catch((e) => console.log('Error reproduciendo video:', e))
+        }
+
+        if (gameActiveContent) gameActiveContent.classList.add('hidden')
+        if (gameSuccessContent) gameSuccessContent.classList.remove('hidden')
+      } else {
+        // Respuesta incorrecta
+        showFeedback(false, 'Incorrecto, inténtalo de nuevo')
+        answerInput.value = ''
+        availableLetters.forEach((l) => (l.used = false))
+        updateLetterVisuals()
+        answerInput.setAttribute('data-previous-value', '')
+        answerInput.focus()
+      }
+    }
+
+    function showFeedback(isCorrect, message) {
+      if (!feedback) return
+
+      feedback.textContent = message
+      feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`
+      feedback.classList.remove('hidden')
+
+      if (!isCorrect) {
+        setTimeout(() => {
+          feedback.classList.add('hidden')
+        }, 2000)
+      }
+    }
+
+    function showAnagramAchievement() {
+      if (window.showAchievement) {
+        window.showAchievement('achievement-notification', {
+          title: '¡Logro desbloqueado!',
+          description: 'Completa tu primer anagrama y acierta el premio del día.',
+          icon: '/achievement_01.webp',
+        })
+      }
+    }
+
+    // Event Listeners de botones
+    console.log('AnagramGame: Configurando event listeners')
+    document.getElementById('btn-submit')?.addEventListener('click', checkAnswer)
+
+    answerInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkAnswer()
+    })
+
+    // Cleanup al salir
+    window.addEventListener('beforeunload', () => {
+      stopGame()
+    })
+
+    // Escuchar evento para iniciar el juego
+    console.log('AnagramGame: Registrando listener para start-game')
+    window.addEventListener('start-game', () => {
+      console.log('AnagramGame: Evento start-game recibido!')
+      startGame()
+    })
+
+    console.log('AnagramGame: Script completamente cargado')
+  })()
+</script>
