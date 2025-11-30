@@ -137,13 +137,18 @@ const isHomePage = currentPath === '/'
           </div>
         </a>
       ) : (
-        <div class="logo-wrapper relative z-10 mx-auto max-w-xl w-full px-4 md:px-0">
-          <img class="logo-main" src="/logo-a.svg" alt="bigibai logo" />
-          <img
-            class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
-            src="/logo-a.svg"
-            alt="bigibai logo"
-          />
+        <div class="mx-auto max-w-5xl w-full px-4 md:px-0 flex flex-col items-center gap-2">
+          <h1 class="font-century text-brand text-2xl sm:text-3xl md:text-4xl uppercase tracking-wide">
+            El Calendario de Adviento De
+          </h1>
+          <div class="logo-wrapper relative z-10 w-full max-w-xl">
+            <img class="logo-main" src="/logo-a.svg" alt="bigibai logo" />
+            <img
+              class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
+              src="/logo-a.svg"
+              alt="bigibai logo"
+            />
+          </div>
         </div>
       )
     }

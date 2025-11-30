@@ -3,6 +3,7 @@ import Button from '@/components/Button.astro'
 import AchievementsBox from '@/components/AchievementsBox.astro'
 import BentoCard from '@/components/ui/BentoCard.astro'
 import Chocolates from './Chocolates.astro'
+import Calendar from './Calendar.astro'
 import Map from '@/components/Map.astro'
 
 interface Props {
@@ -110,6 +111,8 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
     <AchievementsBox isLoggedIn={isLoggedIn} userAchievements={userAchievements} />
 
     <Chocolates />
+
+    <Calendar />
 
     <Map />
   </div>

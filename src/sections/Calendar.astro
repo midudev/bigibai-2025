@@ -1,0 +1,138 @@
+---
+import BentoCard from '@/components/ui/BentoCard.astro'
+import { cells } from '@/data/days-data'
+
+// Función para verificar si un día está activo
+function isDayActive(day: number): boolean {
+  const now = new Date()
+
+  // Convertir a hora CET (UTC+1)
+  const cetTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
+
+  const month = cetTime.getMonth() // 0 = enero, 11 = diciembre
+  const currentDay = cetTime.getDate()
+
+  // Si no es diciembre, ningún día está activo
+  if (month !== 11) return false // 11 = diciembre
+
+  // Activar el día si estamos en diciembre y es ese día o posterior
+  return day <= currentDay
+}
+---
+
+<BentoCard class="col-span-3 md:col-span-3 p-4 md:p-8">
+  <div class="w-full">
+    <h2
+      class="font-heavy text-3xl md:text-5xl lg:text-6xl font-bold text-brand text-center mb-6 md:mb-8 uppercase text-shadow-title"
+    >
+      Calendario de Adviento
+    </h2>
+
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-4">
+      {
+        cells.map((cell) => {
+          const isActive = isDayActive(cell.day)
+          console.log(cell.day, isActive)
+          const chocolateImage = isActive
+            ? `/chocolatinas/${cell.day}.webp`
+            : `/chocolatinas/1.webp`
+
+          return (
+            <a
+              href={isActive ? `/casilla-${cell.day}-diciembre` : '#'}
+              class:list={[
+                'calendar-card group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300',
+                isActive
+                  ? 'border-brand/50 hover:border-brand hover:scale-105 cursor-pointer bg-linear-to-br from-brand/10 to-transparent'
+                  : 'border-white/20 cursor-not-allowed opacity-60',
+              ]}
+              aria-label={`Día ${cell.day}`}
+              aria-disabled={!isActive}
+            >
+              {/* Chocolate Image */}
+              <div class="absolute inset-0 flex items-center justify-center p-3 md:p-4">
+                <img
+                  src={chocolateImage}
+                  alt={`Chocolate día ${cell.day}`}
+                  class:list={[
+                    'w-full h-full object-contain transition-all duration-500',
+                    isActive
+                      ? 'chocolate-active group-hover:scale-125 group-hover:rotate-12'
+                      : 'chocolate-inactive grayscale brightness-0',
+                  ]}
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Day Number */}
+              <div class="absolute top-1 right-1 md:top-2 md:right-2 z-10">
+                <span
+                  class:list={[
+                    'font-century text-2xl md:text-3xl font-bold inline-block px-2 py-1 rounded-lg backdrop-blur-sm transition-all duration-300',
+                    isActive
+                      ? 'text-brand bg-black/40 group-hover:text-white group-hover:bg-brand/80 group-hover:scale-110'
+                      : 'text-white/40 bg-black/60',
+                  ]}
+                  style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"
+                >
+                  {cell.day}
+                </span>
+              </div>
+
+              {/* Lock Icon for inactive days */}
+              {!isActive && (
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <svg
+                    class="w-8 h-8 md:w-12 md:h-12 text-white/30"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              {/* Glow effect on hover for active days */}
+              {isActive && (
+                <div
+                  class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style="background: radial-gradient(circle at center, rgba(248, 177, 52, 0.2), transparent 70%);"
+                />
+              )}
+            </a>
+          )
+        })
+      }
+    </div>
+  </div>
+</BentoCard>
+
+<style>
+  .calendar-card {
+    transform-style: preserve-3d;
+  }
+
+  .chocolate-active {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  }
+
+  .chocolate-inactive {
+    filter: grayscale(100%) brightness(0) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Animación sutil para las cards activas */
+  .calendar-card:not([aria-disabled='true']):hover {
+    box-shadow:
+      0 10px 30px rgba(248, 177, 52, 0.3),
+      0 0 20px rgba(248, 177, 52, 0.2);
+  }
+
+  /* Efecto de profundidad */
+  .calendar-card:not([aria-disabled='true']):active {
+    transform: scale(0.98);
+  }
+</style>
