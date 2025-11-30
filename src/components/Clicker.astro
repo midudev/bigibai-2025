@@ -99,7 +99,7 @@
     str: 5,
     crit: 5,
     lifesteal: 0,
-    el: $('#choco-hero'),
+    el: $('#choco-hero') as HTMLImageElement,
   }
 
   const enemy = {
@@ -115,7 +115,7 @@
 
   function initBgMusic(): HTMLAudioElement {
     if (!bgMusic) {
-      bgMusic = new Audio('/game-music.mp3')
+      bgMusic = new Audio('https://videos.bigibai.com/music/game-music.mp3')
       bgMusic.loop = true
       bgMusic.volume = 0.2
     }
@@ -266,7 +266,8 @@
   function enemyAttackLoop() {
     if (!state.isPaused && !state.isGameOver && enemy.hp > 0 && state.gameStarted) {
       player.hp -= enemy.damage
-      const container = $('#choco-game-container')
+      const container = $('#choco-game-container') as HTMLDivElement
+
       container.style.borderColor = '#ff1744'
       setTimeout(() => (container.style.borderColor = '#d7ccc8'), 100)
 
@@ -376,7 +377,8 @@
     if (type === 'crit') player.crit += 2
     if (type === 'lifesteal') player.lifesteal += 2
 
-    $('#choco-levelup-modal').style.display = 'none'
+    const levelupModal = $('#choco-levelup-modal') as HTMLDivElement
+    levelupModal.style.display = 'none'
     state.isPaused = false
     spawnEnemy()
     updateUI()
@@ -384,13 +386,15 @@
 
   function triggerVictory() {
     state.isGameOver = true
-    $('#choco-modal-title').innerText = '¡ERES EL CAMPEÓN!'
-    $('#choco-modal-title').style.color = '#76ff03'
-    $('#choco-modal-desc').innerHTML =
-      `Has alcanzado el NIVEL ${state.level}.<br>¡Eres el rey del chocolate!`
+
+    const modalTitle = $('#choco-modal-title') as HTMLHeadingElement
+    const modalDesc = $('#choco-modal-desc') as HTMLParagraphElement
+    modalTitle.innerText = '¡ERES EL CAMPEÓN!'
+    modalTitle.style.color = '#76ff03'
+    modalDesc.innerHTML = `Has alcanzado el NIVEL ${state.level}.<br>¡Eres el rey del chocolate!`
 
     // Crear y cargar la imagen del trofeo solo cuando se necesita
-    const trophyContainer = $('#victory-trophy-container')
+    const trophyContainer = $('#victory-trophy-container') as HTMLDivElement
     if (trophyContainer && !trophyContainer.querySelector('.trophy-img')) {
       const trophyImg = document.createElement('img')
       trophyImg.className = 'trophy-img'
@@ -401,27 +405,38 @@
 
     // Mostrar trofeo y ocultar opciones
     trophyContainer.style.display = 'flex'
-    $('#choco-upgrade-options').style.display = 'none'
+    const upgradeOptions = $('#choco-upgrade-options') as HTMLDivElement
+    upgradeOptions.style.display = 'none'
 
-    $('#choco-reset-btn').style.display = 'block'
-    $('#choco-reset-btn').innerText = 'JUGAR DE NUEVO'
-    $('#choco-levelup-modal').style.display = 'flex'
+    const resetBtn = $('#choco-reset-btn') as HTMLButtonElement
+    const levelupModal = $('#choco-levelup-modal') as HTMLDivElement
+
+    resetBtn.style.display = 'block'
+    resetBtn.innerText = 'JUGAR DE NUEVO'
+    levelupModal.style.display = 'flex'
     playSound('levelup')
   }
 
   function triggerGameOver() {
     state.isGameOver = true
-    $('#choco-modal-title').innerText = 'GAME OVER'
-    $('#choco-modal-title').style.color = 'var(--accent-red)'
-    $('#choco-modal-desc').innerText =
-      `Sobreviviste ${state.level} niveles y comiste ${state.kills} bichos.`
 
-    $('#victory-trophy-container').style.display = 'none'
-    $('#choco-upgrade-options').style.display = 'none'
+    const modalTitle = $('#choco-modal-title') as HTMLHeadingElement
+    const modalDesc = $('#choco-modal-desc') as HTMLParagraphElement
+    modalTitle.innerText = 'GAME OVER'
+    modalTitle.style.color = 'var(--accent-red)'
+    modalDesc.innerText = `Sobreviviste ${state.level} niveles y comiste ${state.kills} bichos.`
 
-    $('#choco-reset-btn').style.display = 'block'
-    $('#choco-reset-btn').innerText = 'REINICIAR'
-    $('#choco-levelup-modal').style.display = 'flex'
+    const victoryTrophyContainer = $('#victory-trophy-container') as HTMLDivElement
+    victoryTrophyContainer.style.display = 'none'
+    const upgradeOptions = $('#choco-upgrade-options') as HTMLDivElement
+    upgradeOptions.style.display = 'none'
+
+    const resetBtn = $('#choco-reset-btn') as HTMLButtonElement
+    const levelupModal = $('#choco-levelup-modal') as HTMLDivElement
+
+    resetBtn.style.display = 'block'
+    resetBtn.innerText = 'REINICIAR'
+    levelupModal.style.display = 'flex'
   }
 
   function resetGame() {
@@ -441,8 +456,10 @@
     enemy.maxHp = 40
     enemy.damage = 2
 
-    $('#victory-trophy-container').style.display = 'none'
-    $('#choco-levelup-modal').style.display = 'none'
+    const victoryTrophyContainer = $('#victory-trophy-container') as HTMLDivElement
+    const levelupModal = $('#choco-levelup-modal') as HTMLDivElement
+    victoryTrophyContainer.style.display = 'none'
+    levelupModal.style.display = 'none'
 
     spawnEnemy()
     updateUI()
@@ -452,14 +469,23 @@
   }
 
   function updateUI() {
-    $('#choco-hp-bar').style.width = (player.hp / player.maxHp) * 100 + '%'
-    $('#choco-enemy-hp-bar').style.width = (enemy.hp / enemy.maxHp) * 100 + '%'
-    $('#choco-exp-bar').style.width = (state.exp / state.expToNext) * 100 + '%'
-    $('#choco-level-display').innerText = state.level
-    $('#choco-kills-display').innerText = state.kills
-    $('#choco-stat-str').innerText = player.str
-    $('#choco-stat-crit').innerText = player.crit
-    $('#choco-stat-lifesteal').innerText = player.lifesteal
+    const hpBar = $('#choco-hp-bar') as HTMLDivElement
+    const enemyHpBar = $('#choco-enemy-hp-bar') as HTMLDivElement
+    const expBar = $('#choco-exp-bar') as HTMLDivElement
+    const levelDisplay = $('#choco-level-display') as HTMLSpanElement
+    const killsDisplay = $('#choco-kills-display') as HTMLSpanElement
+    const statStr = $('#choco-stat-str') as HTMLSpanElement
+    const statCrit = $('#choco-stat-crit') as HTMLSpanElement
+    const statLifesteal = $('#choco-stat-lifesteal') as HTMLSpanElement
+
+    hpBar.style.width = (player.hp / player.maxHp) * 100 + '%'
+    enemyHpBar.style.width = (enemy.hp / enemy.maxHp) * 100 + '%'
+    expBar.style.width = (state.exp / state.expToNext) * 100 + '%'
+    levelDisplay.innerText = state.level.toString()
+    killsDisplay.innerText = state.kills.toString()
+    statStr.innerText = player.str.toString()
+    statCrit.innerText = player.crit.toString()
+    statLifesteal.innerText = player.lifesteal.toString()
   }
 
   function createFloatingText(
