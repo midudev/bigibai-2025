@@ -3,44 +3,758 @@ import Layout from '@/layouts/Layout.astro'
 import Footer from '@/sections/Footer.astro'
 import Header from '@/sections/Header.astro'
 import Countdown from '@/components/Countdown.astro'
-import { cells } from '@/data/days-data'
+import Button from '@/components/Button.astro'
+import { cells, type GameType } from '@/data/days-data'
+import AnagramGame from '@/components/games/AnagramGame.astro'
+import TriviaGame from '@/components/games/TriviaGame.astro'
+import PuzzleGame from '@/components/games/PuzzleGame.astro'
+import MemoryGame from '@/components/games/MemoryGame.astro'
+import RacerGame from '@/components/games/RacerGame.astro'
+import { isAdmin } from '@/utils/admin'
 
-export interface Props {
-  description: string
-}
+const {
+  params: { dia: paramDay },
+} = Astro
 
-const { description } = Astro.props
-const { params } = Astro
+const paramDayNumber = Number(paramDay)
+if (Number.isNaN(paramDayNumber)) return Astro.redirect('/404')
 
-export function getStaticPaths() {
-  return cells.map((cell) => {
-    return {
-      params: {
-        dia: cell.day,
-      },
-      props: {
-        description: cell.description,
-      },
-    }
-  })
-}
+const dayData = cells.find((cell) => cell.day === paramDayNumber)
+
+if (!dayData) return Astro.redirect('/404')
+
+const { description, gameType, gameData } = dayData
+
+// Verificar si el usuario es administrador
+const user = Astro.locals.user
+const userIsAdmin = isAdmin(user?.id)
+
+// Verificar si el día ya es accesible
+const today = new Date()
+const currentMonth = today.getMonth() // 0-11 (11 = diciembre)
+const currentDay = today.getDate()
+
+// Solo es accesible si estamos en diciembre y el día actual es igual o mayor al día de la casilla
+const isDayAccessible = currentMonth === 11 && currentDay >= paramDayNumber
+
+// Los admins pueden ver todas las casillas, o si el día es accesible
+const isAccessible = userIsAdmin || isDayAccessible
+
+// Obtener el nombre del premio desde gameData
+const prizeName = gameData?.prize || 'el premio del día'
 ---
 
 <Layout description={description}>
   <div class="flex min-h-screen flex-col">
-    <Header />
-    <div class="flex flex-1">
-      <main class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4">
-        <Countdown day={params.dia} />
-        <p
-          class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up"
-          style="animation-delay: 0.2s;"
-          aria-live="off"
-        >
-          {description}
-        </p>
-      </main>
-    </div>
-    <Footer />
+    {
+      isAccessible ? (
+        <div id="casilla-flow" class="flex-1 relative text-xs">
+          {/* Aviso de admin si está viendo una casilla que aún no es visible para todos */}
+          {userIsAdmin && !isDayAccessible && (
+            <div class="admin-notice">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <span class="text-xs">
+                Vista previa de admin - Esta casilla no es visible para usuarios
+              </span>
+            </div>
+          )}
+
+          <canvas id="confetti-canvas" class="confetti-canvas w-full h-full" />
+
+          {/* Pantalla 1: Animación de apertura con calendario */}
+          <div id="screen-opening" class="screen active">
+            <div class="opening-animation relative">
+              <div class="scene">
+                <div class="calendar-wrapper" id="calendarWrapper">
+                  <img src="/calendar.webp" alt="Calendario" class="bg-image" />
+                  <div class="grid-layer" id="gridLayer" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pantalla 2: Adivina el premio */}
+          <div id="screen-guess" class="screen">
+            <div class="screen-content">
+              <div class="text-center mb-8">
+                <h1
+                  class="text-4xl md:text-5xl text-brand font-bold mb-4 uppercase"
+                  style="font-family: 'Heavy', sans-serif; text-shadow: var(--text-shadow-title);"
+                >
+                  ¡Adivina el premio
+                  <br />
+                  del día {paramDayNumber}!
+                </h1>
+                <p class="text-white/70 text-lg">Resuelve el reto para descubrirlo</p>
+              </div>
+
+              <div class="chocolate-reveal">
+                <img
+                  src={`/chocolatinas/${paramDayNumber}.webp`}
+                  alt="Chocolatina"
+                  class="chocolate-image floating-chocolate"
+                  onerror="this.src='/chocolatinas/1.webp'"
+                />
+              </div>
+
+              <div class="flex flex-col gap-4 mt-12 max-w-[320px] mx-auto">
+                <Button id="btn-start-game" variant="brand" size="lg" class="w-full">
+                  ¡Empezar el reto!
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Pantalla 3: Renderizar el componente de juego según el tipo */}
+          <div id="screen-game" class="screen">
+            {gameType === 'anagram' && <AnagramGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'trivia' && <TriviaGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'puzzle' && <PuzzleGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'memory' && <MemoryGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'racer' && <RacerGame day={paramDayNumber} gameData={gameData} />}
+          </div>
+        </div>
+      ) : (
+        <>
+          <Header />
+          <div class="flex flex-1">
+            <main class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4">
+              <Countdown day={paramDayNumber} />
+              <p
+                class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up"
+                style="animation-delay: 0.2s;"
+                aria-live="off"
+              >
+                {description}
+              </p>
+            </main>
+          </div>
+          <Footer />
+        </>
+      )
+    }
   </div>
 </Layout>
+
+<style>
+  :root {
+    /* Variables de ajuste */
+    --pad-top: 3%;
+    --pad-bottom: 5%;
+    --pad-side: 7%;
+    --gap-row: 16px;
+    --gap-col: 26px;
+
+    /* Variables de animación */
+    --zoom-scale: 3.5;
+    --bg-image: url('/calendar.webp');
+  }
+
+  /* Contenedor principal */
+  #casilla-flow {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Oscurecer el fondo más durante el flujo de casillas */
+  #casilla-flow::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .confetti-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  /* Pantallas */
+  .screen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    padding: 2rem 0;
+  }
+
+  .screen.opening {
+    padding: 0;
+  }
+
+  .screen.active {
+    display: flex;
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .screen-content {
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Pantalla 1: Animación de apertura */
+  .opening-animation {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .scene {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    perspective: 1000px;
+    z-index: 2;
+  }
+
+  .calendar-wrapper {
+    position: relative;
+    width: 100%;
+    transform-style: preserve-3d;
+    transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+    cursor: default;
+  }
+
+  .calendar-wrapper.shake {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+  }
+
+  .calendar-wrapper.is-zoomed {
+    cursor: pointer;
+  }
+
+  .bg-image {
+    width: 100%;
+    display: block;
+    border-radius: 10px;
+    pointer-events: none;
+  }
+
+  .grid-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    padding-top: var(--pad-top);
+    padding-bottom: var(--pad-bottom);
+    padding-left: var(--pad-side);
+    padding-right: var(--pad-side);
+    column-gap: var(--gap-col);
+    row-gap: var(--gap-row);
+    pointer-events: none;
+  }
+
+  /* Estilos para las puertas generadas dinámicamente */
+  :global(.door-container) {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    cursor: pointer;
+    perspective: 600px;
+    transform-style: preserve-3d;
+  }
+
+  :global(.door-flipper) {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transition: transform 0.6s cubic-bezier(0.4, 2, 0.6, 1);
+  }
+
+  :global(.door-container.is-open .door-flipper) {
+    transform: rotateY(-110deg);
+  }
+
+  :global(.door-front) {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 2px;
+    background-image: var(--bg-image);
+    background-size: 400% 600%;
+    color: transparent;
+    text-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    z-index: 2;
+    transition:
+      color 0.3s ease,
+      text-shadow 0.3s ease;
+  }
+
+  :global(.door-container:hover .door-front),
+  :global(.door-container.is-open .door-front) {
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 2px 4px black;
+  }
+
+  :global(.door-back) {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 4px;
+    background-color: #eaeaea;
+    background-image: linear-gradient(to bottom right, #e6e6e6, #f2f2f2);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transform: rotateY(180deg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  :global(.door-hole) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    z-index: 0;
+    box-shadow: inset 0 0 10px black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  :global(.door-chocolate) {
+    width: 80%;
+    height: auto;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    transform: rotate(-5deg);
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Chocolate Reveal */
+  .chocolate-reveal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
+    animation: fadeInScale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .chocolate-image {
+    width: 120px;
+    height: auto;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    transform: rotate(-5deg);
+    transition: transform 0.3s ease;
+  }
+
+  @media (min-width: 768px) {
+    .chocolate-image {
+      width: 250px;
+    }
+  }
+
+  .chocolate-image:hover {
+    transform: rotate(0deg) scale(1.05);
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: rotate(-10deg) translateY(0px);
+    }
+    50% {
+      transform: rotate(-5deg) translateY(-20px);
+    }
+  }
+
+  .floating-chocolate {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes shake {
+    0% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    10% {
+      transform: translate(-5px, -5px) rotate(-3deg);
+    }
+    20% {
+      transform: translate(5px, 5px) rotate(3deg);
+    }
+    30% {
+      transform: translate(-5px, 5px) rotate(-3deg);
+    }
+    40% {
+      transform: translate(5px, -5px) rotate(3deg);
+    }
+    50% {
+      transform: translate(-5px, -5px) rotate(-3deg);
+    }
+    60% {
+      transform: translate(5px, 5px) rotate(3deg);
+    }
+    70% {
+      transform: translate(-5px, 5px) rotate(-3deg);
+    }
+    80% {
+      transform: translate(5px, -5px) rotate(3deg);
+    }
+    90% {
+      transform: translate(-5px, -5px) rotate(-3deg);
+    }
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+  }
+
+  /* Aviso de administrador */
+  .admin-notice {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(248, 177, 52, 0.95);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(248, 177, 52, 1);
+    border-radius: 0.5rem;
+    color: #000;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(248, 177, 52, 0.3);
+    animation: slideInLeft 0.5s ease-out;
+  }
+
+  .admin-notice svg {
+    flex-shrink: 0;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .admin-notice {
+      left: 0.5rem;
+      right: 0.5rem;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .admin-notice span {
+      line-height: 1.3;
+    }
+  }
+</style>
+
+<script>
+  import confetti from 'canvas-confetti'
+
+  const $ = document.querySelector.bind(document)
+
+  // Obtener el día desde la URL
+  const pathParts = window.location.pathname.split('/')
+  const dayMatch = pathParts.find((part) => part.startsWith('casilla-'))
+  const day = dayMatch ? parseInt(dayMatch.split('-')[1]) : 1
+
+  console.log('Día detectado:', day)
+
+  // Configuración del calendario
+  const doorNumbers = [
+    14, 7, 10, 22, 3, 15, 13, 12, 21, 16, 20, 2, 9, 5, 24, 8, 19, 11, 18, 1, 4, 17, 6, 23,
+  ]
+
+  // Elementos del DOM
+  const screens = {
+    opening: $('#screen-opening'),
+    guess: $('#screen-guess'),
+    game: $('#screen-game'),
+  }
+
+  const gridLayer = $('#gridLayer')
+  const wrapper = $('#calendarWrapper')
+  let activeDoor = null
+  let isZoomed = false
+  let currentScreen = 'opening'
+
+  // Inicialización del calendario
+  function initCalendar() {
+    console.log('initCalendar llamado')
+    console.log('gridLayer:', gridLayer)
+    console.log('wrapper:', wrapper)
+
+    if (!gridLayer || !wrapper) {
+      console.error('No se encontró gridLayer o wrapper')
+      return
+    }
+
+    doorNumbers.forEach((number, index) => {
+      const cell = document.createElement('div')
+      cell.className = 'door-container'
+      cell.id = `door-${index}`
+
+      const holeContent =
+        number === day
+          ? `<img src="/chocolatinas/${day}.webp" class="door-chocolate" alt="Chocolate" />`
+          : ''
+
+      cell.innerHTML = `
+          <div class="door-hole">${holeContent}</div>
+          <div class="door-flipper">
+            <div class="door-front">
+              <span>${number}</span>
+            </div>
+            <div class="door-back"></div>
+          </div>
+        `
+
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation()
+        handleDoorClick(cell, index)
+      })
+
+      gridLayer.appendChild(cell)
+    })
+
+    requestAnimationFrame(updateDoorBackgrounds)
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDoorBackgrounds()
+    })
+    resizeObserver.observe(wrapper)
+  }
+
+  function updateDoorBackgrounds() {
+    if (!wrapper) return
+    const wrapperRect = wrapper.getBoundingClientRect()
+    const doors = document.querySelectorAll('.door-front') as NodeListOf<HTMLElement>
+
+    doors.forEach((door) => {
+      const doorRect = door.getBoundingClientRect()
+      const offsetX = doorRect.left - wrapperRect.left
+      const offsetY = doorRect.top - wrapperRect.top
+
+      door.style.backgroundSize = `${wrapperRect.width}px ${wrapperRect.height}px`
+      door.style.backgroundPosition = `-${offsetX}px -${offsetY}px`
+    })
+  }
+
+  // Lógica de ZOOM + CENTRADO
+  function handleDoorClick(doorElement: HTMLElement, index: number) {
+    if (isZoomed || !wrapper) return
+
+    isZoomed = true
+    activeDoor = doorElement
+
+    const rect = doorElement.getBoundingClientRect()
+    const wrapperRect = wrapper.getBoundingClientRect()
+
+    const doorCenterX = rect.left + rect.width / 2
+    const doorCenterY = rect.top + rect.height / 2
+
+    const targetCenterX = wrapperRect.left + wrapperRect.width / 2
+    const targetCenterY = wrapperRect.top + wrapperRect.height / 2
+
+    const originX = doorCenterX - wrapperRect.left
+    const originY = doorCenterY - wrapperRect.top
+
+    wrapper.style.transformOrigin = `${originX}px ${originY}px`
+
+    const moveX = targetCenterX - doorCenterX
+    const moveY = targetCenterY - doorCenterY
+
+    wrapper.style.transform = `translate(${moveX}px, ${moveY}px) scale(var(--zoom-scale))`
+    wrapper.classList.add('is-zoomed')
+
+    setTimeout(() => {
+      doorElement.classList.add('is-open')
+
+      setTimeout(() => {
+        transitionToScreen('guess')
+      }, 1000)
+    }, 800)
+  }
+
+  // Animación inicial automática
+  function startOpeningAnimation() {
+    console.log('startOpeningAnimation llamado')
+    console.log('wrapper:', wrapper)
+
+    if (!wrapper) {
+      console.error('No se encontró wrapper')
+      return
+    }
+
+    const SHAKE_DURATION = 1500
+
+    setTimeout(() => {
+      console.log('Iniciando shake')
+      wrapper.classList.add('shake')
+      launchChristmasConfetti(SHAKE_DURATION)
+
+      setTimeout(() => {
+        wrapper.classList.remove('shake')
+
+        const dayIndex = doorNumbers.indexOf(day)
+        if (dayIndex !== -1) {
+          const doorElement = document.getElementById(`door-${dayIndex}`)
+          if (doorElement) {
+            handleDoorClick(doorElement, dayIndex)
+          }
+        }
+      }, SHAKE_DURATION)
+    }, 500)
+  }
+
+  // Configurar canvas de confetti
+  const canvas = document.getElementById('confetti-canvas')
+  const myConfetti = canvas
+    ? confetti.create(canvas, {
+        resize: true,
+        useWorker: true,
+      })
+    : null
+
+  // Función para lanzar confetti navideño
+  function launchChristmasConfetti(duration = 3000) {
+    if (!myConfetti) return
+
+    const animationEnd = Date.now() + duration
+    const defaults = {
+      startVelocity: 30,
+      spread: 360,
+      ticks: 60,
+      zIndex: 1,
+    }
+
+    const interval = setInterval(function () {
+      const timeLeft = animationEnd - Date.now()
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval)
+      }
+
+      const particleCount = 100 * (timeLeft / duration)
+
+      myConfetti({
+        ...defaults,
+        particleCount,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+        scalar: 1.2,
+      })
+    }, 250)
+  }
+
+  function transitionToScreen(screenName) {
+    console.log('transitionToScreen llamado con:', screenName)
+    console.log('Screen actual:', currentScreen)
+    console.log('Screens disponibles:', screens)
+
+    if (screens[currentScreen]) {
+      console.log('Removiendo active de:', currentScreen)
+      screens[currentScreen]?.classList.remove('active')
+    }
+
+    if (screens[screenName]) {
+      console.log('Añadiendo active a:', screenName)
+      screens[screenName]?.classList.add('active')
+      currentScreen = screenName
+
+      if (screenName === 'game') {
+        console.log('Iniciando juego - disparando evento start-game')
+        // Disparar evento para que el juego se inicie
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('start-game'))
+        }, 100)
+      }
+    } else {
+      console.error('Screen no encontrada:', screenName)
+    }
+  }
+
+  // Event Listeners
+  console.log('Script cargado')
+
+  // Función para inicializar todo
+  function init() {
+    console.log('Iniciando calendario y animaciones')
+    initCalendar()
+    startOpeningAnimation()
+
+    document.getElementById('btn-start-game')?.addEventListener('click', () => {
+      transitionToScreen('game')
+    })
+  }
+
+  // Ejecutar cuando el DOM esté listo o inmediatamente si ya está listo
+  if (document.readyState === 'loading') {
+    console.log('DOM todavía cargando, esperando DOMContentLoaded')
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    console.log('DOM ya listo, ejecutando inmediatamente')
+    init()
+  }
+
+  // Exponer función globalmente para que los juegos puedan cambiar de pantalla
+  window.transitionToScreen = transitionToScreen
+</script>
