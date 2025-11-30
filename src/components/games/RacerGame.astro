@@ -133,6 +133,7 @@ const GAME_DATA = {
 <script>
   import { actions } from 'astro:actions'
   import { showAchievement } from '@/utils/show-achievement'
+  import confetti from 'canvas-confetti'
   
   ;(function () {
     /**
@@ -275,12 +276,11 @@ const GAME_DATA = {
     /**
      * MOTOR DEL JUEGO
      */
-    const canvas = document.getElementById('racerCanvas')
-    if (!canvas) {
-      console.error('RacerGame: Canvas no encontrado')
-      return
-    }
+    const canvas = document.getElementById('racerCanvas') as HTMLCanvasElement
+    if (!canvas) return
+    
     const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
     // Estado del juego
     let state = {
@@ -294,8 +294,8 @@ const GAME_DATA = {
 
     // Entidades
     let player = { lane: 1, y: 0, animY: 0 }
-    let enemies = []
-    let coins = []
+    let enemies: { lane: number, y: number, type: string }[] = []
+    let coins: { lane: number, y: number }[] = []
 
     // Inputs visuales
     let buttons = {
@@ -354,7 +354,7 @@ const GAME_DATA = {
     /**
      * INPUT HANDLING
      */
-    function handleKey(e) {
+    function handleKey(e: KeyboardEvent) {
       if (state.status !== 'playing') return
       if (e.key === 'ArrowLeft') {
         movePlayer(-1)
@@ -366,12 +366,12 @@ const GAME_DATA = {
       }
     }
 
-    function handleKeyUp(e) {
+    function handleKeyUp(e: KeyboardEvent) {
       buttons.left.pressed = false
       buttons.right.pressed = false
     }
 
-    function getCanvasCoords(event) {
+    function getCanvasCoords(event: MouseEvent) {
       const rect = canvas.getBoundingClientRect()
       const scaleX = canvas.width / rect.width
       const scaleY = canvas.height / rect.height
@@ -381,7 +381,7 @@ const GAME_DATA = {
       }
     }
 
-    function handleInputStart(e) {
+    function handleInputStart(e: MouseEvent | TouchEvent) {
       // ACTIVAR AUDIO EN PRIMER CLICK
       if (audioCtx.state === 'suspended') {
         audioCtx.resume()
@@ -406,11 +406,11 @@ const GAME_DATA = {
       buttons.right.pressed = false
     }
 
-    function hitTest(pos, btn) {
+    function hitTest(pos: { x: number, y: number }, btn: { x: number, y: number, w: number, h: number }) {
       return pos.x >= btn.x && pos.x <= btn.x + btn.w && pos.y >= btn.y && pos.y <= btn.y + btn.h
     }
 
-    function movePlayer(dir) {
+    function movePlayer(dir: number) {
       const newLane = player.lane + dir
       if (newLane >= 0 && newLane < LANE_COUNT) {
         player.lane = newLane
@@ -461,7 +461,7 @@ const GAME_DATA = {
       }
     }
 
-    function updateEntities(arr, speed) {
+    function updateEntities(arr: { lane: number, y: number }[], speed: number) {
       for (let i = arr.length - 1; i >= 0; i--) {
         arr[i].y += speed
         if (arr[i].y > INTERNAL_HEIGHT) arr.splice(i, 1)
@@ -496,6 +496,7 @@ const GAME_DATA = {
      * DRAW LOGIC
      */
     function draw() {
+      if (!ctx) return
       // Fondo
       ctx.fillStyle = '#333'
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
@@ -523,6 +524,8 @@ const GAME_DATA = {
     }
 
     function drawRoad() {
+      if (!ctx) return
+
       ctx.fillStyle = '#222'
       ctx.fillRect(20, 0, INTERNAL_WIDTH - 40, INTERNAL_HEIGHT)
 
@@ -543,6 +546,8 @@ const GAME_DATA = {
     }
 
     function drawUI() {
+      if (!ctx) return
+    
       ctx.fillStyle = '#fff'
       ctx.font = '20px "Press Start 2P"'
       ctx.textAlign = 'center'
@@ -566,7 +571,9 @@ const GAME_DATA = {
       }
     }
 
-    function drawButton(btn, sprite) {
+    function drawButton(btn: { x: number, y: number, w: number, h: number, pressed: boolean }, sprite: number[][]) {
+      if (!ctx) return
+
       ctx.fillStyle = btn.pressed ? '#bdc3c7' : '#ecf0f1'
 
       if (!btn.pressed) {
@@ -586,7 +593,9 @@ const GAME_DATA = {
       drawSprite(ctx, sprite, iconX, iconY, iconScale, PALETTES.ui)
     }
 
-    function drawOverlay(title, subtitle, showInstructions = false) {
+    function drawOverlay(title: string, subtitle: string, showInstructions = false) {
+      if (!ctx) return
+  
       ctx.fillStyle = 'rgba(0,0,0,0.85)'
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
@@ -652,10 +661,9 @@ const GAME_DATA = {
     }
 
     async function onLevelComplete() {
-      // Mostrar video y resultado
-      const videoPlaceholder = document.getElementById('video-placeholder')
-      const placeholderContent = videoPlaceholder?.querySelector('.placeholder-content')
-      const video = document.getElementById('prize-video-racer')
+      const videoPlaceholder = document.getElementById('video-placeholder') as HTMLElement
+      const placeholderContent = videoPlaceholder?.querySelector('.placeholder-content') as HTMLElement
+      const video = document.getElementById('prize-video-racer') as HTMLVideoElement
 
       const gameActiveContent = document.getElementById('game-active-content')
       const gameSuccessContent = document.getElementById('game-success-content')
@@ -674,9 +682,8 @@ const GAME_DATA = {
       if (gameSuccessContent) gameSuccessContent.classList.remove('hidden')
 
       // Confetti
-      if (window.confetti) {
-        const canvas = document.getElementById('confetti-canvas')
-        const myConfetti = window.confetti.create(canvas, {
+        const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement
+        const myConfetti = confetti.create(canvas, {
           resize: true,
           useWorker: true,
         })
@@ -704,7 +711,6 @@ const GAME_DATA = {
             requestAnimationFrame(frame)
           }
         })()
-      }
 
       // Achievement - Grant "a-todo-gas" achievement
       actions
