@@ -21,38 +21,23 @@ const allAchievements = Object.values(ACHIEVEMENTS)
       </h2>
     </div>
 
-    {
-      !isLoggedIn ? (
-        <div class="relative flex flex-col items-center justify-center min-h-[300px]">
+    <div class="relative flex flex-col items-center justify-center">
+      {
+        !isLoggedIn && (
           <div class="absolute z-10 flex flex-col items-center gap-4 h-full w-full justify-center px-4">
-            <p class="text-lg text-white/80 text-balance text-center">
+            <p class="text-lg text-white/80 text-balance text-center leading-tight">
               Inicia sesión para desbloquear y guardar tus logros
             </p>
             <Button href="/registro" variant="brand" size="lg">
               Iniciar sesión
             </Button>
           </div>
-          <div class="grid grid-cols-2 gap-2 w-full mt-12 blur-xs">
-            {allAchievements.map((achievement) => (
-              <div class="flex flex-col items-center gap-3 p-2 opacity-40 grayscale select-none pointer-events-none">
-                <div class="relative">
-                  <img
-                    src={achievement.image}
-                    alt={achievement.title}
-                    class="w-16 h-16 object-contain drop-shadow-lg"
-                    loading="lazy"
-                  />
-                </div>
-                <div class="text-center">
-                  <p class="text-xs font-bold text-white/60 leading-tight">{achievement.title}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div class="grid grid-cols-3 gap-2">
-          {allAchievements.map((achievement) => {
+        )
+      }
+
+      <div class={`grid grid-cols-3 gap-2 ${!isLoggedIn ? 'blur-xs' : ''}`}>
+        {
+          allAchievements.map((achievement) => {
             const isUnlocked = !!userAchievements[achievement.id]
             return (
               <div
@@ -73,13 +58,15 @@ const allAchievements = Object.values(ACHIEVEMENTS)
                   />
                 </div>
                 <div class="text-center relative">
-                  <p class="text-xs font-bold text-white leading-tight mb-1">{achievement.title}</p>
+                  <p class="text-[10px] lg:text-xs font-bold text-white leading-tight mb-1">
+                    {achievement.title}
+                  </p>
                 </div>
               </div>
             )
-          })}
-        </div>
-      )
-    }
+          })
+        }
+      </div>
+    </div>
   </div>
 </BentoCard>
