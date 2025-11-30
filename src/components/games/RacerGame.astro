@@ -1,5 +1,4 @@
 ---
-import Button from '@/components/Button.astro'
 import AchievementNotification from '@/components/AchievementNotification.astro'
 
 export interface Props {
@@ -15,9 +14,9 @@ const { day, gameData } = Astro.props
 
 const GAME_DATA = {
   day: day,
-  targetScore: gameData?.targetScore || 15,
+  targetScore: gameData?.targetScore || 1,
   prize: gameData?.prize || 'Premio del día',
-  videoUrl: gameData?.videoUrl || '/videos/mock.mp4',
+  videoUrl: gameData?.videoUrl,
 }
 ---
 
@@ -28,20 +27,12 @@ const GAME_DATA = {
       <div class="game-canvas-container">
         <canvas id="racerCanvas"></canvas>
       </div>
-      <div class="game-instructions">
-        <p class="text-white/70 text-sm text-center">
-          🎮 Usa las flechas del teclado o los botones en pantalla
-        </p>
-        <p class="text-white/70 text-sm text-center">
-          🪙 Recoge {GAME_DATA.targetScore} monedas para ganar
-        </p>
-      </div>
     </div>
 
     <!-- Contenido de éxito (Oculto inicialmente) -->
     <div
       id="game-success-content"
-      class="hidden h-full flex flex-col justify-center items-center text-center"
+      class="hidden h-full flex-col justify-center items-center text-center"
     >
       <h2
         class="text-4xl text-brand font-bold mb-6 uppercase"
@@ -53,8 +44,8 @@ const GAME_DATA = {
       <p class="text-3xl text-brand font-bold uppercase mb-8">{GAME_DATA.prize}</p>
 
       <div class="bg-black/30 p-4 rounded-lg border border-white/10 mb-6 w-full">
-        <p class="text-sm text-white/60 mb-2">* Todos los sorteos se harán el 24 de diciembre.</p>
-        <p class="text-sm text-brand/80 font-bold">
+        <p class="text-sm text-white/60 mb-2 text-balance">* Todos los sorteos se harán el 24 de diciembre.</p>
+        <p class="text-sm text-brand/80 font-bold text-balance">
           Vuelve mañana para desvelar el premio de mañana.
         </p>
       </div>
@@ -75,7 +66,12 @@ const GAME_DATA = {
         muted
         loop
       >
-        <source src={GAME_DATA.videoUrl} type="video/mp4" />
+        {GAME_DATA.videoUrl === 'mock' ? (
+          <source src="/videos/mock.mp4" type="video/mp4" />
+        ) : (
+          <source src={`https://videos.bigibai.com/premios/${GAME_DATA.videoUrl}.webm`} type="video/webm" />
+          <source src={`https://videos.bigibai.com/premios/${GAME_DATA.videoUrl}.mp4`} type="video/mp4" />
+        )}
       </video>
     </div>
   </div>
@@ -123,13 +119,6 @@ const GAME_DATA = {
     image-rendering: pixelated;
     outline: none;
     -webkit-tap-highlight-color: transparent;
-  }
-
-  .game-instructions {
-    margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
   }
 
   .video-placeholder {
@@ -230,6 +219,11 @@ const GAME_DATA = {
      * SISTEMA DE SONIDO (Web Audio API)
      */
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/racer-music.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
 
     function playSound(type) {
       if (audioCtx.state === 'suspended') {
@@ -370,6 +364,10 @@ const GAME_DATA = {
       player.lane = 1
       enemies = []
       coins = []
+      
+      // Iniciar música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(e => console.log('Error reproduciendo música:', e))
     }
 
     /**
@@ -461,7 +459,8 @@ const GAME_DATA = {
 
       if (state.score >= TARGET_SCORE) {
         state.status = 'win'
-        setTimeout(onLevelComplete, 500)
+        bgMusic.pause()
+        setTimeout(onLevelComplete, 2500)
       }
     }
 
@@ -497,6 +496,7 @@ const GAME_DATA = {
         if (e.lane === player.lane && e.y + 70 > pY + 10 && e.y < pY + pH - 10) {
           playSound('crash')
           state.status = 'gameover'
+          bgMusic.pause()
         }
       })
 
@@ -577,11 +577,11 @@ const GAME_DATA = {
       }
 
       if (state.status === 'start') {
-        drawOverlay('ADVENT RACER', 'CLICK PARA JUGAR')
+        drawOverlay('ADVENT RACER', 'CLICK PARA JUGAR', true)
       } else if (state.status === 'gameover') {
         drawOverlay('CHOQUE', 'REINTENTAR')
       } else if (state.status === 'win') {
-        drawOverlay('GANASTE', 'ABRIENDO REGALO...')
+        drawOverlay('GANASTE', 'DESBLOQUEANDO...')
       }
     }
 
@@ -605,22 +605,50 @@ const GAME_DATA = {
       drawSprite(ctx, sprite, iconX, iconY, iconScale, PALETTES.ui)
     }
 
-    function drawOverlay(title, subtitle) {
+    function drawOverlay(title, subtitle, showInstructions = false) {
       ctx.fillStyle = 'rgba(0,0,0,0.85)'
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.fillStyle = '#c0392b'
       ctx.font = '30px "Press Start 2P"'
-      ctx.fillText(title, INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 - 20 + 4)
-
-      ctx.fillStyle = '#f1c40f'
-      ctx.fillText(title, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
+      
+      // Dividir el título en dos líneas si contiene espacio
+      const titleParts = title.split(' ')
+      if (titleParts.length > 1) {
+        // Sombra línea 1
+        ctx.fillStyle = '#c0392b'
+        ctx.fillText(titleParts[0], INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 - 40 + 4)
+        // Título línea 1
+        ctx.fillStyle = '#f1c40f'
+        ctx.fillText(titleParts[0], INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 40)
+        
+        // Sombra línea 2
+        ctx.fillStyle = '#c0392b'
+        ctx.fillText(titleParts.slice(1).join(' '), INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 + 4)
+        // Título línea 2
+        ctx.fillStyle = '#f1c40f'
+        ctx.fillText(titleParts.slice(1).join(' '), INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2)
+      } else {
+        // Si no hay espacio, mostrar en una línea
+        ctx.fillStyle = '#c0392b'
+        ctx.fillText(title, INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 - 20 + 4)
+        ctx.fillStyle = '#f1c40f'
+        ctx.fillText(title, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
+      }
 
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
         ctx.font = '16px "Press Start 2P"'
         ctx.fillText(subtitle, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+      }
+
+      // Mostrar instrucciones en pantalla de inicio
+      if (showInstructions) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.textAlign = 'center'
+        ctx.fillText('CLIC EN FLECHAS O USA LAS TECLAS', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 20)
+        ctx.fillText(`RECOGE ${TARGET_SCORE} MONEDAS `, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 8)
       }
     }
 
