@@ -382,4 +382,33 @@ export const server = {
       }
     },
   }),
+
+  grantGameAchievement: defineAction({
+    input: z.object({
+      achievementId: z.string(),
+    }),
+    async handler({ achievementId }, ctx) {
+      const user = ctx.locals.user
+      if (!user) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'Debes iniciar sesión',
+        })
+      }
+
+      const result = await grantAchievement(user.id, achievementId)
+      if (!result.success) {
+        throw new ActionError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error al guardar el logro',
+        })
+      }
+
+      return { 
+        success: true, 
+        new: result.new,
+        achievement: result.new && result.achievement ? result.achievement : undefined,
+      }
+    },
+  }),
 }
