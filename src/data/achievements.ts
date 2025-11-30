@@ -31,15 +31,15 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
   'first-unlocked': {
     id: 'first-unlocked',
     title: '¿Qué es? ¿Qué es?',
-    descriptionDo: 'Desvela tu primer sorteo',
+    descriptionDo: 'Desvela el primer sorteo',
     descriptionDone: '¡Has desvelado tu primer sorteo!',
     image: '/pixel-pig-achievement.png',
   },
   'five-unlocked': {
     id: 'five-unlocked',
     title: '¡El quinto!',
-    descriptionDo: 'Desvela tu quinto sorteo',
-    descriptionDone: '¡Has desvelado tu quinto sorteo!',
+    descriptionDo: 'Desvela cinco sorteos',
+    descriptionDone: '¡Has desvelado cinco sorteos!',
     image: '/pixel-five-achievement.png',
   },
   'all-unlocked': {
@@ -48,6 +48,13 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     descriptionDo: 'Desvela todos los sorteos',
     descriptionDone: '¡Has desvelado todos los sorteos!',
     image: '/pixel-gift-achievement.png',
+  },
+  'a-todo-gas': {
+    id: 'a-todo-gas',
+    title: 'A todo gas',
+    descriptionDo: 'Completa el juego del coche',
+    descriptionDone: '¡Has completado el juego del coche!',
+    image: '/pixel-car-achievement.png',
   },
   'clicker-level-1': {
     id: 'clicker-level-1',
