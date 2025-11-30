@@ -42,9 +42,6 @@ const isDayAccessible = currentMonth === 11 && currentDay >= paramDayNumber
 
 // Los admins pueden ver todas las casillas, o si el día es accesible
 const isAccessible = userIsAdmin || isDayAccessible
-
-// Obtener el nombre del premio desde gameData
-const prizeName = gameData?.prize || 'el premio del día'
 ---
 
 <Layout description={description}>
@@ -571,8 +568,6 @@ const prizeName = gameData?.prize || 'el premio del día'
   const dayMatch = pathParts.find((part) => part.startsWith('casilla-'))
   const day = dayMatch ? parseInt(dayMatch.split('-')[1]) : 1
 
-  console.log('Día detectado:', day)
-
   // Configuración del calendario
   const doorNumbers = [
     14, 7, 10, 22, 3, 15, 13, 12, 21, 16, 20, 2, 9, 5, 24, 8, 19, 11, 18, 1, 4, 17, 6, 23,
@@ -580,25 +575,20 @@ const prizeName = gameData?.prize || 'el premio del día'
 
   // Elementos del DOM
   const screens = {
-    opening: $('#screen-opening'),
-    guess: $('#screen-guess'),
-    game: $('#screen-game'),
+    opening: $('#screen-opening') as HTMLDivElement,
+    guess: $('#screen-guess') as HTMLDivElement,
+    game: $('#screen-game') as HTMLDivElement,
   }
 
-  const gridLayer = $('#gridLayer')
-  const wrapper = $('#calendarWrapper')
-  let activeDoor = null
+  const gridLayer = $('#gridLayer') as HTMLDivElement
+  const wrapper = $('#calendarWrapper') as HTMLDivElement
   let isZoomed = false
-  let currentScreen = 'opening'
+  let activeDoor: HTMLElement | null = null
+  let currentScreen: keyof typeof screens = 'opening'
 
   // Inicialización del calendario
   function initCalendar() {
-    console.log('initCalendar llamado')
-    console.log('gridLayer:', gridLayer)
-    console.log('wrapper:', wrapper)
-
     if (!gridLayer || !wrapper) {
-      console.error('No se encontró gridLayer o wrapper')
       return
     }
 
@@ -691,18 +681,13 @@ const prizeName = gameData?.prize || 'el premio del día'
 
   // Animación inicial automática
   function startOpeningAnimation() {
-    console.log('startOpeningAnimation llamado')
-    console.log('wrapper:', wrapper)
-
     if (!wrapper) {
-      console.error('No se encontró wrapper')
       return
     }
 
     const SHAKE_DURATION = 1500
 
     setTimeout(() => {
-      console.log('Iniciando shake')
       wrapper.classList.add('shake')
       launchChristmasConfetti(SHAKE_DURATION)
 
@@ -721,7 +706,7 @@ const prizeName = gameData?.prize || 'el premio del día'
   }
 
   // Configurar canvas de confetti
-  const canvas = document.getElementById('confetti-canvas')
+  const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement
   const myConfetti = canvas
     ? confetti.create(canvas, {
         resize: true,
@@ -760,39 +745,28 @@ const prizeName = gameData?.prize || 'el premio del día'
     }, 250)
   }
 
-  function transitionToScreen(screenName) {
-    console.log('transitionToScreen llamado con:', screenName)
-    console.log('Screen actual:', currentScreen)
-    console.log('Screens disponibles:', screens)
-
+  function transitionToScreen(screenName: keyof typeof screens) {
     if (screens[currentScreen]) {
-      console.log('Removiendo active de:', currentScreen)
       screens[currentScreen]?.classList.remove('active')
     }
 
     if (screens[screenName]) {
-      console.log('Añadiendo active a:', screenName)
       screens[screenName]?.classList.add('active')
       currentScreen = screenName
 
       if (screenName === 'game') {
-        console.log('Iniciando juego - disparando evento start-game')
         // Disparar evento para que el juego se inicie
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('start-game'))
         }, 100)
       }
-    } else {
-      console.error('Screen no encontrada:', screenName)
     }
   }
 
   // Event Listeners
-  console.log('Script cargado')
 
   // Función para inicializar todo
   function init() {
-    console.log('Iniciando calendario y animaciones')
     initCalendar()
     startOpeningAnimation()
 
@@ -803,13 +777,8 @@ const prizeName = gameData?.prize || 'el premio del día'
 
   // Ejecutar cuando el DOM esté listo o inmediatamente si ya está listo
   if (document.readyState === 'loading') {
-    console.log('DOM todavía cargando, esperando DOMContentLoaded')
     document.addEventListener('DOMContentLoaded', init)
   } else {
-    console.log('DOM ya listo, ejecutando inmediatamente')
     init()
   }
-
-  // Exponer función globalmente para que los juegos puedan cambiar de pantalla
-  window.transitionToScreen = transitionToScreen
 </script>
