@@ -1,6 +1,7 @@
 ---
 import Button from '@/components/Button.astro'
 import AchievementNotification from '@/components/AchievementNotification.astro'
+import GameSuccessContent from '@/components/games/GameSuccessContent.astro'
 
 export interface Props {
   day: number
@@ -77,28 +78,7 @@ const GAME_DATA = {
     </div>
 
     <!-- Contenido de éxito (Oculto inicialmente) -->
-    <div
-      id="game-success-content"
-      class="hidden h-full flex flex-col justify-center items-center text-center"
-    >
-      <h2
-        class="text-4xl text-brand font-bold mb-6 uppercase"
-        style="font-family: 'Heavy', sans-serif;"
-      >
-        ¡Lo conseguiste!
-      </h2>
-      <p class="text-white text-lg mb-2">Has desvelado el premio del día:</p>
-      <p class="text-3xl text-brand font-bold uppercase mb-8">{GAME_DATA.prize}</p>
-
-      <div class="bg-black/30 p-4 rounded-lg border border-white/10 mb-6 w-full">
-        <p class="text-sm text-white/60 mb-2 text-balance">
-          * Todos los sorteos se harán el 24 de diciembre.
-        </p>
-        <p class="text-sm text-brand/80 font-bold">
-          Vuelve mañana para desvelar el premio de mañana.
-        </p>
-      </div>
-    </div>
+    <GameSuccessContent prize={GAME_DATA.prize} />
   </div>
 
   <!-- Columna Derecha: Video Placeholder / Resultado -->
