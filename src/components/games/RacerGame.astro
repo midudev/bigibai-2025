@@ -139,7 +139,7 @@ const GAME_DATA = {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const TARGET_SCORE = 1
+    const TARGET_SCORE = 10
     const LANE_COUNT = 3
     const INITIAL_SPEED = 3
     const SPEED_INCREMENT = 0.0005
@@ -688,19 +688,19 @@ const GAME_DATA = {
           useWorker: true,
         })
 
-        const duration = 3000
+        const duration = 1500
         const end = Date.now() + duration
 
         ;(function frame() {
           myConfetti({
-            particleCount: 7,
+            particleCount: 5,
             angle: 60,
             spread: 55,
             origin: { x: 0, y: 1 },
             colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
           })
           myConfetti({
-            particleCount: 7,
+            particleCount: 5,
             angle: 120,
             spread: 55,
             origin: { x: 1, y: 1 },
