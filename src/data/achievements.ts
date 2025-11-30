@@ -23,7 +23,7 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
   },
   'calendar-lover': {
     id: 'calendar-lover',
-    title: 'Amor por el chocolate',
+    title: 'Chocolate Lover',
     descriptionDo: 'Canjea 5 calendarios de adviento.',
     descriptionDone: '¡Has canjeado 5 calendarios de adviento!',
     image: '/pixel-heart-achievement.png',
