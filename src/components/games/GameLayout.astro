@@ -1,0 +1,176 @@
+---
+import AchievementNotification from '@/components/AchievementNotification.astro'
+import GameSuccessContent from '@/components/games/GameSuccessContent.astro'
+
+export interface Props {
+  prize: string
+  videoUrl?: string
+}
+
+const { prize, videoUrl } = Astro.props
+---
+
+<div class="screen-content game-layout">
+  <!-- Columna Izquierda: Juego -->
+  <div class="game-column">
+    <div id="game-active-content">
+      <div class="game-canvas-container">
+        <slot name="game" />
+      </div>
+    </div>
+
+    <!-- Contenido de éxito (Oculto inicialmente) -->
+    <GameSuccessContent prize={prize} />
+  </div>
+
+  <!-- Columna Derecha: Video Placeholder / Resultado -->
+  <div class="video-column">
+    <div id="video-placeholder" class="video-placeholder h-full">
+      <div class="placeholder-content">
+        <span class="text-6xl mb-4">🎬</span>
+        <p class="text-white/60 text-center">Completa el juego para desbloquear el vídeo</p>
+      </div>
+      <video
+        id="prize-video"
+        class="hidden w-full h-full object-cover rounded-lg"
+        playsinline
+        muted
+        loop
+      >
+        {videoUrl === 'mock' ? (
+          <source src="/videos/mock.mp4" type="video/mp4" />
+        ) : (
+          <source src={`https://videos.bigibai.com/premios/${videoUrl}.webm`} type="video/webm" />
+          <source src={`https://videos.bigibai.com/premios/${videoUrl}.mp4`} type="video/mp4" />
+        )}
+      </video>
+    </div>
+  </div>
+</div>
+
+<!-- Notificación de Logro -->
+<AchievementNotification />
+
+<script>
+  import confetti from 'canvas-confetti'
+
+  // Escuchar el evento de victoria del juego
+  window.addEventListener('game-completed', async () => {
+    const videoPlaceholder = document.getElementById('video-placeholder') as HTMLElement
+    const placeholderContent = videoPlaceholder?.querySelector(
+      '.placeholder-content'
+    ) as HTMLElement
+    const video = document.getElementById('prize-video') as HTMLVideoElement
+
+    const gameActiveContent = document.getElementById('game-active-content')
+    const gameSuccessContent = document.getElementById('game-success-content')
+
+    // Ocultar placeholder y mostrar video
+    if (placeholderContent) {
+      placeholderContent.style.display = 'none'
+    }
+    if (video) {
+      video.classList.remove('hidden')
+      video.muted = false
+      video.play()
+
+      // Scroll automático al vídeo para que esté visible en el viewport
+      setTimeout(() => {
+        video.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        })
+      }, 1500)
+    }
+
+    if (gameActiveContent) gameActiveContent.classList.add('hidden')
+    if (gameSuccessContent) gameSuccessContent.classList.remove('hidden')
+
+    // Confetti
+    const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement
+    const myConfetti = confetti.create(canvas, {
+      resize: true,
+      useWorker: true,
+    })
+
+    const duration = 1000
+    const end = Date.now() + duration
+
+    ;(function frame() {
+      myConfetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 1 },
+      })
+      myConfetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 1 },
+      })
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame)
+      }
+    })()
+  })
+</script>
+
+<style>
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    max-width: 1000px;
+  }
+
+  .game-column,
+  .video-column {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 2px solid rgba(248, 177, 52, 0.3);
+  }
+
+  .game-canvas-container {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    aspect-ratio: 9/16;
+    background: #000;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .video-placeholder {
+    aspect-ratio: 9/16;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .game-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
