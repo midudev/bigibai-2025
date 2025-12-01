@@ -3,7 +3,7 @@ import { createClient } from '@/supabase'
 
 const protectedRoutes = ['/dashboard', '/admin']
 const redirectRoutes = ['/registro']
-const publicRoutes = ['/aviso-legal', '/bases-legales', '/politica-de-cookies', '/privacidad', '/api/locations']
+const publicRoutes = ['/aviso-legal', '/bases-legales', '/politica-de-cookies', '/privacidad', '/api/locations', '/api/auth/signin', '/api/auth/callback', '/api/auth/signout']
 
 // Rutas que no necesitan verificación de autenticación
 function shouldSkipAuth(pathname: string): boolean {
@@ -13,6 +13,8 @@ function shouldSkipAuth(pathname: string): boolean {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url
+
+  console.log({ pathname })
 
   // Skip auth check para rutas que no lo necesitan
   if (shouldSkipAuth(pathname)) {
