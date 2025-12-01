@@ -141,7 +141,7 @@ const GAME_DATA = {
      */
     const TARGET_SCORE = 7
     const LANE_COUNT = 3
-    const INITIAL_SPEED = 2
+    const INITIAL_SPEED = 3
     const SPEED_INCREMENT = 0.0005
     const INTERNAL_WIDTH = 360
     const INTERNAL_HEIGHT = 640
@@ -290,7 +290,13 @@ const GAME_DATA = {
       laneOffset: 0,
       laneWidth: 0,
       frames: 0,
+      lastTime: 0,
+      accumulator: 0,
     }
+
+    // Constantes de tiempo (60 FPS target)
+    const TARGET_FPS = 60
+    const FRAME_TIME = 1000 / TARGET_FPS // ~16.67ms
 
     // Entidades
     let player = { lane: 1, y: 0, animY: 0 }
@@ -333,6 +339,7 @@ const GAME_DATA = {
       })
 
       document.fonts.ready.then(function () {
+        state.lastTime = performance.now()
         requestAnimationFrame(loop)
       })
 
@@ -342,6 +349,8 @@ const GAME_DATA = {
       state.status = 'playing'
       state.score = 0
       state.speed = INITIAL_SPEED
+      state.lastTime = performance.now()
+      state.accumulator = 0
       player.lane = 1
       enemies = []
       coins = []
@@ -419,7 +428,7 @@ const GAME_DATA = {
     }
 
     /**
-     * UPDATE LOGIC
+     * UPDATE LOGIC (Fixed timestep)
      */
     function update() {
       if (state.status !== 'playing') return
@@ -654,8 +663,22 @@ const GAME_DATA = {
       }
     }
 
-    function loop() {
-      update()
+    function loop(currentTime: number) {
+      // Calcular delta time
+      const deltaTime = currentTime - state.lastTime
+      state.lastTime = currentTime
+      
+      // Acumular el tiempo transcurrido
+      state.accumulator += deltaTime
+      
+      // Fixed timestep: actualizar la lógica del juego a una tasa fija
+      // Esto asegura que el juego funcione a la misma velocidad en todos los dispositivos
+      while (state.accumulator >= FRAME_TIME) {
+        update()
+        state.accumulator -= FRAME_TIME
+      }
+      
+      // Siempre dibujar (render) a la tasa de frames del dispositivo
       draw()
       requestAnimationFrame(loop)
     }
@@ -684,7 +707,7 @@ const GAME_DATA = {
             block: 'center',
             inline: 'nearest'
           })
-        }, 100)
+        }, 1000)
       }
 
       if (gameActiveContent) gameActiveContent.classList.add('hidden')
