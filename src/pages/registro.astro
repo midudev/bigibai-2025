@@ -28,6 +28,11 @@ if (user) return Astro.redirect('/dashboard')
               </div>
 
               <form action="/api/auth/signin" method="post" class="w-full" data-astro-reload>
+                <input
+                  type="hidden"
+                  name="redirect"
+                  value={Astro.url.searchParams.get('redirect') || '/dashboard'}
+                />
                 <Button
                   id="google-login-btn"
                   variant="brand"
