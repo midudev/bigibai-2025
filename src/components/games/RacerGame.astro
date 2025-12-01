@@ -1,6 +1,5 @@
 ---
-import AchievementNotification from '@/components/AchievementNotification.astro'
-import GameSuccessContent from '@/components/games/GameSuccessContent.astro'
+import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
   day: number
@@ -21,78 +20,12 @@ const GAME_DATA = {
 }
 ---
 
-<div class="screen-content game-layout">
-  <!-- Columna Izquierda: Juego -->
-  <div class="game-column">
-    <div id="game-active-content">
-      <div class="game-canvas-container">
-        <canvas id="racerCanvas"></canvas>
-      </div>
-    </div>
-
-    <!-- Contenido de éxito (Oculto inicialmente) -->
-    <GameSuccessContent prize={GAME_DATA.prize} />
-  </div>
-
-  <!-- Columna Derecha: Video Placeholder / Resultado -->
-  <div class="video-column">
-    <div id="video-placeholder" class="video-placeholder h-full">
-      <div class="placeholder-content">
-        <span class="text-6xl mb-4">🎬</span>
-        <p class="text-white/60 text-center">Completa el juego para desbloquear el vídeo</p>
-      </div>
-      <video
-        id="prize-video-racer"
-        class="hidden w-full h-full object-cover rounded-lg"
-        playsinline
-        muted
-        loop
-      >
-        {GAME_DATA.videoUrl === 'mock' ? (
-          <source src="/videos/mock.mp4" type="video/mp4" />
-        ) : (
-          <source src={`https://videos.bigibai.com/premios/${GAME_DATA.videoUrl}.webm`} type="video/webm" />
-          <source src={`https://videos.bigibai.com/premios/${GAME_DATA.videoUrl}.mp4`} type="video/mp4" />
-        )}
-      </video>
-    </div>
-  </div>
-</div>
-
-<!-- Notificación de Logro -->
-<AchievementNotification />
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="racerCanvas" slot="game"></canvas>
+</GameLayout>
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-  .game-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: center;
-    max-width: 1000px;
-  }
-
-  .game-column,
-  .video-column {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    border: 2px solid rgba(248, 177, 52, 0.3);
-  }
-
-  .game-canvas-container {
-    position: relative;
-    width: 100%;
-    max-width: 450px;
-    margin: 0 auto;
-    aspect-ratio: 9/16;
-    background: #000;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  }
 
   #racerCanvas {
     display: block;
@@ -102,44 +35,16 @@ const GAME_DATA = {
     outline: none;
     -webkit-tap-highlight-color: transparent;
   }
-
-  .video-placeholder {
-    aspect-ratio: 9/16;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-    position: relative;
-  }
-
-  .placeholder-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .game-layout {
-      grid-template-columns: 1fr;
-    }
-  }
 </style>
 
 <script>
   import { actions } from 'astro:actions'
   import { showAchievement } from '@/utils/show-achievement'
-  import confetti from 'canvas-confetti'
-  
   ;(function () {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const TARGET_SCORE = 7
+    const TARGET_SCORE = 1
     const LANE_COUNT = 3
     const INITIAL_SPEED = 3
     const SPEED_INCREMENT = 0.0005
@@ -278,7 +183,7 @@ const GAME_DATA = {
      */
     const canvas = document.getElementById('racerCanvas') as HTMLCanvasElement
     if (!canvas) return
-    
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -300,8 +205,8 @@ const GAME_DATA = {
 
     // Entidades
     let player = { lane: 1, y: 0, animY: 0 }
-    let enemies: { lane: number, y: number, type: string }[] = []
-    let coins: { lane: number, y: number }[] = []
+    let enemies: { lane: number; y: number; type: string }[] = []
+    let coins: { lane: number; y: number }[] = []
 
     // Inputs visuales
     let buttons = {
@@ -342,7 +247,6 @@ const GAME_DATA = {
         state.lastTime = performance.now()
         requestAnimationFrame(loop)
       })
-
     }
 
     function resetGame() {
@@ -354,7 +258,7 @@ const GAME_DATA = {
       player.lane = 1
       enemies = []
       coins = []
-      
+
       // Iniciar música de fondo
       bgMusic.currentTime = 0
       bgMusic.play()
@@ -415,7 +319,10 @@ const GAME_DATA = {
       buttons.right.pressed = false
     }
 
-    function hitTest(pos: { x: number, y: number }, btn: { x: number, y: number, w: number, h: number }) {
+    function hitTest(
+      pos: { x: number; y: number },
+      btn: { x: number; y: number; w: number; h: number }
+    ) {
       return pos.x >= btn.x && pos.x <= btn.x + btn.w && pos.y >= btn.y && pos.y <= btn.y + btn.h
     }
 
@@ -450,7 +357,26 @@ const GAME_DATA = {
       if (state.score >= TARGET_SCORE) {
         state.status = 'win'
         bgMusic.pause()
-        setTimeout(onLevelComplete, 1500)
+        setTimeout(() => {
+          // Emitir evento de victoria para que el GameLayout maneje el video
+          window.dispatchEvent(new CustomEvent('game-completed'))
+
+          // Otorgar logro específico del juego
+          actions
+            .grantGameAchievement({ achievementId: 'a-todo-gas' })
+            .then((result) => {
+              if (result.data?.achievement) {
+                showAchievement('achievement-notification', {
+                  title: result.data.achievement.title,
+                  description: result.data.achievement.description,
+                  icon: result.data.achievement.image,
+                })
+              }
+            })
+            .catch((error) => {
+              console.error('Error granting achievement:', error)
+            })
+        }, 1500)
       }
     }
 
@@ -470,7 +396,7 @@ const GAME_DATA = {
       }
     }
 
-    function updateEntities(arr: { lane: number, y: number }[], speed: number) {
+    function updateEntities(arr: { lane: number; y: number }[], speed: number) {
       for (let i = arr.length - 1; i >= 0; i--) {
         arr[i].y += speed
         if (arr[i].y > INTERNAL_HEIGHT) arr.splice(i, 1)
@@ -556,7 +482,7 @@ const GAME_DATA = {
 
     function drawUI() {
       if (!ctx) return
-    
+
       ctx.fillStyle = '#fff'
       ctx.font = '20px "Press Start 2P"'
       ctx.textAlign = 'center'
@@ -580,7 +506,10 @@ const GAME_DATA = {
       }
     }
 
-    function drawButton(btn: { x: number, y: number, w: number, h: number, pressed: boolean }, sprite: number[][]) {
+    function drawButton(
+      btn: { x: number; y: number; w: number; h: number; pressed: boolean },
+      sprite: number[][]
+    ) {
       if (!ctx) return
 
       ctx.fillStyle = btn.pressed ? '#bdc3c7' : '#ecf0f1'
@@ -604,13 +533,13 @@ const GAME_DATA = {
 
     function drawOverlay(title: string, subtitle: string, showInstructions = false) {
       if (!ctx) return
-  
+
       ctx.fillStyle = 'rgba(0,0,0,0.85)'
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
       ctx.font = '30px "Press Start 2P"'
-      
+
       // Dividir el título en dos líneas si contiene espacio
       const titleParts = title.split(' ')
       if (titleParts.length > 1) {
@@ -620,7 +549,7 @@ const GAME_DATA = {
         // Título línea 1
         ctx.fillStyle = '#f1c40f'
         ctx.fillText(titleParts[0], INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 40)
-        
+
         // Sombra línea 2
         ctx.fillStyle = '#c0392b'
         ctx.fillText(titleParts.slice(1).join(' '), INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 + 4)
@@ -667,102 +596,25 @@ const GAME_DATA = {
       // Calcular delta time
       const deltaTime = currentTime - state.lastTime
       state.lastTime = currentTime
-      
+
       // Acumular el tiempo transcurrido
       state.accumulator += deltaTime
-      
+
       // Fixed timestep: actualizar la lógica del juego a una tasa fija
       // Esto asegura que el juego funcione a la misma velocidad en todos los dispositivos
       while (state.accumulator >= FRAME_TIME) {
         update()
         state.accumulator -= FRAME_TIME
       }
-      
+
       // Siempre dibujar (render) a la tasa de frames del dispositivo
       draw()
       requestAnimationFrame(loop)
-    }
-
-    async function onLevelComplete() {
-      const videoPlaceholder = document.getElementById('video-placeholder') as HTMLElement
-      const placeholderContent = videoPlaceholder?.querySelector('.placeholder-content') as HTMLElement
-      const video = document.getElementById('prize-video-racer') as HTMLVideoElement
-
-      const gameActiveContent = document.getElementById('game-active-content')
-      const gameSuccessContent = document.getElementById('game-success-content')
-
-      // Ocultar placeholder y mostrar video
-      if (placeholderContent) {
-        placeholderContent.style.display = 'none'
-      }
-      if (video) {
-        video.classList.remove('hidden')
-        video.muted = false
-        video.play()
-        
-        // Scroll automático al vídeo para que esté visible en el viewport
-        setTimeout(() => {
-          video.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'nearest'
-          })
-        }, 1500)
-      }
-
-      if (gameActiveContent) gameActiveContent.classList.add('hidden')
-      if (gameSuccessContent) gameSuccessContent.classList.remove('hidden')
-
-      // Confetti
-        const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement
-        const myConfetti = confetti.create(canvas, {
-          resize: true,
-          useWorker: true,
-        })
-
-        const duration = 1000
-        const end = Date.now() + duration
-
-        ;(function frame() {
-          myConfetti({
-            particleCount: 3,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0, y: 1 },
-          })
-          myConfetti({
-            particleCount: 3,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1, y: 1 },
-          })
-
-          if (Date.now() < end) {
-            requestAnimationFrame(frame)
-          }
-        })()
-
-      // Achievement - Grant "a-todo-gas" achievement
-      actions
-        .grantGameAchievement({ achievementId: 'a-todo-gas' })
-        .then((result) => {
-          if (result.data?.achievement) {
-            showAchievement('achievement-notification', {
-              title: result.data.achievement.title,
-              description: result.data.achievement.description,
-              icon: result.data.achievement.image,
-            })
-          }
-        })
-        .catch((error) => {
-          console.error('Error granting achievement:', error)
-        })
     }
 
     // Escuchar evento para iniciar el juego
     window.addEventListener('start-game', () => {
       initRacerGame()
     })
-
   })()
 </script>
