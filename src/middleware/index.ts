@@ -14,8 +14,6 @@ function shouldSkipAuth(pathname: string): boolean {
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url
 
-  console.log({ pathname })
-
   // Skip auth check para rutas que no lo necesitan
   if (shouldSkipAuth(pathname)) {
     return next()
