@@ -75,6 +75,7 @@ const GAME_CONFIG: Record<number, GameType> = {
 // Mapeo de videos por día (UUID único para cada video)
 const VIDEO_URLS: Record<number, string> = {
   1: '01_0CF5950A-A6B4-4F86-93DD-23E28C7685EE',
+  2: '02_C0EAB650-A81B-42A7-862D-30C51F8B9C8D'
 }
 
 // Función auxiliar para obtener la URL del video según el día
@@ -89,7 +90,6 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     prize: 'Mini Cooper Eléctrico',
   },
   2: {
-    targetScore: 5,
     videoUrl: getVideoUrlForDay(2),
     prize: '...',
   },
