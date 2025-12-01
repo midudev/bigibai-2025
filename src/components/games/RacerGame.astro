@@ -139,7 +139,7 @@ const GAME_DATA = {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const TARGET_SCORE = 7
+    const TARGET_SCORE = 1
     const LANE_COUNT = 3
     const INITIAL_SPEED = 3
     const SPEED_INCREMENT = 0.0005
@@ -450,7 +450,7 @@ const GAME_DATA = {
       if (state.score >= TARGET_SCORE) {
         state.status = 'win'
         bgMusic.pause()
-        setTimeout(onLevelComplete, 2500)
+        setTimeout(onLevelComplete, 1500)
       }
     }
 
@@ -707,7 +707,7 @@ const GAME_DATA = {
             block: 'center',
             inline: 'nearest'
           })
-        }, 1000)
+        }, 1500)
       }
 
       if (gameActiveContent) gameActiveContent.classList.add('hidden')
@@ -720,23 +720,21 @@ const GAME_DATA = {
           useWorker: true,
         })
 
-        const duration = 1500
+        const duration = 1000
         const end = Date.now() + duration
 
         ;(function frame() {
           myConfetti({
-            particleCount: 5,
+            particleCount: 3,
             angle: 60,
             spread: 55,
             origin: { x: 0, y: 1 },
-            colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
           })
           myConfetti({
-            particleCount: 5,
+            particleCount: 3,
             angle: 120,
             spread: 55,
             origin: { x: 1, y: 1 },
-            colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
           })
 
           if (Date.now() < end) {
