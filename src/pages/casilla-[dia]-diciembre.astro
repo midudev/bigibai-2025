@@ -103,14 +103,19 @@ const isAccessible = userIsAdmin || isDayAccessible
                   class="text-lg text-white/60 text-center text-balance mb-8 fade-in-up"
                   style="animation-delay: 0.3s;"
                 >
-                  Regístrate gratis y participa en el calendario de Adviento de BigiBai.
+                  Regístrate gratis y valida tu código del calendario de BigIbai para participar en
+                  el sorteo de este premio.
                 </p>
               </div>
               <div
                 class="flex flex-col sm:flex-row gap-4 fade-in-up"
                 style="animation-delay: 0.4s;"
               >
-                <Button href="/registro" variant="brand" size="lg">
+                <Button
+                  href={`/registro?redirect=${encodeURIComponent(Astro.url.pathname)}`}
+                  variant="brand"
+                  size="lg"
+                >
                   Iniciar Sesión / Registrarse
                 </Button>
                 <Button href="/" variant="secondary" size="lg">
