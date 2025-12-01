@@ -1,0 +1,773 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 1,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="camper-game-container" slot="game">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Interfaz de Usuario -->
+    <div id="ui-layer">
+      <div id="score" class="score-display">0</div>
+
+      <div id="start-screen" class="message-box">
+        <h3 style="font-family: 'Press Start 2P', cursive;">CAMPER<br />DRIFT</h3>
+        <p class="blink" style="color:#e74c3c;">CLICK O TAP<br />PARA EMPEZAR</p>
+      </div>
+
+      <div id="game-over-screen" class="message-box hidden">
+        <h3 style="color: #e74c3c; font-family: 'Press Start 2P', cursive;">¡CHOQUE!</h3>
+        <p>PUNTOS: <span id="final-score">0</span></p>
+        <p style="margin-top:15px;" class="blink">TAP PARA REINTENTAR</p>
+      </div>
+
+      <div id="success-screen" class="message-box hidden" style="margin-top: 100px;">
+        <h3 style="color: #2ecc71; font-family: 'Press Start 2P', cursive; line-height: 1.5;">
+          ¡ENHORABUENA!
+        </h3>
+        <p class="blink" style="margin-top:15px; color: #333;">¡DESVELANDO EL SORTEO!</p>
+      </div>
+
+      <div class="instructions">
+        • PULSA PARA GIRAR EL COCHE •<br />
+        • CONSIGUE 8 MONEDAS •
+      </div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  #camper-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #8be698;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .score-display {
+    position: absolute;
+    top: 10%;
+    font-size: 3rem;
+    color: #ffffff;
+    text-shadow: 4px 4px 0px #000;
+    display: none;
+  }
+
+  .instructions {
+    position: absolute;
+    bottom: 5%;
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.8;
+    opacity: 0.9;
+  }
+
+  .message-box {
+    background: #fff;
+    padding: 20px;
+    border: 4px solid #000;
+    box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    image-rendering: pixelated;
+    pointer-events: auto;
+  }
+
+  #start-screen {
+    margin-top: 100px;
+  }
+
+  h1 {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  p {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 0.6rem;
+    line-height: 1.5;
+  }
+
+  .blink {
+    animation: blink-anim 1s infinite;
+  }
+
+  @keyframes blink-anim {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .hidden {
+    display: none !important;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+  ;(function () {
+    // --- AUDIO ENGINE ---
+    const AudioEngine = {
+      ctx: null as AudioContext | null,
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume()
+      },
+      playTone(freq: number, type: OscillatorType, duration: number, vol = 0.1, slide = 0) {
+        if (!this.ctx) return
+        const osc = this.ctx.createOscillator()
+        const gain = this.ctx.createGain()
+        osc.type = type
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime)
+        if (slide !== 0) {
+          osc.frequency.linearRampToValueAtTime(freq + slide, this.ctx.currentTime + duration)
+        }
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration)
+        osc.connect(gain)
+        gain.connect(this.ctx.destination)
+        osc.start()
+        osc.stop(this.ctx.currentTime + duration)
+      },
+      sfxTurn() {
+        this.playTone(200, 'square', 0.1, 0.1, 100)
+      },
+      sfxPoint() {
+        this.playTone(600, 'square', 0.1, 0.1)
+        setTimeout(() => this.playTone(900, 'square', 0.2, 0.1), 80)
+      },
+      sfxCrash() {
+        this.playTone(100, 'sawtooth', 0.3, 0.3, -50)
+        setTimeout(() => this.playTone(50, 'square', 0.4, 0.3), 100)
+      },
+    }
+
+    // --- CONFIGURACIÓN & VARIABLES ---
+    const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const uiStart = document.getElementById('start-screen')
+    const uiGameOver = document.getElementById('game-over-screen')
+    const uiSuccess = document.getElementById('success-screen')
+    const uiScore = document.getElementById('score')
+    const uiFinalScore = document.getElementById('final-score')
+
+    const TARGET_SCORE = 1 // Puntuación objetivo
+
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/campfire.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    let state = {
+      running: false,
+      gameOver: false,
+      score: 0,
+      width: INTERNAL_WIDTH,
+      height: INTERNAL_HEIGHT,
+      cx: INTERNAL_WIDTH / 2,
+      cy: INTERNAL_HEIGHT / 2,
+      scale: INTERNAL_WIDTH / 500,
+      totalTime: 0,
+    }
+
+    const map = {
+      baseRadius: 175,
+      baseWidth: 60,
+      radius: 0,
+      width: 0,
+      colorTop: '#95a5a6',
+      colorSide: '#7f8c8d',
+    }
+
+    // Entorno
+    let trees: any[] = []
+    let river = {
+      y: 0,
+      width: 60,
+      speed: 10,
+    }
+    let rabbit = {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+      state: 'idle',
+      timer: 0,
+      jumpHeight: 0,
+      startX: 0,
+      startY: 0,
+    }
+
+    const van = {
+      x: 0,
+      y: 0,
+      size: 16,
+      colorBody: '#ecf0f1',
+      colorStripe: '#e74c3c',
+      colorWin: '#3498db',
+      colorWheel: '#2c3e50',
+      speed: 0,
+      baseSpeedPPS: 160,
+      dir: 0,
+    }
+
+    const coin = { x: 0, y: 0, size: 10, active: false, floatY: 0 }
+
+    // --- GAME LOOP ---
+    let lastTime = 0
+    function gameLoop(timestamp: number) {
+      if (!lastTime) lastTime = timestamp
+      const dt = Math.min((timestamp - lastTime) / 1000, 0.1)
+      lastTime = timestamp
+
+      update(dt)
+      draw()
+      requestAnimationFrame(gameLoop)
+    }
+
+    // --- CORE FUNCIONES ---
+    function initGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      // Recalculate derived values based on scale
+      map.radius = map.baseRadius * state.scale
+      map.width = map.baseWidth * state.scale
+      van.size = 22 * state.scale
+      coin.size = 12 * state.scale
+
+      generateEnvironment()
+
+      if (!state.running && !state.gameOver) resetPositions()
+    }
+
+    function generateEnvironment() {
+      trees = []
+      const count = 35
+      const R = map.radius + map.width
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2
+        const dist = R + Math.random() * 150 * state.scale + 15
+        trees.push({
+          x: Math.cos(angle) * dist,
+          y: Math.sin(angle) * dist,
+          h: (Math.random() * 25 + 20) * state.scale,
+          w: (Math.random() * 12 + 8) * state.scale,
+          type: Math.random() > 0.5 ? 1 : 2,
+        })
+      }
+
+      rabbit.x = state.cx - 200 * state.scale
+      rabbit.y = state.cy + 200 * state.scale
+      rabbit.targetX = rabbit.x
+      rabbit.targetY = rabbit.y
+    }
+
+    function resetPositions() {
+      van.x = state.cx - map.radius
+      van.y = state.cy
+      van.dir = 0
+      van.speed = van.baseSpeedPPS * state.scale
+      spawnCoin()
+    }
+
+    function startGame() {
+      AudioEngine.init()
+      state.score = 0
+      state.running = true
+      state.gameOver = false
+
+      if (uiScore) uiScore.innerText = '0'
+      if (uiScore) uiScore.style.display = 'block'
+      if (uiStart) uiStart.classList.add('hidden')
+      if (uiGameOver) uiGameOver.classList.add('hidden')
+      if (uiSuccess) uiSuccess.classList.add('hidden')
+
+      // Iniciar música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {
+        // Ignorar errores de autoplay
+      })
+
+      resetPositions()
+    }
+
+    function gameOver() {
+      AudioEngine.sfxCrash()
+      state.running = false
+      state.gameOver = true
+      bgMusic.pause()
+      if (uiFinalScore) uiFinalScore.innerText = state.score.toString()
+      if (uiScore) uiScore.style.display = 'none'
+      if (uiGameOver) uiGameOver.classList.remove('hidden')
+    }
+
+    function spawnCoin() {
+      const side = Math.floor(Math.random() * 4)
+      const segmentLength = map.radius
+      const offset = (Math.random() * 0.6 + 0.2) * segmentLength
+      const R = map.radius
+
+      let tx, ty
+      if (side === 0) {
+        tx = state.cx + offset
+        ty = state.cy - (R - offset)
+      } else if (side === 1) {
+        tx = state.cx + (R - offset)
+        ty = state.cy + offset
+      } else if (side === 2) {
+        tx = state.cx - offset
+        ty = state.cy + (R - offset)
+      } else {
+        tx = state.cx - (R - offset)
+        ty = state.cy - offset
+      }
+
+      coin.x = tx
+      coin.y = ty
+      coin.active = true
+    }
+
+    function inputAction(e?: Event) {
+      if (e) e.preventDefault()
+
+      if (state.gameOver) {
+        startGame()
+        return
+      }
+      if (!state.running) {
+        startGame()
+        return
+      }
+
+      AudioEngine.sfxTurn()
+      van.dir = (van.dir + 1) % 4
+    }
+
+    const c = document.getElementById('camper-game-container')
+    if (c) {
+      c.addEventListener('mousedown', inputAction)
+      c.addEventListener('touchstart', inputAction, { passive: false })
+    }
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') inputAction()
+    })
+
+    // --- UPDATE ---
+    function update(dt: number) {
+      state.totalTime += dt
+
+      updateRabbit(dt)
+
+      if (!state.running) return
+
+      // Movimiento Furgoneta
+      const moveStep = van.speed * dt
+      if (van.dir === 0) {
+        van.x += moveStep
+        van.y -= moveStep
+      } else if (van.dir === 1) {
+        van.x += moveStep
+        van.y += moveStep
+      } else if (van.dir === 2) {
+        van.x -= moveStep
+        van.y += moveStep
+      } else if (van.dir === 3) {
+        van.x -= moveStep
+        van.y -= moveStep
+      }
+
+      // Colisiones
+      const dx = Math.abs(van.x - state.cx)
+      const dy = Math.abs(van.y - state.cy)
+      const manhattanDist = dx + dy
+      const halfRoad = map.width / 2
+      const hitboxMargin = van.size * 0.4
+
+      if (
+        manhattanDist < map.radius - halfRoad + hitboxMargin ||
+        manhattanDist > map.radius + halfRoad - hitboxMargin
+      ) {
+        gameOver()
+      }
+
+      // Moneda
+      if (coin.active) {
+        const distCoin = Math.hypot(van.x - coin.x, van.y - coin.y)
+        if (distCoin < van.size + coin.size) {
+          state.score++
+          if (uiScore) {
+            uiScore.innerText = state.score.toString()
+            uiScore.style.transform = 'scale(1.5)'
+            setTimeout(() => {
+              if (uiScore) uiScore.style.transform = 'scale(1)'
+            }, 100)
+          }
+          AudioEngine.sfxPoint()
+          coin.active = false
+          van.speed *= 1.02
+
+          // Verificar victoria
+          if (state.score >= TARGET_SCORE) {
+            state.running = false
+            bgMusic.pause()
+            if (uiScore) uiScore.style.display = 'none'
+            if (uiSuccess) uiSuccess.classList.remove('hidden')
+            setTimeout(() => {
+              // Emitir evento de victoria para que el GameLayout maneje el video
+              window.dispatchEvent(new CustomEvent('game-completed'))
+
+              // Otorgar logro específico del juego
+              actions
+                .grantGameAchievement({ achievementId: 'camper-drift' })
+                .then((result) => {
+                  if (result.data?.achievement) {
+                    showAchievement('achievement-notification', {
+                      title: result.data.achievement.title,
+                      description: result.data.achievement.description,
+                      icon: result.data.achievement.image,
+                    })
+                  }
+                })
+                .catch((error) => {
+                  console.error('Error granting achievement:', error)
+                })
+            }, 2500)
+          } else {
+            spawnCoin()
+          }
+        }
+      }
+    }
+
+    function updateRabbit(dt: number) {
+      rabbit.timer -= dt
+
+      if (rabbit.state === 'idle') {
+        if (rabbit.timer <= 0) {
+          rabbit.state = 'jump'
+          rabbit.timer = 0.5
+          const angle = Math.random() * Math.PI * 2
+          const dist = 30 * state.scale
+          rabbit.startX = rabbit.x
+          rabbit.startY = rabbit.y
+          rabbit.targetX = rabbit.x + Math.cos(angle) * dist
+          rabbit.targetY = rabbit.y + Math.sin(angle) * dist
+        }
+      } else if (rabbit.state === 'jump') {
+        const progress = 1 - rabbit.timer / 0.5
+        if (progress >= 1) {
+          rabbit.state = 'idle'
+          rabbit.timer = Math.random() * 2 + 1
+          rabbit.jumpHeight = 0
+        } else {
+          rabbit.x = rabbit.startX + (rabbit.targetX - rabbit.startX) * progress
+          rabbit.y = rabbit.startY + (rabbit.targetY - rabbit.startY) * progress
+          rabbit.jumpHeight = Math.sin(progress * Math.PI) * (20 * state.scale)
+        }
+      }
+    }
+
+    // --- DIBUJADO ---
+    function draw() {
+      if (!ctx) return
+      ctx.clearRect(0, 0, state.width, state.height)
+
+      drawRiver()
+      drawRoad()
+
+      // Ordenar objetos por Y
+      let objects = [...trees.map((t: any) => ({ ...t, type: 'tree' }))]
+      objects.push({ type: 'rabbit', y: rabbit.y, x: rabbit.x })
+
+      objects.sort((a: any, b: any) => a.y - b.y)
+
+      objects.forEach((obj: any) => {
+        if (obj.type === 'rabbit') {
+          drawRabbit(obj)
+        } else {
+          const tx = state.cx + obj.x
+          const ty = state.cy + obj.y
+          drawVoxel(tx, ty, 0, obj.w / 2, obj.w / 2, obj.h / 3, '#8e44ad', '#5b2c6f')
+          drawVoxel(tx, ty, obj.h / 3, obj.w, obj.w, obj.h / 2, '#2ecc71', '#27ae60')
+          drawVoxel(
+            tx,
+            ty,
+            obj.h / 3 + obj.h / 3,
+            obj.w * 0.7,
+            obj.w * 0.7,
+            obj.h / 2,
+            '#27ae60',
+            '#1e8449'
+          )
+        }
+      })
+
+      if (state.running || state.gameOver) {
+        if (coin.active) {
+          coin.floatY = Math.sin(state.totalTime * 3) * 5
+          drawVoxel(coin.x, coin.y + coin.floatY, 10, coin.size, coin.size, 5, '#f1c40f', '#d4ac0d')
+        }
+        const bounce = Math.abs(Math.sin(state.totalTime * 8)) * 2
+        drawCamperVan(van.x, van.y, van.size, van.dir, bounce)
+      } else {
+        drawStartScreenVan()
+      }
+    }
+
+    function drawRiver() {
+      if (!ctx) return
+      ctx.save()
+      ctx.translate(state.cx, state.cy)
+      ctx.rotate(-Math.PI / 6)
+
+      const riverW = 100 * state.scale
+      const riverL = state.height * 2
+
+      ctx.fillStyle = '#5dade2'
+      ctx.fillRect(-riverL / 2, 200 * state.scale, riverL, riverW)
+
+      ctx.fillStyle = '#85c1e9'
+      const offset = (state.totalTime * 50) % 100
+      ctx.fillRect(-riverL / 2 + offset, 210 * state.scale, riverL, riverW / 4)
+
+      ctx.restore()
+    }
+
+    function drawRoad() {
+      if (!ctx) return
+      ctx.save()
+      ctx.translate(state.cx, state.cy)
+      ctx.rotate(Math.PI / 4)
+
+      const side = map.radius * Math.sqrt(2)
+      const thick = map.width
+      const roadHeight = 15 * state.scale
+
+      const outer = side / 2 + thick / 2
+      const inner = side / 2 - thick / 2
+
+      // Top Segment
+      ctx.fillStyle = map.colorSide
+      ctx.fillRect(-outer, -outer + roadHeight, side + thick, thick)
+      ctx.fillStyle = map.colorTop
+      ctx.fillRect(-outer, -outer, side + thick, thick)
+
+      // Left Segment
+      ctx.fillStyle = map.colorSide
+      ctx.fillRect(-outer, -outer + roadHeight, thick, side + thick)
+      ctx.fillStyle = map.colorTop
+      ctx.fillRect(-outer, -outer, thick, side + thick)
+
+      // Right Segment
+      ctx.fillStyle = map.colorSide
+      ctx.fillRect(inner, -outer + roadHeight, thick, side + thick)
+      ctx.fillStyle = map.colorTop
+      ctx.fillRect(inner, -outer, thick, side + thick)
+
+      // Bottom Segment
+      ctx.fillStyle = map.colorSide
+      ctx.fillRect(-outer, inner + roadHeight, side + thick, thick)
+      ctx.fillStyle = map.colorTop
+      ctx.fillRect(-outer, inner, side + thick, thick)
+
+      ctx.restore()
+    }
+
+    function drawVoxel(
+      x: number,
+      y: number,
+      z: number,
+      w: number,
+      h: number,
+      d: number,
+      colorTop: string,
+      colorSide: string
+    ) {
+      if (!ctx) return
+      const visualHeight = d
+      const bottomY = y - z
+      const topY = bottomY - visualHeight
+      ctx.fillStyle = colorSide
+      ctx.fillRect(x - w / 2, topY, w, visualHeight)
+      ctx.fillStyle = colorTop
+      ctx.fillRect(x - w / 2, topY - h / 2, w, h)
+    }
+
+    function drawRabbit(r: any) {
+      const size = 6 * state.scale
+      drawVoxel(r.x, r.y, r.jumpHeight || 0, size, size, size, '#fff', '#ccc')
+      drawVoxel(
+        r.x,
+        r.y - size / 2,
+        (r.jumpHeight || 0) + size,
+        size / 3,
+        size / 2,
+        size / 2,
+        '#fff',
+        '#ccc'
+      )
+    }
+
+    function drawCamperVan(x: number, y: number, size: number, dir: number, animBounce: number) {
+      if (!ctx) return
+      ctx.save()
+      ctx.translate(x, y - animBounce)
+      const rotationMap = [-45, 45, 135, 225]
+      ctx.rotate((rotationMap[dir] * Math.PI) / 180)
+
+      const w = size
+      const l = size * 2.2
+      const h = size * 1.2
+
+      // Sombra
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx.fillRect(-w / 2 + 4, -l / 2 + 4, w, l)
+
+      const depth = size * 0.5
+
+      // Ruedas
+      ctx.fillStyle = van.colorWheel
+      const wheelW = w * 0.2
+      const wheelH = depth * 0.5
+      ctx.fillRect(-w / 2 - 2, -l / 3, wheelW, wheelH)
+      ctx.fillRect(-w / 2 - 2, l / 3, wheelW, wheelH)
+      ctx.fillRect(w / 2 - wheelW + 2, -l / 3, wheelW, wheelH)
+      ctx.fillRect(w / 2 - wheelW + 2, l / 3, wheelW, wheelH)
+
+      // Cuerpo Principal
+      ctx.fillStyle = '#bdc3c7'
+      ctx.fillRect(-w / 2, -l / 2, w, l)
+      ctx.fillStyle = '#bdc3c7'
+      ctx.fillRect(-w / 2, -l / 2 - depth, w, depth)
+
+      // Tapa superior
+      ctx.fillStyle = van.colorBody
+      ctx.fillRect(-w / 2, -l / 2 - depth, w, l)
+
+      // Franja Roja
+      ctx.fillStyle = van.colorStripe
+      ctx.fillRect(-w / 2, -l / 2 - depth + l / 2, w, l / 6)
+
+      // Ventanas
+      ctx.fillStyle = van.colorWin
+      const windL = l * 0.2
+      ctx.fillRect(-w / 2 + 2, -l / 2 - depth + 2, w - 4, windL)
+      ctx.fillRect(-w / 2 + 2, l / 2 - depth - windL - 2, w - 4, windL)
+
+      ctx.restore()
+    }
+
+    function drawStartScreenVan() {
+      if (!ctx) return
+      const t = state.totalTime * 1.0
+      const centerX = state.cx
+      const centerY = state.cy - 120 * state.scale
+      const bigSize = 50 * state.scale
+
+      ctx.save()
+      ctx.translate(centerX, centerY)
+      const floatY = Math.sin(state.totalTime * 2) * 10
+      ctx.translate(0, floatY)
+      ctx.rotate(t)
+
+      const w = bigSize
+      const l = bigSize * 2.2
+
+      // Sombra
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      ctx.fillRect(-w / 2 + 10, -l / 2 + 10, w, l)
+
+      // Cuerpo
+      ctx.fillStyle = van.colorBody
+      ctx.fillRect(-w / 2, -l / 2, w, l)
+
+      // Franja
+      ctx.fillStyle = van.colorStripe
+      ctx.fillRect(-w / 2, -l / 2 + l / 2, w, l / 6)
+
+      // Ventanas
+      ctx.fillStyle = van.colorWin
+      ctx.fillRect(-w / 2 + 5, -l / 2 + 10, w - 10, l * 0.2)
+      ctx.fillRect(-w / 2 + 5, l / 2 - 30, w - 10, l * 0.2)
+
+      ctx.restore()
+    }
+
+    initGame()
+    requestAnimationFrame(gameLoop)
+
+    // Reiniciar juego si se recibe el evento start-game
+    window.addEventListener('start-game', () => {
+      initGame()
+    })
+  })()
+</script>

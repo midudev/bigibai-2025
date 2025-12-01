@@ -1,5 +1,5 @@
 // Tipos de juegos disponibles
-export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer'
+export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper'
 
 // Configuración de cada día
 interface DayConfig {
@@ -13,6 +13,7 @@ interface DayConfig {
     answer?: string
     hint?: string
     videoUrl?: string
+    prize?: string
     // Aquí puedes añadir más propiedades específicas de cada tipo de juego
   }
 }
@@ -47,7 +48,7 @@ const DESCRIPTIONS = [
 // Configuración de juegos por día
 const GAME_CONFIG: Record<number, GameType> = {
   1: 'racer',
-  2: 'racer',
+  2: 'camper',
   3: 'racer',
   4: 'racer',
   5: 'racer',
@@ -91,7 +92,7 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
   },
   2: {
     videoUrl: getVideoUrlForDay(2),
-    prize: '...',
+    prize: 'Fin de semana sobre ruedas',
   },
   // ... más días
 }
