@@ -3,10 +3,20 @@ import { type APIRoute } from 'astro'
 
 const allowedPaths = ['/dashboard', '/registro', '/']
 
+// Función para validar si una ruta es segura
+function isSafeRedirect(path: string): boolean {
+  // Permitir rutas que empiezan con /casilla- (para las casillas del calendario)
+  if (path.startsWith('/casilla-')) {
+    return true
+  }
+  // Permitir rutas explícitamente permitidas
+  return allowedPaths.includes(path)
+}
+
 export const GET: APIRoute = async ({ request, url, cookies, redirect }) => {
   const code = url.searchParams.get('code')
-  const next = url.searchParams.get('next') || '/registro'
-  const safePath = allowedPaths.includes(next) ? next : '/registro'
+  const next = url.searchParams.get('next') || '/dashboard'
+  const safePath = isSafeRedirect(next) ? next : '/dashboard'
   const providerType = url.searchParams.get('type') || 'google'
 
   if (!code) {

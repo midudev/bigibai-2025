@@ -6,6 +6,7 @@ import { createClient } from '@/supabase'
 export const POST: APIRoute = async ({ request, url, redirect, cookies }) => {
   const formData = await request.formData()
   const provider = formData.get('provider')?.toString()
+  const redirectPath = formData.get('redirect')?.toString() || '/dashboard'
 
   const validProviders = ['google']
 
@@ -15,7 +16,7 @@ export const POST: APIRoute = async ({ request, url, redirect, cookies }) => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider as Provider,
       options: {
-        redirectTo: `${url.origin}/api/auth/callback`,
+        redirectTo: `${url.origin}/api/auth/callback?next=${encodeURIComponent(redirectPath)}`,
       },
     })
 
