@@ -28,11 +28,11 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     descriptionDone: '¡Has canjeado 5 calendarios de adviento!',
     image: '/pixel-heart-achievement.png',
   },
-  'first-unlocked': {
-    id: 'first-unlocked',
+  'two-unlocked': {
+    id: 'two-unlocked',
     title: '¿Qué es? ¿Qué es?',
-    descriptionDo: 'Desvela el primer sorteo',
-    descriptionDone: '¡Has desvelado tu primer sorteo!',
+    descriptionDo: 'Desvela dos sorteos',
+    descriptionDone: '¡Has desvelado dos sorteos!',
     image: '/pixel-pig-achievement.png',
   },
   'five-unlocked': {
