@@ -3,7 +3,7 @@ import { createClient } from '@/supabase'
 
 const protectedRoutes = ['/dashboard', '/admin']
 const redirectRoutes = ['/registro']
-const publicRoutes = ['/aviso-legal', '/bases-legales', '/politica-de-cookies', '/privacidad']
+const publicRoutes = ['/aviso-legal', '/bases-legales', '/politica-de-cookies', '/privacidad', '/api/locations']
 
 // Rutas que no necesitan verificación de autenticación
 function shouldSkipAuth(pathname: string): boolean {
