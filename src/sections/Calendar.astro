@@ -32,7 +32,6 @@ function isDayActive(day: number): boolean {
       {
         cells.map((cell) => {
           const isActive = isDayActive(cell.day)
-          console.log(cell.day, isActive)
           const chocolateImage = isActive
             ? `/chocolatinas/${cell.day}.webp`
             : `/chocolatinas/1.webp`

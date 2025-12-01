@@ -139,9 +139,9 @@ const GAME_DATA = {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const TARGET_SCORE = 10
+    const TARGET_SCORE = 7
     const LANE_COUNT = 3
-    const INITIAL_SPEED = 3
+    const INITIAL_SPEED = 2
     const SPEED_INCREMENT = 0.0005
     const INTERNAL_WIDTH = 360
     const INTERNAL_HEIGHT = 640
@@ -209,7 +209,7 @@ const GAME_DATA = {
     bgMusic.loop = true
     bgMusic.volume = 0.3
 
-    function playSound(type) {
+    function playSound(type: string) {
       if (audioCtx.state === 'suspended') {
         audioCtx.resume()
       }

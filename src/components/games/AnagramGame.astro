@@ -304,8 +304,6 @@ const GAME_DATA = {
 </style>
 
 <script is:inline define:vars={{ GAME_DATA }}>
-  console.log('AnagramGame: Script cargando')
-  console.log('AnagramGame: GAME_DATA =', GAME_DATA)
   ;(function () {
     // Estados del juego
     let gameTimer = null
@@ -315,12 +313,6 @@ const GAME_DATA = {
     const answerInput = document.getElementById('answer-input')
     const feedback = document.getElementById('feedback')
     const timerSeconds = document.getElementById('timer-seconds')
-
-    console.log('AnagramGame: Elementos DOM encontrados:', {
-      answerInput: !!answerInput,
-      feedback: !!feedback,
-      timerSeconds: !!timerSeconds,
-    })
 
     // Configurar canvas de confetti
     const canvas = document.getElementById('confetti-canvas')
@@ -332,9 +324,6 @@ const GAME_DATA = {
         resize: true,
         useWorker: true,
       })
-      console.log('AnagramGame: Canvas confetti creado')
-    } else {
-      console.warn('AnagramGame: confetti no disponible aún')
     }
 
     function launchWinConfetti() {
@@ -367,7 +356,6 @@ const GAME_DATA = {
 
     // Lógica del juego
     function startGame() {
-      console.log('AnagramGame: startGame llamado')
       elapsedSeconds = 0
       updateTimerDisplay()
 
@@ -376,8 +364,6 @@ const GAME_DATA = {
         index,
         used: false,
       }))
-
-      console.log('AnagramGame: availableLetters =', availableLetters)
 
       setTimeout(() => {
         answerInput?.focus()
@@ -546,7 +532,6 @@ const GAME_DATA = {
     }
 
     // Event Listeners de botones
-    console.log('AnagramGame: Configurando event listeners')
     document.getElementById('btn-submit')?.addEventListener('click', checkAnswer)
 
     answerInput?.addEventListener('keypress', (e) => {
@@ -559,12 +544,8 @@ const GAME_DATA = {
     })
 
     // Escuchar evento para iniciar el juego
-    console.log('AnagramGame: Registrando listener para start-game')
     window.addEventListener('start-game', () => {
-      console.log('AnagramGame: Evento start-game recibido!')
       startGame()
     })
-
-    console.log('AnagramGame: Script completamente cargado')
   })()
 </script>
