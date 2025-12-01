@@ -67,9 +67,25 @@ export const GET: APIRoute = async ({ request, locals }) => {
       })
     }
 
-    // Obtener los detalles completos del usuario
-    const { data: userResponse, error: userError } =
-      await supabaseAdmin.auth.admin.getUserById(userId)
+    // Obtener los detalles completos del usuario, cupones y logros en paralelo
+    const [
+      { data: userResponse, error: userError },
+      { data: coupons, error: couponsError },
+      { data: userAchievements, error: achievementsError }
+    ] = await Promise.all([
+      supabaseAdmin.auth.admin.getUserById(userId),
+      supabaseAdmin
+        .from('coupons')
+        .select('id, hash, used_at')
+        .eq('used_by', userId)
+        .eq('is_used', true)
+        .order('used_at', { ascending: false }),
+      supabaseAdmin
+        .from('user_achievements')
+        .select('achievements')
+        .eq('user_id', userId)
+        .single()
+    ])
 
     if (userError || !userResponse.user) {
       console.error('Error al obtener detalles del usuario:', userError)
@@ -81,24 +97,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     const user = userResponse.user
 
-    // Obtener los cupones del usuario
-    const { data: coupons, error: couponsError } = await supabaseAdmin
-      .from('coupons')
-      .select('id, hash, used_at')
-      .eq('used_by', user.id)
-      .eq('is_used', true)
-      .order('used_at', { ascending: false })
-
     if (couponsError) {
       console.error('Error al obtener cupones:', couponsError)
     }
-
-    // Obtener los logros del usuario
-    const { data: userAchievements, error: achievementsError } = await supabaseAdmin
-      .from('user_achievements')
-      .select('achievements')
-      .eq('user_id', user.id)
-      .single()
 
     if (achievementsError && achievementsError.code !== 'PGRST116') {
       console.error('Error al obtener logros:', achievementsError)
