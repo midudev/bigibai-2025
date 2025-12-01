@@ -676,6 +676,15 @@ const GAME_DATA = {
         video.classList.remove('hidden')
         video.muted = false
         video.play()
+        
+        // Scroll automático al vídeo para que esté visible en el viewport
+        setTimeout(() => {
+          video.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          })
+        }, 100)
       }
 
       if (gameActiveContent) gameActiveContent.classList.add('hidden')
