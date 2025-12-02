@@ -314,6 +314,10 @@ const GAME_DATA = {
     const startScreen = document.getElementById('start-screen')
     const gameOverScreen = document.getElementById('game-over-screen')
 
+    // Tamaño interno del juego (aspect ratio 9:16)
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+
     const COLS = 13
     const ROWS = 23
     let TILE_SIZE = 0
@@ -349,17 +353,12 @@ const GAME_DATA = {
     let touchStartY = 0
 
     function resize() {
-      const container = document.getElementById('snake-game-wrapper')
-      if (!container || !canvas) return
+      if (!canvas) return
 
-      // Obtenemos el tamaño real del contenedor padre
-      const rect = container.getBoundingClientRect()
-      const w = rect.width - 24 // Restamos el padding (12px * 2)
-      const h = rect.height - 24
-
-      canvas.width = w
-      canvas.height = h
-      TILE_SIZE = w / COLS
+      // Usar tamaño interno fijo con aspect ratio 9:16
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+      TILE_SIZE = INTERNAL_WIDTH / COLS
 
       if (!isPlaying) drawBackground()
     }
@@ -730,22 +729,6 @@ const GAME_DATA = {
           setTimeout(() => {
             // Emitir evento de victoria para que el GameLayout maneje el video
             window.dispatchEvent(new CustomEvent('game-completed'))
-
-            // Otorgar logro específico del juego
-            actions
-              .grantGameAchievement({ achievementId: 'maestro-bloques' })
-              .then((result) => {
-                if (result.data?.achievement) {
-                  showAchievement('achievement-notification', {
-                    title: result.data.achievement.title,
-                    description: result.data.achievement.description,
-                    icon: result.data.achievement.image,
-                  })
-                }
-              })
-              .catch((error) => {
-                console.error('Error granting achievement:', error)
-              })
           }, 1500)
           return
         }
