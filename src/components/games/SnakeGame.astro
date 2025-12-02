@@ -1,0 +1,794 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 100,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<!-- Fuente Pixelada Retro -->
+<link
+  href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+  rel="stylesheet"
+/>
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="snake-game-wrapper" slot="game">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+      <div class="score-container">
+        <div class="lego-score-brick">
+          <span class="score-label">PUNTOS</span>
+          <span id="scoreVal" class="score-val">000</span>
+          <!-- Barra de cuenta atrás visual -->
+          <div class="point-timer-bg">
+            <div id="pointTimerBar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div id="start-screen">
+      <h1 class="title" style="font-family: 'Press Start 2P', cursive;">BRICK<br />SNAKE</h1>
+      <p style="color:#FFF; font-size: 0.7rem; margin-bottom: 15px;">EDICIÓN SUPREMA</p>
+      <div
+        style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; border: 1px solid #555;"
+      >
+        <p style="color:#FBD821; font-size: 0.8rem; margin-bottom: 8px;">OBJETIVO:</p>
+        <p style="color:#FFF; font-size: 1.2rem;">{GAME_DATA.targetScore} PUNTOS</p>
+      </div>
+      <button id="btn-start" class="lego-btn">JUGAR</button>
+    </div>
+
+    <!-- Pantalla Game Over -->
+    <div id="game-over-screen" class="hidden">
+      <h1 class="title" style="color: #EE3F33; text-shadow: 4px 4px 0 #fff;">¡AY!</h1>
+      <p style="color: white; font-size: 0.8rem; margin-top:10px;">PUNTUACIÓN FINAL</p>
+      <p style="color: #FBD821; font-size: 1.5rem; margin-top:5px;" id="finalScore">0</p>
+      <button id="btn-retry" class="lego-btn blink">REINTENTAR</button>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  #snake-game-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    /* Marco exterior amarillo LEGO + fondo verde */
+    padding: 12px;
+    background: #fbd821;
+    box-shadow:
+      inset 0 0 10px rgba(0, 0, 0, 0.2),
+      0 10px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  #gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #00852b; /* Verde Baseplate LEGO oficial */
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* --- UI LAYER --- */
+  #ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 20;
+  }
+
+  /* Marcador estilo bloque físico */
+  .score-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    pointer-events: none;
+  }
+
+  .lego-score-brick {
+    background: #111;
+    border: 4px solid #fbd821; /* Amarillo */
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    transform: skew(-2deg); /* Un poco de estilo dinámico */
+    min-width: 140px;
+  }
+
+  .score-label {
+    font-size: 0.6rem;
+    color: #fbd821;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .score-val {
+    font-size: 1.5rem;
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    margin-bottom: 5px;
+  }
+
+  /* Barra de progreso de puntos */
+  .point-timer-bg {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid #555;
+  }
+
+  #pointTimerBar {
+    width: 100%;
+    height: 100%;
+    background: #ee3f33; /* Rojo Lego */
+    transition: width 0.1s linear;
+  }
+
+  /* Pantallas */
+  #start-screen,
+  #game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    z-index: 50;
+    text-align: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Botón estilo Ladrillo Rojo */
+  .lego-btn {
+    background: #ee3f33; /* Rojo LEGO oficial */
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1rem;
+    font-family: 'Press Start 2P', cursive;
+    cursor: pointer;
+    margin-top: 20px;
+    /* Efecto 3D CSS */
+    box-shadow:
+      inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+      inset -2px -2px 0px rgba(0, 0, 0, 0.2),
+      0 6px 0 #902018,
+      /* Sombra sólida */ 0 10px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+    position: relative;
+    transition:
+      transform 0.1s,
+      box-shadow 0.1s;
+  }
+
+  .lego-btn:active {
+    transform: translateY(6px);
+    box-shadow:
+      inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+      inset -2px -2px 0px rgba(0, 0, 0, 0.2),
+      0 0 0 #902018;
+  }
+
+  .title {
+    font-size: 2.5rem;
+    color: #fbd821; /* Amarillo */
+    -webkit-text-stroke: 2px #000;
+    text-shadow: 4px 4px 0 #ee3f33; /* Sombra Roja */
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .blink {
+    animation: blinker 1s linear infinite;
+  }
+  @keyframes blinker {
+    50% {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+
+  const TARGET_SCORE = 100
+
+  ;(function () {
+    // --- AUDIO SYSTEM ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext
+    let audioCtx
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/snake.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.4
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext()
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    const sfx = {
+      click: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.05)
+      },
+      eat: (points) => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        // Tono más agudo si ganaste más puntos
+        const freq = 300 + points * 20
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+        osc.frequency.linearRampToValueAtTime(freq + 300, audioCtx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime)
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      },
+      die: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.4)
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.4)
+      },
+    }
+
+    // --- GAME CONFIG ---
+    const canvas = document.getElementById('gameCanvas')
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const scoreEl = document.getElementById('scoreVal')
+    const finalScoreEl = document.getElementById('finalScore')
+    const pointTimerBar = document.getElementById('pointTimerBar')
+    const startScreen = document.getElementById('start-screen')
+    const gameOverScreen = document.getElementById('game-over-screen')
+
+    const COLS = 13
+    const ROWS = 23
+    let TILE_SIZE = 0
+    const SCORE_SAFE_ZONE_ROWS = 4 // Filas reservadas para el UI superior
+
+    // Paleta Oficial LEGO
+    const COLORS = {
+      base: '#00852B',
+      baseStud: '#006d23',
+      snakeHead: '#FBD821',
+      snakeBody: '#EE3F33',
+      food: ['#1877CF', '#FFFFFF', '#FBD821', '#4B9F4A'],
+      shadow: 'rgba(0,0,0,0.3)',
+    }
+
+    let snake = []
+    let food = {}
+    let direction = { x: 0, y: 0 }
+    let nextDirection = { x: 0, y: 0 }
+    let score = 0
+    let gameLoopId
+
+    let gameSpeed = 130
+    let isPlaying = false
+
+    // Variables para puntuación dinámica
+    let foodSpawnTime = 0
+    let floatingTexts = []
+    // Tiempo en ms antes de que los puntos lleguen al mínimo (aprox 6 seg para bajar de 15 a 1)
+    const MAX_POINTS_WINDOW = 6000
+
+    let touchStartX = 0
+    let touchStartY = 0
+
+    function resize() {
+      const container = document.getElementById('snake-game-wrapper')
+      if (!container || !canvas) return
+
+      // Obtenemos el tamaño real del contenedor padre
+      const rect = container.getBoundingClientRect()
+      const w = rect.width - 24 // Restamos el padding (12px * 2)
+      const h = rect.height - 24
+
+      canvas.width = w
+      canvas.height = h
+      TILE_SIZE = w / COLS
+
+      if (!isPlaying) drawBackground()
+    }
+
+    window.addEventListener('resize', resize)
+    setTimeout(resize, 100)
+
+    // --- CONTROLS ---
+    document.addEventListener('keydown', (e) => {
+      initAudio()
+      if (!isPlaying) return
+      switch (e.key) {
+        case 'ArrowUp':
+          if (direction.y === 0) nextDirection = { x: 0, y: -1 }
+          break
+        case 'ArrowDown':
+          if (direction.y === 0) nextDirection = { x: 0, y: 1 }
+          break
+        case 'ArrowLeft':
+          if (direction.x === 0) nextDirection = { x: -1, y: 0 }
+          break
+        case 'ArrowRight':
+          if (direction.x === 0) nextDirection = { x: 1, y: 0 }
+          break
+      }
+    })
+
+    canvas.addEventListener(
+      'touchstart',
+      (e) => {
+        initAudio()
+        e.preventDefault()
+        touchStartX = e.touches[0].clientX
+        touchStartY = e.touches[0].clientY
+      },
+      { passive: false }
+    )
+
+    canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false })
+
+    canvas.addEventListener('touchend', (e) => {
+      if (!isPlaying) return
+      const touchEndX = e.changedTouches[0].clientX
+      const touchEndY = e.changedTouches[0].clientY
+
+      const dx = touchEndX - touchStartX
+      const dy = touchEndY - touchStartY
+
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return
+
+      sfx.click()
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && direction.x === 0) nextDirection = { x: 1, y: 0 }
+        else if (dx < 0 && direction.x === 0) nextDirection = { x: -1, y: 0 }
+      } else {
+        if (dy > 0 && direction.y === 0) nextDirection = { x: 0, y: 1 }
+        else if (dy < 0 && direction.y === 0) nextDirection = { x: 0, y: -1 }
+      }
+    })
+
+    // --- RENDERIZADO DE TEXTO FLOTANTE ---
+    function drawFloatingTexts() {
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i]
+
+        // Actualizar (MÁS RÁPIDO)
+        ft.y -= 1.5 // Velocidad de subida aumentada
+        ft.life--
+
+        // Dibujar
+        ctx.save()
+        ctx.globalAlpha = Math.max(0, ft.life / 20) // Fade out más rápido
+        ctx.fillStyle = '#FFF'
+        ctx.strokeStyle = '#000'
+        ctx.lineWidth = 3
+        ctx.font = `bold ${TILE_SIZE * 0.8}px "Press Start 2P", sans-serif`
+        ctx.textAlign = 'center'
+
+        const drawX = ft.gx * TILE_SIZE + TILE_SIZE / 2
+        const drawY = ft.gy * TILE_SIZE + ft.y
+
+        ctx.strokeText(ft.text, drawX, drawY)
+        ctx.fillText(ft.text, drawX, drawY)
+        ctx.restore()
+
+        // Eliminar si muere
+        if (ft.life <= 0) {
+          floatingTexts.splice(i, 1)
+        }
+      }
+    }
+
+    // --- LEGO RENDERING ---
+    function drawStud(x, y, size, color, isTopView = true) {
+      const cx = x + size / 2
+      const cy = y + size / 2
+      const r = size * 0.35
+
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      ctx.beginPath()
+      ctx.arc(cx + 1, cy + 2, r, 0, Math.PI * 2)
+      ctx.fill()
+
+      const grad = ctx.createLinearGradient(x, y, x + size, y + size)
+      grad.addColorStop(0, adjustColor(color, 20))
+      grad.addColorStop(1, adjustColor(color, -20))
+
+      ctx.fillStyle = grad
+      ctx.beginPath()
+      ctx.arc(cx, cy, r, 0, Math.PI * 2)
+      ctx.fill()
+
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'
+      ctx.beginPath()
+      ctx.ellipse(cx - r * 0.3, cy - r * 0.3, r * 0.25, r * 0.15, Math.PI / 4, 0, Math.PI * 2)
+      ctx.fill()
+
+      if (size > 15) {
+        ctx.fillStyle = 'rgba(0,0,0,0.1)'
+        ctx.font = `bold ${size * 0.15}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('LEGO', cx, cy)
+      }
+    }
+
+    function adjustColor(color, amount) {
+      return (
+        '#' +
+        color
+          .replace(/^#/, '')
+          .replace(/../g, (color) =>
+            ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2)
+          )
+      )
+    }
+
+    function drawBrick(col, row, colorHex, isHead = false, isFood = false) {
+      const x = col * TILE_SIZE
+      const y = row * TILE_SIZE
+      const s = TILE_SIZE
+      const pad = 1
+
+      const brickX = x + pad
+      const brickY = y + pad
+      const brickW = s - pad * 2
+      const brickH = s - pad * 2
+
+      if (!isFood) {
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'
+        ctx.fillRect(brickX + s * 0.1, brickY + s * 0.15, brickW, brickH)
+      }
+
+      ctx.fillStyle = colorHex
+      ctx.fillRect(brickX, brickY, brickW, brickH)
+
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.beginPath()
+      ctx.moveTo(brickX, brickY + brickH)
+      ctx.lineTo(brickX, brickY)
+      ctx.lineTo(brickX + brickW, brickY)
+      ctx.lineTo(brickX + brickW - 4, brickY + 4)
+      ctx.lineTo(brickX + 4, brickY + 4)
+      ctx.lineTo(brickX + 4, brickY + brickH - 4)
+      ctx.fill()
+
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      ctx.beginPath()
+      ctx.moveTo(brickX, brickY + brickH)
+      ctx.lineTo(brickX + brickW, brickY + brickH)
+      ctx.lineTo(brickX + brickW, brickY)
+      ctx.lineTo(brickX + brickW - 4, brickY + 4)
+      ctx.lineTo(brickX + brickW - 4, brickY + brickH - 4)
+      ctx.lineTo(brickX + 4, brickY + brickH - 4)
+      ctx.fill()
+
+      drawStud(x, y, s, colorHex)
+
+      if (isHead) {
+        const eyeSize = s * 0.12
+        ctx.fillStyle = '#111'
+
+        let dx = 0,
+          dy = 0
+        if (direction.x === 1) dx = 4
+        if (direction.x === -1) dx = -4
+        if (direction.y === 1) dy = 4
+        if (direction.y === -1) dy = -4
+
+        ctx.beginPath()
+        ctx.arc(x + s * 0.3 + dx, y + s * 0.4 + dy, eyeSize, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(x + s * 0.7 + dx, y + s * 0.4 + dy, eyeSize, 0, Math.PI * 2)
+        ctx.fill()
+
+        ctx.fillStyle = '#FFF'
+        ctx.beginPath()
+        ctx.arc(x + s * 0.3 + dx + 1, y + s * 0.4 + dy - 1, eyeSize * 0.4, 0, Math.PI * 2)
+        ctx.arc(x + s * 0.7 + dx + 1, y + s * 0.4 + dy - 1, eyeSize * 0.4, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = COLORS.base
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Dibujar zona segura diferente? No, mantenemos uniforme.
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const x = c * TILE_SIZE
+          const y = r * TILE_SIZE
+
+          const cx = x + TILE_SIZE / 2
+          const cy = y + TILE_SIZE / 2
+          const rad = TILE_SIZE * 0.35
+
+          ctx.fillStyle = 'rgba(0,0,0,0.15)'
+          ctx.beginPath()
+          ctx.arc(cx + 1, cy + 2, rad, 0, Math.PI * 2)
+          ctx.fill()
+
+          ctx.fillStyle = COLORS.baseStud
+          ctx.beginPath()
+          ctx.arc(cx, cy, rad, 0, Math.PI * 2)
+          ctx.fill()
+
+          ctx.fillStyle = 'rgba(255,255,255,0.1)'
+          ctx.beginPath()
+          ctx.arc(cx - rad * 0.3, cy - rad * 0.3, rad * 0.2, 0, Math.PI * 2)
+          ctx.fill()
+
+          if (TILE_SIZE > 15) {
+            ctx.fillStyle = 'rgba(0,0,0,0.15)'
+            ctx.font = `bold ${TILE_SIZE * 0.12}px sans-serif`
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText('LEGO', cx, cy)
+          }
+        }
+      }
+    }
+
+    // --- GAME LOGIC ---
+
+    function initGame() {
+      initAudio()
+      bgMusic.currentTime = 0
+      bgMusic.play().catch((e) => console.log('Audio play failed:', e))
+
+      snake = [
+        { x: 6, y: 15 },
+        { x: 6, y: 16 },
+        { x: 6, y: 17 },
+      ]
+      direction = { x: 0, y: -1 }
+      nextDirection = { x: 0, y: -1 }
+      score = 0
+      updateScore(0)
+
+      gameSpeed = 130
+      isPlaying = true
+      floatingTexts = []
+
+      spawnFood()
+
+      if (startScreen) startScreen.classList.add('hidden')
+      if (gameOverScreen) gameOverScreen.classList.add('hidden')
+
+      if (gameLoopId) clearTimeout(gameLoopId)
+      gameLoop()
+    }
+
+    function updateScore(val) {
+      score = val
+      const str = score.toString().padStart(3, '0')
+      if (scoreEl) scoreEl.innerText = str
+    }
+
+    function spawnFood() {
+      let valid = false
+      while (!valid) {
+        // Cálculo corregido: Solo filas por debajo de la zona segura
+        // Math.random() * (Total - Safe) + Safe
+        const safeRows = ROWS - SCORE_SAFE_ZONE_ROWS
+        const randomY = Math.floor(Math.random() * safeRows) + SCORE_SAFE_ZONE_ROWS
+
+        food = {
+          x: Math.floor(Math.random() * COLS),
+          y: randomY,
+          color: COLORS.food[Math.floor(Math.random() * COLORS.food.length)],
+        }
+        valid = !snake.some((segment) => segment.x === food.x && segment.y === food.y)
+      }
+      foodSpawnTime = Date.now()
+      updateTimerBar()
+    }
+
+    function updateTimerBar() {
+      if (!isPlaying) return
+      const timeTaken = Date.now() - foodSpawnTime
+      // Porcentaje restante (de 100% a 0%)
+      let percent = 100 - (timeTaken / MAX_POINTS_WINDOW) * 100
+      if (percent < 0) percent = 0
+
+      if (pointTimerBar) {
+        pointTimerBar.style.width = percent + '%'
+        // Cambiar color si queda poco
+        if (percent < 20) pointTimerBar.style.backgroundColor = '#B71C1C'
+        else pointTimerBar.style.backgroundColor = '#EE3F33'
+      }
+
+      requestAnimationFrame(updateTimerBar)
+    }
+
+    function gameOver() {
+      bgMusic.pause()
+      sfx.die()
+      isPlaying = false
+      if (finalScoreEl) finalScoreEl.innerText = score.toString()
+      if (gameOverScreen) gameOverScreen.classList.remove('hidden')
+    }
+
+    function gameLoop() {
+      if (!isPlaying) return
+
+      direction = nextDirection
+      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y }
+
+      if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+        gameOver()
+        return
+      }
+
+      if (snake.some((segment) => segment.x === head.x && segment.y === head.y)) {
+        gameOver()
+        return
+      }
+
+      snake.unshift(head)
+
+      if (head.x === food.x && head.y === food.y) {
+        const timeTaken = Date.now() - foodSpawnTime
+        const pointsEarned = Math.max(1, 15 - Math.floor(timeTaken / 400))
+
+        const newScore = score + pointsEarned
+        updateScore(newScore)
+
+        // Efecto Visual de Puntos
+        floatingTexts.push({
+          x: 0,
+          y: 0,
+          gx: head.x,
+          gy: head.y,
+          text: '+' + pointsEarned,
+          life: 20, // Menos vida = más rápido se va
+        })
+
+        sfx.eat(pointsEarned)
+
+        // Verificar si ganó
+        if (newScore >= TARGET_SCORE) {
+          bgMusic.pause()
+          isPlaying = false
+
+          setTimeout(() => {
+            // Emitir evento de victoria para que el GameLayout maneje el video
+            window.dispatchEvent(new CustomEvent('game-completed'))
+
+            // Otorgar logro específico del juego
+            actions
+              .grantGameAchievement({ achievementId: 'maestro-bloques' })
+              .then((result) => {
+                if (result.data?.achievement) {
+                  showAchievement('achievement-notification', {
+                    title: result.data.achievement.title,
+                    description: result.data.achievement.description,
+                    icon: result.data.achievement.image,
+                  })
+                }
+              })
+              .catch((error) => {
+                console.error('Error granting achievement:', error)
+              })
+          }, 1500)
+          return
+        }
+
+        if (gameSpeed > 60) {
+          gameSpeed -= 4
+        }
+
+        spawnFood()
+      } else {
+        snake.pop()
+      }
+
+      draw()
+      gameLoopId = setTimeout(gameLoop, gameSpeed)
+    }
+
+    function draw() {
+      drawBackground()
+
+      drawBrick(food.x, food.y, food.color, false, true)
+
+      snake.forEach((segment, index) => {
+        const isHead = index === 0
+        const color = isHead ? COLORS.snakeHead : COLORS.snakeBody
+        drawBrick(segment.x, segment.y, color, isHead)
+      })
+
+      drawFloatingTexts()
+    }
+
+    // Hook up buttons
+    const btnStart = document.getElementById('btn-start')
+    const btnRetry = document.getElementById('btn-retry')
+
+    if (btnStart) btnStart.addEventListener('click', initGame)
+    if (btnRetry) btnRetry.addEventListener('click', initGame)
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      resize()
+    })
+
+    resize()
+  })()
+</script>
