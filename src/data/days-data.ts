@@ -76,7 +76,8 @@ const GAME_CONFIG: Record<number, GameType> = {
 // Mapeo de videos por día (UUID único para cada video)
 const VIDEO_URLS: Record<number, string> = {
   1: '01_0CF5950A-A6B4-4F86-93DD-23E28C7685EE',
-  2: '02_C0EAB650-A81B-42A7-862D-30C51F8B9C8D'
+  2: '02_C0EAB650-A81B-42A7-862D-30C51F8B9C8D',
+  3: '03_4CCC36F4-D5B2-4BE8-BA1D-6B006F53B207'
 }
 
 // Función auxiliar para obtener la URL del video según el día
@@ -94,7 +95,10 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     videoUrl: getVideoUrlForDay(2),
     prize: 'Fin de semana sobre ruedas',
   },
-  // ... más días
+  3: {
+    videoUrl: getVideoUrlForDay(3),
+    prize: 'Kit de LEGO valorado en 2000€',
+  }
 }
 
 function getDescriptionForDay(day: number): string {
