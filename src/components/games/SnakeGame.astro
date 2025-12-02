@@ -58,10 +58,28 @@ const GAME_DATA = {
 
     <!-- Pantalla Game Over -->
     <div id="game-over-screen" class="hidden">
-      <h1 class="title" style="color: #EE3F33; text-shadow: 4px 4px 0 #fff;">¡AY!</h1>
+      <h1
+        class="title"
+        style="color: #EE3F33; text-shadow: 4px 4px 0 #fff; font-family: 'Press Start 2P', cursive;"
+      >
+        ¡AY!
+      </h1>
       <p style="color: white; font-size: 0.8rem; margin-top:10px;">PUNTUACIÓN FINAL</p>
       <p style="color: #FBD821; font-size: 1.5rem; margin-top:5px;" id="finalScore">0</p>
       <button id="btn-retry" class="lego-btn blink">REINTENTAR</button>
+    </div>
+
+    <!-- Pantalla de Victoria -->
+    <div id="success-screen" class="hidden">
+      <h2
+        class="title"
+        style="color: #2ecc71; text-shadow: 4px 4px 0 #fff; font-family: 'Press Start 2P', cursive; line-height: 1.5; font-size: 1.5rem; text-align: center;"
+      >
+        ¡ENHORABUENA!
+      </h2>
+      <p style="color: #FBD821; font-size: 0.9rem; margin-top:15px;" class="blink">
+        ¡DESVELANDO <br />EL SORTEO...!
+      </p>
     </div>
   </div>
 </GameLayout>
@@ -163,7 +181,8 @@ const GAME_DATA = {
 
   /* Pantallas */
   #start-screen,
-  #game-over-screen {
+  #game-over-screen,
+  #success-screen {
     position: absolute;
     top: 0;
     left: 0;
@@ -235,12 +254,12 @@ const GAME_DATA = {
 </style>
 
 <script>
-  const TARGET_SCORE = 100
+  const TARGET_SCORE = 10
 
   ;(function () {
     // --- AUDIO SYSTEM ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext
-    let audioCtx
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
 
     // Música de fondo
     const bgMusic = new Audio('https://videos.bigibai.com/music/snake.mp3')
@@ -267,7 +286,7 @@ const GAME_DATA = {
         osc.start()
         osc.stop(audioCtx.currentTime + 0.05)
       },
-      eat: (points) => {
+      eat: (points: number) => {
         if (!audioCtx) return
         const osc = audioCtx.createOscillator()
         const gain = audioCtx.createGain()
@@ -311,6 +330,7 @@ const GAME_DATA = {
     const pointTimerBar = document.getElementById('pointTimerBar') as HTMLDivElement
     const startScreen = document.getElementById('start-screen') as HTMLDivElement
     const gameOverScreen = document.getElementById('game-over-screen') as HTMLDivElement
+    const successScreen = document.getElementById('success-screen') as HTMLDivElement
 
     // Tamaño interno del juego (aspect ratio 9:16)
     const INTERNAL_WIDTH = 360
@@ -331,8 +351,8 @@ const GAME_DATA = {
       shadow: 'rgba(0,0,0,0.3)',
     }
 
-    let snake = []
-    let food = {}
+    let snake: { x: number; y: number }[] = []
+    let food: { x: number; y: number; color: string } = { x: 0, y: 0, color: '' }
     let direction = { x: 0, y: 0 }
     let nextDirection = { x: 0, y: 0 }
     let score = 0
@@ -343,7 +363,7 @@ const GAME_DATA = {
 
     // Variables para puntuación dinámica
     let foodSpawnTime = 0
-    let floatingTexts = []
+    let floatingTexts: { x: number; y: number; text: string; life: number }[] = []
     // Tiempo en ms antes de que los puntos lleguen al mínimo (aprox 6 seg para bajar de 15 a 1)
     const MAX_POINTS_WINDOW = 6000
 
@@ -426,6 +446,8 @@ const GAME_DATA = {
         // Actualizar (MÁS RÁPIDO)
         ft.y -= 1.5 // Velocidad de subida aumentada
         ft.life--
+
+        if (!ctx) return
 
         // Dibujar
         ctx.save()
@@ -627,6 +649,7 @@ const GAME_DATA = {
 
       if (startScreen) startScreen.classList.add('hidden')
       if (gameOverScreen) gameOverScreen.classList.add('hidden')
+      if (successScreen) successScreen.classList.add('hidden')
 
       if (gameLoopId) clearTimeout(gameLoopId)
       gameLoop()
@@ -724,10 +747,13 @@ const GAME_DATA = {
           bgMusic.pause()
           isPlaying = false
 
+          // Mostrar pantalla de éxito
+          if (successScreen) successScreen.classList.remove('hidden')
+
           setTimeout(() => {
             // Emitir evento de victoria para que el GameLayout maneje el video
             window.dispatchEvent(new CustomEvent('game-completed'))
-          }, 1500)
+          }, 2500)
           return
         }
 
