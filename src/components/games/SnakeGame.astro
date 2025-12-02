@@ -235,9 +235,6 @@ const GAME_DATA = {
 </style>
 
 <script>
-  import { actions } from 'astro:actions'
-  import { showAchievement } from '@/utils/show-achievement'
-
   const TARGET_SCORE = 100
 
   ;(function () {
@@ -258,6 +255,7 @@ const GAME_DATA = {
     const sfx = {
       click: () => {
         if (!audioCtx) return
+
         const osc = audioCtx.createOscillator()
         const gain = audioCtx.createGain()
         osc.frequency.setValueAtTime(800, audioCtx.currentTime)
@@ -302,17 +300,17 @@ const GAME_DATA = {
     }
 
     // --- GAME CONFIG ---
-    const canvas = document.getElementById('gameCanvas')
+    const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement
     if (!canvas) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const scoreEl = document.getElementById('scoreVal')
-    const finalScoreEl = document.getElementById('finalScore')
-    const pointTimerBar = document.getElementById('pointTimerBar')
-    const startScreen = document.getElementById('start-screen')
-    const gameOverScreen = document.getElementById('game-over-screen')
+    const scoreEl = document.getElementById('scoreVal') as HTMLSpanElement
+    const finalScoreEl = document.getElementById('finalScore') as HTMLSpanElement
+    const pointTimerBar = document.getElementById('pointTimerBar') as HTMLDivElement
+    const startScreen = document.getElementById('start-screen') as HTMLDivElement
+    const gameOverScreen = document.getElementById('game-over-screen') as HTMLDivElement
 
     // Tamaño interno del juego (aspect ratio 9:16)
     const INTERNAL_WIDTH = 360
