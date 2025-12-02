@@ -11,6 +11,7 @@ import PuzzleGame from '@/components/games/PuzzleGame.astro'
 import MemoryGame from '@/components/games/MemoryGame.astro'
 import RacerGame from '@/components/games/RacerGame.astro'
 import CamperGame from '@/components/games/CamperGame.astro'
+import SnakeGame from '@/components/games/SnakeGame.astro'
 import { isAdmin } from '@/utils/admin'
 
 const {
@@ -208,6 +209,7 @@ const isAccessible = userIsAdmin || isDayAccessible
             {gameType === 'memory' && <MemoryGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'racer' && <RacerGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'camper' && <CamperGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'snake' && <SnakeGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
