@@ -12,7 +12,12 @@ export function createClient({ request, cookies }: { request: Request; cookies: 
         return parseCookieHeader(request.headers.get('Cookie') ?? '')
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => cookies.set(name, value, options))
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookies.set(name, value, {
+            ...options,
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+          })
+        })
       },
     },
   })
