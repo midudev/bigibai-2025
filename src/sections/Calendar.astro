@@ -12,6 +12,9 @@ function isDayActive(day: number): boolean {
   const month = cetTime.getMonth() // 0 = enero, 11 = diciembre
   const currentDay = cetTime.getDate()
 
+  // quitar esto
+  if (currentDay > 3) return false
+
   // Si no es diciembre, ningún día está activo
   if (month !== 11) return false // 11 = diciembre
 

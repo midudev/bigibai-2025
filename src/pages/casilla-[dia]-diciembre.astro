@@ -35,6 +35,8 @@ const isAuthenticated = !!user
 // Verificar si el usuario es administrador
 const userIsAdmin = isAdmin(user?.id)
 
+if (paramDayNumber > 3) return Astro.redirect('/404')
+
 // Verificar si el día ya es accesible (usando hora CET)
 const today = new Date()
 const cetTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
