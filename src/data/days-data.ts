@@ -99,6 +99,10 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
   3: {
     videoUrl: getVideoUrlForDay(3),
     prize: 'Kit de LEGO valorado en 2000€',
+  },
+  4: {
+    videoUrl: getVideoUrlForDay(4),
+    prize: 'Entradas para Cirque du Soleil',
   }
 }
 
