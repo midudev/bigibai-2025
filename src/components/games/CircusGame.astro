@@ -24,7 +24,9 @@ const GAME_DATA = {
   <div id="circus-game-container" slot="game" data-target-score={GAME_DATA.targetScore}>
     <canvas id="gameCanvas" width="360" height="640"></canvas>
 
-    <div id="score-hud" class="hidden">PUNTOS: <span id="score-val">0</span></div>
+    <div id="score-hud" class="hidden">
+      PUNTOS: <span id="score-val">0/{GAME_DATA.targetScore}</span>
+    </div>
 
     <div id="ui-layer">
       <div id="start-screen">
@@ -35,7 +37,7 @@ const GAME_DATA = {
       </div>
 
       <div id="game-over-screen" class="hidden">
-        <h1>GAME OVER</h1>
+        <h1 style="font-family: 'Press Start 2P', cursive;">GAME OVER</h1>
         <p>Puntuación: <span id="final-score">0</span></p>
         <p>Récord: <span id="best-score">0</span></p>
         <button class="btn" id="restart-btn">REINTENTAR</button>
