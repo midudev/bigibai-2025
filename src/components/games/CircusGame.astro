@@ -1,0 +1,858 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 5,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="circus-game-container" slot="game" data-target-score={GAME_DATA.targetScore}>
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+
+    <div id="score-hud" class="hidden">SCORE: <span id="score-val">0</span></div>
+
+    <div id="ui-layer">
+      <div id="start-screen">
+        <h1>EL CAÑÓN<br />DEL PAYASO</h1>
+        <p>¡Toca para disparar!</p>
+        <p>No te caigas al vacío.</p>
+        <button class="btn" id="start-btn">JUGAR</button>
+      </div>
+
+      <div id="game-over-screen" class="hidden">
+        <h1>GAME OVER</h1>
+        <p>Puntuación: <span id="final-score">0</span></p>
+        <p>Récord: <span id="best-score">0</span></p>
+        <button class="btn" id="restart-btn">REINTENTAR</button>
+      </div>
+
+      <div id="success-screen" class="hidden">
+        <h1 style="color: #2ecc71;">¡ENHORABUENA!</h1>
+        <p class="blink">¡DESVELANDO EL SORTEO!</p>
+      </div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #circus-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #222;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: white;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  h1 {
+    font-size: 22px;
+    color: #ffd700;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    text-shadow:
+      -3px -3px 0 #000,
+      3px -3px 0 #000,
+      -3px 3px 0 #000,
+      3px 3px 0 #000,
+      0px -3px 0 #000,
+      0px 3px 0 #000,
+      -3px 0px 0 #000,
+      3px 0px 0 #000;
+  }
+
+  p {
+    font-size: 11px;
+    line-height: 2;
+    color: #fff;
+    text-shadow:
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0px -2px 0 #000,
+      0px 2px 0 #000,
+      -2px 0px 0 #000,
+      2px 0px 0 #000;
+    margin: 8px 20px;
+  }
+
+  .btn {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    padding: 15px 30px;
+    margin-top: 25px;
+    background: linear-gradient(180deg, #4caf50 0%, #2e7d32 100%);
+    color: #fff;
+    border: 4px solid #1b5e20;
+    border-radius: 8px;
+    cursor: pointer;
+    pointer-events: auto;
+    text-shadow:
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000;
+    box-shadow:
+      0 6px 0 #1b5e20,
+      0 8px 10px rgba(0, 0, 0, 0.4);
+    transition: all 0.1s;
+  }
+
+  .btn:hover {
+    background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%);
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 0 #1b5e20,
+      0 10px 15px rgba(0, 0, 0, 0.4);
+  }
+
+  .btn:active {
+    transform: translateY(4px);
+    box-shadow:
+      0 2px 0 #1b5e20,
+      0 4px 5px rgba(0, 0, 0, 0.4);
+  }
+
+  #score-hud {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 12px;
+    color: #ffd700;
+    text-shadow:
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0px -2px 0 #000,
+      0px 2px 0 #000,
+      -2px 0px 0 #000,
+      2px 0px 0 #000;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+  }
+
+  #start-screen,
+  #game-over-screen,
+  #success-screen {
+    background: rgba(0, 0, 0, 0.75);
+    padding: 30px 20px;
+    border-radius: 15px;
+    border: 4px solid #ffd700;
+    max-width: 85%;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  #start-screen .btn,
+  #game-over-screen .btn {
+    animation: pulse 1.5s infinite;
+  }
+
+  .blink {
+    animation: blink-anim 1s infinite;
+  }
+
+  @keyframes blink-anim {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  
+  
+
+  ;(function () {
+    const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const container = document.getElementById('circus-game-container')
+    const TARGET_SCORE = container ? parseInt(container.dataset.targetScore || '5', 10) : 5
+
+    // Elementos UI
+    const uiStart = document.getElementById('start-screen')
+    const uiGameOver = document.getElementById('game-over-screen')
+    const uiSuccess = document.getElementById('success-screen')
+    const scoreHud = document.getElementById('score-hud')
+    const scoreVal = document.getElementById('score-val')
+    const finalScoreVal = document.getElementById('final-score')
+    const bestScoreVal = document.getElementById('best-score')
+
+    // Estado del Juego
+    let gameState: 'START' | 'PLAYING' | 'GAMEOVER' | 'SUCCESS' = 'START'
+    let score = 0
+    let highScore = parseInt(localStorage.getItem('clownCannonHighScore') || '0', 10)
+    let cameraY = 0
+    let frameCount = 0
+
+    // Físicas
+    const GRAVITY = 0.25
+    const SHOOT_FORCE = 14
+
+    // Entidades
+    let clown = {
+      x: 0,
+      y: 0,
+      radius: 12,
+      vx: 0,
+      vy: 0,
+      inCannon: true,
+      currentCannon: null as Cannon | null,
+      lastCannon: null as Cannon | null,
+      rotation: 0,
+    }
+
+    let cannons: Cannon[] = []
+    let particles: Particle[] = []
+
+    // --- SISTEMA DE AUDIO ---
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playSound(type: 'shoot' | 'land' | 'die') {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+
+      const now = audioCtx.currentTime
+
+      if (type === 'shoot') {
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(100, now)
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.4)
+        gainNode.gain.setValueAtTime(0.5, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
+        osc.start(now)
+        osc.stop(now + 0.4)
+      } else if (type === 'land') {
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.linearRampToValueAtTime(600, now + 0.1)
+        gainNode.gain.setValueAtTime(0.3, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.15)
+        osc.start(now)
+        osc.stop(now + 0.15)
+      } else if (type === 'die') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(200, now)
+        osc.frequency.linearRampToValueAtTime(50, now + 0.6)
+        gainNode.gain.setValueAtTime(0.5, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.6)
+        osc.start(now)
+        osc.stop(now + 0.6)
+      }
+    }
+
+    // --- CLASES ---
+    class Cannon {
+      x: number
+      y: number
+      angle: number
+      rotationSpeed: number
+      minAngle: number
+      maxAngle: number
+      color: string
+      accentColor: string
+      visited: boolean
+
+      constructor(x: number, y: number, startAngle: number, speed: number) {
+        this.x = x
+        this.y = y
+        this.angle = startAngle
+        this.rotationSpeed = speed
+        this.minAngle = -Math.PI / 4.5
+        this.maxAngle = Math.PI / 4.5
+        this.angle = Math.max(this.minAngle, Math.min(this.maxAngle, this.angle))
+        this.color = '#1a1a1a'
+        this.accentColor = '#333'
+        this.visited = false
+      }
+
+      update() {
+        this.angle += this.rotationSpeed
+        if (this.angle >= this.maxAngle) {
+          this.angle = this.maxAngle
+          this.rotationSpeed = -Math.abs(this.rotationSpeed)
+        } else if (this.angle <= this.minAngle) {
+          this.angle = this.minAngle
+          this.rotationSpeed = Math.abs(this.rotationSpeed)
+        }
+      }
+
+      draw(hasClown = false) {
+        if (!ctx) return
+        ctx.save()
+        ctx.translate(this.x, this.y - cameraY)
+
+        // Base del cañón
+        ctx.fillStyle = '#5C4033'
+        ctx.fillRect(-10, 5, 20, 25)
+        ctx.fillRect(-14, 25, 28, 6)
+
+        ctx.fillStyle = '#4A3728'
+        ctx.fillRect(-6, 8, 4, 18)
+        ctx.fillRect(2, 8, 4, 18)
+
+        // Eje de rotación
+        ctx.fillStyle = '#FFD700'
+        ctx.beginPath()
+        ctx.arc(0, 5, 6, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#B8860B'
+        ctx.beginPath()
+        ctx.arc(0, 5, 3, 0, Math.PI * 2)
+        ctx.fill()
+
+        ctx.rotate(this.angle)
+
+        // Cuerpo del cañón
+        ctx.fillStyle = this.color
+        ctx.fillRect(-14, -5, 28, 30)
+
+        ctx.fillStyle = '#2a2a2a'
+        ctx.fillRect(-10, -5, 8, 30)
+
+        ctx.fillStyle = '#0a0a0a'
+        ctx.fillRect(-15, 0, 30, 5)
+        ctx.fillRect(-15, 15, 30, 5)
+
+        // Tubo del cañón
+        ctx.fillStyle = this.color
+        ctx.beginPath()
+        ctx.moveTo(-14, -5)
+        ctx.lineTo(14, -5)
+        ctx.lineTo(18, -45)
+        ctx.lineTo(-18, -45)
+        ctx.closePath()
+        ctx.fill()
+
+        ctx.fillStyle = '#2a2a2a'
+        ctx.beginPath()
+        ctx.moveTo(-10, -5)
+        ctx.lineTo(-4, -5)
+        ctx.lineTo(-6, -45)
+        ctx.lineTo(-14, -45)
+        ctx.closePath()
+        ctx.fill()
+
+        // Boca del cañón
+        ctx.fillStyle = this.color
+        ctx.fillRect(-20, -52, 40, 8)
+
+        ctx.fillStyle = '#8B7355'
+        ctx.fillRect(-20, -53, 40, 3)
+
+        ctx.fillStyle = '#000'
+        ctx.fillRect(-14, -50, 28, 6)
+
+        // Mecha
+        if (hasClown && Math.random() > 0.4) {
+          ctx.fillStyle = '#FFA500'
+          ctx.beginPath()
+          ctx.arc(0, 28, 4, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.fillStyle = '#FF4500'
+          ctx.beginPath()
+          ctx.arc(0, 28, 2, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
+        // Guía de puntos
+        if (hasClown) {
+          ctx.fillStyle = '#00BFFF'
+          for (let i = 1; i <= 3; i++) {
+            const dotY = -55 - i * 18
+            const dotSize = 5 - i * 0.8
+            ctx.globalAlpha = 1 - i * 0.25
+            ctx.beginPath()
+            ctx.arc(0, dotY, dotSize, 0, Math.PI * 2)
+            ctx.fill()
+          }
+          ctx.globalAlpha = 1
+        }
+
+        ctx.restore()
+      }
+
+      getMuzzlePosition() {
+        const muzzleDistance = 50
+        return {
+          x: this.x + Math.sin(this.angle) * muzzleDistance,
+          y: this.y - Math.cos(this.angle) * muzzleDistance,
+        }
+      }
+
+      getClownPosition() {
+        const clownDistance = 38
+        return {
+          x: this.x + Math.sin(this.angle) * clownDistance,
+          y: this.y - Math.cos(this.angle) * clownDistance,
+        }
+      }
+    }
+
+    class Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      life: number
+      color: string
+      size: number
+
+      constructor(x: number, y: number, color: string) {
+        this.x = x
+        this.y = y
+        this.vx = (Math.random() - 0.5) * 6
+        this.vy = (Math.random() - 0.5) * 6
+        this.life = 1.0
+        this.color = color
+        this.size = Math.random() * 5 + 2
+      }
+
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+        this.life -= 0.03
+        this.size *= 0.95
+      }
+
+      draw() {
+        if (!ctx) return
+        ctx.fillStyle = this.color
+        ctx.globalAlpha = this.life
+        ctx.fillRect(this.x, this.y - cameraY, this.size, this.size)
+        ctx.globalAlpha = 1.0
+      }
+    }
+
+    function spawnExplosion(x: number, y: number) {
+      const colors = ['#666', '#444', '#FFA500', '#FF4500', '#FFD700']
+      for (let i = 0; i < 18; i++) {
+        particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]))
+      }
+    }
+
+    function initGame() {
+      score = 0
+      cameraY = 0
+      if (scoreVal) scoreVal.innerText = String(score)
+
+      clown = {
+        x: canvas.width / 2,
+        y: canvas.height - 150,
+        radius: 12,
+        vx: 0,
+        vy: 0,
+        inCannon: true,
+        currentCannon: null,
+        lastCannon: null,
+        rotation: 0,
+      }
+
+      cannons = []
+      particles = []
+
+      // Cañón inicial
+      const startCannon = new Cannon(canvas.width / 2, canvas.height - 150, 0, 0.018)
+      cannons.push(startCannon)
+      clown.currentCannon = startCannon
+
+      // Generar siguientes cañones
+      for (let i = 1; i < 6; i++) {
+        addCannon(canvas.height - 150 - i * 200)
+      }
+
+      gameState = 'PLAYING'
+      uiStart?.classList.add('hidden')
+      uiGameOver?.classList.add('hidden')
+      uiSuccess?.classList.add('hidden')
+      scoreHud?.classList.remove('hidden')
+    }
+
+    function addCannon(y: number) {
+      const margin = 60
+      const x = margin + Math.random() * (canvas.width - margin * 2)
+      const speed = (0.02 + Math.random() * 0.025) * (Math.random() > 0.5 ? 1 : -1)
+      const startAngle = (Math.random() - 0.5) * 0.4
+      cannons.push(new Cannon(x, y, startAngle, speed))
+    }
+
+    function update() {
+      if (gameState !== 'PLAYING') return
+
+      frameCount++
+
+      // Limpiar partículas muertas
+      particles = particles.filter((p) => p.life > 0)
+      particles.forEach((p) => p.update())
+
+      // Actualizar cañones
+      cannons.forEach((c) => c.update())
+
+      // Lógica del Payaso
+      if (clown.inCannon && clown.currentCannon) {
+        const clownPos = clown.currentCannon.getClownPosition()
+        clown.x = clownPos.x
+        clown.y = clownPos.y
+        clown.rotation = clown.currentCannon.angle
+      } else {
+        // Físicas de vuelo
+        clown.vy += GRAVITY
+        clown.x += clown.vx
+        clown.y += clown.vy
+        clown.rotation += 0.2
+
+        // Colisiones con cañones
+        for (const c of cannons) {
+          if (c === clown.lastCannon) continue
+
+          const dx = clown.x - c.x
+          const dy = clown.y - c.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+
+          if (dist < 35) {
+            clown.inCannon = true
+            clown.currentCannon = c
+            clown.vx = 0
+            clown.vy = 0
+            playSound('land')
+
+            if (!c.visited) {
+              score++
+              if (scoreVal) scoreVal.innerText = String(score)
+              c.visited = true
+              spawnExplosion(c.x, c.y)
+
+              // Verificar victoria
+              if (score >= TARGET_SCORE) {
+                gameState = 'SUCCESS'
+                scoreHud?.classList.add('hidden')
+                uiSuccess?.classList.remove('hidden')
+
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('game-completed'))
+                }, 2500)
+              } else {
+                const highestCannonY = Math.min(...cannons.map((cn) => cn.y))
+                addCannon(highestCannonY - 200)
+
+                if (cannons.length > 8) {
+                  cannons.shift()
+                }
+              }
+            }
+            break
+          }
+        }
+
+        // Game Over si sale de la pantalla
+        if (
+          clown.y > cameraY + canvas.height + 100 ||
+          clown.x < -50 ||
+          clown.x > canvas.width + 50
+        ) {
+          gameOver()
+        }
+      }
+
+      // Cámara suave
+      let targetY = clown.y - canvas.height / 1.5
+      if (clown.inCannon && clown.currentCannon) {
+        targetY = clown.currentCannon.y - canvas.height / 1.5
+      }
+      cameraY += (targetY - cameraY) * 0.1
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      // Fondo de Circo
+      const stripeWidth = 60
+      const numStripes = Math.ceil(canvas.width / stripeWidth) + 1
+
+      for (let i = 0; i < numStripes; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#FF3333' : '#FFFACD'
+        ctx.fillRect(i * stripeWidth, 0, stripeWidth, canvas.height)
+      }
+
+      // Techo de la carpa (solo en pantalla de inicio)
+      if (gameState === 'START') {
+        const tentTopHeight = 80
+
+        ctx.fillStyle = '#FF3333'
+        ctx.beginPath()
+        ctx.moveTo(0, 0)
+        ctx.lineTo(canvas.width / 2, tentTopHeight)
+        ctx.lineTo(canvas.width, 0)
+        ctx.closePath()
+        ctx.fill()
+
+        ctx.strokeStyle = '#FFD700'
+        ctx.lineWidth = 5
+        ctx.beginPath()
+        ctx.moveTo(0, 0)
+        ctx.lineTo(canvas.width / 2, tentTopHeight)
+        ctx.lineTo(canvas.width, 0)
+        ctx.stroke()
+
+        ctx.fillStyle = '#FFD700'
+        ctx.beginPath()
+        ctx.moveTo(canvas.width / 2 - 8, tentTopHeight)
+        ctx.lineTo(canvas.width / 2, tentTopHeight - 20)
+        ctx.lineTo(canvas.width / 2 + 8, tentTopHeight)
+        ctx.closePath()
+        ctx.fill()
+      }
+
+      // Dibujar Cañones
+      cannons.forEach((c) => {
+        const hasClown = clown.inCannon && clown.currentCannon === c
+        c.draw(hasClown)
+      })
+
+      // Dibujar Partículas
+      particles.forEach((p) => p.draw())
+
+      // Dibujar Payaso
+      drawClown()
+    }
+
+    function drawClown() {
+      if (!ctx) return
+      if (gameState === 'START' || !clown.currentCannon) return
+
+      ctx.save()
+      ctx.translate(clown.x, clown.y - cameraY)
+
+      if (!clown.inCannon) {
+        ctx.rotate(clown.rotation)
+      } else if (clown.currentCannon) {
+        ctx.rotate(clown.currentCannon.angle)
+      }
+
+      const pSize = 3
+      function drawPixel(x: number, y: number, color: string) {
+        if (!ctx) return
+        ctx.fillStyle = color
+        ctx.fillRect(x * pSize - 12, y * pSize - 12, pSize, pSize)
+      }
+
+      const skinColor = '#FFC0CB'
+      const whiteColor = '#FFFFFF'
+      const redColor = '#FF0000'
+      const hairColor = '#FF4500'
+      const hatColor = '#00FF00'
+      const pomponColor = '#FFFF00'
+      const blackColor = '#000000'
+
+      // Cabeza
+      for (let y = 2; y < 7; y++) for (let x = 1; x < 8; x++) drawPixel(x, y, whiteColor)
+      for (let y = 1; y < 8; y++) for (let x = 2; x < 7; x++) drawPixel(x, y, whiteColor)
+
+      // Cara
+      for (let y = 3; y < 6; y++) for (let x = 2; x < 7; x++) drawPixel(x, y, skinColor)
+
+      // Ojos
+      drawPixel(3, 4, blackColor)
+      drawPixel(5, 4, blackColor)
+
+      // Nariz
+      drawPixel(4, 5, redColor)
+
+      // Boca
+      drawPixel(3, 6, redColor)
+      drawPixel(5, 6, redColor)
+      drawPixel(4, 7, redColor)
+
+      // Pelo
+      drawPixel(0, 3, hairColor)
+      drawPixel(0, 4, hairColor)
+      drawPixel(8, 3, hairColor)
+      drawPixel(8, 4, hairColor)
+      drawPixel(1, 2, hairColor)
+      drawPixel(7, 2, hairColor)
+
+      // Gorro
+      for (let x = 2; x < 7; x++) drawPixel(x, 1, hatColor)
+      for (let x = 3; x < 6; x++) drawPixel(x, 0, hatColor)
+      drawPixel(4, -1, hatColor)
+
+      // Pompon
+      drawPixel(4, -2, pomponColor)
+
+      ctx.restore()
+    }
+
+    function shoot() {
+      if (gameState !== 'PLAYING') return
+      if (!clown.inCannon || !clown.currentCannon) return
+
+      playSound('shoot')
+
+      const muzzle = clown.currentCannon.getMuzzlePosition()
+      spawnExplosion(muzzle.x, muzzle.y)
+
+      clown.inCannon = false
+      clown.lastCannon = clown.currentCannon
+
+      const angle = clown.currentCannon.angle
+      clown.vx = Math.sin(angle) * SHOOT_FORCE
+      clown.vy = -Math.cos(angle) * SHOOT_FORCE
+    }
+
+    function gameOver() {
+      gameState = 'GAMEOVER'
+      playSound('die')
+
+      if (score > highScore) {
+        highScore = score
+        localStorage.setItem('clownCannonHighScore', String(highScore))
+      }
+
+      if (finalScoreVal) finalScoreVal.innerText = String(score)
+      if (bestScoreVal) bestScoreVal.innerText = String(highScore)
+
+      scoreHud?.classList.add('hidden')
+      uiGameOver?.classList.remove('hidden')
+    }
+
+    // --- INPUTS ---
+    function handleInput(e?: Event) {
+      if (e) e.preventDefault()
+
+      initAudio()
+
+      if (gameState === 'START') {
+        initGame()
+      } else if (gameState === 'PLAYING') {
+        shoot()
+      } else if (gameState === 'GAMEOVER') {
+        setTimeout(() => initGame(), 200)
+      }
+    }
+
+    canvas.addEventListener('mousedown', handleInput)
+    canvas.addEventListener('touchstart', handleInput, { passive: false })
+
+    document.getElementById('start-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      initAudio()
+      initGame()
+    })
+
+    document.getElementById('restart-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      initGame()
+    })
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        handleInput(e)
+      }
+    })
+
+    function loop() {
+      update()
+      draw()
+      requestAnimationFrame(loop)
+    }
+
+    if (bestScoreVal) bestScoreVal.innerText = String(highScore)
+    loop()
+
+    // Escuchar evento start-game para reiniciar
+    window.addEventListener('start-game', () => {
+      gameState = 'START'
+      uiStart?.classList.remove('hidden')
+      uiGameOver?.classList.add('hidden')
+      uiSuccess?.classList.add('hidden')
+      scoreHud?.classList.add('hidden')
+    })
+  })()
+</script>
