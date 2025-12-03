@@ -14,7 +14,7 @@ const { day, gameData } = Astro.props
 
 const GAME_DATA = {
   day: day,
-  targetScore: gameData?.targetScore || 5,
+  targetScore: gameData?.targetScore || 8,
   prize: gameData?.prize || 'Premio del día',
   videoUrl: gameData?.videoUrl,
 }
@@ -24,13 +24,13 @@ const GAME_DATA = {
   <div id="circus-game-container" slot="game" data-target-score={GAME_DATA.targetScore}>
     <canvas id="gameCanvas" width="360" height="640"></canvas>
 
-    <div id="score-hud" class="hidden">SCORE: <span id="score-val">0</span></div>
+    <div id="score-hud" class="hidden">PUNTOS: <span id="score-val">0</span></div>
 
     <div id="ui-layer">
       <div id="start-screen">
-        <h1>EL CAÑÓN<br />DEL PAYASO</h1>
+        <h1 style="font-family: 'Press Start 2P', cursive;">EL CAÑÓN<br />DEL PAYASO</h1>
         <p>¡Toca para disparar!</p>
-        <p>No te caigas al vacío.</p>
+        <p class="text-balance">No te caigas al vacío.</p>
         <button class="btn" id="start-btn">JUGAR</button>
       </div>
 
@@ -42,7 +42,7 @@ const GAME_DATA = {
       </div>
 
       <div id="success-screen" class="hidden">
-        <h1 style="color: #2ecc71;">¡ENHORABUENA!</h1>
+        <h1 style="color: #2ecc71; font-family: 'Press Start 2P', cursive;">¡ENHORABUENA!</h1>
         <p class="blink">¡DESVELANDO EL SORTEO!</p>
       </div>
     </div>
@@ -229,9 +229,6 @@ const GAME_DATA = {
 </style>
 
 <script>
-  
-  
-
   ;(function () {
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement
     if (!canvas) return
@@ -240,7 +237,7 @@ const GAME_DATA = {
     if (!ctx) return
 
     const container = document.getElementById('circus-game-container')
-    const TARGET_SCORE = container ? parseInt(container.dataset.targetScore || '5', 10) : 5
+    const TARGET_SCORE = container ? parseInt(container.dataset.targetScore || '10', 10) : 10
 
     // Elementos UI
     const uiStart = document.getElementById('start-screen')
@@ -281,6 +278,11 @@ const GAME_DATA = {
     // --- SISTEMA DE AUDIO ---
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext
     let audioCtx: AudioContext | null = null
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/circus.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
 
     function initAudio() {
       if (!audioCtx) {
@@ -545,7 +547,7 @@ const GAME_DATA = {
 
       // Generar siguientes cañones
       for (let i = 1; i < 6; i++) {
-        addCannon(canvas.height - 150 - i * 200)
+        addCannon(canvas.height - 150 - i * 220)
       }
 
       gameState = 'PLAYING'
@@ -553,6 +555,12 @@ const GAME_DATA = {
       uiGameOver?.classList.add('hidden')
       uiSuccess?.classList.add('hidden')
       scoreHud?.classList.remove('hidden')
+
+      // Iniciar música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {
+        // Ignorar errores de autoplay
+      })
     }
 
     function addCannon(y: number) {
@@ -614,13 +622,14 @@ const GAME_DATA = {
                 gameState = 'SUCCESS'
                 scoreHud?.classList.add('hidden')
                 uiSuccess?.classList.remove('hidden')
+                bgMusic.pause()
 
                 setTimeout(() => {
                   window.dispatchEvent(new CustomEvent('game-completed'))
                 }, 2500)
               } else {
                 const highestCannonY = Math.min(...cannons.map((cn) => cn.y))
-                addCannon(highestCannonY - 200)
+                addCannon(highestCannonY - 220)
 
                 if (cannons.length > 8) {
                   cannons.shift()
@@ -789,6 +798,7 @@ const GAME_DATA = {
     function gameOver() {
       gameState = 'GAMEOVER'
       playSound('die')
+      bgMusic.pause()
 
       if (score > highScore) {
         highScore = score
