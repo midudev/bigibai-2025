@@ -4,7 +4,7 @@ import Footer from '@/sections/Footer.astro'
 import Header from '@/sections/Header.astro'
 import Countdown from '@/components/Countdown.astro'
 import Button from '@/components/Button.astro'
-import { cells, type GameType } from '@/data/days-data'
+import { cells } from '@/data/days-data'
 import AnagramGame from '@/components/games/AnagramGame.astro'
 import TriviaGame from '@/components/games/TriviaGame.astro'
 import PuzzleGame from '@/components/games/PuzzleGame.astro'
@@ -13,6 +13,7 @@ import RacerGame from '@/components/games/RacerGame.astro'
 import CamperGame from '@/components/games/CamperGame.astro'
 import SnakeGame from '@/components/games/SnakeGame.astro'
 import { isAdmin } from '@/utils/admin'
+import { supabaseAdmin } from '@/supabase-admin'
 
 const {
   params: { dia: paramDay },
@@ -43,8 +44,17 @@ const currentDay = cetTime.getDate()
 // Solo es accesible si estamos en diciembre y el día actual es igual o mayor al día de la casilla
 const isDayAccessible = currentMonth === 11 && currentDay >= paramDayNumber
 
-// Los admins pueden ver todas las casillas, o si el día es accesible
-const isAccessible = userIsAdmin || isDayAccessible
+// Verificar si el usuario ha validado algún cupón
+let hasValidatedCoupon = false
+if (user) {
+  const { count } = await supabaseAdmin
+    .from('coupons')
+    .select('*', { count: 'exact', head: true })
+    .eq('used_by', user.id)
+    .eq('is_used', true)
+
+  hasValidatedCoupon = (count ?? 0) > 0
+}
 ---
 
 <Layout description={description}>
@@ -128,8 +138,65 @@ const isAccessible = userIsAdmin || isDayAccessible
           </div>
           <Footer />
         </>
+      ) : !hasValidatedCoupon && !userIsAdmin ? (
+        // 2.5. Si está registrado pero NO ha validado cupón, muestra popup
+        <>
+          <Header />
+          <div class="flex flex-1">
+            <main class="max-w-6xl mx-auto flex items-center justify-center px-4 py-20">
+              <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                <div class="text-center md:text-left">
+                  <h2 class="text-3xl md:text-5xl text-brand font-bold mb-6 uppercase fade-in-up leading-tighter text-balance text-shadow-title">
+                    ¡Tienes que validar tu cupón!
+                  </h2>
+                  <p
+                    class="text-xl text-white/80 text-balance mb-8 fade-in-up leading-relaxed text-center text-shadow-title"
+                    style="animation-delay: 0.2s;"
+                  >
+                    Antes de resolver el reto de hoy, tienes que validar al menos un cupón. ¡Busca
+                    en tu tu calendario de BigIbai el código que está localizado detrás de la caja
+                    de chocolate!
+                  </p>
+
+                  <div
+                    class="fade-in-up flex justify-center md:justify-center gap-x-2"
+                    style="animation-delay: 0.4s;"
+                  >
+                    <Button href="/dashboard" variant="brand" size="lg">
+                      Llévame a validar mi cupón
+                    </Button>
+                    <Button href={Astro.url.pathname} variant="secondary" size="lg">
+                      ¡Ya lo he validado!
+                    </Button>
+                  </div>
+                </div>
+
+                <div class="flex justify-center">
+                  <video
+                    class="w-full max-w-[300px] rounded-xl shadow-2xl fade-in-up"
+                    playsinline
+                    muted
+                    loop
+                    autoplay
+                    style="animation-delay: 0.5s;"
+                  >
+                    <source
+                      src="https://videos.bigibai.com/premios/tutorial.webm"
+                      type="video/webm"
+                    />
+                    <source
+                      src="https://videos.bigibai.com/premios/tutorial.mp4"
+                      type="video/mp4"
+                    />
+                  </video>
+                </div>
+              </div>
+            </main>
+          </div>
+          <Footer />
+        </>
       ) : (
-        // 3. Si es accesible y está registrado, muestra el contenido completo
+        // 3. Si es accesible y está registrado (y tiene cupón o es admin), muestra el contenido completo
         <div id="casilla-flow" class="flex-1 relative text-xs">
           {/* Aviso de admin si está viendo una casilla que aún no es visible para todos */}
           {userIsAdmin && !isDayAccessible && (
