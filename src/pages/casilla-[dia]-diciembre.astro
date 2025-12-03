@@ -12,6 +12,7 @@ import MemoryGame from '@/components/games/MemoryGame.astro'
 import RacerGame from '@/components/games/RacerGame.astro'
 import CamperGame from '@/components/games/CamperGame.astro'
 import SnakeGame from '@/components/games/SnakeGame.astro'
+import CircusGame from '@/components/games/CircusGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 
@@ -34,8 +35,6 @@ const isAuthenticated = !!user
 
 // Verificar si el usuario es administrador
 const userIsAdmin = isAdmin(user?.id)
-
-if (paramDayNumber > 3) return Astro.redirect('/404')
 
 // Verificar si el día ya es accesible (usando hora CET)
 const today = new Date()
@@ -279,6 +278,7 @@ if (user) {
             {gameType === 'racer' && <RacerGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'camper' && <CamperGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'snake' && <SnakeGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'circus' && <CircusGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
