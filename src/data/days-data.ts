@@ -77,7 +77,8 @@ const GAME_CONFIG: Record<number, GameType> = {
 const VIDEO_URLS: Record<number, string> = {
   1: '01_0CF5950A-A6B4-4F86-93DD-23E28C7685EE',
   2: '02_C0EAB650-A81B-42A7-862D-30C51F8B9C8D',
-  3: '03_4CCC36F4-D5B2-4BE8-BA1D-6B006F53B207'
+  3: '03_4CCC36F4-D5B2-4BE8-BA1D-6B006F53B207',
+  4: '04_466A47E3-5C11-450F-AB27-A2FA4858B45E'
 }
 
 // Función auxiliar para obtener la URL del video según el día
