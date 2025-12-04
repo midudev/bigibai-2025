@@ -1,5 +1,5 @@
 // Tipos de juegos disponibles
-export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus'
+export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus' | 'safari'
 
 // Configuración de cada día
 interface DayConfig {
@@ -51,7 +51,7 @@ const GAME_CONFIG: Record<number, GameType> = {
   2: 'camper',
   3: 'snake',
   4: 'circus',
-  5: 'racer',
+  5: 'safari',
   6: 'racer',
   7: 'racer',
   8: 'racer',
@@ -78,7 +78,27 @@ const VIDEO_URLS: Record<number, string> = {
   1: '01_0CF5950A-A6B4-4F86-93DD-23E28C7685EE',
   2: '02_C0EAB650-A81B-42A7-862D-30C51F8B9C8D',
   3: '03_4CCC36F4-D5B2-4BE8-BA1D-6B006F53B207',
-  4: '04_466A47E3-5C11-450F-AB27-A2FA4858B45E'
+  4: '04_466A47E3-5C11-450F-AB27-A2FA4858B45E',
+  5: '05_466A47E3-5C11-450F-AB27-A2FA4858B45E',
+  6: '06_C86A7444-3949-4882-9654-6BBE45EE440B',
+  7: '07_AA0C1848-B6CD-4261-8A51-35E77CE89126',
+  8: '08_2F2D0FE7-37B2-4F42-9631-02BA19BA432B',
+  9: '09_BEC5D794-65D1-4D7D-A131-41CB3AC582AF',
+  10: '10_BAE880CD-0208-4D56-A6D1-3C435C0D4194',
+  11: '11_86DC3649-B1FE-4D4F-94EC-461D838E71D4',
+  12: '12_EDEE315A-6067-4ECA-81E6-298597A674BC',
+  13: '13_D4A64AE3-8F76-4D85-A6A6-AE8492FDD2A9',
+  14: '14_6FDFB013-5993-428D-AF3A-D3BDF93D3FC6',
+  15: '15_0FA809B7-0D07-49F5-A348-DABC509FD44F',
+  16: '16_9E7C5F1C-46FA-457F-9EAB-D77872C4ADF9',
+  17: '17_FA969ED4-81C1-49FF-AC30-7A2249AE0326',
+  18: '18_4B0B8912-9257-45E9-981A-E1028D61E5E7',
+  19: '19_EE7E34B9-086B-40DB-8302-47F2E23DE74B',
+  20: '20_301DD07A-DD32-47F4-B2E3-39708BF2CB42',
+  21: '21_0CDA7CDE-4043-4632-B942-BD6D827C6A5B',
+  22: '22_BF745AFA-FCB1-4743-B510-185CD126FB95',
+  23: '23_AEEED75B-A73F-4BB5-A99A-0E70AA7DE9BC',
+  24: '24_097B0006-3D8F-427D-A198-0E7AC25DCC67',
 }
 
 // Función auxiliar para obtener la URL del video según el día
@@ -103,7 +123,11 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
   4: {
     videoUrl: getVideoUrlForDay(4),
     prize: 'Entradas para Cirque du Soleil',
-  }
+  },
+  5: {
+    videoUrl: getVideoUrlForDay(5),
+    prize: 'Viaje en Safari para dos',
+  },
 }
 
 function getDescriptionForDay(day: number): string {
