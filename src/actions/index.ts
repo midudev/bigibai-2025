@@ -205,7 +205,7 @@ export const server = {
           if (existingCoupon.used_by === user.id) {
             throw new ActionError({
               code: 'BAD_REQUEST',
-              message: 'Ya has usado este cupón anteriormente',
+              message: 'Ya has usado este cupón en tu cuenta anteriormente',
             })
           }
 
