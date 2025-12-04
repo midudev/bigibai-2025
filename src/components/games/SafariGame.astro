@@ -49,8 +49,8 @@ const GAME_DATA = {
      */
     const TARGET_DISTANCE = 800 // metros
     const LANE_COUNT = 3
-    const INITIAL_SPEED = 3
-    const SPEED_INCREMENT = 0.0003
+    const INITIAL_SPEED = 2.2
+    const SPEED_INCREMENT = 0.00018
     const INTERNAL_WIDTH = 360
     const INTERNAL_HEIGHT = 640
     const METERS_PER_FRAME = 0.15
@@ -71,53 +71,75 @@ const GAME_DATA = {
         [0, 4, 1, 1, 1, 1, 1, 4, 0],
         [0, 4, 1, 1, 1, 1, 1, 4, 0],
       ],
+      // Tigre mejorado con rayas
       tiger: [
-        [0, 1, 0, 0, 0, 0, 0, 1, 0],
-        [0, 1, 1, 2, 2, 2, 1, 1, 0],
-        [0, 1, 2, 3, 2, 3, 2, 1, 0],
-        [0, 1, 2, 2, 2, 2, 2, 1, 0],
-        [0, 0, 1, 2, 2, 2, 1, 0, 0],
-        [0, 1, 2, 1, 2, 1, 2, 1, 0],
-        [1, 2, 1, 2, 2, 2, 1, 2, 1],
-        [1, 2, 2, 2, 2, 2, 2, 2, 1],
-        [0, 1, 2, 2, 2, 2, 2, 1, 0],
-        [0, 0, 1, 0, 0, 0, 1, 0, 0],
-      ],
-      lion: [
-        [0, 1, 1, 1, 1, 1, 1, 1, 0],
-        [1, 1, 2, 2, 2, 2, 2, 1, 1],
-        [1, 2, 2, 3, 2, 3, 2, 2, 1],
-        [0, 1, 2, 2, 2, 2, 2, 1, 0],
-        [0, 0, 2, 2, 3, 2, 2, 0, 0],
+        [0, 0, 2, 0, 0, 0, 2, 0, 0],
+        [0, 2, 1, 2, 2, 2, 1, 2, 0],
+        [0, 2, 2, 3, 2, 3, 2, 2, 0],
+        [0, 1, 2, 2, 4, 2, 2, 1, 0],
         [0, 0, 2, 2, 2, 2, 2, 0, 0],
+        [0, 2, 1, 2, 2, 2, 1, 2, 0],
+        [2, 1, 2, 1, 2, 1, 2, 1, 2],
+        [2, 2, 1, 2, 2, 2, 1, 2, 2],
         [0, 2, 2, 2, 2, 2, 2, 2, 0],
-        [0, 2, 2, 2, 2, 2, 2, 2, 0],
-        [0, 0, 2, 2, 2, 2, 2, 0, 0],
         [0, 0, 2, 0, 0, 0, 2, 0, 0],
       ],
-      elephant: [
+      // León con melena más definida
+      lion: [
         [0, 1, 1, 1, 1, 1, 1, 1, 0],
         [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 2, 3, 2, 3, 2, 1, 1],
+        [1, 2, 2, 2, 2, 2, 2, 2, 1],
+        [0, 1, 2, 2, 4, 2, 2, 1, 0],
+        [0, 0, 2, 2, 2, 2, 2, 0, 0],
+        [0, 2, 2, 2, 2, 2, 2, 2, 0],
+        [0, 2, 2, 2, 2, 2, 2, 2, 0],
+        [0, 0, 2, 0, 2, 0, 2, 0, 0],
+        [0, 0, 2, 0, 0, 0, 2, 0, 0],
+      ],
+      // Elefante con trompa y colmillos
+      elephant: [
+        [0, 0, 1, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
         [1, 1, 2, 1, 1, 1, 2, 1, 1],
         [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [3, 1, 1, 1, 1, 1, 1, 1, 3],
         [0, 1, 1, 1, 1, 1, 1, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 1, 1, 0, 0, 0, 1, 1, 0],
-        [0, 1, 1, 0, 0, 0, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 0, 1, 0, 1, 1, 0],
+        [0, 1, 1, 0, 1, 0, 1, 1, 0],
       ],
+      // Árbol más detallado con hojas y tronco
       tree: [
         [0, 0, 0, 1, 1, 1, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 0, 1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 1, 3, 1, 3, 1, 0, 0],
+        [0, 1, 3, 1, 1, 1, 3, 1, 0],
+        [1, 3, 1, 1, 1, 1, 1, 3, 1],
+        [1, 1, 1, 3, 1, 3, 1, 1, 1],
+        [0, 1, 3, 1, 1, 1, 3, 1, 0],
+        [0, 0, 1, 1, 2, 1, 1, 0, 0],
         [0, 0, 0, 2, 2, 2, 0, 0, 0],
         [0, 0, 0, 2, 2, 2, 0, 0, 0],
-        [0, 0, 0, 2, 2, 2, 0, 0, 0],
+        [0, 0, 2, 2, 2, 2, 2, 0, 0],
+      ],
+      // Árbol pequeño para decoraciones laterales
+      smallTree: [
+        [0, 0, 1, 1, 1, 0, 0],
+        [0, 1, 3, 1, 3, 1, 0],
+        [1, 3, 1, 1, 1, 3, 1],
+        [1, 1, 3, 1, 3, 1, 1],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 2, 0, 0, 0],
+        [0, 0, 0, 2, 0, 0, 0],
+      ],
+      // Arbusto para decoraciones
+      bush: [
+        [0, 0, 1, 1, 1, 0, 0],
+        [0, 1, 3, 1, 3, 1, 0],
+        [1, 3, 1, 1, 1, 3, 1],
+        [1, 1, 3, 1, 3, 1, 1],
+        [0, 1, 1, 1, 1, 1, 0],
       ],
       arrowLeft: [
         [0, 0, 0, 0, 1, 0, 0, 0],
@@ -141,10 +163,12 @@ const GAME_DATA = {
 
     const PALETTES = {
       jeep: { 1: '#d4a574', 2: '#87ceeb', 3: '#2c3e50', 4: '#1a1a1a' },
-      tiger: { 1: '#1a1a1a', 2: '#ff8c00', 3: '#ffffff' },
-      lion: { 1: '#8b4513', 2: '#daa520', 3: '#1a1a1a' },
-      elephant: { 1: '#708090', 2: '#1a1a1a' },
-      tree: { 1: '#228b22', 2: '#8b4513' },
+      tiger: { 1: '#1a1a1a', 2: '#ff8c00', 3: '#ffffff', 4: '#ff6b6b' },
+      lion: { 1: '#8b4513', 2: '#daa520', 3: '#1a1a1a', 4: '#ff6b6b' },
+      elephant: { 1: '#708090', 2: '#1a1a1a', 3: '#f5f5f5' },
+      tree: { 1: '#228b22', 2: '#6b4423', 3: '#1a5c1a' },
+      smallTree: { 1: '#2d8a2d', 2: '#5c3d1a', 3: '#1a6b1a' },
+      bush: { 1: '#3d9a3d', 3: '#1a7a1a' },
       ui: { 1: '#333333', 2: '#cccccc' },
     }
 
@@ -242,7 +266,13 @@ const GAME_DATA = {
     // Entidades
     let player = { lane: 1, y: 0, animY: 0 }
     let obstacles: { lane: number; y: number; type: string }[] = []
-    let decorations: { x: number; y: number; side: 'left' | 'right' }[] = []
+    let decorations: {
+      x: number
+      y: number
+      side: 'left' | 'right'
+      type: 'smallTree' | 'bush'
+    }[] = []
+    let roadMarks: { x: number; y: number; size: number }[] = []
 
     // Inputs visuales
     let buttons = {
@@ -261,17 +291,29 @@ const GAME_DATA = {
       state.laneWidth = INTERNAL_WIDTH / LANE_COUNT
       player.y = INTERNAL_HEIGHT - 200
 
-      // Inicializar decoraciones laterales
-      for (let i = 0; i < 10; i++) {
+      // Inicializar decoraciones laterales (árboles y arbustos pixel art)
+      for (let i = 0; i < 12; i++) {
+        const type = Math.random() > 0.4 ? 'smallTree' : 'bush'
         decorations.push({
-          x: Math.random() * 30,
-          y: i * 80 + Math.random() * 40,
+          x: -5 + Math.random() * 10,
+          y: i * 60 + Math.random() * 30,
           side: 'left',
+          type: type,
         })
         decorations.push({
-          x: INTERNAL_WIDTH - 30 - Math.random() * 30,
-          y: i * 80 + Math.random() * 40,
+          x: INTERNAL_WIDTH - 30 - Math.random() * 10,
+          y: i * 60 + Math.random() * 30,
           side: 'right',
+          type: Math.random() > 0.4 ? 'smallTree' : 'bush',
+        })
+      }
+
+      // Inicializar manchas/baches del camino
+      for (let i = 0; i < 12; i++) {
+        roadMarks.push({
+          x: 50 + Math.random() * (INTERNAL_WIDTH - 100),
+          y: Math.random() * INTERNAL_HEIGHT,
+          size: 2 + Math.random() * 3,
         })
       }
 
@@ -308,6 +350,16 @@ const GAME_DATA = {
       state.lastMilestone = 0
       player.lane = 1
       obstacles = []
+
+      // Reinicializar manchas del camino
+      roadMarks = []
+      for (let i = 0; i < 12; i++) {
+        roadMarks.push({
+          x: 50 + Math.random() * (INTERNAL_WIDTH - 100),
+          y: Math.random() * INTERNAL_HEIGHT,
+          size: 2 + Math.random() * 3,
+        })
+      }
 
       // Iniciar música de fondo
       bgMusic.currentTime = 0
@@ -402,12 +454,13 @@ const GAME_DATA = {
         playSound('progress')
       }
 
-      const spawnRateObstacle = Math.max(25, Math.floor(500 / state.speed))
+      const spawnRateObstacle = Math.max(12, Math.floor(200 / state.speed))
 
       if (state.frames % spawnRateObstacle === 0) spawnObstacle()
 
       updateEntities(obstacles, state.speed * 4)
       updateDecorations(state.speed * 4)
+      updateRoadMarks(state.speed * 4)
       checkCollisions()
 
       if (state.distance >= TARGET_DISTANCE) {
@@ -419,7 +472,7 @@ const GAME_DATA = {
 
           // Otorgar logro específico del juego
           actions
-            .grantGameAchievement({ achievementId: 'rey-de-la-selva' })
+            .grantGameAchievement({ achievementId: 'five-unlocked' })
             .then((result) => {
               if (result.data?.achievement) {
                 showAchievement('achievement-notification', {
@@ -462,11 +515,23 @@ const GAME_DATA = {
       for (let i = 0; i < decorations.length; i++) {
         decorations[i].y += speed
         if (decorations[i].y > INTERNAL_HEIGHT) {
-          decorations[i].y = -40
+          decorations[i].y = -50
           decorations[i].x =
             decorations[i].side === 'left'
-              ? Math.random() * 30
-              : INTERNAL_WIDTH - 30 - Math.random() * 30
+              ? -5 + Math.random() * 10
+              : INTERNAL_WIDTH - 30 - Math.random() * 10
+          decorations[i].type = Math.random() > 0.4 ? 'smallTree' : 'bush'
+        }
+      }
+    }
+
+    function updateRoadMarks(speed: number) {
+      for (let i = 0; i < roadMarks.length; i++) {
+        roadMarks[i].y += speed
+        if (roadMarks[i].y > INTERNAL_HEIGHT + 20) {
+          roadMarks[i].y = -20
+          roadMarks[i].x = 50 + Math.random() * (INTERNAL_WIDTH - 100)
+          roadMarks[i].size = 2 + Math.random() * 3
         }
       }
     }
@@ -530,16 +595,13 @@ const GAME_DATA = {
       ctx.fillStyle = '#0d260d'
       ctx.fillRect(INTERNAL_WIDTH - 30, 0, 30, INTERNAL_HEIGHT)
 
-      // Dibujar decoraciones (plantas/arbustos)
+      // Dibujar decoraciones (árboles y arbustos pixel art)
       decorations.forEach((d) => {
-        ctx.fillStyle = '#2d5a2d'
-        ctx.beginPath()
-        ctx.arc(d.x + 15, d.y + 15, 12, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#1a4d1a'
-        ctx.beginPath()
-        ctx.arc(d.x + 12, d.y + 12, 8, 0, Math.PI * 2)
-        ctx.fill()
+        const sprite = SPRITES[d.type]
+        const palette = PALETTES[d.type]
+        if (sprite && palette) {
+          drawSprite(ctx, sprite, d.x, d.y, 5, palette)
+        }
       })
 
       // Marcas en el camino (tierra más clara)
@@ -556,13 +618,11 @@ const GAME_DATA = {
         ctx.fillRect(state.laneWidth * 2 - 3, y, 6, dashH)
       }
 
-      // Piedras decorativas aleatorias en el camino
+      // Piedras/manchas decorativas en el camino
       ctx.fillStyle = '#6b5a00'
-      for (let i = 0; i < 8; i++) {
-        const stoneY = ((i * 90 + state.laneOffset * 1.5) % (INTERNAL_HEIGHT + 100)) - 50
-        const stoneX = 50 + (i % 3) * 100 + (i % 2) * 30
+      for (const mark of roadMarks) {
         ctx.beginPath()
-        ctx.ellipse(stoneX, stoneY, 4, 3, 0, 0, Math.PI * 2)
+        ctx.ellipse(mark.x, mark.y, mark.size + 1, mark.size, 0, 0, Math.PI * 2)
         ctx.fill()
       }
     }
