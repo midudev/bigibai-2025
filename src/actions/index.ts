@@ -185,7 +185,7 @@ export const server = {
         if (checkError || !existingCoupon) {
           throw new ActionError({
             code: 'BAD_REQUEST',
-            message: 'El cupón no es válido o ya ha sido utilizado',
+            message: 'Este cupón no es válido',
           })
         }
 
@@ -193,7 +193,7 @@ export const server = {
         if (existingCoupon.is_used && !existingCoupon.is_reactivable) {
           throw new ActionError({
             code: 'BAD_REQUEST',
-            message: 'El cupón no es válido o ya ha sido utilizado',
+            message: 'Este cupón ya ha sido utilizado previamente',
           })
         }
 
