@@ -647,224 +647,219 @@ if (user) {
 <script>
   import confetti from 'canvas-confetti'
 
-  const $ = document.querySelector.bind(document)
+  document.addEventListener('astro:page-load', () => {
+    const $ = document.querySelector.bind(document)
 
-  // Obtener el día desde la URL
-  const pathParts = window.location.pathname.split('/')
-  const dayMatch = pathParts.find((part) => part.startsWith('casilla-'))
-  const day = dayMatch ? parseInt(dayMatch.split('-')[1]) : 1
+    // Obtener el día desde la URL
+    const pathParts = window.location.pathname.split('/')
+    const dayMatch = pathParts.find((part) => part.startsWith('casilla-'))
+    const day = dayMatch ? parseInt(dayMatch.split('-')[1]) : 1
 
-  // Configuración del calendario
-  const doorNumbers = [
-    14, 7, 10, 22, 3, 15, 13, 12, 21, 16, 20, 2, 9, 5, 24, 8, 19, 11, 18, 1, 4, 17, 6, 23,
-  ]
+    // Configuración del calendario
+    const doorNumbers = [
+      14, 7, 10, 22, 3, 15, 13, 12, 21, 16, 20, 2, 9, 5, 24, 8, 19, 11, 18, 1, 4, 17, 6, 23,
+    ]
 
-  // Elementos del DOM
-  const screens = {
-    opening: $('#screen-opening') as HTMLDivElement,
-    guess: $('#screen-guess') as HTMLDivElement,
-    game: $('#screen-game') as HTMLDivElement,
-  }
-
-  const gridLayer = $('#gridLayer') as HTMLDivElement
-  const wrapper = $('#calendarWrapper') as HTMLDivElement
-  let isZoomed = false
-  let activeDoor: HTMLElement | null = null
-  let currentScreen: keyof typeof screens = 'opening'
-
-  // Inicialización del calendario
-  function initCalendar() {
-    if (!gridLayer || !wrapper) {
-      return
+    // Elementos del DOM
+    const screens = {
+      opening: $('#screen-opening') as HTMLDivElement,
+      guess: $('#screen-guess') as HTMLDivElement,
+      game: $('#screen-game') as HTMLDivElement,
     }
 
-    doorNumbers.forEach((number, index) => {
-      const cell = document.createElement('div')
-      cell.className = 'door-container'
-      cell.id = `door-${index}`
+    const gridLayer = $('#gridLayer') as HTMLDivElement
+    const wrapper = $('#calendarWrapper') as HTMLDivElement
+    let isZoomed = false
+    let activeDoor: HTMLElement | null = null
+    let currentScreen: keyof typeof screens = 'opening'
 
-      const holeContent =
-        number === day
-          ? `<img src="/chocolatinas/${day}.webp" class="door-chocolate" alt="Chocolate" />`
-          : ''
+    // Inicialización del calendario
+    function initCalendar() {
+      if (!gridLayer || !wrapper) {
+        return
+      }
 
-      cell.innerHTML = `
-          <div class="door-hole">${holeContent}</div>
-          <div class="door-flipper">
-            <div class="door-front">
-              <span>${number}</span>
+      doorNumbers.forEach((number, index) => {
+        const cell = document.createElement('div')
+        cell.className = 'door-container'
+        cell.id = `door-${index}`
+
+        const holeContent =
+          number === day
+            ? `<img src="/chocolatinas/${day}.webp" class="door-chocolate" alt="Chocolate" />`
+            : ''
+
+        cell.innerHTML = `
+            <div class="door-hole">${holeContent}</div>
+            <div class="door-flipper">
+              <div class="door-front">
+                <span>${number}</span>
+              </div>
+              <div class="door-back"></div>
             </div>
-            <div class="door-back"></div>
-          </div>
-        `
+          `
 
-      cell.addEventListener('click', (e) => {
-        e.stopPropagation()
-        handleDoorClick(cell, index)
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation()
+          handleDoorClick(cell, index)
+        })
+
+        gridLayer.appendChild(cell)
       })
 
-      gridLayer.appendChild(cell)
-    })
+      requestAnimationFrame(updateDoorBackgrounds)
 
-    requestAnimationFrame(updateDoorBackgrounds)
+      const resizeObserver = new ResizeObserver(() => {
+        updateDoorBackgrounds()
+      })
+      resizeObserver.observe(wrapper)
+    }
 
-    const resizeObserver = new ResizeObserver(() => {
-      updateDoorBackgrounds()
-    })
-    resizeObserver.observe(wrapper)
-  }
+    function updateDoorBackgrounds() {
+      if (!wrapper) return
+      const wrapperRect = wrapper.getBoundingClientRect()
+      const doors = document.querySelectorAll('.door-front') as NodeListOf<HTMLElement>
 
-  function updateDoorBackgrounds() {
-    if (!wrapper) return
-    const wrapperRect = wrapper.getBoundingClientRect()
-    const doors = document.querySelectorAll('.door-front') as NodeListOf<HTMLElement>
+      doors.forEach((door) => {
+        const doorRect = door.getBoundingClientRect()
+        const offsetX = doorRect.left - wrapperRect.left
+        const offsetY = doorRect.top - wrapperRect.top
 
-    doors.forEach((door) => {
-      const doorRect = door.getBoundingClientRect()
-      const offsetX = doorRect.left - wrapperRect.left
-      const offsetY = doorRect.top - wrapperRect.top
+        door.style.backgroundSize = `${wrapperRect.width}px ${wrapperRect.height}px`
+        door.style.backgroundPosition = `-${offsetX}px -${offsetY}px`
+      })
+    }
 
-      door.style.backgroundSize = `${wrapperRect.width}px ${wrapperRect.height}px`
-      door.style.backgroundPosition = `-${offsetX}px -${offsetY}px`
-    })
-  }
+    // Lógica de ZOOM + CENTRADO
+    function handleDoorClick(doorElement: HTMLElement, index: number) {
+      if (isZoomed || !wrapper) return
 
-  // Lógica de ZOOM + CENTRADO
-  function handleDoorClick(doorElement: HTMLElement, index: number) {
-    if (isZoomed || !wrapper) return
+      isZoomed = true
+      activeDoor = doorElement
 
-    isZoomed = true
-    activeDoor = doorElement
+      const rect = doorElement.getBoundingClientRect()
+      const wrapperRect = wrapper.getBoundingClientRect()
 
-    const rect = doorElement.getBoundingClientRect()
-    const wrapperRect = wrapper.getBoundingClientRect()
+      const doorCenterX = rect.left + rect.width / 2
+      const doorCenterY = rect.top + rect.height / 2
 
-    const doorCenterX = rect.left + rect.width / 2
-    const doorCenterY = rect.top + rect.height / 2
+      const targetCenterX = wrapperRect.left + wrapperRect.width / 2
+      const targetCenterY = wrapperRect.top + wrapperRect.height / 2
 
-    const targetCenterX = wrapperRect.left + wrapperRect.width / 2
-    const targetCenterY = wrapperRect.top + wrapperRect.height / 2
+      const originX = doorCenterX - wrapperRect.left
+      const originY = doorCenterY - wrapperRect.top
 
-    const originX = doorCenterX - wrapperRect.left
-    const originY = doorCenterY - wrapperRect.top
+      wrapper.style.transformOrigin = `${originX}px ${originY}px`
 
-    wrapper.style.transformOrigin = `${originX}px ${originY}px`
+      const moveX = targetCenterX - doorCenterX
+      const moveY = targetCenterY - doorCenterY
 
-    const moveX = targetCenterX - doorCenterX
-    const moveY = targetCenterY - doorCenterY
-
-    wrapper.style.transform = `translate(${moveX}px, ${moveY}px) scale(var(--zoom-scale))`
-    wrapper.classList.add('is-zoomed')
-
-    setTimeout(() => {
-      doorElement.classList.add('is-open')
+      wrapper.style.transform = `translate(${moveX}px, ${moveY}px) scale(var(--zoom-scale))`
+      wrapper.classList.add('is-zoomed')
 
       setTimeout(() => {
-        transitionToScreen('guess')
-      }, 1000)
-    }, 800)
-  }
+        doorElement.classList.add('is-open')
 
-  // Animación inicial automática
-  function startOpeningAnimation() {
-    if (!wrapper) {
-      return
-    }
-
-    const SHAKE_DURATION = 1500
-
-    setTimeout(() => {
-      wrapper.classList.add('shake')
-      launchChristmasConfetti(SHAKE_DURATION)
-
-      setTimeout(() => {
-        wrapper.classList.remove('shake')
-
-        const dayIndex = doorNumbers.indexOf(day)
-        if (dayIndex !== -1) {
-          const doorElement = document.getElementById(`door-${dayIndex}`)
-          if (doorElement) {
-            handleDoorClick(doorElement, dayIndex)
-          }
-        }
-      }, SHAKE_DURATION)
-    }, 500)
-  }
-
-  // Configurar canvas de confetti
-  const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement
-  const myConfetti = canvas
-    ? confetti.create(canvas, {
-        resize: true,
-        useWorker: true,
-      })
-    : null
-
-  // Función para lanzar confetti navideño
-  function launchChristmasConfetti(duration = 3000) {
-    if (!myConfetti) return
-
-    const animationEnd = Date.now() + duration
-    const defaults = {
-      startVelocity: 30,
-      spread: 360,
-      ticks: 60,
-      zIndex: 1,
-    }
-
-    const interval = setInterval(function () {
-      const timeLeft = animationEnd - Date.now()
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval)
-      }
-
-      const particleCount = 100 * (timeLeft / duration)
-
-      myConfetti({
-        ...defaults,
-        particleCount,
-        origin: { x: 0.5, y: 0.5 },
-        colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
-        scalar: 1.2,
-      })
-    }, 250)
-  }
-
-  function transitionToScreen(screenName: keyof typeof screens) {
-    if (screens[currentScreen]) {
-      screens[currentScreen]?.classList.remove('active')
-    }
-
-    if (screens[screenName]) {
-      screens[screenName]?.classList.add('active')
-      currentScreen = screenName
-
-      if (screenName === 'game') {
-        // Disparar evento para que el juego se inicie
         setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('start-game'))
-        }, 100)
+          transitionToScreen('guess')
+        }, 1000)
+      }, 800)
+    }
+
+    // Animación inicial automática
+    function startOpeningAnimation() {
+      if (!wrapper) {
+        return
+      }
+
+      const SHAKE_DURATION = 1500
+
+      setTimeout(() => {
+        wrapper.classList.add('shake')
+        launchChristmasConfetti(SHAKE_DURATION)
+
+        setTimeout(() => {
+          wrapper.classList.remove('shake')
+
+          const dayIndex = doorNumbers.indexOf(day)
+          if (dayIndex !== -1) {
+            const doorElement = document.getElementById(`door-${dayIndex}`)
+            if (doorElement) {
+              handleDoorClick(doorElement, dayIndex)
+            }
+          }
+        }, SHAKE_DURATION)
+      }, 500)
+    }
+
+    // Configurar canvas de confetti
+    const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement
+    const myConfetti = canvas
+      ? confetti.create(canvas, {
+          resize: true,
+          useWorker: true,
+        })
+      : null
+
+    // Función para lanzar confetti navideño
+    function launchChristmasConfetti(duration = 3000) {
+      if (!myConfetti) return
+
+      const animationEnd = Date.now() + duration
+      const defaults = {
+        startVelocity: 30,
+        spread: 360,
+        ticks: 60,
+        zIndex: 1,
+      }
+
+      const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now()
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval)
+        }
+
+        const particleCount = 100 * (timeLeft / duration)
+
+        myConfetti({
+          ...defaults,
+          particleCount,
+          origin: { x: 0.5, y: 0.5 },
+          colors: ['#ff0000', '#00ff00', '#ffffff', '#FFD700'],
+          scalar: 1.2,
+        })
+      }, 250)
+    }
+
+    function transitionToScreen(screenName: keyof typeof screens) {
+      if (screens[currentScreen]) {
+        screens[currentScreen]?.classList.remove('active')
+      }
+
+      if (screens[screenName]) {
+        screens[screenName]?.classList.add('active')
+        currentScreen = screenName
+
+        if (screenName === 'game') {
+          // Disparar evento para que el juego se inicie
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('start-game'))
+          }, 100)
+        }
       }
     }
-  }
 
-  // Event Listeners
+    // Inicializar el calendario
+    function init() {
+      initCalendar()
+      startOpeningAnimation()
 
-  // Función para inicializar todo
-  function init() {
-    initCalendar()
-    startOpeningAnimation()
+      document.getElementById('btn-start-game')?.addEventListener('click', () => {
+        transitionToScreen('game')
+      })
+    }
 
-    document.getElementById('btn-start-game')?.addEventListener('click', () => {
-      transitionToScreen('game')
-    })
-  }
-
-  // Ejecutar cuando el DOM esté listo o inmediatamente si ya está listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init)
-  } else {
     init()
-  }
+  })
 </script>
