@@ -46,6 +46,31 @@ const isHomePage = currentPath === '/'
 ---
 
 <header class="overflow-x-clip pt-24 pb-5" aria-label="Big Ibai">
+  {
+    !isHomePage && (
+      <a
+        href="/"
+        class="home-btn absolute top-4 left-4 z-20 flex items-center justify-center size-10 rounded-full bg-black/50 backdrop-blur-lg transition-all duration-300 hover:bg-black/70 hover:scale-110 active:scale-95"
+        aria-label="Volver al inicio"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-brand"
+        >
+          <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+          <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        </svg>
+      </a>
+    )
+  }
+
   <div class="absolute top-4 right-4 z-20">
     <div id="header-auth-section" class="flex items-center gap-3">
       {
@@ -85,7 +110,7 @@ const isHomePage = currentPath === '/'
             </div>
             <a href="/dashboard">
               <Button variant="brand" size="sm">
-                Mis cupones
+                <span class="hidden sm:inline">Mis cupones</span>
                 <div class="relative flex items-center justify-center px-2">
                   <TicketIcon class="absolute size-6! opacity-20 transition-transform group-hover:scale-110" />
                   <span
@@ -370,6 +395,18 @@ const isHomePage = currentPath === '/'
     width: 8px;
     height: 8px;
     transform: rotate(45deg);
+  }
+
+  .home-btn {
+    box-shadow: 0 0 20px rgba(248, 177, 52, 0.3);
+  }
+
+  .home-btn:hover {
+    box-shadow: 0 0 30px rgba(248, 177, 52, 0.5);
+  }
+
+  .home-btn svg {
+    filter: drop-shadow(0 0 4px rgba(248, 177, 52, 0.5));
   }
 </style>
 
