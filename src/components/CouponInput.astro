@@ -136,6 +136,105 @@ import Button from '@/components/Button.astro'
   </div>
 </form>
 
+<!-- Mensaje de resultado (entre el botón y la caja de ayuda) -->
+<div id="message-container" class="mt-4">
+  <div
+    id="message"
+    class="invisible relative mx-auto max-w-xl block translate-y-3 scale-90 cursor-crosshair rounded-lg bg-linear-to-bl from-emerald-400 to-green-500 px-5 py-2 text-center text-sm font-semibold text-white opacity-0 shadow ring-4 shadow-emerald-300 ring-white/20 transition duration-300 hover:scale-105"
+  >
+  </div>
+</div>
+
+<!-- Contenedor con altura animada para evitar layout shift -->
+<div id="error-help-wrapper" class="error-help-wrapper">
+  <div id="error-help-section" class="error-help-content">
+    <div class="error-help-card p-5 md:p-6 rounded-2xl">
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-white/10">
+        <div class="size-10 rounded-full bg-brand/20 flex items-center justify-center">
+          <svg
+            class="size-5 text-brand"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <circle cx="12" cy="17" r="0.5" fill="currentColor"></circle>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-white font-bold text-base md:text-lg">
+            ¿Algún problema? ¡Tranqui, lo solucionamos! 💪
+          </h3>
+          <p class="text-white/60 text-xs md:text-sm">
+            No te preocupes, tienes hasta el <strong class="text-brand">23 de diciembre</strong> para
+            participar
+          </p>
+        </div>
+      </div>
+
+      <!-- Pasos -->
+      <div class="space-y-4">
+        <div class="flex gap-3">
+          <div
+            class="shrink-0 size-7 rounded-lg bg-brand text-black font-bold text-sm flex items-center justify-center shadow-lg shadow-brand/30"
+          >
+            1
+          </div>
+          <div class="pt-0.5">
+            <p class="text-white font-semibold text-sm mb-1">Comprueba el código</p>
+            <p class="text-white/70 text-xs md:text-sm leading-relaxed">
+              Es fácil confundir caracteres parecidos. Revisa que el número
+              <span
+                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
+                >0</span
+              >
+              no sea la letra
+              <span
+                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
+                >O</span
+              >, o que el
+              <span
+                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
+                >1</span
+              >
+              no sea una
+              <span
+                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
+                >I</span
+              >.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <div
+            class="shrink-0 size-7 rounded-lg bg-brand text-black font-bold text-sm flex items-center justify-center shadow-lg shadow-brand/30"
+          >
+            2
+          </div>
+          <div class="pt-0.5">
+            <p class="text-white font-semibold text-sm mb-1">¿Te dice que ya está usado?</p>
+            <p class="text-white/70 text-xs md:text-sm leading-relaxed">
+              Escríbenos a
+              <a href="mailto:hola@bigibai.com" class="text-brand hover:underline font-semibold"
+                >hola@bigibai.com</a
+              >
+              adjuntando una foto del <strong class="text-white/90">ticket de compra</strong> y del
+              <strong class="text-white/90">calendario</strong>. ¡Te ayudamos encantados!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   import { throwConfetti } from '@/utils/confetti'
 
@@ -145,6 +244,7 @@ import Button from '@/components/Button.astro'
     const headerParticipationCount = document.getElementById(
       'header-participation-count'
     ) as HTMLDivElement
+    const errorHelpWrapper = document.getElementById('error-help-wrapper') as HTMLDivElement
 
     // Función para actualizar el valor oculto
     function updateHiddenInput() {
@@ -255,6 +355,9 @@ import Button from '@/components/Button.astro'
       couponForm.addEventListener('submit', async (e) => {
         e.preventDefault()
 
+        // Ocultar la sección de ayuda al intentar validar
+        showErrorHelp(false)
+
         const couponValue = hiddenInput.value.trim()
 
         // Validar que el cupón esté completo
@@ -354,6 +457,17 @@ import Button from '@/components/Button.astro'
       })
     }
 
+    // Función para mostrar/ocultar la sección de ayuda
+    function showErrorHelp(show: boolean) {
+      if (!errorHelpWrapper) return
+
+      if (show) {
+        errorHelpWrapper.classList.add('is-visible')
+      } else {
+        errorHelpWrapper.classList.remove('is-visible')
+      }
+    }
+
     // Función para mostrar mensajes
     function showMessage(text: string, isError = false) {
       if (!messageContainer) return
@@ -364,10 +478,10 @@ import Button from '@/components/Button.astro'
 
       if (isError) {
         messageContainer.classList.remove(
-          'from-yellow-400',
-          'to-orange-300',
-          'shadow-amber-200',
-          'text-black'
+          'from-emerald-400',
+          'to-green-500',
+          'shadow-emerald-300',
+          'text-white'
         )
         messageContainer.classList.add(
           'from-red-400',
@@ -375,6 +489,8 @@ import Button from '@/components/Button.astro'
           'shadow-pink-400',
           'text-white'
         )
+        // Mostrar la sección de ayuda cuando hay error
+        showErrorHelp(true)
       } else {
         messageContainer.classList.remove(
           'from-red-400',
@@ -383,14 +499,16 @@ import Button from '@/components/Button.astro'
           'text-white'
         )
         messageContainer.classList.add(
-          'from-yellow-400',
-          'to-orange-300',
-          'shadow-amber-200',
-          'text-black'
+          'from-emerald-400',
+          'to-green-500',
+          'shadow-emerald-300',
+          'text-white'
         )
+        // Ocultar la sección de ayuda cuando hay éxito
+        showErrorHelp(false)
       }
 
-      // Ocultar el mensaje después de 5 segundos
+      // Ocultar el mensaje después de 5 segundos (pero mantener la ayuda visible)
       setTimeout(() => {
         messageContainer.classList.add('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
         messageContainer.classList.remove('opacity-100', 'translate-y-0', 'scale-100')
@@ -406,5 +524,44 @@ import Button from '@/components/Button.astro'
 
   .coupon-input::placeholder {
     color: rgba(248, 177, 52, 0.3);
+  }
+
+  /* Contenedor con animación de altura sin layout shift */
+  .error-help-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s ease-out;
+    margin-top: 1.5rem;
+  }
+
+  .error-help-wrapper.is-visible {
+    grid-template-rows: 1fr;
+  }
+
+  .error-help-content {
+    overflow: hidden;
+  }
+
+  .error-help-content > div {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition:
+      opacity 0.3s ease-out 0.1s,
+      transform 0.3s ease-out 0.1s;
+  }
+
+  .error-help-wrapper.is-visible .error-help-content > div {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Estilo tipo BentoCard para la caja de ayuda */
+  .error-help-card {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(0, 41, 107, 0.6) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 </style>
