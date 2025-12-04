@@ -128,6 +128,34 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     videoUrl: getVideoUrlForDay(5),
     prize: 'Viaje en Safari para dos',
   },
+  6: {
+    videoUrl: getVideoUrlForDay(6),
+    prize: 'Cena en Celler Can Roca',
+  },
+  7: {
+    videoUrl: getVideoUrlForDay(7),
+    prize: 'DJI Mini 4K Fly More Combo',
+  },
+  8: {
+    videoUrl: getVideoUrlForDay(8),
+    prize: 'Viaje a Islas para dos',
+  },
+  9: {
+    videoUrl: getVideoUrlForDay(9),
+    prize: 'Viaje en Crucero para dos',
+  },
+  10: {
+    videoUrl: getVideoUrlForDay(10),
+    prize: 'iPhone Air 256GB',
+  },
+  11: {
+    videoUrl: getVideoUrlForDay(11),
+    prize: 'Sony WH-1000XM5 + LinkBuds',
+  },
+  12: {
+    videoUrl: getVideoUrlForDay(12),
+    prize: 'Camino Legendario para 2 personas'
+  }, 
 }
 
 function getDescriptionForDay(day: number): string {
