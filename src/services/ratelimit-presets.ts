@@ -63,7 +63,7 @@ export const RateLimitPresets = {
   ip: (ipAddr: string) =>
     checkRateLimit({
       identifier: bucket('ip', ipAddr),
-      limit: 15,
+      limit: 25,
       windowMs: ONE_HOUR,
     }),
 } as const
