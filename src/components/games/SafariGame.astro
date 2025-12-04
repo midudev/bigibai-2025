@@ -1,0 +1,749 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 800,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="safariCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #safariCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const TARGET_DISTANCE = 800 // metros
+    const LANE_COUNT = 3
+    const INITIAL_SPEED = 3
+    const SPEED_INCREMENT = 0.0003
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+    const METERS_PER_FRAME = 0.15
+
+    /**
+     * SPRITES (DISEÑOS PIXEL ART)
+     */
+    const SPRITES = {
+      jeep: [
+        [0, 0, 3, 3, 3, 3, 3, 0, 0],
+        [0, 3, 1, 1, 1, 1, 1, 3, 0],
+        [0, 3, 1, 2, 2, 2, 1, 3, 0],
+        [3, 1, 1, 1, 1, 1, 1, 1, 3],
+        [3, 1, 1, 1, 1, 1, 1, 1, 3],
+        [4, 1, 1, 1, 1, 1, 1, 1, 4],
+        [4, 1, 1, 1, 1, 1, 1, 1, 4],
+        [3, 1, 1, 3, 3, 3, 1, 1, 3],
+        [0, 4, 1, 1, 1, 1, 1, 4, 0],
+        [0, 4, 1, 1, 1, 1, 1, 4, 0],
+      ],
+      tiger: [
+        [0, 1, 0, 0, 0, 0, 0, 1, 0],
+        [0, 1, 1, 2, 2, 2, 1, 1, 0],
+        [0, 1, 2, 3, 2, 3, 2, 1, 0],
+        [0, 1, 2, 2, 2, 2, 2, 1, 0],
+        [0, 0, 1, 2, 2, 2, 1, 0, 0],
+        [0, 1, 2, 1, 2, 1, 2, 1, 0],
+        [1, 2, 1, 2, 2, 2, 1, 2, 1],
+        [1, 2, 2, 2, 2, 2, 2, 2, 1],
+        [0, 1, 2, 2, 2, 2, 2, 1, 0],
+        [0, 0, 1, 0, 0, 0, 1, 0, 0],
+      ],
+      lion: [
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [1, 1, 2, 2, 2, 2, 2, 1, 1],
+        [1, 2, 2, 3, 2, 3, 2, 2, 1],
+        [0, 1, 2, 2, 2, 2, 2, 1, 0],
+        [0, 0, 2, 2, 3, 2, 2, 0, 0],
+        [0, 0, 2, 2, 2, 2, 2, 0, 0],
+        [0, 2, 2, 2, 2, 2, 2, 2, 0],
+        [0, 2, 2, 2, 2, 2, 2, 2, 0],
+        [0, 0, 2, 2, 2, 2, 2, 0, 0],
+        [0, 0, 2, 0, 0, 0, 2, 0, 0],
+      ],
+      elephant: [
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 2, 1, 1, 1, 2, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 1, 0, 0, 0, 1, 1, 0],
+        [0, 1, 1, 0, 0, 0, 1, 1, 0],
+      ],
+      tree: [
+        [0, 0, 0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 1, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 2, 2, 2, 0, 0, 0],
+        [0, 0, 0, 2, 2, 2, 0, 0, 0],
+        [0, 0, 0, 2, 2, 2, 0, 0, 0],
+      ],
+      arrowLeft: [
+        [0, 0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 1, 1, 1, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0],
+      ],
+      arrowRight: [
+        [0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0, 0],
+      ],
+    }
+
+    const PALETTES = {
+      jeep: { 1: '#d4a574', 2: '#87ceeb', 3: '#2c3e50', 4: '#1a1a1a' },
+      tiger: { 1: '#1a1a1a', 2: '#ff8c00', 3: '#ffffff' },
+      lion: { 1: '#8b4513', 2: '#daa520', 3: '#1a1a1a' },
+      elephant: { 1: '#708090', 2: '#1a1a1a' },
+      tree: { 1: '#228b22', 2: '#8b4513' },
+      ui: { 1: '#333333', 2: '#cccccc' },
+    }
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    const audioCtx = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )() as AudioContext
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/jungle.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    function playSound(type: string) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      const now = audioCtx.currentTime
+
+      if (type === 'move') {
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.1)
+
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'crash') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(150, now)
+        osc.frequency.exponentialRampToValueAtTime(20, now + 0.5)
+
+        const lfo = audioCtx.createOscillator()
+        lfo.frequency.value = 50
+        const lfoGain = audioCtx.createGain()
+        lfoGain.gain.value = 500
+        lfo.connect(lfoGain)
+        lfoGain.connect(osc.frequency)
+        lfo.start(now)
+
+        gainNode.gain.setValueAtTime(0.4, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5)
+
+        osc.start(now)
+        osc.stop(now + 0.5)
+        lfo.stop(now + 0.5)
+      } else if (type === 'progress') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(600, now)
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.05)
+
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08)
+
+        osc.start(now)
+        osc.stop(now + 0.08)
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('safariCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Estado del juego
+    let state = {
+      status: 'start',
+      distance: 0,
+      speed: INITIAL_SPEED,
+      laneOffset: 0,
+      laneWidth: 0,
+      frames: 0,
+      lastTime: 0,
+      accumulator: 0,
+      lastMilestone: 0,
+    }
+
+    // Constantes de tiempo (60 FPS target)
+    const TARGET_FPS = 60
+    const FRAME_TIME = 1000 / TARGET_FPS // ~16.67ms
+
+    // Entidades
+    let player = { lane: 1, y: 0, animY: 0 }
+    let obstacles: { lane: number; y: number; type: string }[] = []
+    let decorations: { x: number; y: number; side: 'left' | 'right' }[] = []
+
+    // Inputs visuales
+    let buttons = {
+      left: { x: 40, y: 550, w: 80, h: 80, pressed: false },
+      right: { x: 240, y: 550, w: 80, h: 80, pressed: false },
+      restart: { x: 100, y: 400, w: 160, h: 50 },
+    }
+
+    /**
+     * INICIALIZACIÓN
+     */
+    function initSafariGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      state.laneWidth = INTERNAL_WIDTH / LANE_COUNT
+      player.y = INTERNAL_HEIGHT - 200
+
+      // Inicializar decoraciones laterales
+      for (let i = 0; i < 10; i++) {
+        decorations.push({
+          x: Math.random() * 30,
+          y: i * 80 + Math.random() * 40,
+          side: 'left',
+        })
+        decorations.push({
+          x: INTERNAL_WIDTH - 30 - Math.random() * 30,
+          y: i * 80 + Math.random() * 40,
+          side: 'right',
+        })
+      }
+
+      window.addEventListener('keydown', handleKey)
+      window.addEventListener('keyup', handleKeyUp)
+
+      canvas.addEventListener('mousedown', handleInputStart)
+      canvas.addEventListener('mouseup', handleInputEnd)
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          handleInputStart(e.touches[0])
+        },
+        { passive: false }
+      )
+      canvas.addEventListener('touchend', (e) => {
+        e.preventDefault()
+        handleInputEnd()
+      })
+
+      document.fonts.ready.then(function () {
+        state.lastTime = performance.now()
+        requestAnimationFrame(loop)
+      })
+    }
+
+    function resetGame() {
+      state.status = 'playing'
+      state.distance = 0
+      state.speed = INITIAL_SPEED
+      state.lastTime = performance.now()
+      state.accumulator = 0
+      state.lastMilestone = 0
+      player.lane = 1
+      obstacles = []
+
+      // Iniciar música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play()
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function handleKey(e: KeyboardEvent) {
+      if (state.status !== 'playing') return
+      if (e.key === 'ArrowLeft') {
+        movePlayer(-1)
+        buttons.left.pressed = true
+      }
+      if (e.key === 'ArrowRight') {
+        movePlayer(1)
+        buttons.right.pressed = true
+      }
+    }
+
+    function handleKeyUp(e: KeyboardEvent) {
+      buttons.left.pressed = false
+      buttons.right.pressed = false
+    }
+
+    function getCanvasCoords(event: MouseEvent | Touch) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      }
+    }
+
+    function handleInputStart(e: MouseEvent | Touch) {
+      // ACTIVAR AUDIO EN PRIMER CLICK
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+      const pos = getCanvasCoords(e)
+      if (state.status === 'playing') {
+        if (hitTest(pos, buttons.left)) {
+          movePlayer(-1)
+          buttons.left.pressed = true
+        }
+        if (hitTest(pos, buttons.right)) {
+          movePlayer(1)
+          buttons.right.pressed = true
+        }
+      } else if (state.status === 'start' || state.status === 'gameover') {
+        resetGame()
+      }
+    }
+
+    function handleInputEnd() {
+      buttons.left.pressed = false
+      buttons.right.pressed = false
+    }
+
+    function hitTest(
+      pos: { x: number; y: number },
+      btn: { x: number; y: number; w: number; h: number }
+    ) {
+      return pos.x >= btn.x && pos.x <= btn.x + btn.w && pos.y >= btn.y && pos.y <= btn.y + btn.h
+    }
+
+    function movePlayer(dir: number) {
+      const newLane = player.lane + dir
+      if (newLane >= 0 && newLane < LANE_COUNT) {
+        player.lane = newLane
+        playSound('move')
+      }
+    }
+
+    /**
+     * UPDATE LOGIC (Fixed timestep)
+     */
+    function update() {
+      if (state.status !== 'playing') return
+
+      state.frames++
+      state.speed += SPEED_INCREMENT
+      state.laneOffset = (state.laneOffset + state.speed * 4) % 80
+      state.distance += METERS_PER_FRAME * state.speed
+
+      // Sonido de progreso cada 100 metros
+      const currentMilestone = Math.floor(state.distance / 100)
+      if (currentMilestone > state.lastMilestone) {
+        state.lastMilestone = currentMilestone
+        playSound('progress')
+      }
+
+      const spawnRateObstacle = Math.max(25, Math.floor(500 / state.speed))
+
+      if (state.frames % spawnRateObstacle === 0) spawnObstacle()
+
+      updateEntities(obstacles, state.speed * 4)
+      updateDecorations(state.speed * 4)
+      checkCollisions()
+
+      if (state.distance >= TARGET_DISTANCE) {
+        state.status = 'win'
+        bgMusic.pause()
+        setTimeout(() => {
+          // Emitir evento de victoria para que el GameLayout maneje el video
+          window.dispatchEvent(new CustomEvent('game-completed'))
+
+          // Otorgar logro específico del juego
+          actions
+            .grantGameAchievement({ achievementId: 'rey-de-la-selva' })
+            .then((result) => {
+              if (result.data?.achievement) {
+                showAchievement('achievement-notification', {
+                  title: result.data.achievement.title,
+                  description: result.data.achievement.description,
+                  icon: result.data.achievement.image,
+                })
+              }
+            })
+            .catch((error) => {
+              console.error('Error granting achievement:', error)
+            })
+        }, 1500)
+      }
+    }
+
+    function spawnObstacle() {
+      let lane = Math.floor(Math.random() * LANE_COUNT)
+      const types = ['tiger', 'lion', 'elephant', 'tree', 'tree']
+      const type = types[Math.floor(Math.random() * types.length)]
+
+      // Evitar spawns muy cercanos en el mismo carril
+      if (!obstacles.some((o) => o.lane === lane && o.y < 150)) {
+        obstacles.push({
+          lane: lane,
+          y: -100,
+          type: type,
+        })
+      }
+    }
+
+    function updateEntities(arr: { lane: number; y: number }[], speed: number) {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        arr[i].y += speed
+        if (arr[i].y > INTERNAL_HEIGHT) arr.splice(i, 1)
+      }
+    }
+
+    function updateDecorations(speed: number) {
+      for (let i = 0; i < decorations.length; i++) {
+        decorations[i].y += speed
+        if (decorations[i].y > INTERNAL_HEIGHT) {
+          decorations[i].y = -40
+          decorations[i].x =
+            decorations[i].side === 'left'
+              ? Math.random() * 30
+              : INTERNAL_WIDTH - 30 - Math.random() * 30
+        }
+      }
+    }
+
+    function checkCollisions() {
+      const pY = player.y
+      const pH = 70
+
+      // Obstacles
+      obstacles.forEach((o) => {
+        if (o.lane === player.lane && o.y + 70 > pY + 10 && o.y < pY + pH - 10) {
+          playSound('crash')
+          state.status = 'gameover'
+          bgMusic.pause()
+        }
+      })
+    }
+
+    /**
+     * DRAW LOGIC
+     */
+    function draw() {
+      if (!ctx) return
+
+      // Fondo selva
+      ctx.fillStyle = '#1a4d1a'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      drawJunglePath()
+      drawProgressBar()
+
+      // Jugador (Jeep)
+      const pX = player.lane * state.laneWidth + state.laneWidth / 2 - 32
+      drawSprite(ctx, SPRITES.jeep, pX, player.y, 7, PALETTES.jeep)
+
+      // Obstáculos
+      obstacles.forEach((o) => {
+        const x = o.lane * state.laneWidth + state.laneWidth / 2 - 32
+        const sprite = SPRITES[o.type as keyof typeof SPRITES]
+        const palette = PALETTES[o.type as keyof typeof PALETTES]
+        if (sprite && palette) {
+          drawSprite(ctx, sprite, x, o.y, 7, palette)
+        }
+      })
+
+      drawUI()
+    }
+
+    function drawJunglePath() {
+      if (!ctx) return
+
+      // Camino de tierra
+      ctx.fillStyle = '#8b6914'
+      ctx.fillRect(30, 0, INTERNAL_WIDTH - 60, INTERNAL_HEIGHT)
+
+      // Vegetación lateral izquierda
+      ctx.fillStyle = '#0d260d'
+      ctx.fillRect(0, 0, 30, INTERNAL_HEIGHT)
+
+      // Vegetación lateral derecha
+      ctx.fillStyle = '#0d260d'
+      ctx.fillRect(INTERNAL_WIDTH - 30, 0, 30, INTERNAL_HEIGHT)
+
+      // Dibujar decoraciones (plantas/arbustos)
+      decorations.forEach((d) => {
+        ctx.fillStyle = '#2d5a2d'
+        ctx.beginPath()
+        ctx.arc(d.x + 15, d.y + 15, 12, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#1a4d1a'
+        ctx.beginPath()
+        ctx.arc(d.x + 12, d.y + 12, 8, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      // Marcas en el camino (tierra más clara)
+      ctx.fillStyle = '#a67c00'
+      const dashH = 60
+      const gapH = 60
+      const totalH = dashH + gapH
+
+      for (let i = -totalH; i < INTERNAL_HEIGHT; i += totalH) {
+        let y = i + state.laneOffset
+
+        // Líneas centrales del camino
+        ctx.fillRect(state.laneWidth - 3, y, 6, dashH)
+        ctx.fillRect(state.laneWidth * 2 - 3, y, 6, dashH)
+      }
+
+      // Piedras decorativas aleatorias en el camino
+      ctx.fillStyle = '#6b5a00'
+      for (let i = 0; i < 8; i++) {
+        const stoneY = ((i * 90 + state.laneOffset * 1.5) % (INTERNAL_HEIGHT + 100)) - 50
+        const stoneX = 50 + (i % 3) * 100 + (i % 2) * 30
+        ctx.beginPath()
+        ctx.ellipse(stoneX, stoneY, 4, 3, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    function drawProgressBar() {
+      if (!ctx) return
+
+      const barWidth = INTERNAL_WIDTH - 80
+      const barHeight = 20
+      const barX = 40
+      const barY = 15
+
+      // Fondo de la barra
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+      ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4)
+
+      // Barra de fondo
+      ctx.fillStyle = '#3d2914'
+      ctx.fillRect(barX, barY, barWidth, barHeight)
+
+      // Barra de progreso
+      const progress = Math.min(state.distance / TARGET_DISTANCE, 1)
+      const progressGradient = ctx.createLinearGradient(
+        barX,
+        barY,
+        barX + barWidth * progress,
+        barY
+      )
+      progressGradient.addColorStop(0, '#27ae60')
+      progressGradient.addColorStop(1, '#2ecc71')
+      ctx.fillStyle = progressGradient
+      ctx.fillRect(barX, barY, barWidth * progress, barHeight)
+
+      // Texto de distancia
+      ctx.fillStyle = '#fff'
+      ctx.font = '10px "Press Start 2P"'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        `${Math.floor(state.distance)}m / ${TARGET_DISTANCE}m`,
+        INTERNAL_WIDTH / 2,
+        barY + 14
+      )
+    }
+
+    function drawUI() {
+      if (!ctx) return
+
+      if (state.status === 'playing') {
+        drawButton(buttons.left, SPRITES.arrowLeft)
+        drawButton(buttons.right, SPRITES.arrowRight)
+      }
+
+      if (state.status === 'start') {
+        drawOverlay('SAFARI ESCAPE', 'CLICK PARA JUGAR', true)
+      } else if (state.status === 'gameover') {
+        drawOverlay('CHOQUE', 'REINTENTAR')
+      } else if (state.status === 'win') {
+        drawOverlay('ESCAPASTE', 'DESBLOQUEANDO...')
+      }
+    }
+
+    function drawButton(
+      btn: { x: number; y: number; w: number; h: number; pressed: boolean },
+      sprite: number[][]
+    ) {
+      if (!ctx) return
+
+      ctx.fillStyle = btn.pressed ? '#5d4e37' : '#8b7355'
+
+      if (!btn.pressed) {
+        ctx.fillRect(btn.x, btn.y, btn.w, btn.h)
+        ctx.fillStyle = '#3d2914'
+        ctx.fillRect(btn.x, btn.y + btn.h, btn.w, 8)
+      } else {
+        ctx.fillRect(btn.x, btn.y + 4, btn.w, btn.h)
+      }
+
+      const iconScale = 5
+      const iconW = sprite[0].length * iconScale
+      const iconH = sprite.length * iconScale
+      const iconX = btn.x + (btn.w - iconW) / 2
+      const iconY = btn.y + (btn.h - iconH) / 2 + (btn.pressed ? 4 : 0)
+
+      drawSprite(ctx, sprite, iconX, iconY, iconScale, PALETTES.ui)
+    }
+
+    function drawOverlay(title: string, subtitle: string, showInstructions = false) {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '26px "Press Start 2P"'
+
+      // Dividir el título en dos líneas si contiene espacio
+      const titleParts = title.split(' ')
+      if (titleParts.length > 1) {
+        // Sombra línea 1
+        ctx.fillStyle = '#1a4d1a'
+        ctx.fillText(titleParts[0], INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 - 40 + 4)
+        // Título línea 1
+        ctx.fillStyle = '#2ecc71'
+        ctx.fillText(titleParts[0], INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 40)
+
+        // Sombra línea 2
+        ctx.fillStyle = '#1a4d1a'
+        ctx.fillText(titleParts.slice(1).join(' '), INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 + 4)
+        // Título línea 2
+        ctx.fillStyle = '#2ecc71'
+        ctx.fillText(titleParts.slice(1).join(' '), INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2)
+      } else {
+        // Si no hay espacio, mostrar en una línea
+        ctx.fillStyle = '#1a4d1a'
+        ctx.fillText(title, INTERNAL_WIDTH / 2 + 4, INTERNAL_HEIGHT / 2 - 20 + 4)
+        ctx.fillStyle = '#2ecc71'
+        ctx.fillText(title, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
+      }
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '16px "Press Start 2P"'
+        ctx.fillText(subtitle, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+      }
+
+      // Mostrar instrucciones en pantalla de inicio
+      if (showInstructions) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.textAlign = 'center'
+        ctx.fillText('CLIC EN FLECHAS O USA LAS TECLAS', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 20)
+        ctx.fillText(
+          `ESQUIVA Y AVANZA ${TARGET_DISTANCE}M`,
+          INTERNAL_WIDTH / 2,
+          INTERNAL_HEIGHT - 8
+        )
+      }
+    }
+
+    function drawSprite(
+      context: CanvasRenderingContext2D,
+      matrix: number[][],
+      x: number,
+      y: number,
+      size: number,
+      palette: Record<number, string>
+    ) {
+      for (let r = 0; r < matrix.length; r++) {
+        for (let c = 0; c < matrix[r].length; c++) {
+          const pixelVal = matrix[r][c]
+          if (pixelVal !== 0) {
+            context.fillStyle = palette[pixelVal] || '#000'
+            context.fillRect(x + c * size, y + r * size, size, size)
+          }
+        }
+      }
+    }
+
+    function loop(currentTime: number) {
+      // Calcular delta time
+      const deltaTime = currentTime - state.lastTime
+      state.lastTime = currentTime
+
+      // Acumular el tiempo transcurrido
+      state.accumulator += deltaTime
+
+      // Fixed timestep: actualizar la lógica del juego a una tasa fija
+      // Esto asegura que el juego funcione a la misma velocidad en todos los dispositivos
+      while (state.accumulator >= FRAME_TIME) {
+        update()
+        state.accumulator -= FRAME_TIME
+      }
+
+      // Siempre dibujar (render) a la tasa de frames del dispositivo
+      draw()
+      requestAnimationFrame(loop)
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initSafariGame()
+    })
+  })()
+</script>
