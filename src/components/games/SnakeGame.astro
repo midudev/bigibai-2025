@@ -81,6 +81,16 @@ const GAME_DATA = {
         ¡DESVELANDO <br />EL SORTEO...!
       </p>
     </div>
+
+    <!-- Controles táctiles para móviles -->
+    <div id="mobile-controls">
+      <button id="btn-up" class="control-btn" aria-label="Arriba">▲</button>
+      <div class="control-row">
+        <button id="btn-left" class="control-btn" aria-label="Izquierda">◀</button>
+        <button id="btn-down" class="control-btn" aria-label="Abajo">▼</button>
+        <button id="btn-right" class="control-btn" aria-label="Derecha">▶</button>
+      </div>
+    </div>
   </div>
 </GameLayout>
 
@@ -251,6 +261,66 @@ const GAME_DATA = {
       opacity: 0;
     }
   }
+
+  /* Controles táctiles para móviles */
+  #mobile-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 30;
+    pointer-events: auto;
+  }
+
+  .control-row {
+    display: flex;
+    gap: 5px;
+  }
+
+  .control-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 3px solid #fbd821;
+    border-radius: 8px;
+    color: #fbd821;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    box-shadow:
+      inset 1px 1px 0px rgba(255, 255, 255, 0.2),
+      inset -1px -1px 0px rgba(0, 0, 0, 0.3),
+      0 3px 0 #333,
+      0 5px 10px rgba(0, 0, 0, 0.4);
+    transition:
+      transform 0.05s,
+      box-shadow 0.05s;
+  }
+
+  .control-btn:active {
+    transform: translateY(3px);
+    box-shadow:
+      inset 1px 1px 0px rgba(255, 255, 255, 0.2),
+      inset -1px -1px 0px rgba(0, 0, 0, 0.3),
+      0 0 0 #333;
+    background: rgba(251, 216, 33, 0.3);
+  }
+
+  /* Ocultar controles en pantallas grandes */
+  @media (min-width: 768px) {
+    #mobile-controls {
+      display: none;
+    }
+  }
 </style>
 
 <script>
@@ -340,6 +410,7 @@ const GAME_DATA = {
     const ROWS = 23
     let TILE_SIZE = 0
     const SCORE_SAFE_ZONE_ROWS = 4 // Filas reservadas para el UI superior
+    const CONTROLS_SAFE_ZONE_ROWS = 5 // Filas reservadas para los controles móviles (parte inferior)
 
     // Paleta Oficial LEGO
     const COLORS = {
@@ -664,10 +735,10 @@ const GAME_DATA = {
     function spawnFood() {
       let valid = false
       while (!valid) {
-        // Cálculo corregido: Solo filas por debajo de la zona segura
-        // Math.random() * (Total - Safe) + Safe
-        const safeRows = ROWS - SCORE_SAFE_ZONE_ROWS
-        const randomY = Math.floor(Math.random() * safeRows) + SCORE_SAFE_ZONE_ROWS
+        // Cálculo corregido: Solo filas entre la zona segura superior e inferior
+        // Zona válida: desde SCORE_SAFE_ZONE_ROWS hasta (ROWS - CONTROLS_SAFE_ZONE_ROWS)
+        const availableRows = ROWS - SCORE_SAFE_ZONE_ROWS - CONTROLS_SAFE_ZONE_ROWS
+        const randomY = Math.floor(Math.random() * availableRows) + SCORE_SAFE_ZONE_ROWS
 
         food = {
           x: Math.floor(Math.random() * COLS),
@@ -790,6 +861,38 @@ const GAME_DATA = {
 
     if (btnStart) btnStart.addEventListener('click', initGame)
     if (btnRetry) btnRetry.addEventListener('click', initGame)
+
+    // Controles táctiles móviles
+    const btnUp = document.getElementById('btn-up')
+    const btnDown = document.getElementById('btn-down')
+    const btnLeft = document.getElementById('btn-left')
+    const btnRight = document.getElementById('btn-right')
+
+    function handleControlButton(
+      btn: HTMLElement | null,
+      newDir: { x: number; y: number },
+      checkAxis: 'x' | 'y'
+    ) {
+      if (!btn) return
+
+      const handlePress = (e: Event) => {
+        e.preventDefault()
+        initAudio()
+        if (!isPlaying) return
+        if (direction[checkAxis] === 0) {
+          nextDirection = newDir
+          sfx.click()
+        }
+      }
+
+      btn.addEventListener('touchstart', handlePress, { passive: false })
+      btn.addEventListener('mousedown', handlePress)
+    }
+
+    handleControlButton(btnUp, { x: 0, y: -1 }, 'y')
+    handleControlButton(btnDown, { x: 0, y: 1 }, 'y')
+    handleControlButton(btnLeft, { x: -1, y: 0 }, 'x')
+    handleControlButton(btnRight, { x: 1, y: 0 }, 'x')
 
     // Escuchar evento para iniciar el juego
     window.addEventListener('start-game', () => {
