@@ -74,15 +74,6 @@ const isHomePage = currentPath === '/'
                 fallback={fallbackInitial}
                 class="transition-transform duration-300 group-hover:scale-105"
               />
-              <div class="relative flex items-center justify-center px-2">
-                <TicketIcon class="text-brand absolute h-8 w-8 opacity-20 transition-transform group-hover:scale-110" />
-                <span
-                  id="header-participation-count"
-                  class="text-brand relative z-10 text-sm font-bold transition-colors group-hover:text-white"
-                >
-                  {participationCount}
-                </span>
-              </div>
             </a>
             <div id="participation-tooltip" role="tooltip">
               {participationCount === 0
@@ -92,14 +83,22 @@ const isHomePage = currentPath === '/'
                   : `Tienes ${participationCount} participaciones`}
               <div id="tooltip-arrow" />
             </div>
+            <a href="/dashboard">
+              <Button variant="brand" size="sm">
+                Mis cupones
+                <div class="relative flex items-center justify-center px-2">
+                  <TicketIcon class="absolute size-6! opacity-20 transition-transform group-hover:scale-110" />
+                  <span
+                    id="header-participation-count"
+                    class="relative z-10 text-xs font-semibold transition-colors"
+                  >
+                    {participationCount}
+                  </span>
+                </div>
+              </Button>
+            </a>
             <form action="/api/auth/signout" method="post" data-astro-reload>
-              <Button
-                id="header-logout-btn"
-                variant="ghost"
-                size="md"
-                class="text-white/70 hover:text-white"
-                type="submit"
-              >
+              <Button id="header-logout-btn" variant="secondary" size="sm" type="submit">
                 Cerrar sesión
               </Button>
             </form>
