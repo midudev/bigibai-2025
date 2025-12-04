@@ -152,11 +152,13 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
 
 <script>
   const L = window.L
-  const $map = document.querySelector('#map') as HTMLDivElement
-  const centerLat = $map.dataset.centerLat
-  const centerLon = $map.dataset.centerLon
-  const initialZoom = $map.dataset.initialZoom
-  const hasUserLocation = $map.dataset.hasUserLocation
+
+  // Variables globales que se inicializan solo si el mapa existe
+  let $map: HTMLDivElement | null = null
+  let centerLat: string | undefined
+  let centerLon: string | undefined
+  let initialZoom: string | undefined
+  let hasUserLocation: string | undefined
 
   // Diccionario de retail
   const retailDictionary: Record<string, string> = {
@@ -197,6 +199,16 @@ const hasUserLocation = !!(ipLatitude && ipLongitude)
   let locations: any[] = []
 
   document.addEventListener('astro:page-load', () => {
+    // Solo inicializar si el elemento del mapa existe en la página
+    $map = document.querySelector('#map') as HTMLDivElement | null
+    if (!$map) return
+
+    // Inicializar las variables desde el dataset del mapa
+    centerLat = $map.dataset.centerLat
+    centerLon = $map.dataset.centerLon
+    initialZoom = $map.dataset.initialZoom
+    hasUserLocation = $map.dataset.hasUserLocation
+
     initMap()
   })
 
