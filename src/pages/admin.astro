@@ -263,6 +263,27 @@ const claimedPercentage =
                       </h4>
                     </div>
 
+                    <!-- Acción para eliminar cupón duplicado -->
+                    <div
+                      id="coupon-duplicate-actions"
+                      class="hidden mt-4 pt-4 border-t border-white/20"
+                    >
+                      <div class="flex flex-col gap-2">
+                        <Button
+                          id="delete-duplicate-btn"
+                          variant="destructive"
+                          size="md"
+                          class="w-full"
+                        >
+                          🗑️ Eliminar duplicado y reactivar original
+                        </Button>
+                        <p class="text-xs text-white/60 text-center">
+                          Esto eliminará el segundo uso y permitirá que el cupón original sea usado
+                          de nuevo.
+                        </p>
+                      </div>
+                    </div>
+
                     <div class="flex justify-between border-b border-white/10 pb-2">
                       <span class="font-semibold">ID del cupón:</span>
                       <span id="coupon-used-id" class="font-mono text-sm"></span>
@@ -522,9 +543,13 @@ const claimedPercentage =
   const markReactivableBtn = $('#mark-reactivable-btn') as HTMLButtonElement
   const reactivableStatus = $('#reactivable-status') as HTMLParagraphElement
   const resetCouponBtn = $('#reset-coupon-btn') as HTMLButtonElement
+  const couponDuplicateActions = $('#coupon-duplicate-actions') as HTMLDivElement
+  const deleteDuplicateBtn = $('#delete-duplicate-btn') as HTMLButtonElement
 
   // Variable para almacenar el ID del cupón actual
   let currentCouponId: string | null = null
+  // Variable para almacenar el ID del cupón duplicado
+  let currentDuplicateCouponId: string | null = null
 
   // Función para ocultar todos los estados de cupón
   function hideAllCouponStates() {
@@ -535,7 +560,9 @@ const claimedPercentage =
     couponUsedIpRow.classList.add('hidden')
     couponUsedLocationRow.classList.add('hidden')
     couponActions.classList.add('hidden')
+    couponDuplicateActions.classList.add('hidden')
     currentCouponId = null
+    currentDuplicateCouponId = null
   }
 
   // Función para obtener la ubicación de una IP
@@ -760,12 +787,17 @@ const claimedPercentage =
             '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-red-500/20 text-red-400 border border-red-500/30">Usado</span>'
         }
 
-        // Configurar acciones del cupón (solo para cupones no duplicados)
+        // Configurar acciones del cupón
         currentCouponId = String(data.id || '')
-        if (data.is_duplicate) {
-          // Si es un duplicado, no mostrar acciones
+        if (data.is_duplicate && data.duplicate_usage) {
+          // Si es un duplicado, mostrar acciones de duplicado
           couponActions.classList.add('hidden')
+          currentDuplicateCouponId = String(data.duplicate_usage.id || '')
+          couponDuplicateActions.classList.remove('hidden')
         } else {
+          // No es duplicado, mostrar acciones normales
+          couponDuplicateActions.classList.add('hidden')
+          currentDuplicateCouponId = null
           if (data.is_reactivable) {
             markReactivableBtn.disabled = true
             markReactivableBtn.classList.add('opacity-50', 'cursor-not-allowed')
@@ -1019,7 +1051,6 @@ const claimedPercentage =
   })
 
   // Elementos para logros
-  const userAchievementsSection = $('#user-achievements-section') as HTMLDivElement
   const userAchievementsLoading = $('#user-achievements-loading') as HTMLDivElement
   const userAchievementsList = $('#user-achievements-list') as HTMLDivElement
   const userNoAchievements = $('#user-no-achievements') as HTMLDivElement
@@ -1149,4 +1180,54 @@ const claimedPercentage =
       alert('Error al actualizar el logro. Inténtalo de nuevo.')
     }
   }
+
+  // Event listener para eliminar cupón duplicado
+  deleteDuplicateBtn?.addEventListener('click', async () => {
+    if (!currentDuplicateCouponId) return
+
+    // Confirmar acción con el usuario
+    if (
+      !confirm(
+        '¿Estás seguro de que quieres eliminar este cupón duplicado? Esta acción eliminará el segundo uso y permitirá que el cupón original sea usado de nuevo.'
+      )
+    ) {
+      return
+    }
+
+    const originalText = deleteDuplicateBtn.textContent
+    deleteDuplicateBtn.disabled = true
+    deleteDuplicateBtn.textContent = 'Eliminando...'
+
+    try {
+      const response = await fetch('/api/admin/delete-duplicate-coupon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ duplicateCouponId: currentDuplicateCouponId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'No se pudo eliminar el cupón duplicado'}`)
+        deleteDuplicateBtn.disabled = false
+        deleteDuplicateBtn.textContent = originalText
+        return
+      }
+
+      // Mostrar mensaje de éxito
+      alert('✅ Cupón duplicado eliminado y original reactivado correctamente')
+
+      // Limpiar el formulario y ocultar todos los estados
+      hideAllCouponStates()
+      couponInput.value = ''
+      deleteDuplicateBtn.textContent = originalText
+    } catch (error) {
+      console.error('Error al eliminar cupón duplicado:', error)
+      alert('Error al eliminar el cupón duplicado. Inténtalo de nuevo.')
+      deleteDuplicateBtn.disabled = false
+      deleteDuplicateBtn.textContent = originalText
+    }
+  })
 </script>
