@@ -1,0 +1,710 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 5,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="flightCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #flightCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const TARGET_TICKETS = 5
+    const LOGICAL_WIDTH = 270
+    const LOGICAL_HEIGHT = 480
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    const audioCtx = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )() as AudioContext
+
+    function playSound(type: string) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      if (type === 'jump') {
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      } else if (type === 'collect') {
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime)
+        osc.frequency.setValueAtTime(1600, audioCtx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.2)
+      } else if (type === 'crash') {
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.3)
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.3)
+      } else if (type === 'win') {
+        const now = audioCtx.currentTime
+        const gain = audioCtx.createGain()
+        gain.connect(audioCtx.destination)
+        gain.gain.value = 0.1
+        ;[523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator()
+          osc.type = 'square'
+          osc.frequency.value = freq
+          osc.connect(gain)
+          osc.start(now + i * 0.1)
+          osc.stop(now + i * 0.1 + 0.1)
+        })
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('flightCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // --- SPRITES (PIXEL ART) ---
+    const planeSprite = [
+      [0, 0, 0, 0, 1, 0, 0, 0, 0],
+      [0, 0, 0, 1, 8, 1, 0, 0, 0],
+      [0, 0, 0, 1, 1, 1, 0, 0, 0],
+      [0, 0, 1, 1, 1, 1, 1, 0, 0],
+      [0, 1, 1, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [0, 0, 0, 1, 1, 1, 0, 0, 0],
+      [0, 0, 0, 1, 1, 1, 0, 0, 0],
+      [0, 0, 1, 1, 1, 1, 1, 0, 0],
+      [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    ]
+
+    const cloudSprite = [
+      [0, 1, 1, 1, 0],
+      [1, 1, 4, 1, 1],
+      [1, 4, 4, 4, 1],
+      [0, 1, 1, 1, 0],
+    ]
+
+    const birdSprite = [
+      [0, 0, 5, 5, 0],
+      [5, 5, 5, 5, 5],
+      [0, 5, 0, 5, 0],
+    ]
+
+    const ticketSprite = [
+      [3, 3, 3, 3, 3],
+      [3, 1, 1, 1, 3],
+      [3, 1, 3, 1, 3],
+      [3, 3, 3, 3, 3],
+    ]
+
+    const islandSprite = [
+      [0, 0, 6, 6, 6, 0, 0],
+      [0, 6, 6, 7, 6, 6, 0],
+      [6, 6, 7, 7, 7, 6, 6],
+      [6, 6, 6, 7, 6, 6, 6],
+    ]
+
+    const COLORS: Record<number, string> = {
+      1: '#ffffff',
+      3: '#ffeb3b',
+      4: '#546e7a',
+      5: '#34495e',
+      6: '#2ecc71',
+      7: '#27ae60',
+      8: '#3498db',
+    }
+
+    function drawPixelArt(
+      ctx: CanvasRenderingContext2D,
+      sprite: number[][],
+      x: number,
+      y: number,
+      scale: number,
+      colorMap: Record<number, string>
+    ) {
+      for (let r = 0; r < sprite.length; r++) {
+        for (let c = 0; c < sprite[r].length; c++) {
+          if (sprite[r][c] !== 0) {
+            ctx.fillStyle = colorMap[sprite[r][c]]
+            ctx.fillRect(x + c * scale, y + r * scale, scale, scale)
+          }
+        }
+      }
+    }
+
+    // --- ESTADO DEL JUEGO ---
+    let gameState: 'START' | 'PLAYING' | 'GAMEOVER' | 'WIN' = 'START'
+    let frames = 0
+    let score = 0
+    let tickets = 0
+    let gameSpeed = 3
+
+    // --- OBJETOS DEL JUEGO ---
+    const player = {
+      x: 119,
+      y: 320,
+      width: 32,
+      height: 35,
+      speed: 5,
+    }
+
+    interface Cloud {
+      x: number
+      y: number
+      w: number
+      h: number
+      spd: number
+      scale: number
+    }
+
+    interface Bird {
+      x: number
+      y: number
+      w: number
+      h: number
+      spd: number
+    }
+
+    interface Item {
+      x: number
+      y: number
+      w: number
+      h: number
+      spd: number
+    }
+
+    interface Island {
+      x: number
+      y: number
+      spd: number
+    }
+
+    interface Particle {
+      x: number
+      y: number
+      size: number
+      speed: number
+    }
+
+    let clouds: Cloud[] = []
+    let birds: Bird[] = []
+    let items: Item[] = []
+    let islands: Island[] = []
+    let particles: Particle[] = []
+    let input = { left: false, right: false }
+
+    // --- FUNCIONES DEL JUEGO ---
+    function resetGame() {
+      gameState = 'PLAYING'
+      score = 0
+      tickets = 0
+      gameSpeed = 3
+      frames = 0
+      clouds = []
+      birds = []
+      items = []
+      islands = []
+
+      player.x = LOGICAL_WIDTH / 2 - player.width / 2
+      player.y = LOGICAL_HEIGHT - 80
+
+      // Water particles
+      particles = []
+      for (let i = 0; i < 25; i++) {
+        particles.push({
+          x: Math.random() * LOGICAL_WIDTH,
+          y: Math.random() * LOGICAL_HEIGHT,
+          size: Math.random() * 2 + 1,
+          speed: Math.random() * 3 + 2,
+        })
+      }
+    }
+
+    function rectIntersect(
+      x1: number,
+      y1: number,
+      w1: number,
+      h1: number,
+      x2: number,
+      y2: number,
+      w2: number,
+      h2: number
+    ) {
+      return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1
+    }
+
+    function endGame() {
+      gameState = 'GAMEOVER'
+      playSound('crash')
+    }
+
+    function checkWinCondition() {
+      if (tickets >= TARGET_TICKETS && gameState === 'PLAYING') {
+        gameState = 'WIN'
+        playSound('win')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+
+          actions
+            .grantGameAchievement({ achievementId: 'twelve-unlocked' })
+            .then((result) => {
+              if (result.data?.achievement) {
+                showAchievement('achievement-notification', {
+                  title: result.data.achievement.title,
+                  description: result.data.achievement.description,
+                  icon: result.data.achievement.image,
+                })
+              }
+            })
+            .catch((error) => {
+              console.error('Error granting achievement:', error)
+            })
+        }, 1500)
+      }
+    }
+
+    function update() {
+      if (gameState !== 'PLAYING') return
+
+      frames++
+      score += 0.05
+      if (frames % 600 === 0) gameSpeed += 0.5
+
+      // Player Move
+      if (input.left && player.x > 0) player.x -= player.speed
+      if (input.right && player.x < LOGICAL_WIDTH - player.width) player.x += player.speed
+
+      // Spawn logic
+      // Clouds with random sizes
+      if (frames % Math.max(20, 60 - Math.floor(gameSpeed * 2)) === 0) {
+        const scale = Math.random() * 3 + 3
+        const w = 5 * scale
+        const h = 4 * scale
+        clouds.push({
+          x: Math.random() * (LOGICAL_WIDTH - w),
+          y: -h,
+          w: w,
+          h: h,
+          spd: gameSpeed,
+          scale: scale,
+        })
+      }
+
+      // Birds
+      if (frames % 180 === 0) {
+        birds.push({
+          x: Math.random() * (LOGICAL_WIDTH - 20),
+          y: -20,
+          w: 20,
+          h: 12,
+          spd: gameSpeed + 1.5,
+        })
+      }
+
+      // Tickets
+      if (frames % 150 === 0) {
+        items.push({
+          x: Math.random() * (LOGICAL_WIDTH - 25),
+          y: -25,
+          w: 25,
+          h: 25,
+          spd: gameSpeed,
+        })
+      }
+
+      // Islands (background)
+      if (frames % 300 === 0) {
+        islands.push({
+          x: Math.random() * (LOGICAL_WIDTH - 35),
+          y: -30,
+          spd: gameSpeed * 0.5,
+        })
+      }
+
+      // Logic Clouds
+      for (let i = 0; i < clouds.length; i++) {
+        const c = clouds[i]
+        c.y += c.spd
+        if (rectIntersect(player.x, player.y, player.width, player.height, c.x, c.y, c.w, c.h)) {
+          endGame()
+        }
+        if (c.y > LOGICAL_HEIGHT) {
+          clouds.splice(i, 1)
+          i--
+        }
+      }
+
+      // Logic Birds
+      for (let i = 0; i < birds.length; i++) {
+        const b = birds[i]
+        b.y += b.spd
+        b.x += Math.sin(frames / 10) * 1
+        if (rectIntersect(player.x, player.y, player.width, player.height, b.x, b.y, b.w, b.h)) {
+          endGame()
+        }
+        if (b.y > LOGICAL_HEIGHT) {
+          birds.splice(i, 1)
+          i--
+        }
+      }
+
+      // Logic Items
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i]
+        it.y += it.spd
+        if (
+          rectIntersect(player.x, player.y, player.width, player.height, it.x, it.y, it.w, it.h)
+        ) {
+          tickets++
+          playSound('collect')
+          items.splice(i, 1)
+          i--
+          checkWinCondition()
+          continue
+        }
+        if (it.y > LOGICAL_HEIGHT) {
+          items.splice(i, 1)
+          i--
+        }
+      }
+
+      // Logic Islands
+      for (let i = 0; i < islands.length; i++) {
+        islands[i].y += islands[i].spd
+        if (islands[i].y > LOGICAL_HEIGHT) {
+          islands.splice(i, 1)
+          i--
+        }
+      }
+
+      // Particles
+      particles.forEach((p) => {
+        p.y += p.speed
+        if (p.y > LOGICAL_HEIGHT) {
+          p.y = -10
+          p.x = Math.random() * LOGICAL_WIDTH
+        }
+      })
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      // Sky/Sea background
+      ctx.fillStyle = '#4facfe'
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+      // Background particles
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      particles.forEach((p) => ctx.fillRect(p.x, p.y, p.size, p.size))
+
+      // Islands
+      islands.forEach((i) =>
+        drawPixelArt(ctx, islandSprite, i.x, i.y, 5, { 6: '#2ecc71', 7: '#27ae60' })
+      )
+
+      // Player (plane)
+      drawPixelArt(ctx, planeSprite, player.x, player.y, 3.5, {
+        1: '#ffffff',
+        8: '#3498db',
+      })
+
+      // Clouds
+      clouds.forEach((c) =>
+        drawPixelArt(ctx, cloudSprite, c.x, c.y, c.scale, {
+          1: '#90a4ae',
+          4: '#546e7a',
+        })
+      )
+
+      // Birds
+      birds.forEach((b) => drawPixelArt(ctx, birdSprite, b.x, b.y, 4, { 5: '#34495e' }))
+
+      // Items (tickets)
+      items.forEach((i) =>
+        drawPixelArt(ctx, ticketSprite, i.x, i.y, 5, { 1: '#fff', 3: '#ffeb3b' })
+      )
+    }
+
+    function drawUI() {
+      if (!ctx) return
+
+      ctx.textAlign = 'left'
+      ctx.shadowColor = 'black'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 2
+      ctx.shadowOffsetY = 2
+
+      // Top bar
+      ctx.fillStyle = '#ffeb3b'
+      ctx.font = '12px "Press Start 2P"'
+      ctx.fillText(`Kms: ${Math.floor(score)}`, 10, 25)
+
+      ctx.textAlign = 'right'
+      ctx.fillText(`Tickets: ${tickets}/${TARGET_TICKETS}`, LOGICAL_WIDTH - 10, 25)
+
+      ctx.textAlign = 'center'
+
+      if (gameState === 'START') {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+        ctx.shadowOffsetX = 2
+        ctx.shadowOffsetY = 2
+        ctx.fillStyle = '#ffeb3b'
+        ctx.font = '24px "Press Start 2P"'
+        ctx.fillText('PILOTA', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 3)
+        ctx.fillText('EL AVIÓN', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 3 + 35)
+
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText('Esquiva nubes', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2)
+        ctx.fillText('y pájaros.', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 18)
+        ctx.fillText('Atrapa tickets.', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 36)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.font = '12px "Press Start 2P"'
+          ctx.fillText('CLICK PARA', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 80)
+          ctx.fillText('EMPEZAR', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 60)
+        }
+      }
+
+      if (gameState === 'GAMEOVER') {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)'
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+        ctx.shadowOffsetX = 2
+        ctx.shadowOffsetY = 2
+        ctx.fillStyle = '#ff4d4d'
+        ctx.font = '24px "Press Start 2P"'
+        ctx.fillText('¡CHOQUE!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 - 40)
+
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText(
+          `Distancia: ${Math.floor(score)}km`,
+          LOGICAL_WIDTH / 2,
+          LOGICAL_HEIGHT / 2 + 10
+        )
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.font = '10px "Press Start 2P"'
+          ctx.fillText('REINTENTAR', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 50)
+        }
+      }
+
+      if (gameState === 'WIN') {
+        ctx.fillStyle = 'rgba(0,0,0,0.8)'
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+        ctx.shadowOffsetX = 2
+        ctx.shadowOffsetY = 2
+        ctx.fillStyle = '#69f0ae'
+        ctx.font = '20px "Press Start 2P"'
+        ctx.fillText('¡NOS VAMOS!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 - 30)
+
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText('¡Maletas listas!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 10)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.font = '12px "Press Start 2P"'
+          ctx.fillText('DESBLOQUEANDO...', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 60)
+        }
+      }
+
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+    }
+
+    function loop() {
+      update()
+      draw()
+      drawUI()
+
+      if (gameState === 'PLAYING' || gameState === 'START') {
+        requestAnimationFrame(loop)
+      } else if (gameState === 'GAMEOVER' || gameState === 'WIN') {
+        // Keep rendering for UI updates
+        requestAnimationFrame(loop)
+      }
+    }
+
+    function handleInput() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      if (gameState === 'START') {
+        resetGame()
+        playSound('jump')
+      } else if (gameState === 'GAMEOVER') {
+        resetGame()
+        playSound('jump')
+      }
+    }
+
+    function getCanvasCoords(event: MouseEvent | Touch) {
+      const rect = canvas.getBoundingClientRect()
+      return {
+        x: event.clientX - rect.left,
+        width: rect.width,
+      }
+    }
+
+    function handleTouch(x: number, width: number) {
+      if (gameState !== 'PLAYING') return
+      if (x < width / 2) {
+        input.left = true
+        input.right = false
+      } else {
+        input.left = false
+        input.right = true
+      }
+    }
+
+    // --- INICIALIZACIÓN ---
+    function initFlightGame() {
+      canvas.width = LOGICAL_WIDTH
+      canvas.height = LOGICAL_HEIGHT
+
+      // Keyboard input
+      window.addEventListener('keydown', (e) => {
+        if (gameState !== 'PLAYING') return
+        if (e.key === 'ArrowLeft') input.left = true
+        if (e.key === 'ArrowRight') input.right = true
+      })
+
+      window.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowLeft') input.left = false
+        if (e.key === 'ArrowRight') input.right = false
+      })
+
+      // Mouse input
+      canvas.addEventListener('mousedown', (e) => {
+        handleInput()
+        const coords = getCanvasCoords(e)
+        handleTouch(coords.x, coords.width)
+      })
+
+      // Touch input
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          handleInput()
+          const coords = getCanvasCoords(e.touches[0])
+          handleTouch(coords.x, coords.width)
+        },
+        { passive: false }
+      )
+
+      canvas.addEventListener(
+        'touchmove',
+        (e) => {
+          e.preventDefault()
+          const coords = getCanvasCoords(e.touches[0])
+          handleTouch(coords.x, coords.width)
+        },
+        { passive: false }
+      )
+
+      canvas.addEventListener('touchend', () => {
+        input.left = false
+        input.right = false
+      })
+
+      // Initialize particles for start screen
+      particles = []
+      for (let i = 0; i < 25; i++) {
+        particles.push({
+          x: Math.random() * LOGICAL_WIDTH,
+          y: Math.random() * LOGICAL_HEIGHT,
+          size: Math.random() * 2 + 1,
+          speed: Math.random() * 3 + 2,
+        })
+      }
+
+      // Set initial player position for start screen
+      player.x = LOGICAL_WIDTH / 2 - player.width / 2
+      player.y = LOGICAL_HEIGHT / 2 + 50
+
+      document.fonts.ready.then(() => {
+        loop()
+      })
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initFlightGame()
+    })
+  })()
+</script>
