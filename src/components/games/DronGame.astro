@@ -1,0 +1,793 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 10,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="droneCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #droneCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const TARGET_SCORE = 8
+    const LOGICAL_WIDTH = 324
+    const LOGICAL_HEIGHT = 576
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    const audioCtx = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )() as AudioContext
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/dron.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.5
+
+    function playSound(type: string) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      const now = audioCtx.currentTime
+
+      if (type === 'flap') {
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.3, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1)
+
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'score') {
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(440, now)
+        osc.frequency.linearRampToValueAtTime(880, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.2, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+
+        osc.start(now)
+        osc.stop(now + 0.2)
+      } else if (type === 'crash') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(200, now)
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3)
+
+        gainNode.gain.setValueAtTime(0.4, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+
+        osc.start(now)
+        osc.stop(now + 0.3)
+      } else if (type === 'win') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(523.25, now) // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.15) // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.3) // G5
+
+        gainNode.gain.setValueAtTime(0.4, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.5)
+
+        osc.start(now)
+        osc.stop(now + 0.5)
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('droneCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // --- SPRITES (PIXEL ART) ---
+    const SPRITES = {
+      drone: [
+        // Frame 1
+        [
+          [1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+          [0, 1, 2, 0, 0, 0, 0, 0, 2, 1, 0],
+          [0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+          [0, 0, 3, 4, 5, 3, 4, 5, 3, 0, 0],
+          [0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+          [0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0],
+        ],
+        // Frame 2
+        [
+          [0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0],
+          [1, 1, 2, 0, 0, 0, 0, 0, 2, 1, 1],
+          [0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+          [0, 0, 3, 4, 5, 3, 4, 5, 3, 0, 0],
+          [0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+          [0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0],
+        ],
+      ],
+      bird: [
+        // Alas arriba
+        [
+          [0, 0, 0, 0, 0, 6, 6, 0],
+          [0, 0, 6, 6, 6, 7, 7, 7],
+          [6, 6, 7, 7, 7, 7, 8, 0],
+          [0, 0, 7, 7, 7, 0, 0, 0],
+        ],
+        // Alas abajo
+        [
+          [0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 6, 6, 6, 7, 7, 7],
+          [6, 6, 7, 7, 7, 7, 8, 0],
+          [0, 0, 6, 6, 0, 0, 0, 0],
+        ],
+      ],
+      sun: [
+        [0, 0, 0, 9, 9, 9, 9, 0, 0, 0],
+        [0, 9, 9, 10, 10, 10, 10, 9, 9, 0],
+        [0, 9, 10, 10, 10, 10, 10, 10, 9, 0],
+        [9, 10, 10, 10, 10, 10, 10, 10, 10, 9],
+        [9, 10, 10, 10, 10, 10, 10, 10, 10, 9],
+        [9, 10, 10, 10, 10, 10, 10, 10, 10, 9],
+        [9, 10, 10, 10, 10, 10, 10, 10, 10, 9],
+        [0, 9, 10, 10, 10, 10, 10, 10, 9, 0],
+        [0, 9, 9, 10, 10, 10, 10, 9, 9, 0],
+        [0, 0, 0, 9, 9, 9, 9, 0, 0, 0],
+      ],
+      colors: {
+        1: '#111',
+        2: '#555',
+        3: '#95a5a6',
+        4: '#e74c3c',
+        5: '#3498db',
+        6: '#2c3e50', // Ala pájaro
+        7: '#e74c3c', // Cuerpo pájaro rojo
+        8: '#f1c40f', // Pico
+        9: '#f39c12', // Sol borde
+        10: '#f1c40f', // Sol centro
+
+        buildingMain: '#7f8c8d',
+        buildingDark: '#2c3e50',
+        windowOn: '#f1c40f',
+        windowOff: '#34495e',
+        bushDark: '#145a32',
+        bushLight: '#2ecc71',
+        street: '#34495e',
+        streetLine: '#ecf0f1',
+      } as Record<string | number, string>,
+    }
+
+    function drawSprite(
+      ctx: CanvasRenderingContext2D,
+      spriteData: number[][],
+      x: number,
+      y: number,
+      size: number
+    ) {
+      for (let r = 0; r < spriteData.length; r++) {
+        for (let c = 0; c < spriteData[r].length; c++) {
+          const colorCode = spriteData[r][c]
+          if (colorCode !== 0) {
+            ctx.fillStyle = SPRITES.colors[colorCode]
+            ctx.fillRect(x + c * size, y + r * size, size, size)
+          }
+        }
+      }
+    }
+
+    // --- ESTADO DEL JUEGO ---
+    let frames = 0
+    let score = 0
+    let highScore = parseInt(localStorage.getItem('droneCityHighScore') || '0')
+    let gameState: 'START' | 'PLAYING' | 'GAMEOVER' | 'WIN' = 'START'
+
+    // --- OBJETOS DEL JUEGO ---
+    const drone = {
+      x: 50,
+      y: 150,
+      pixelSize: 4,
+      w: 0,
+      h: 0,
+      velocity: 0,
+      gravity: 0.22,
+      jump: 6.5,
+
+      init: function () {
+        this.w = SPRITES.drone[0][0].length * this.pixelSize
+        this.h = SPRITES.drone[0].length * this.pixelSize
+      },
+
+      draw: function () {
+        if (!ctx) return
+        ctx.save()
+        ctx.translate(this.x + this.w / 2, this.y + this.h / 2)
+        const targetRotation = Math.min(Math.PI / 5, Math.max(-Math.PI / 5, this.velocity * 0.1))
+        ctx.rotate(targetRotation)
+        ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2))
+
+        const currentSprite = frames % 4 < 2 ? SPRITES.drone[0] : SPRITES.drone[1]
+        drawSprite(ctx, currentSprite, this.x, this.y, this.pixelSize)
+
+        ctx.restore()
+      },
+
+      update: function () {
+        this.velocity += this.gravity
+        this.y += this.velocity
+
+        if (this.y + this.h >= LOGICAL_HEIGHT - 50) {
+          this.y = LOGICAL_HEIGHT - 50 - this.h
+          gameOver()
+        }
+        if (this.y < 0) {
+          this.y = 0
+          this.velocity = 0
+        }
+      },
+
+      flap: function () {
+        this.velocity = -this.jump
+        playSound('flap')
+      },
+    }
+
+    interface Bird {
+      x: number
+      y: number
+      speed: number
+    }
+
+    const enemyBirds = {
+      items: [] as Bird[],
+      pixelSize: 3,
+      w: 0,
+      h: 0,
+
+      init: function () {
+        this.w = SPRITES.bird[0][0].length * this.pixelSize
+        this.h = SPRITES.bird[0].length * this.pixelSize
+      },
+
+      reset: function () {
+        this.items = []
+      },
+
+      draw: function () {
+        if (!ctx) return
+        for (const b of this.items) {
+          const currentSprite = frames % 10 < 5 ? SPRITES.bird[0] : SPRITES.bird[1]
+          drawSprite(ctx, currentSprite, b.x, b.y, this.pixelSize)
+        }
+      },
+
+      update: function () {
+        // Spawnear pájaros aleatoriamente
+        if (frames % 200 === 0 && Math.random() > 0.3) {
+          this.items.push({
+            x: LOGICAL_WIDTH,
+            y: Math.random() * (LOGICAL_HEIGHT - 100),
+            speed: 3 + Math.random() * 2,
+          })
+        }
+
+        for (let i = 0; i < this.items.length; i++) {
+          const b = this.items[i]
+          b.x -= b.speed
+
+          // Hitbox un poco más pequeña que el sprite
+          const hitX = drone.x + 4
+          const hitY = drone.y + 4
+          const hitW = drone.w - 8
+          const hitH = drone.h - 8
+
+          if (
+            hitX < b.x + this.w &&
+            hitX + hitW > b.x &&
+            hitY < b.y + this.h &&
+            hitY + hitH > b.y
+          ) {
+            gameOver()
+          }
+
+          if (b.x + this.w < 0) {
+            this.items.shift()
+            i--
+          }
+        }
+      },
+    }
+
+    interface Obstacle {
+      x: number
+      top: number
+      bottom: number
+      passed: boolean
+      buildingColor: string
+      seed: number
+    }
+
+    const obstacles = {
+      items: [] as Obstacle[],
+      w: 55,
+      gap: 145,
+      dx: 1.8,
+
+      reset: function () {
+        this.items = []
+        this.dx = 1.8
+      },
+
+      draw: function () {
+        if (!ctx) return
+        for (const p of this.items) {
+          // --- PARTE SUPERIOR: ARBUSTOS ---
+          ctx.fillStyle = SPRITES.colors.bushDark
+          ctx.fillRect(p.x + 5, -20, this.w - 10, p.top + 20)
+
+          ctx.fillStyle = SPRITES.colors.bushLight
+          const leafSize = 15
+          for (let ly = 0; ly < p.top; ly += 15) {
+            ctx.fillRect(p.x - 5, ly, leafSize * 2, leafSize)
+            ctx.fillRect(p.x + 10, ly + 8, leafSize * 2, leafSize)
+          }
+          ctx.fillStyle = '#1e8449'
+          ctx.fillRect(p.x, p.top - 10, this.w, 10)
+
+          // --- PARTE INFERIOR: EDIFICIOS ---
+          const bHeight = LOGICAL_HEIGHT - p.bottom
+
+          ctx.fillStyle = p.buildingColor || SPRITES.colors.buildingMain
+          ctx.fillRect(p.x, p.bottom, this.w, bHeight)
+
+          ctx.fillStyle = 'rgba(0,0,0,0.2)'
+          ctx.fillRect(p.x + this.w - 8, p.bottom, 8, bHeight)
+
+          // Ventanas
+          const winSize = 6
+          const winGap = 12
+          let localX = 0
+
+          for (let wx = p.x + 8; wx < p.x + this.w - 10; wx += winGap) {
+            let localY = 0
+            for (let wy = p.bottom + 10; wy < LOGICAL_HEIGHT - 60; wy += winGap) {
+              const isLit = Math.sin(p.seed + localX * localY * 1.5) > 0.1
+
+              ctx.fillStyle = isLit ? SPRITES.colors.windowOn : SPRITES.colors.windowOff
+              ctx.fillRect(wx, wy, winSize, winSize + 2)
+              localY++
+            }
+            localX++
+          }
+
+          ctx.fillStyle = '#95a5a6'
+          ctx.fillRect(p.x - 2, p.bottom, this.w + 4, 6)
+        }
+      },
+
+      update: function () {
+        if (frames % 180 === 0) {
+          const availableHeight = LOGICAL_HEIGHT - 50
+          const minObs = 60
+          const maxPos = availableHeight - this.gap - minObs
+
+          let topHeight: number
+
+          if (frames === 0) {
+            topHeight = LOGICAL_HEIGHT / 2 - this.gap / 2
+          } else {
+            topHeight = Math.floor(Math.random() * (maxPos - minObs + 1)) + minObs
+          }
+
+          const bColors = ['#7f8c8d', '#5d6d7e', '#626567', '#707b7c']
+          const chosenColor = bColors[Math.floor(Math.random() * bColors.length)]
+
+          this.items.push({
+            x: LOGICAL_WIDTH,
+            top: topHeight,
+            bottom: topHeight + this.gap,
+            passed: false,
+            buildingColor: chosenColor,
+            seed: Math.random() * 100,
+          })
+        }
+
+        for (let i = 0; i < this.items.length; i++) {
+          const p = this.items[i]
+          p.x -= this.dx
+
+          const hitX = drone.x + 4
+          const hitY = drone.y + 4
+          const hitW = drone.w - 8
+          const hitH = drone.h - 8
+
+          if (
+            hitX < p.x + this.w &&
+            hitX + hitW > p.x &&
+            (hitY < p.top || hitY + hitH > p.bottom)
+          ) {
+            gameOver()
+          }
+
+          if (p.x + this.w < drone.x && !p.passed) {
+            score++
+            p.passed = true
+            playSound('score')
+            if (score % 5 === 0) this.dx += 0.1
+
+            // Verificar condición de victoria
+            checkWinCondition()
+          }
+
+          if (p.x + this.w < 0) {
+            this.items.shift()
+            i--
+          }
+        }
+      },
+    }
+
+    interface Cloud {
+      x: number
+      y: number
+      w: number
+    }
+
+    interface SkylineBuilding {
+      x: number
+      w: number
+      h: number
+    }
+
+    const background = {
+      clouds: [] as Cloud[],
+      skyline: [] as SkylineBuilding[],
+      groundOffset: 0,
+
+      init: function () {
+        for (let i = 0; i < 5; i++) {
+          this.clouds.push({
+            x: Math.random() * LOGICAL_WIDTH,
+            y: Math.random() * 200,
+            w: 40 + Math.random() * 40,
+          })
+        }
+        let x = 0
+        while (x < LOGICAL_WIDTH * 2) {
+          const w = 20 + Math.random() * 30
+          this.skyline.push({
+            x: x,
+            w: w,
+            h: 50 + Math.random() * 80,
+          })
+          x += w
+        }
+      },
+
+      update: function () {
+        if (gameState === 'PLAYING') {
+          this.groundOffset = (this.groundOffset + obstacles.dx) % 40
+
+          this.clouds.forEach((c) => {
+            c.x -= 0.2
+            if (c.x + c.w < 0) {
+              c.x = LOGICAL_WIDTH
+              c.y = Math.random() * 200
+            }
+          })
+
+          this.skyline.forEach((b) => {
+            b.x -= 0.5
+          })
+
+          if (this.skyline[0].x + this.skyline[0].w < 0) {
+            const first = this.skyline.shift()!
+            const last = this.skyline[this.skyline.length - 1]
+            first.x = last.x + last.w
+            first.h = 50 + Math.random() * 80
+            this.skyline.push(first)
+          }
+        }
+      },
+
+      draw: function () {
+        if (!ctx) return
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, LOGICAL_HEIGHT)
+        gradient.addColorStop(0, '#3498db')
+        gradient.addColorStop(1, '#85c1e9')
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+        // Sol Pixel Art
+        drawSprite(ctx, SPRITES.sun, LOGICAL_WIDTH - 60, 40, 4)
+
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'
+        this.clouds.forEach((c) => {
+          ctx.fillRect(c.x, c.y, c.w, 15)
+          ctx.fillRect(c.x + 10, c.y - 10, c.w - 20, 20)
+        })
+
+        ctx.fillStyle = '#aab7b8'
+        this.skyline.forEach((b) => {
+          ctx.fillRect(b.x, LOGICAL_HEIGHT - 50 - b.h, b.w + 1, b.h)
+        })
+
+        const groundY = LOGICAL_HEIGHT - 50
+        ctx.fillStyle = SPRITES.colors.street
+        ctx.fillRect(0, groundY, LOGICAL_WIDTH, 50)
+
+        ctx.fillStyle = SPRITES.colors.streetLine
+        for (let i = -40; i < LOGICAL_WIDTH; i += 40) {
+          ctx.fillRect(i - this.groundOffset, groundY + 22, 20, 4)
+        }
+
+        ctx.fillStyle = '#7f8c8d'
+        ctx.fillRect(0, groundY, LOGICAL_WIDTH, 5)
+      },
+    }
+
+    // --- FUNCIONES DEL SISTEMA ---
+    function resetGame() {
+      drone.y = LOGICAL_HEIGHT / 2
+      drone.velocity = 0
+      score = 0
+      frames = 0
+      obstacles.reset()
+      enemyBirds.reset()
+      gameState = 'PLAYING'
+
+      // Reproducir música
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    }
+
+    function gameOver() {
+      if (gameState === 'WIN') return
+      gameState = 'GAMEOVER'
+      playSound('crash')
+      bgMusic.pause()
+      if (score > highScore) {
+        highScore = score
+        localStorage.setItem('droneCityHighScore', highScore.toString())
+      }
+    }
+
+    function checkWinCondition() {
+      if (score >= TARGET_SCORE && gameState === 'PLAYING') {
+        gameState = 'WIN'
+        bgMusic.pause()
+        playSound('win')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+
+          actions
+            .grantGameAchievement({ achievementId: 'eleven-unlocked' })
+            .then((result) => {
+              if (result.data?.achievement) {
+                showAchievement('achievement-notification', {
+                  title: result.data.achievement.title,
+                  description: result.data.achievement.description,
+                  icon: result.data.achievement.image,
+                })
+              }
+            })
+            .catch((error) => {
+              console.error('Error granting achievement:', error)
+            })
+        }, 1500)
+      }
+    }
+
+    function drawUI() {
+      if (!ctx) return
+
+      ctx.fillStyle = '#FFF'
+      ctx.textAlign = 'center'
+      ctx.shadowColor = 'black'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 3
+      ctx.shadowOffsetY = 3
+
+      if (gameState === 'PLAYING') {
+        ctx.font = '30px "Press Start 2P"'
+        ctx.fillText(score.toString(), LOGICAL_WIDTH / 2, 80)
+      }
+
+      if (gameState === 'START') {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+        ctx.shadowOffsetX = 3
+        ctx.shadowOffsetY = 3
+        ctx.fillStyle = '#f39c12'
+        ctx.font = '30px "Press Start 2P"'
+        ctx.fillText('DRONE', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 3)
+        ctx.fillText('CITY', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 3 + 40)
+
+        ctx.fillStyle = '#FFF'
+        ctx.font = '12px "Press Start 2P"'
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.fillText('TOCA PARA VOLAR', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 50)
+        }
+
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText('RECORD: ' + highScore, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 60)
+      }
+
+      if (gameState === 'GAMEOVER') {
+        ctx.fillStyle = '#e74c3c'
+        ctx.font = '25px "Press Start 2P"'
+        ctx.fillText('CRASH!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 - 50)
+
+        ctx.fillStyle = '#FFF'
+        ctx.font = '15px "Press Start 2P"'
+        ctx.fillText('PUNTOS: ' + score, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2)
+        ctx.fillText('RECORD: ' + highScore, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 30)
+
+        if (frames % 60 < 30) {
+          ctx.font = '10px "Press Start 2P"'
+          ctx.fillText('REINTENTAR', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 70)
+        }
+      }
+
+      if (gameState === 'WIN') {
+        ctx.fillStyle = 'rgba(0,0,0,0.8)'
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+
+        ctx.shadowOffsetX = 3
+        ctx.shadowOffsetY = 3
+        ctx.fillStyle = '#f39c12'
+        ctx.font = '20px "Press Start 2P"'
+        ctx.fillText('¡MISIÓN', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 - 30)
+        ctx.fillText('CUMPLIDA!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 10)
+
+        ctx.fillStyle = '#FFF'
+        ctx.font = '15px "Press Start 2P"'
+        ctx.fillText('PUNTOS: ' + score, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 60)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.font = '12px "Press Start 2P"'
+          ctx.fillText('DESBLOQUEANDO...', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 100)
+        }
+      }
+
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+    }
+
+    function loop() {
+      background.update()
+      background.draw()
+
+      if (gameState === 'PLAYING') {
+        drone.update()
+        drone.draw()
+        obstacles.update()
+        obstacles.draw()
+        enemyBirds.update()
+        enemyBirds.draw()
+        frames++
+      } else if (gameState === 'START') {
+        drone.y = LOGICAL_HEIGHT / 2 + Math.sin(Date.now() / 300) * 10
+        drone.draw()
+        background.groundOffset = (Date.now() / 10) % 40
+      } else if (gameState === 'GAMEOVER') {
+        obstacles.draw()
+        enemyBirds.draw()
+        drone.draw()
+        frames++
+      } else if (gameState === 'WIN') {
+        obstacles.draw()
+        enemyBirds.draw()
+        drone.draw()
+      }
+
+      drawUI()
+      requestAnimationFrame(loop)
+    }
+
+    function inputAction() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      // Iniciar música
+      if (bgMusic.paused && gameState !== 'GAMEOVER' && gameState !== 'WIN') {
+        bgMusic.play().catch(() => {})
+      }
+
+      if (gameState === 'START') {
+        resetGame()
+      } else if (gameState === 'PLAYING') {
+        drone.flap()
+      } else if (gameState === 'GAMEOVER') {
+        if (frames > 30) resetGame()
+      }
+    }
+
+    // --- INICIALIZACIÓN ---
+    function initDroneGame() {
+      canvas.width = LOGICAL_WIDTH
+      canvas.height = LOGICAL_HEIGHT
+
+      // Input handlers
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'ArrowUp') {
+          e.preventDefault()
+          inputAction()
+        }
+      })
+
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          inputAction()
+        },
+        { passive: false }
+      )
+
+      canvas.addEventListener('mousedown', inputAction)
+
+      document.fonts.ready.then(() => {
+        drone.init()
+        enemyBirds.init()
+        background.init()
+        loop()
+      })
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initDroneGame()
+    })
+  })()
+</script>
