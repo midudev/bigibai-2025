@@ -228,7 +228,7 @@ const GAME_DATA = {
 
     const shopArea = {
       x: 10,
-      y: INTERNAL_HEIGHT * 0.60,
+      y: INTERNAL_HEIGHT * 0.6,
       width: INTERNAL_WIDTH - 20,
       height: INTERNAL_HEIGHT * 0.33,
       itemHeight: 60,
@@ -396,6 +396,7 @@ const GAME_DATA = {
     function checkWinCondition() {
       if (state.calories >= TARGET_CALORIES && state.status === 'playing') {
         state.status = 'win'
+        bgMusic.pause()
         playSound('win')
 
         setTimeout(() => {
