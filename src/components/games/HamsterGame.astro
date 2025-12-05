@@ -63,6 +63,11 @@ const GAME_DATA = {
       window.AudioContext || (window as any).webkitAudioContext
     )() as AudioContext
 
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/food.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
     function playSound(type: string) {
       if (audioCtx.state === 'suspended') {
         audioCtx.resume()
@@ -223,9 +228,9 @@ const GAME_DATA = {
 
     const shopArea = {
       x: 10,
-      y: INTERNAL_HEIGHT * 0.55,
+      y: INTERNAL_HEIGHT * 0.60,
       width: INTERNAL_WIDTH - 20,
-      height: INTERNAL_HEIGHT * 0.42,
+      height: INTERNAL_HEIGHT * 0.33,
       itemHeight: 60,
     }
 
@@ -269,6 +274,10 @@ const GAME_DATA = {
         cost: u.baseCost,
         count: 0,
       }))
+
+      // Reproducir música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
     }
 
     /**
