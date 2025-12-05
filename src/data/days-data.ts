@@ -1,5 +1,5 @@
 // Tipos de juegos disponibles
-export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus' | 'safari'
+export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus' | 'safari' | 'hamster'
 
 // Configuración de cada día
 interface DayConfig {
@@ -52,7 +52,7 @@ const GAME_CONFIG: Record<number, GameType> = {
   3: 'snake',
   4: 'circus',
   5: 'safari',
-  6: 'racer',
+  6: 'hamster',
   7: 'racer',
   8: 'racer',
   9: 'racer',
