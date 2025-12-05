@@ -1,0 +1,791 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 800,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="hamsterCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #hamsterCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const TARGET_CALORIES = 800
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+
+    // URLs de imágenes
+    const HAMSTER_IMG_URL = '/games/hamster.webp'
+    const HAMSTER_EAT_IMG_URL = '/games/hamster-eat.webp'
+    const FOOD_BASE_URL = '/food/'
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    const audioCtx = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )() as AudioContext
+
+    function playSound(type: string) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      const now = audioCtx.currentTime
+
+      if (type === 'crunch') {
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(200 + Math.random() * 50, now)
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.5, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1)
+
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'buy') {
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(440, now)
+        osc.frequency.linearRampToValueAtTime(880, now + 0.1)
+
+        gainNode.gain.setValueAtTime(0.3, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+
+        osc.start(now)
+        osc.stop(now + 0.3)
+      } else if (type === 'win') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(523.25, now) // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.15) // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.3) // G5
+
+        gainNode.gain.setValueAtTime(0.4, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.5)
+
+        osc.start(now)
+        osc.stop(now + 0.5)
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('hamsterCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Imágenes
+    const hamsterImg = new Image()
+    hamsterImg.src = HAMSTER_IMG_URL
+    const hamsterEatImg = new Image()
+    hamsterEatImg.src = HAMSTER_EAT_IMG_URL
+
+    // Pre-cargar algunas imágenes de comida
+    const foodImages: HTMLImageElement[] = []
+    for (let i = 1; i <= 20; i++) {
+      const img = new Image()
+      img.src = `${FOOD_BASE_URL}${i}.png`
+      foodImages.push(img)
+    }
+
+    // Tipos
+    interface Upgrade {
+      id: number
+      name: string
+      cost: number
+      baseCost: number
+      cps?: number
+      epc?: number
+      type: 'auto' | 'click'
+      icon: string
+      count: number
+    }
+
+    interface FoodParticle {
+      x: number
+      y: number
+      targetY: number
+      scale: number
+      rotation: number
+      foodId: number
+      progress: number
+    }
+
+    interface FloatingText {
+      x: number
+      y: number
+      text: string
+      progress: number
+    }
+
+    // Estado del juego
+    let state = {
+      status: 'start' as 'start' | 'playing' | 'win',
+      calories: 0,
+      totalConsumed: 0,
+      clickPower: 1,
+      autoCps: 0,
+      hamsterScale: 1.0,
+      isEating: false,
+      eatingTimeout: 0,
+      lastTime: 0,
+      scrollOffset: 0,
+      selectedUpgrade: -1,
+    }
+
+    // Upgrades
+    let upgrades: Upgrade[] = [
+      {
+        id: 1,
+        name: 'Migas Sueltas',
+        baseCost: 15,
+        cost: 15,
+        cps: 1,
+        type: 'auto',
+        icon: '🍪',
+        count: 0,
+      },
+      {
+        id: 2,
+        name: 'Mandíbula Fuerte',
+        baseCost: 30,
+        cost: 30,
+        epc: 3,
+        type: 'click',
+        icon: '🦷',
+        count: 0,
+      },
+      {
+        id: 3,
+        name: 'Dispensador Auto',
+        baseCost: 60,
+        cost: 60,
+        cps: 5,
+        type: 'auto',
+        icon: '🤖',
+        count: 0,
+      },
+    ]
+
+    // Partículas y efectos
+    let foodParticles: FoodParticle[] = []
+    let floatingTexts: FloatingText[] = []
+
+    // Posiciones de UI
+    const hamsterArea = {
+      x: INTERNAL_WIDTH / 2,
+      y: INTERNAL_HEIGHT * 0.35,
+      radius: 80,
+    }
+
+    const shopArea = {
+      x: 10,
+      y: INTERNAL_HEIGHT * 0.55,
+      width: INTERNAL_WIDTH - 20,
+      height: INTERNAL_HEIGHT * 0.42,
+      itemHeight: 60,
+    }
+
+    /**
+     * INICIALIZACIÓN
+     */
+    function initHamsterGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      canvas.addEventListener('mousedown', handleInputStart)
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          handleInputStart(e.touches[0])
+        },
+        { passive: false }
+      )
+
+      document.fonts.ready.then(() => {
+        state.lastTime = performance.now()
+        requestAnimationFrame(loop)
+      })
+    }
+
+    function resetGame() {
+      state.status = 'playing'
+      state.calories = 0
+      state.totalConsumed = 0
+      state.clickPower = 1
+      state.autoCps = 0
+      state.hamsterScale = 1.0
+      state.lastTime = performance.now()
+      foodParticles = []
+      floatingTexts = []
+
+      // Reset upgrades
+      upgrades = upgrades.map((u) => ({
+        ...u,
+        cost: u.baseCost,
+        count: 0,
+      }))
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function getCanvasCoords(event: MouseEvent | Touch) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      }
+    }
+
+    function handleInputStart(e: MouseEvent | Touch) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      const pos = getCanvasCoords(e)
+
+      if (state.status === 'start') {
+        resetGame()
+        return
+      }
+
+      if (state.status !== 'playing') return
+
+      // Check hamster click
+      const dx = pos.x - hamsterArea.x
+      const dy = pos.y - hamsterArea.y
+      const distToHamster = Math.sqrt(dx * dx + dy * dy)
+
+      if (distToHamster < hamsterArea.radius * state.hamsterScale) {
+        feedHamster(pos.x, pos.y)
+        return
+      }
+
+      // Check shop clicks
+      if (pos.y >= shopArea.y && pos.y <= shopArea.y + shopArea.height) {
+        const itemIndex = Math.floor((pos.y - shopArea.y) / shopArea.itemHeight)
+        if (itemIndex >= 0 && itemIndex < upgrades.length) {
+          buyUpgrade(upgrades[itemIndex].id)
+        }
+      }
+    }
+
+    function feedHamster(clickX: number, clickY: number) {
+      const gain = state.clickPower
+      state.calories += gain
+      state.totalConsumed += gain
+
+      playSound('crunch')
+
+      // Hamster eating animation
+      state.isEating = true
+      clearTimeout(state.eatingTimeout)
+      state.eatingTimeout = window.setTimeout(() => {
+        state.isEating = false
+      }, 150)
+
+      // Grow hamster (logarithmic cap)
+      state.hamsterScale = Math.min(2.0, state.hamsterScale + 0.008 / (state.hamsterScale * 2))
+
+      // Spawn effects
+      spawnFloatingText(clickX, clickY, `+${gain}`)
+      spawnFood(clickX)
+
+      // Check win condition
+      checkWinCondition()
+    }
+
+    function buyUpgrade(id: number) {
+      const upg = upgrades.find((u) => u.id === id)
+      if (upg && state.calories >= upg.cost) {
+        state.calories -= upg.cost
+        upg.count++
+
+        // Apply effect
+        if (upg.type === 'click' && upg.epc) {
+          state.clickPower += upg.epc
+        } else if (upg.cps) {
+          state.autoCps += upg.cps
+        }
+
+        // Increase cost
+        upg.cost = Math.floor(upg.baseCost * Math.pow(1.3, upg.count))
+
+        playSound('buy')
+      }
+    }
+
+    function spawnFloatingText(x: number, y: number, text: string) {
+      floatingTexts.push({
+        x,
+        y,
+        text,
+        progress: 0,
+      })
+    }
+
+    function spawnFood(targetX: number) {
+      const foodId = Math.floor(Math.random() * 20) + 1
+      foodParticles.push({
+        x: targetX + (Math.random() - 0.5) * 60,
+        y: -50,
+        targetY: hamsterArea.y - 30,
+        scale: 1.2,
+        rotation: 0,
+        foodId,
+        progress: 0,
+      })
+    }
+
+    function checkWinCondition() {
+      if (state.calories >= TARGET_CALORIES && state.status === 'playing') {
+        state.status = 'win'
+        playSound('win')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+
+          actions
+            .grantGameAchievement({ achievementId: 'five-unlocked' })
+            .then((result) => {
+              if (result.data?.achievement) {
+                showAchievement('achievement-notification', {
+                  title: result.data.achievement.title,
+                  description: result.data.achievement.description,
+                  icon: result.data.achievement.image,
+                })
+              }
+            })
+            .catch((error) => {
+              console.error('Error granting achievement:', error)
+            })
+        }, 1500)
+      }
+    }
+
+    /**
+     * UPDATE LOGIC
+     */
+    let lastAutoTick = 0
+
+    function update(deltaTime: number) {
+      if (state.status !== 'playing') return
+
+      // Auto calories per second
+      lastAutoTick += deltaTime
+      if (lastAutoTick >= 1000 && state.autoCps > 0) {
+        state.calories += state.autoCps
+        state.totalConsumed += state.autoCps
+        state.hamsterScale = Math.min(2.0, state.hamsterScale + state.autoCps * 0.0002)
+        lastAutoTick = 0
+        checkWinCondition()
+      }
+
+      // Update food particles
+      for (let i = foodParticles.length - 1; i >= 0; i--) {
+        const p = foodParticles[i]
+        p.progress += deltaTime / 600
+        p.rotation += deltaTime * 0.01
+
+        if (p.progress >= 1) {
+          foodParticles.splice(i, 1)
+        }
+      }
+
+      // Update floating texts
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const t = floatingTexts[i]
+        t.progress += deltaTime / 800
+
+        if (t.progress >= 1) {
+          floatingTexts.splice(i, 1)
+        }
+      }
+    }
+
+    /**
+     * DRAW LOGIC
+     */
+    function draw() {
+      if (!ctx) return
+
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, INTERNAL_HEIGHT)
+      gradient.addColorStop(0, '#1e3a8a')
+      gradient.addColorStop(1, '#312e81')
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      if (state.status === 'start') {
+        drawStartScreen()
+        return
+      }
+
+      drawStatsBar()
+      drawHamster()
+      drawFoodParticles()
+      drawFloatingTexts()
+      drawShop()
+      drawProgressBar()
+
+      if (state.status === 'win') {
+        drawWinOverlay()
+      }
+    }
+
+    function drawStartScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      // Draw hamster preview
+      const previewSize = 150
+      if (hamsterImg.complete) {
+        ctx.drawImage(
+          hamsterImg,
+          INTERNAL_WIDTH / 2 - previewSize / 2,
+          INTERNAL_HEIGHT / 2 - previewSize - 20,
+          previewSize,
+          previewSize
+        )
+      }
+
+      ctx.textAlign = 'center'
+      ctx.font = '20px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#1a4d1a'
+      ctx.fillText('HAMSTER', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 + 43)
+      ctx.fillStyle = '#fbbf24'
+      ctx.fillText('HAMSTER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 40)
+
+      ctx.fillStyle = '#1a4d1a'
+      ctx.fillText('GLOTÓN', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 + 73)
+      ctx.fillStyle = '#fbbf24'
+      ctx.fillText('GLOTÓN', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+
+      // Blink instruction
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 120)
+      }
+
+      // Instructions
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.font = '8px "Press Start 2P"'
+      ctx.fillText('ALIMENTA AL HAMSTER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 40)
+      ctx.fillText(
+        `OBJETIVO: ${TARGET_CALORIES} CALORÍAS`,
+        INTERNAL_WIDTH / 2,
+        INTERNAL_HEIGHT - 25
+      )
+    }
+
+    function drawStatsBar() {
+      if (!ctx) return
+
+      // Background
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, 80)
+
+      // Title
+      ctx.textAlign = 'center'
+      ctx.fillStyle = '#fbbf24'
+      ctx.font = '8px "Press Start 2P"'
+      ctx.fillText('CALORÍAS TOTALES', INTERNAL_WIDTH / 2, 25)
+
+      // Calories count
+      ctx.fillStyle = '#fff'
+      ctx.font = '22px "Press Start 2P"'
+      ctx.fillText(Math.floor(state.calories).toLocaleString(), INTERNAL_WIDTH / 2, 55)
+
+      // Sub stats
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '8px "Press Start 2P"'
+      ctx.fillText(`${state.autoCps}/s`, INTERNAL_WIDTH / 2 - 60, 72)
+      ctx.fillText(`${state.clickPower}/click`, INTERNAL_WIDTH / 2 + 60, 72)
+    }
+
+    function drawHamster() {
+      if (!ctx) return
+
+      // Glow effect
+      const glowGradient = ctx.createRadialGradient(
+        hamsterArea.x,
+        hamsterArea.y,
+        0,
+        hamsterArea.x,
+        hamsterArea.y,
+        100 * state.hamsterScale
+      )
+      glowGradient.addColorStop(0, 'rgba(251, 191, 36, 0.3)')
+      glowGradient.addColorStop(1, 'rgba(251, 191, 36, 0)')
+      ctx.fillStyle = glowGradient
+      ctx.beginPath()
+      ctx.arc(hamsterArea.x, hamsterArea.y, 100 * state.hamsterScale, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.4)'
+      ctx.beginPath()
+      ctx.ellipse(
+        hamsterArea.x,
+        hamsterArea.y + 70 * state.hamsterScale,
+        50 * state.hamsterScale,
+        15,
+        0,
+        0,
+        Math.PI * 2
+      )
+      ctx.fill()
+
+      // Hamster image
+      const img = state.isEating ? hamsterEatImg : hamsterImg
+      const size = 150 * state.hamsterScale
+
+      if (img.complete) {
+        ctx.drawImage(img, hamsterArea.x - size / 2, hamsterArea.y - size / 2, size, size)
+      }
+    }
+
+    function drawFoodParticles() {
+      if (!ctx) return
+
+      for (const p of foodParticles) {
+        const img = foodImages[p.foodId - 1]
+        if (!img || !img.complete) continue
+
+        // Easing for fall animation
+        const easedProgress = 1 - Math.pow(1 - p.progress, 3)
+        const currentY = p.y + (p.targetY - p.y) * easedProgress
+        const currentScale = p.scale * (1 - p.progress)
+        const size = 48 * currentScale
+        const alpha = 1 - p.progress
+
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.translate(p.x, currentY)
+        ctx.rotate(p.rotation)
+        ctx.drawImage(img, -size / 2, -size / 2, size, size)
+        ctx.restore()
+      }
+    }
+
+    function drawFloatingTexts() {
+      if (!ctx) return
+
+      for (const t of floatingTexts) {
+        const easedProgress = 1 - Math.pow(1 - t.progress, 2)
+        const y = t.y - 80 * easedProgress
+        const scale = 1 + 0.5 * easedProgress
+        const alpha = 1 - t.progress
+
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.textAlign = 'center'
+        ctx.font = `${Math.floor(16 * scale)}px "Press Start 2P"`
+
+        // Shadow
+        ctx.fillStyle = '#000'
+        ctx.fillText(t.text, t.x + 2, y + 2)
+
+        // Text
+        ctx.fillStyle = '#fde047'
+        ctx.fillText(t.text, t.x, y)
+
+        ctx.restore()
+      }
+    }
+
+    function drawShop() {
+      if (!ctx) return
+
+      // Shop background
+      ctx.fillStyle = '#1f2937'
+      ctx.fillRect(shopArea.x, shopArea.y, shopArea.width, shopArea.height)
+
+      // Header
+      ctx.fillStyle = '#111827'
+      ctx.fillRect(shopArea.x, shopArea.y, shopArea.width, 25)
+
+      ctx.textAlign = 'center'
+      ctx.fillStyle = '#fbbf24'
+      ctx.font = '8px "Press Start 2P"'
+      ctx.fillText('MEJORAS', INTERNAL_WIDTH / 2, shopArea.y + 17)
+
+      // Items
+      const itemsStartY = shopArea.y + 30
+
+      for (let i = 0; i < upgrades.length; i++) {
+        const upg = upgrades[i]
+        const itemY = itemsStartY + i * shopArea.itemHeight
+        const canAfford = state.calories >= upg.cost
+
+        // Item background
+        ctx.fillStyle = canAfford ? '#374151' : '#2d3748'
+        ctx.fillRect(shopArea.x + 5, itemY, shopArea.width - 10, shopArea.itemHeight - 5)
+
+        if (!canAfford) {
+          ctx.fillStyle = 'rgba(0,0,0,0.5)'
+          ctx.fillRect(shopArea.x + 5, itemY, shopArea.width - 10, shopArea.itemHeight - 5)
+        }
+
+        // Icon
+        ctx.font = '20px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText(upg.icon, shopArea.x + 15, itemY + 35)
+
+        // Name
+        ctx.font = '8px "Press Start 2P"'
+        ctx.fillStyle = canAfford ? '#fff' : '#6b7280'
+        ctx.fillText(upg.name, shopArea.x + 50, itemY + 22)
+
+        // Cost
+        ctx.fillStyle = canAfford ? '#fbbf24' : '#6b7280'
+        ctx.fillText(`${upg.cost.toLocaleString()} Cal`, shopArea.x + 50, itemY + 40)
+
+        // Level and bonus (right side)
+        ctx.textAlign = 'right'
+        ctx.fillStyle = '#9ca3af'
+        ctx.font = '7px "Press Start 2P"'
+        ctx.fillText(`LVL ${upg.count}`, shopArea.x + shopArea.width - 15, itemY + 22)
+
+        ctx.fillStyle = '#4ade80'
+        const bonusText = upg.type === 'click' ? `+${upg.epc} CLK` : `+${upg.cps}/S`
+        ctx.fillText(bonusText, shopArea.x + shopArea.width - 15, itemY + 40)
+      }
+    }
+
+    function drawProgressBar() {
+      if (!ctx) return
+
+      const barWidth = INTERNAL_WIDTH - 40
+      const barHeight = 12
+      const barX = 20
+      const barY = 85
+
+      // Background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+      ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4)
+
+      ctx.fillStyle = '#3d2914'
+      ctx.fillRect(barX, barY, barWidth, barHeight)
+
+      // Progress
+      const progress = Math.min(state.calories / TARGET_CALORIES, 1)
+      const progressGradient = ctx.createLinearGradient(
+        barX,
+        barY,
+        barX + barWidth * progress,
+        barY
+      )
+      progressGradient.addColorStop(0, '#f59e0b')
+      progressGradient.addColorStop(1, '#fbbf24')
+      ctx.fillStyle = progressGradient
+      ctx.fillRect(barX, barY, barWidth * progress, barHeight)
+
+      // Text
+      ctx.fillStyle = '#fff'
+      ctx.font = '7px "Press Start 2P"'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        `${Math.floor(state.calories)}/${TARGET_CALORIES} CAL`,
+        INTERNAL_WIDTH / 2,
+        barY + 9
+      )
+    }
+
+    function drawWinOverlay() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.8)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '22px "Press Start 2P"'
+
+      // Shadow
+      ctx.fillStyle = '#5c4827'
+      ctx.fillText('¡HAMSTER', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 27)
+      ctx.fillText('SATISFECHO!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 + 13)
+
+      // Title
+      ctx.fillStyle = '#fbbf24'
+      ctx.fillText('¡HAMSTER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 30)
+      ctx.fillText('SATISFECHO!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 60)
+      }
+    }
+
+    /**
+     * GAME LOOP
+     */
+    function loop(currentTime: number) {
+      const deltaTime = currentTime - state.lastTime
+      state.lastTime = currentTime
+
+      update(deltaTime)
+      draw()
+
+      requestAnimationFrame(loop)
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initHamsterGame()
+    })
+  })()
+</script>
