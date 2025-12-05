@@ -15,6 +15,7 @@ import SnakeGame from '@/components/games/SnakeGame.astro'
 import CircusGame from '@/components/games/CircusGame.astro'
 import DronGame from '@/components/games/DronGame.astro'
 import HamsterGame from '@/components/games/HamsterGame.astro'
+import FlightGame from '@/components/games/FlightGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 import SafariGame from '@/components/games/SafariGame.astro'
@@ -285,6 +286,7 @@ if (user) {
             {gameType === 'safari' && <SafariGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'hamster' && <HamsterGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'dron' && <DronGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'flight' && <FlightGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
