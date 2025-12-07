@@ -152,8 +152,6 @@ const GAME_DATA = {
 </style>
 
 <script>
-  import { actions } from 'astro:actions'
-  import { showAchievement } from '@/utils/show-achievement'
   ;(function () {
     /**
      * CONFIGURACIÓN DEL JUEGO
@@ -433,21 +431,6 @@ const GAME_DATA = {
 
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('game-completed'))
-
-          actions
-            .grantGameAchievement({ achievementId: 'twelve-unlocked' })
-            .then((result) => {
-              if (result.data?.achievement) {
-                showAchievement('achievement-notification', {
-                  title: result.data.achievement.title,
-                  description: result.data.achievement.description,
-                  icon: result.data.achievement.image,
-                })
-              }
-            })
-            .catch((error) => {
-              console.error('Error granting achievement:', error)
-            })
         }, 1500)
       }
     }
