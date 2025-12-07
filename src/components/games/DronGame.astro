@@ -52,6 +52,15 @@ const GAME_DATA = {
     const LOGICAL_HEIGHT = 576
 
     /**
+     * SISTEMA DE FRAMERATE FIJO (60 FPS)
+     * Garantiza que el juego funcione igual en todas las pantallas
+     */
+    const TARGET_FPS = 60
+    const FRAME_DURATION = 1000 / TARGET_FPS // ~16.67ms por frame
+    let lastTime = 0
+    let accumulator = 0
+
+    /**
      * SISTEMA DE SONIDO (Web Audio API)
      */
     const audioCtx = new (
@@ -688,28 +697,47 @@ const GAME_DATA = {
       ctx.shadowOffsetY = 0
     }
 
-    function loop() {
-      background.update()
+    function loop(currentTime: number) {
+      // Calcular delta time
+      if (lastTime === 0) {
+        lastTime = currentTime
+      }
+      const deltaTime = currentTime - lastTime
+      lastTime = currentTime
+
+      // Acumular tiempo (con límite para evitar espirales de muerte)
+      accumulator += Math.min(deltaTime, 100)
+
+      // Ejecutar actualizaciones a framerate fijo
+      while (accumulator >= FRAME_DURATION) {
+        // Update lógica del juego
+        background.update()
+
+        if (gameState === 'PLAYING') {
+          drone.update()
+          obstacles.update()
+          enemyBirds.update()
+          frames++
+        } else if (gameState === 'START') {
+          drone.y = LOGICAL_HEIGHT / 2 + Math.sin(Date.now() / 300) * 10
+          background.groundOffset = (Date.now() / 10) % 40
+        } else if (gameState === 'GAMEOVER') {
+          frames++
+        }
+
+        accumulator -= FRAME_DURATION
+      }
+
+      // Renderizar siempre (aprovecha la tasa de refresco de la pantalla)
       background.draw()
 
       if (gameState === 'PLAYING') {
-        drone.update()
         drone.draw()
-        obstacles.update()
         obstacles.draw()
-        enemyBirds.update()
         enemyBirds.draw()
-        frames++
       } else if (gameState === 'START') {
-        drone.y = LOGICAL_HEIGHT / 2 + Math.sin(Date.now() / 300) * 10
         drone.draw()
-        background.groundOffset = (Date.now() / 10) % 40
-      } else if (gameState === 'GAMEOVER') {
-        obstacles.draw()
-        enemyBirds.draw()
-        drone.draw()
-        frames++
-      } else if (gameState === 'WIN') {
+      } else if (gameState === 'GAMEOVER' || gameState === 'WIN') {
         obstacles.draw()
         enemyBirds.draw()
         drone.draw()
@@ -766,7 +794,10 @@ const GAME_DATA = {
         drone.init()
         enemyBirds.init()
         background.init()
-        loop()
+        // Iniciar el loop con requestAnimationFrame para obtener el timestamp
+        lastTime = 0
+        accumulator = 0
+        requestAnimationFrame(loop)
       })
     }
 
