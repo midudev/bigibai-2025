@@ -21,13 +21,53 @@ const GAME_DATA = {
 ---
 
 <GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
-  <canvas id="flightCanvas" slot="game"></canvas>
+  <div id="flight-game-container" slot="game">
+    <canvas id="flightCanvas"></canvas>
+
+    <!-- Interfaz de Usuario -->
+    <div id="ui-layer">
+      <div id="top-bar">
+        <div id="score">Kms: 0</div>
+        <div id="tickets">Tickets: 0/5</div>
+      </div>
+
+      <div id="start-screen" class="message-box">
+        <h3>PILOTA<br />EL AVIÓN</h3>
+        <p>Esquiva nubes y pájaros.<br />Atrapa tickets.</p>
+        <p class="blink">CLICK PARA EMPEZAR</p>
+      </div>
+
+      <div id="game-over-screen" class="message-box hidden">
+        <h3 style="color: #ff4d4d;">¡CHOQUE!</h3>
+        <p>Distancia: <span id="final-score">0</span>km</p>
+        <p class="blink" style="margin-top:15px;">REINTENTAR</p>
+      </div>
+
+      <div id="win-screen" class="message-box hidden">
+        <h3 style="color: #69f0ae;">¡NOS VAMOS!</h3>
+        <p>¡Maletas listas!</p>
+        <p class="blink" style="margin-top:15px;">DESBLOQUEANDO...</p>
+      </div>
+    </div>
+  </div>
 </GameLayout>
 
 <style>
   @font-face {
     font-family: 'Press Start 2P';
     src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #flight-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #4facfe;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   #flightCanvas {
@@ -37,6 +77,77 @@ const GAME_DATA = {
     image-rendering: pixelated;
     outline: none;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  #ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  #top-bar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #ffeb3b;
+    text-shadow: 2px 2px 0 #000;
+    display: none;
+  }
+
+  .message-box {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 30px 40px;
+    border: 4px solid #ffeb3b;
+    box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    image-rendering: pixelated;
+    pointer-events: auto;
+  }
+
+  h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    color: #ffeb3b;
+    line-height: 1.5;
+  }
+
+  p {
+    margin: 8px 0;
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1.8;
+  }
+
+  .blink {
+    animation: blink-anim 1s infinite;
+    margin-top: 20px !important;
+  }
+
+  @keyframes blink-anim {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .hidden {
+    display: none !important;
   }
 </style>
 
@@ -48,8 +159,8 @@ const GAME_DATA = {
      * CONFIGURACIÓN DEL JUEGO
      */
     const TARGET_TICKETS = 5
-    const LOGICAL_WIDTH = 270
-    const LOGICAL_HEIGHT = 480
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
 
     /**
      * SISTEMA DE SONIDO (Web Audio API)
@@ -124,6 +235,15 @@ const GAME_DATA = {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // UI Elements
+    const uiStart = document.getElementById('start-screen')
+    const uiGameOver = document.getElementById('game-over-screen')
+    const uiWin = document.getElementById('win-screen')
+    const uiTopBar = document.getElementById('top-bar')
+    const uiScore = document.getElementById('score')
+    const uiTickets = document.getElementById('tickets')
+    const uiFinalScore = document.getElementById('final-score')
+
     // --- SPRITES (PIXEL ART) ---
     const planeSprite = [
       [0, 0, 0, 0, 1, 0, 0, 0, 0],
@@ -165,16 +285,6 @@ const GAME_DATA = {
       [6, 6, 6, 7, 6, 6, 6],
     ]
 
-    const COLORS: Record<number, string> = {
-      1: '#ffffff',
-      3: '#ffeb3b',
-      4: '#546e7a',
-      5: '#34495e',
-      6: '#2ecc71',
-      7: '#27ae60',
-      8: '#3498db',
-    }
-
     function drawPixelArt(
       ctx: CanvasRenderingContext2D,
       sprite: number[][],
@@ -202,11 +312,11 @@ const GAME_DATA = {
 
     // --- OBJETOS DEL JUEGO ---
     const player = {
-      x: 119,
-      y: 320,
-      width: 32,
-      height: 35,
-      speed: 5,
+      x: INTERNAL_WIDTH / 2 - 16,
+      y: INTERNAL_HEIGHT - 100,
+      width: 40,
+      height: 45,
+      speed: 6,
     }
 
     interface Cloud {
@@ -266,19 +376,31 @@ const GAME_DATA = {
       items = []
       islands = []
 
-      player.x = LOGICAL_WIDTH / 2 - player.width / 2
-      player.y = LOGICAL_HEIGHT - 80
+      player.x = INTERNAL_WIDTH / 2 - player.width / 2
+      player.y = INTERNAL_HEIGHT - 100
 
       // Water particles
       particles = []
       for (let i = 0; i < 25; i++) {
         particles.push({
-          x: Math.random() * LOGICAL_WIDTH,
-          y: Math.random() * LOGICAL_HEIGHT,
-          size: Math.random() * 2 + 1,
+          x: Math.random() * INTERNAL_WIDTH,
+          y: Math.random() * INTERNAL_HEIGHT,
+          size: Math.random() * 3 + 1,
           speed: Math.random() * 3 + 2,
         })
       }
+
+      // Update UI
+      if (uiStart) uiStart.classList.add('hidden')
+      if (uiGameOver) uiGameOver.classList.add('hidden')
+      if (uiWin) uiWin.classList.add('hidden')
+      if (uiTopBar) uiTopBar.style.display = 'flex'
+      updateUI()
+    }
+
+    function updateUI() {
+      if (uiScore) uiScore.innerText = `Kms: ${Math.floor(score)}`
+      if (uiTickets) uiTickets.innerText = `Tickets: ${tickets}/${TARGET_TICKETS}`
     }
 
     function rectIntersect(
@@ -297,12 +419,17 @@ const GAME_DATA = {
     function endGame() {
       gameState = 'GAMEOVER'
       playSound('crash')
+      if (uiTopBar) uiTopBar.style.display = 'none'
+      if (uiFinalScore) uiFinalScore.innerText = Math.floor(score).toString()
+      if (uiGameOver) uiGameOver.classList.remove('hidden')
     }
 
     function checkWinCondition() {
       if (tickets >= TARGET_TICKETS && gameState === 'PLAYING') {
         gameState = 'WIN'
         playSound('win')
+        if (uiTopBar) uiTopBar.style.display = 'none'
+        if (uiWin) uiWin.classList.remove('hidden')
 
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('game-completed'))
@@ -334,16 +461,16 @@ const GAME_DATA = {
 
       // Player Move
       if (input.left && player.x > 0) player.x -= player.speed
-      if (input.right && player.x < LOGICAL_WIDTH - player.width) player.x += player.speed
+      if (input.right && player.x < INTERNAL_WIDTH - player.width) player.x += player.speed
 
       // Spawn logic
       // Clouds with random sizes
       if (frames % Math.max(20, 60 - Math.floor(gameSpeed * 2)) === 0) {
-        const scale = Math.random() * 3 + 3
+        const scale = Math.random() * 4 + 4
         const w = 5 * scale
         const h = 4 * scale
         clouds.push({
-          x: Math.random() * (LOGICAL_WIDTH - w),
+          x: Math.random() * (INTERNAL_WIDTH - w),
           y: -h,
           w: w,
           h: h,
@@ -355,10 +482,10 @@ const GAME_DATA = {
       // Birds
       if (frames % 180 === 0) {
         birds.push({
-          x: Math.random() * (LOGICAL_WIDTH - 20),
-          y: -20,
-          w: 20,
-          h: 12,
+          x: Math.random() * (INTERNAL_WIDTH - 25),
+          y: -25,
+          w: 25,
+          h: 15,
           spd: gameSpeed + 1.5,
         })
       }
@@ -366,10 +493,10 @@ const GAME_DATA = {
       // Tickets
       if (frames % 150 === 0) {
         items.push({
-          x: Math.random() * (LOGICAL_WIDTH - 25),
-          y: -25,
-          w: 25,
-          h: 25,
+          x: Math.random() * (INTERNAL_WIDTH - 30),
+          y: -30,
+          w: 30,
+          h: 30,
           spd: gameSpeed,
         })
       }
@@ -377,8 +504,8 @@ const GAME_DATA = {
       // Islands (background)
       if (frames % 300 === 0) {
         islands.push({
-          x: Math.random() * (LOGICAL_WIDTH - 35),
-          y: -30,
+          x: Math.random() * (INTERNAL_WIDTH - 45),
+          y: -40,
           spd: gameSpeed * 0.5,
         })
       }
@@ -390,7 +517,7 @@ const GAME_DATA = {
         if (rectIntersect(player.x, player.y, player.width, player.height, c.x, c.y, c.w, c.h)) {
           endGame()
         }
-        if (c.y > LOGICAL_HEIGHT) {
+        if (c.y > INTERNAL_HEIGHT) {
           clouds.splice(i, 1)
           i--
         }
@@ -400,11 +527,11 @@ const GAME_DATA = {
       for (let i = 0; i < birds.length; i++) {
         const b = birds[i]
         b.y += b.spd
-        b.x += Math.sin(frames / 10) * 1
+        b.x += Math.sin(frames / 10) * 1.5
         if (rectIntersect(player.x, player.y, player.width, player.height, b.x, b.y, b.w, b.h)) {
           endGame()
         }
-        if (b.y > LOGICAL_HEIGHT) {
+        if (b.y > INTERNAL_HEIGHT) {
           birds.splice(i, 1)
           i--
         }
@@ -421,10 +548,11 @@ const GAME_DATA = {
           playSound('collect')
           items.splice(i, 1)
           i--
+          updateUI()
           checkWinCondition()
           continue
         }
-        if (it.y > LOGICAL_HEIGHT) {
+        if (it.y > INTERNAL_HEIGHT) {
           items.splice(i, 1)
           i--
         }
@@ -433,7 +561,7 @@ const GAME_DATA = {
       // Logic Islands
       for (let i = 0; i < islands.length; i++) {
         islands[i].y += islands[i].spd
-        if (islands[i].y > LOGICAL_HEIGHT) {
+        if (islands[i].y > INTERNAL_HEIGHT) {
           islands.splice(i, 1)
           i--
         }
@@ -442,11 +570,13 @@ const GAME_DATA = {
       // Particles
       particles.forEach((p) => {
         p.y += p.speed
-        if (p.y > LOGICAL_HEIGHT) {
+        if (p.y > INTERNAL_HEIGHT) {
           p.y = -10
-          p.x = Math.random() * LOGICAL_WIDTH
+          p.x = Math.random() * INTERNAL_WIDTH
         }
       })
+
+      updateUI()
     }
 
     function draw() {
@@ -454,7 +584,7 @@ const GAME_DATA = {
 
       // Sky/Sea background
       ctx.fillStyle = '#4facfe'
-      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       // Background particles
       ctx.fillStyle = 'rgba(255,255,255,0.3)'
@@ -462,11 +592,11 @@ const GAME_DATA = {
 
       // Islands
       islands.forEach((i) =>
-        drawPixelArt(ctx, islandSprite, i.x, i.y, 5, { 6: '#2ecc71', 7: '#27ae60' })
+        drawPixelArt(ctx, islandSprite, i.x, i.y, 6, { 6: '#2ecc71', 7: '#27ae60' })
       )
 
       // Player (plane)
-      drawPixelArt(ctx, planeSprite, player.x, player.y, 3.5, {
+      drawPixelArt(ctx, planeSprite, player.x, player.y, 4.5, {
         1: '#ffffff',
         8: '#3498db',
       })
@@ -480,122 +610,18 @@ const GAME_DATA = {
       )
 
       // Birds
-      birds.forEach((b) => drawPixelArt(ctx, birdSprite, b.x, b.y, 4, { 5: '#34495e' }))
+      birds.forEach((b) => drawPixelArt(ctx, birdSprite, b.x, b.y, 5, { 5: '#34495e' }))
 
       // Items (tickets)
       items.forEach((i) =>
-        drawPixelArt(ctx, ticketSprite, i.x, i.y, 5, { 1: '#fff', 3: '#ffeb3b' })
+        drawPixelArt(ctx, ticketSprite, i.x, i.y, 6, { 1: '#fff', 3: '#ffeb3b' })
       )
-    }
-
-    function drawUI() {
-      if (!ctx) return
-
-      ctx.textAlign = 'left'
-      ctx.shadowColor = 'black'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 2
-      ctx.shadowOffsetY = 2
-
-      // Top bar
-      ctx.fillStyle = '#ffeb3b'
-      ctx.font = '12px "Press Start 2P"'
-      ctx.fillText(`Kms: ${Math.floor(score)}`, 10, 25)
-
-      ctx.textAlign = 'right'
-      ctx.fillText(`Tickets: ${tickets}/${TARGET_TICKETS}`, LOGICAL_WIDTH - 10, 25)
-
-      ctx.textAlign = 'center'
-
-      if (gameState === 'START') {
-        ctx.fillStyle = 'rgba(0,0,0,0.6)'
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 0
-        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
-
-        ctx.shadowOffsetX = 2
-        ctx.shadowOffsetY = 2
-        ctx.fillStyle = '#ffeb3b'
-        ctx.font = '24px "Press Start 2P"'
-        ctx.fillText('PILOTA', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 3)
-        ctx.fillText('EL AVIÓN', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 3 + 35)
-
-        ctx.fillStyle = '#fff'
-        ctx.font = '10px "Press Start 2P"'
-        ctx.fillText('Esquiva nubes', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2)
-        ctx.fillText('y pájaros.', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 18)
-        ctx.fillText('Atrapa tickets.', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 36)
-
-        if (Math.floor(Date.now() / 500) % 2 === 0) {
-          ctx.font = '12px "Press Start 2P"'
-          ctx.fillText('CLICK PARA', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 80)
-          ctx.fillText('EMPEZAR', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 60)
-        }
-      }
-
-      if (gameState === 'GAMEOVER') {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)'
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 0
-        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
-
-        ctx.shadowOffsetX = 2
-        ctx.shadowOffsetY = 2
-        ctx.fillStyle = '#ff4d4d'
-        ctx.font = '24px "Press Start 2P"'
-        ctx.fillText('¡CHOQUE!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 - 40)
-
-        ctx.fillStyle = '#fff'
-        ctx.font = '12px "Press Start 2P"'
-        ctx.fillText(
-          `Distancia: ${Math.floor(score)}km`,
-          LOGICAL_WIDTH / 2,
-          LOGICAL_HEIGHT / 2 + 10
-        )
-
-        if (Math.floor(Date.now() / 500) % 2 === 0) {
-          ctx.font = '10px "Press Start 2P"'
-          ctx.fillText('REINTENTAR', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 50)
-        }
-      }
-
-      if (gameState === 'WIN') {
-        ctx.fillStyle = 'rgba(0,0,0,0.8)'
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 0
-        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT)
-
-        ctx.shadowOffsetX = 2
-        ctx.shadowOffsetY = 2
-        ctx.fillStyle = '#69f0ae'
-        ctx.font = '20px "Press Start 2P"'
-        ctx.fillText('¡NOS VAMOS!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 - 30)
-
-        ctx.fillStyle = '#fff'
-        ctx.font = '12px "Press Start 2P"'
-        ctx.fillText('¡Maletas listas!', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 10)
-
-        if (Math.floor(Date.now() / 500) % 2 === 0) {
-          ctx.font = '12px "Press Start 2P"'
-          ctx.fillText('DESBLOQUEANDO...', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2 + 60)
-        }
-      }
-
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
     }
 
     function loop() {
       update()
       draw()
-      drawUI()
-
-      if (gameState === 'PLAYING' || gameState === 'START') {
-        requestAnimationFrame(loop)
-      } else if (gameState === 'GAMEOVER' || gameState === 'WIN') {
-        // Keep rendering for UI updates
-        requestAnimationFrame(loop)
-      }
+      requestAnimationFrame(loop)
     }
 
     function handleInput() {
@@ -633,8 +659,23 @@ const GAME_DATA = {
 
     // --- INICIALIZACIÓN ---
     function initFlightGame() {
-      canvas.width = LOGICAL_WIDTH
-      canvas.height = LOGICAL_HEIGHT
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      // Initialize particles for start screen
+      particles = []
+      for (let i = 0; i < 25; i++) {
+        particles.push({
+          x: Math.random() * INTERNAL_WIDTH,
+          y: Math.random() * INTERNAL_HEIGHT,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 3 + 2,
+        })
+      }
+
+      // Set initial player position for start screen
+      player.x = INTERNAL_WIDTH / 2 - player.width / 2
+      player.y = INTERNAL_HEIGHT / 2 + 80
 
       // Keyboard input
       window.addEventListener('keydown', (e) => {
@@ -648,58 +689,43 @@ const GAME_DATA = {
         if (e.key === 'ArrowRight') input.right = false
       })
 
-      // Mouse input
-      canvas.addEventListener('mousedown', (e) => {
-        handleInput()
-        const coords = getCanvasCoords(e)
-        handleTouch(coords.x, coords.width)
-      })
-
-      // Touch input
-      canvas.addEventListener(
-        'touchstart',
-        (e) => {
-          e.preventDefault()
+      // Container input
+      const container = document.getElementById('flight-game-container')
+      if (container) {
+        container.addEventListener('mousedown', (e) => {
           handleInput()
-          const coords = getCanvasCoords(e.touches[0])
+          const coords = getCanvasCoords(e as MouseEvent)
           handleTouch(coords.x, coords.width)
-        },
-        { passive: false }
-      )
+        })
 
-      canvas.addEventListener(
-        'touchmove',
-        (e) => {
-          e.preventDefault()
-          const coords = getCanvasCoords(e.touches[0])
-          handleTouch(coords.x, coords.width)
-        },
-        { passive: false }
-      )
+        container.addEventListener(
+          'touchstart',
+          (e) => {
+            e.preventDefault()
+            handleInput()
+            const coords = getCanvasCoords(e.touches[0])
+            handleTouch(coords.x, coords.width)
+          },
+          { passive: false }
+        )
 
-      canvas.addEventListener('touchend', () => {
-        input.left = false
-        input.right = false
-      })
+        container.addEventListener(
+          'touchmove',
+          (e) => {
+            e.preventDefault()
+            const coords = getCanvasCoords(e.touches[0])
+            handleTouch(coords.x, coords.width)
+          },
+          { passive: false }
+        )
 
-      // Initialize particles for start screen
-      particles = []
-      for (let i = 0; i < 25; i++) {
-        particles.push({
-          x: Math.random() * LOGICAL_WIDTH,
-          y: Math.random() * LOGICAL_HEIGHT,
-          size: Math.random() * 2 + 1,
-          speed: Math.random() * 3 + 2,
+        container.addEventListener('touchend', () => {
+          input.left = false
+          input.right = false
         })
       }
 
-      // Set initial player position for start screen
-      player.x = LOGICAL_WIDTH / 2 - player.width / 2
-      player.y = LOGICAL_HEIGHT / 2 + 50
-
-      document.fonts.ready.then(() => {
-        loop()
-      })
+      loop()
     }
 
     // Escuchar evento para iniciar el juego
