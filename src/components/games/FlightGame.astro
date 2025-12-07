@@ -167,6 +167,11 @@ const GAME_DATA = {
       window.AudioContext || (window as any).webkitAudioContext
     )() as AudioContext
 
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/racer-music.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.4
+
     function playSound(type: string) {
       if (audioCtx.state === 'suspended') {
         audioCtx.resume()
@@ -402,6 +407,10 @@ const GAME_DATA = {
       if (uiWin) uiWin.classList.add('hidden')
       if (uiTopBar) uiTopBar.style.display = 'flex'
       updateUI()
+
+      // Start background music
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
     }
 
     function updateUI() {
@@ -425,6 +434,7 @@ const GAME_DATA = {
     function endGame() {
       gameState = 'GAMEOVER'
       playSound('crash')
+      bgMusic.pause()
       if (uiTopBar) uiTopBar.style.display = 'none'
       if (uiFinalScore) uiFinalScore.innerText = Math.floor(score).toString()
       if (uiGameOver) uiGameOver.classList.remove('hidden')
@@ -434,6 +444,7 @@ const GAME_DATA = {
       if (tickets >= TARGET_TICKETS && gameState === 'PLAYING') {
         gameState = 'WIN'
         playSound('win')
+        bgMusic.pause()
         if (uiTopBar) uiTopBar.style.display = 'none'
         if (uiWin) uiWin.classList.remove('hidden')
 
