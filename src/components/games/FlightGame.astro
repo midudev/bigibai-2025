@@ -32,19 +32,19 @@ const GAME_DATA = {
       </div>
 
       <div id="start-screen" class="message-box">
-        <h3>PILOTA<br />EL AVIÓN</h3>
+        <h3 style="font-family: 'Press Start 2P', cursive;">PILOTA<br />EL AVIÓN</h3>
         <p>Esquiva nubes y pájaros.<br />Atrapa tickets.</p>
         <p class="blink">CLICK PARA EMPEZAR</p>
       </div>
 
       <div id="game-over-screen" class="message-box hidden">
-        <h3 style="color: #ff4d4d;">¡CHOQUE!</h3>
+        <h3 style="color: #ff4d4d; font-family: 'Press Start 2P', cursive;">¡CHOQUE!</h3>
         <p>Distancia: <span id="final-score">0</span>km</p>
         <p class="blink" style="margin-top:15px;">REINTENTAR</p>
       </div>
 
       <div id="win-screen" class="message-box hidden">
-        <h3 style="color: #69f0ae;">¡NOS VAMOS!</h3>
+        <h3 style="color: #69f0ae; font-family: 'Press Start 2P', cursive;">¡NOS VAMOS!</h3>
         <p>¡Maletas listas!</p>
         <p class="blink" style="margin-top:15px;">DESBLOQUEANDO...</p>
       </div>
@@ -306,7 +306,10 @@ const GAME_DATA = {
     let frames = 0
     let score = 0
     let tickets = 0
-    let gameSpeed = 3
+    let gameSpeed = 180 // pixels per second base speed
+    let lastTime = 0
+    let accumulatedTime = 0
+    const FIXED_DELTA = 1 / 60 // 60 FPS lógicos
 
     // --- OBJETOS DEL JUEGO ---
     const player = {
@@ -314,7 +317,7 @@ const GAME_DATA = {
       y: INTERNAL_HEIGHT - 100,
       width: 40,
       height: 45,
-      speed: 6,
+      speed: 360, // pixels per second
     }
 
     interface Cloud {
@@ -360,15 +363,20 @@ const GAME_DATA = {
     let items: Item[] = []
     let islands: Island[] = []
     let particles: Particle[] = []
-    let input = { left: false, right: false }
+    let input = { left: false, right: false, up: false, down: false }
+    let isDragging = false
+    let targetX: number | null = null
+    let targetY: number | null = null
 
     // --- FUNCIONES DEL JUEGO ---
     function resetGame() {
       gameState = 'PLAYING'
       score = 0
       tickets = 0
-      gameSpeed = 3
+      gameSpeed = 180 // pixels per second
       frames = 0
+      lastTime = 0
+      accumulatedTime = 0
       clouds = []
       birds = []
       items = []
@@ -384,7 +392,7 @@ const GAME_DATA = {
           x: Math.random() * INTERNAL_WIDTH,
           y: Math.random() * INTERNAL_HEIGHT,
           size: Math.random() * 3 + 1,
-          speed: Math.random() * 3 + 2,
+          speed: Math.random() * 180 + 120, // pixels per second
         })
       }
 
@@ -435,20 +443,58 @@ const GAME_DATA = {
       }
     }
 
-    function update() {
+    function update(dt: number) {
+      // Always update particles for background animation
+      particles.forEach((p) => {
+        p.y += p.speed * dt
+        if (p.y > INTERNAL_HEIGHT) {
+          p.y = -10
+          p.x = Math.random() * INTERNAL_WIDTH
+        }
+      })
+
       if (gameState !== 'PLAYING') return
 
       frames++
-      score += 0.05
-      if (frames % 600 === 0) gameSpeed += 0.5
+      score += 3 * dt // 3 points per second
+      if (frames % 600 === 0) gameSpeed += 30 // Increase speed every 10 seconds
 
-      // Player Move
-      if (input.left && player.x > 0) player.x -= player.speed
-      if (input.right && player.x < INTERNAL_WIDTH - player.width) player.x += player.speed
+      // Player Move (dt-based)
+      const moveSpeed = player.speed * dt
+
+      // Keyboard controls
+      if (input.left) player.x -= moveSpeed
+      if (input.right) player.x += moveSpeed
+      if (input.up) player.y -= moveSpeed
+      if (input.down) player.y += moveSpeed
+
+      // Drag/Touch controls - move towards target
+      if (isDragging) {
+        if (targetX !== null) {
+          const centerX = player.x + player.width / 2
+          const diffX = targetX - centerX
+          if (Math.abs(diffX) > 2) {
+            const move = Math.sign(diffX) * Math.min(Math.abs(diffX), moveSpeed * 1.5)
+            player.x += move
+          }
+        }
+        if (targetY !== null) {
+          const centerY = player.y + player.height / 2
+          const diffY = targetY - centerY
+          if (Math.abs(diffY) > 2) {
+            const move = Math.sign(diffY) * Math.min(Math.abs(diffY), moveSpeed * 1.5)
+            player.y += move
+          }
+        }
+      }
+
+      // Clamp player position to screen bounds
+      player.x = Math.max(0, Math.min(INTERNAL_WIDTH - player.width, player.x))
+      player.y = Math.max(50, Math.min(INTERNAL_HEIGHT - player.height - 10, player.y))
 
       // Spawn logic
       // Clouds with random sizes
-      if (frames % Math.max(20, 60 - Math.floor(gameSpeed * 2)) === 0) {
+      if (frames % Math.max(20, 60 - Math.floor(gameSpeed / 30)) === 0) {
         const scale = Math.random() * 4 + 4
         const w = 5 * scale
         const h = 4 * scale
@@ -469,7 +515,7 @@ const GAME_DATA = {
           y: -25,
           w: 25,
           h: 15,
-          spd: gameSpeed + 1.5,
+          spd: gameSpeed + 90,
         })
       }
 
@@ -493,10 +539,10 @@ const GAME_DATA = {
         })
       }
 
-      // Logic Clouds
+      // Logic Clouds (dt-based)
       for (let i = 0; i < clouds.length; i++) {
         const c = clouds[i]
-        c.y += c.spd
+        c.y += c.spd * dt
         if (rectIntersect(player.x, player.y, player.width, player.height, c.x, c.y, c.w, c.h)) {
           endGame()
         }
@@ -506,11 +552,11 @@ const GAME_DATA = {
         }
       }
 
-      // Logic Birds
+      // Logic Birds (dt-based)
       for (let i = 0; i < birds.length; i++) {
         const b = birds[i]
-        b.y += b.spd
-        b.x += Math.sin(frames / 10) * 1.5
+        b.y += b.spd * dt
+        b.x += Math.sin(frames / 10) * 90 * dt
         if (rectIntersect(player.x, player.y, player.width, player.height, b.x, b.y, b.w, b.h)) {
           endGame()
         }
@@ -520,10 +566,10 @@ const GAME_DATA = {
         }
       }
 
-      // Logic Items
+      // Logic Items (dt-based)
       for (let i = 0; i < items.length; i++) {
         const it = items[i]
-        it.y += it.spd
+        it.y += it.spd * dt
         if (
           rectIntersect(player.x, player.y, player.width, player.height, it.x, it.y, it.w, it.h)
         ) {
@@ -541,23 +587,14 @@ const GAME_DATA = {
         }
       }
 
-      // Logic Islands
+      // Logic Islands (dt-based)
       for (let i = 0; i < islands.length; i++) {
-        islands[i].y += islands[i].spd
+        islands[i].y += islands[i].spd * dt
         if (islands[i].y > INTERNAL_HEIGHT) {
           islands.splice(i, 1)
           i--
         }
       }
-
-      // Particles
-      particles.forEach((p) => {
-        p.y += p.speed
-        if (p.y > INTERNAL_HEIGHT) {
-          p.y = -10
-          p.x = Math.random() * INTERNAL_WIDTH
-        }
-      })
 
       updateUI()
     }
@@ -601,8 +638,18 @@ const GAME_DATA = {
       )
     }
 
-    function loop() {
-      update()
+    function loop(timestamp: number) {
+      if (!lastTime) lastTime = timestamp
+      const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1) // Cap at 100ms
+      lastTime = timestamp
+
+      // Fixed timestep for consistent physics
+      accumulatedTime += deltaTime
+      while (accumulatedTime >= FIXED_DELTA) {
+        update(FIXED_DELTA)
+        accumulatedTime -= FIXED_DELTA
+      }
+
       draw()
       requestAnimationFrame(loop)
     }
@@ -623,21 +670,25 @@ const GAME_DATA = {
 
     function getCanvasCoords(event: MouseEvent | Touch) {
       const rect = canvas.getBoundingClientRect()
+      const scaleX = INTERNAL_WIDTH / rect.width
+      const scaleY = INTERNAL_HEIGHT / rect.height
       return {
-        x: event.clientX - rect.left,
-        width: rect.width,
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
       }
     }
 
-    function handleTouch(x: number, width: number) {
+    function handleDrag(x: number, y: number) {
       if (gameState !== 'PLAYING') return
-      if (x < width / 2) {
-        input.left = true
-        input.right = false
-      } else {
-        input.left = false
-        input.right = true
-      }
+      isDragging = true
+      targetX = x
+      targetY = y
+    }
+
+    function stopDrag() {
+      isDragging = false
+      targetX = null
+      targetY = null
     }
 
     // --- INICIALIZACIÓN ---
@@ -652,7 +703,7 @@ const GAME_DATA = {
           x: Math.random() * INTERNAL_WIDTH,
           y: Math.random() * INTERNAL_HEIGHT,
           size: Math.random() * 3 + 1,
-          speed: Math.random() * 3 + 2,
+          speed: Math.random() * 180 + 120, // pixels per second
         })
       }
 
@@ -665,29 +716,58 @@ const GAME_DATA = {
         if (gameState !== 'PLAYING') return
         if (e.key === 'ArrowLeft') input.left = true
         if (e.key === 'ArrowRight') input.right = true
+        if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          input.up = true
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          input.down = true
+        }
       })
 
       window.addEventListener('keyup', (e) => {
         if (e.key === 'ArrowLeft') input.left = false
         if (e.key === 'ArrowRight') input.right = false
+        if (e.key === 'ArrowUp') input.up = false
+        if (e.key === 'ArrowDown') input.down = false
       })
 
       // Container input
       const container = document.getElementById('flight-game-container')
       if (container) {
+        // Mouse controls
         container.addEventListener('mousedown', (e) => {
           handleInput()
           const coords = getCanvasCoords(e as MouseEvent)
-          handleTouch(coords.x, coords.width)
+          handleDrag(coords.x, coords.y)
         })
 
+        container.addEventListener('mousemove', (e) => {
+          if (e.buttons === 1) {
+            const coords = getCanvasCoords(e as MouseEvent)
+            handleDrag(coords.x, coords.y)
+          }
+        })
+
+        container.addEventListener('mouseup', () => {
+          stopDrag()
+        })
+
+        container.addEventListener('mouseleave', () => {
+          stopDrag()
+        })
+
+        // Touch controls
         container.addEventListener(
           'touchstart',
           (e) => {
             e.preventDefault()
             handleInput()
-            const coords = getCanvasCoords(e.touches[0])
-            handleTouch(coords.x, coords.width)
+            if (e.touches.length > 0) {
+              const coords = getCanvasCoords(e.touches[0])
+              handleDrag(coords.x, coords.y)
+            }
           },
           { passive: false }
         )
@@ -696,19 +776,24 @@ const GAME_DATA = {
           'touchmove',
           (e) => {
             e.preventDefault()
-            const coords = getCanvasCoords(e.touches[0])
-            handleTouch(coords.x, coords.width)
+            if (e.touches.length > 0) {
+              const coords = getCanvasCoords(e.touches[0])
+              handleDrag(coords.x, coords.y)
+            }
           },
           { passive: false }
         )
 
         container.addEventListener('touchend', () => {
-          input.left = false
-          input.right = false
+          stopDrag()
+        })
+
+        container.addEventListener('touchcancel', () => {
+          stopDrag()
         })
       }
 
-      loop()
+      requestAnimationFrame(loop)
     }
 
     // Escuchar evento para iniciar el juego
