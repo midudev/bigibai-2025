@@ -1,0 +1,887 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 300,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="arkanoidCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #arkanoidCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions'
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const TARGET_SCORE = 300
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    let audioCtx: AudioContext | null = null
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/arkanoid.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playSound(type: string) {
+      if (!audioCtx) return
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      const now = audioCtx.currentTime
+
+      if (type === 'hit_paddle') {
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(440, now)
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1)
+        gainNode.gain.setValueAtTime(0.05, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'shoot') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(880, now)
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.2)
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+        osc.start(now)
+        osc.stop(now + 0.2)
+      } else if (type === 'hit_brick') {
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(600, now)
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1)
+        gainNode.gain.setValueAtTime(0.05, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'wall') {
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(200, now)
+        gainNode.gain.setValueAtTime(0.05, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05)
+        osc.start(now)
+        osc.stop(now + 0.05)
+      } else if (type === 'game_over') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.linearRampToValueAtTime(50, now + 1)
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.linearRampToValueAtTime(0, now + 1)
+        osc.start(now)
+        osc.stop(now + 1)
+      } else if (type === 'win') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(523.25, now) // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.15) // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.3) // G5
+        gainNode.gain.setValueAtTime(0.4, now)
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.5)
+        osc.start(now)
+        osc.stop(now + 0.5)
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('arkanoidCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Estado del juego
+    let gameRunning = false
+    let score = 0
+    let lives = 1
+    let animationId: number
+    let lastTime = 0
+    let gameStatus: 'start' | 'playing' | 'win' | 'gameover' = 'start'
+
+    // Entidades
+    const paddle = {
+      width: 100,
+      height: 12,
+      x: 0,
+      y: 0,
+      speed: 400,
+      color: '#e0e0e0',
+    }
+
+    const CHARGE_TIME = 4
+    let currentCharge = 0
+
+    interface Projectile {
+      x: number
+      y: number
+      width: number
+      height: number
+      speed: number
+    }
+    let projectiles: Projectile[] = []
+
+    const ball = {
+      size: 10,
+      x: 0,
+      y: 0,
+      speed: 300,
+      dx: 0,
+      dy: 0,
+      active: false,
+    }
+
+    const brickInfo = {
+      rows: 6,
+      cols: 5,
+      padding: 8,
+      marginTop: 100,
+      height: 22,
+    }
+
+    interface Brick {
+      x: number
+      y: number
+      w: number
+      h: number
+      status: number
+      color: string
+    }
+    let bricks: Brick[][] = []
+
+    let rightPressed = false
+    let leftPressed = false
+
+    /**
+     * LÓGICA DEL JUEGO
+     */
+    function initGameObjects() {
+      paddle.x = (INTERNAL_WIDTH - paddle.width) / 2
+      paddle.y = INTERNAL_HEIGHT - 100
+
+      bricks = []
+      const totalPadding = brickInfo.padding * (brickInfo.cols + 1)
+      const availableWidth = INTERNAL_WIDTH - totalPadding
+      const brickWidth = availableWidth / brickInfo.cols
+      const colors = ['#FF0055', '#FF7700', '#FFDD00', '#00FF55', '#0099FF', '#CC00FF']
+
+      for (let c = 0; c < brickInfo.cols; c++) {
+        bricks[c] = []
+        for (let r = 0; r < brickInfo.rows; r++) {
+          bricks[c][r] = {
+            x: c * (brickWidth + brickInfo.padding) + brickInfo.padding,
+            y: r * (brickInfo.height + brickInfo.padding) + brickInfo.marginTop,
+            status: 1,
+            color: colors[r % colors.length],
+            w: brickWidth,
+            h: brickInfo.height,
+          }
+        }
+      }
+    }
+
+    function collisionDetection() {
+      let activeBricks = 0
+
+      // Colisiones Proyectiles vs Ladrillos
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i]
+        let projectileHit = false
+
+        for (let c = 0; c < brickInfo.cols; c++) {
+          for (let r = 0; r < brickInfo.rows; r++) {
+            const b = bricks[c][r]
+            if (b.status === 1) {
+              if (
+                p.x < b.x + b.w &&
+                p.x + p.width > b.x &&
+                p.y < b.y + b.h &&
+                p.y + p.height > b.y
+              ) {
+                b.status = 0
+                score += 10
+                playSound('hit_brick')
+                projectileHit = true
+                break
+              }
+            }
+          }
+          if (projectileHit) break
+        }
+
+        if (projectileHit) {
+          projectiles.splice(i, 1)
+        }
+      }
+
+      // Colisiones Bola vs Ladrillos
+      for (let c = 0; c < brickInfo.cols; c++) {
+        for (let r = 0; r < brickInfo.rows; r++) {
+          const b = bricks[c][r]
+          if (b.status === 1) {
+            activeBricks++
+
+            if (
+              ball.x < b.x + b.w &&
+              ball.x + ball.size > b.x &&
+              ball.y < b.y + b.h &&
+              ball.y + ball.size > b.y
+            ) {
+              const overlapLeft = ball.x + ball.size - b.x
+              const overlapRight = b.x + b.w - ball.x
+              const overlapTop = ball.y + ball.size - b.y
+              const overlapBottom = b.y + b.h - ball.y
+
+              const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom)
+
+              if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                ball.dx = -ball.dx
+                if (minOverlap === overlapLeft) ball.x = b.x - ball.size
+                else ball.x = b.x + b.w
+              } else {
+                ball.dy = -ball.dy
+                if (minOverlap === overlapTop) ball.y = b.y - ball.size
+                else ball.y = b.y + b.h
+              }
+
+              b.status = 0
+              score += 10
+              playSound('hit_brick')
+              if (ball.speed < 550) ball.speed *= 1.01
+            }
+          }
+        }
+      }
+      if (activeBricks === 0) gameOver(true)
+    }
+
+    function shoot() {
+      if (!gameRunning) return
+      if (currentCharge >= CHARGE_TIME) {
+        projectiles.push({
+          x: paddle.x + paddle.width / 2 - 2,
+          y: paddle.y,
+          width: 4,
+          height: 12,
+          speed: 600,
+        })
+        currentCharge = 0
+        playSound('shoot')
+      }
+    }
+
+    function moveEntities(dt: number) {
+      // Cargar energía
+      if (currentCharge < CHARGE_TIME) {
+        currentCharge += dt
+        if (currentCharge > CHARGE_TIME) currentCharge = CHARGE_TIME
+      }
+
+      // Mover Proyectiles
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        projectiles[i].y -= projectiles[i].speed * dt
+        if (projectiles[i].y < 0) {
+          projectiles.splice(i, 1)
+        }
+      }
+
+      const moveAmount = paddle.speed * dt
+      if (rightPressed && paddle.x < INTERNAL_WIDTH - paddle.width) {
+        paddle.x += moveAmount
+      } else if (leftPressed && paddle.x > 0) {
+        paddle.x -= moveAmount
+      }
+      paddle.x = Math.max(0, Math.min(INTERNAL_WIDTH - paddle.width, paddle.x))
+
+      if (!ball.active) {
+        ball.x = paddle.x + paddle.width / 2 - ball.size / 2
+        ball.y = paddle.y - ball.size - 2
+        return
+      }
+
+      let dirMag = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy)
+      if (dirMag === 0) dirMag = 1
+
+      const velocityX = (ball.dx / dirMag) * ball.speed * dt
+      const velocityY = (ball.dy / dirMag) * ball.speed * dt
+
+      ball.x += velocityX
+      ball.y += velocityY
+
+      if (ball.x + ball.size > INTERNAL_WIDTH) {
+        ball.x = INTERNAL_WIDTH - ball.size
+        ball.dx = -Math.abs(ball.dx)
+        playSound('wall')
+      } else if (ball.x < 0) {
+        ball.x = 0
+        ball.dx = Math.abs(ball.dx)
+        playSound('wall')
+      }
+
+      if (ball.y < 0) {
+        ball.y = 0
+        ball.dy = Math.abs(ball.dy)
+        playSound('wall')
+      }
+
+      if (ball.y > INTERNAL_HEIGHT) {
+        lives--
+        if (lives <= 0) {
+          playSound('game_over')
+          gameOver(false)
+        } else {
+          playSound('wall')
+          ball.active = false
+          ball.speed = 300
+        }
+      }
+
+      if (
+        ball.x < paddle.x + paddle.width &&
+        ball.x + ball.size > paddle.x &&
+        ball.y < paddle.y + paddle.height &&
+        ball.y + ball.size > paddle.y
+      ) {
+        ball.y = paddle.y - ball.size
+
+        const centerPaddle = paddle.x + paddle.width / 2
+        const centerBall = ball.x + ball.size / 2
+        const hitPoint = (centerBall - centerPaddle) / (paddle.width / 2)
+
+        const angle = hitPoint * (Math.PI / 3)
+
+        ball.dx = Math.sin(angle)
+        ball.dy = -Math.abs(Math.cos(angle))
+
+        playSound('hit_paddle')
+      }
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      ctx.fillStyle = '#000'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      if (gameStatus === 'start') {
+        drawStartScreen()
+        return
+      }
+
+      // Grid background
+      ctx.strokeStyle = '#222'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      for (let i = 0; i < INTERNAL_WIDTH; i += 40) {
+        ctx.moveTo(i, 0)
+        ctx.lineTo(i, INTERNAL_HEIGHT)
+      }
+      for (let i = 0; i < INTERNAL_HEIGHT; i += 40) {
+        ctx.moveTo(0, i)
+        ctx.lineTo(INTERNAL_WIDTH, i)
+      }
+      ctx.stroke()
+
+      // Score board
+      ctx.fillStyle = '#fff'
+      ctx.font = '14px "Press Start 2P"'
+      ctx.textAlign = 'left'
+      ctx.fillText(`SCORE: ${score}`, 15, 30)
+
+      // Target score
+      ctx.fillStyle = '#fbbf24'
+      ctx.font = '10px "Press Start 2P"'
+      ctx.textAlign = 'right'
+      ctx.fillText(`META: ${TARGET_SCORE}`, INTERNAL_WIDTH - 15, 30)
+
+      // Progress bar
+      drawProgressBar()
+
+      // Dibujar Ladrillos
+      for (let c = 0; c < brickInfo.cols; c++) {
+        for (let r = 0; r < brickInfo.rows; r++) {
+          const b = bricks[c][r]
+          if (b.status === 1) {
+            ctx.beginPath()
+            ctx.rect(b.x, b.y, b.w, b.h)
+            ctx.fillStyle = b.color
+            ctx.fill()
+
+            // Sombras pixel art
+            ctx.fillStyle = 'rgba(255,255,255,0.3)'
+            ctx.fillRect(b.x, b.y, b.w, 4)
+            ctx.fillRect(b.x, b.y, 4, b.h)
+
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'
+            ctx.fillRect(b.x + b.w - 4, b.y, 4, b.h)
+            ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4)
+
+            ctx.closePath()
+          }
+        }
+      }
+
+      // Dibujar Proyectiles
+      ctx.fillStyle = '#00ffcc'
+      for (const p of projectiles) {
+        ctx.fillRect(p.x, p.y, p.width, p.height)
+      }
+
+      // Pala (Diseño Pixel Art)
+      ctx.fillStyle = '#ccc'
+      ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height)
+
+      ctx.fillStyle = '#555'
+      ctx.fillRect(paddle.x, paddle.y, paddle.width, 2)
+      ctx.fillRect(paddle.x, paddle.y + paddle.height - 2, paddle.width, 2)
+      ctx.fillRect(paddle.x, paddle.y, 2, paddle.height)
+      ctx.fillRect(paddle.x + paddle.width - 2, paddle.y, 2, paddle.height)
+
+      // Barra de Energía
+      if (currentCharge > 0) {
+        const maxBarWidth = paddle.width - 8
+        const barWidth = (currentCharge / CHARGE_TIME) * maxBarWidth
+        const barColor = currentCharge >= CHARGE_TIME ? '#00ffcc' : '#0099cc'
+
+        ctx.fillStyle = barColor
+        ctx.fillRect(paddle.x + 4, paddle.y + 4, barWidth, paddle.height - 8)
+      }
+
+      // Notch Pixelado
+      ctx.fillStyle = '#222'
+      ctx.fillRect(paddle.x + paddle.width / 2 - 6, paddle.y + 2, 12, 4)
+
+      // Bola
+      ctx.beginPath()
+      ctx.rect(ball.x, ball.y, ball.size, ball.size)
+      ctx.fillStyle = '#fff'
+      ctx.shadowBlur = 10
+      ctx.shadowColor = '#fff'
+      ctx.fill()
+      ctx.shadowBlur = 0
+      ctx.closePath()
+
+      // Controles táctiles
+      drawControls()
+
+      if (gameStatus === 'win') {
+        drawWinOverlay()
+      } else if (gameStatus === 'gameover') {
+        drawGameOverOverlay()
+      }
+    }
+
+    function drawStartScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '24px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#1a4d1a'
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 57)
+      ctx.fillStyle = '#00ffcc'
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 60)
+
+      ctx.fillStyle = '#1a4d1a'
+      ctx.fillText('BREAKER', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 17)
+      ctx.fillStyle = '#00ffcc'
+      ctx.fillText('BREAKER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
+
+      // Blink instruction
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 40)
+      }
+
+      // Instructions
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.font = '8px "Press Start 2P"'
+      ctx.fillText('¡DESTRUYE TODOS', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 60)
+      ctx.fillText('LOS BLOQUES!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 45)
+      ctx.fillText(`OBJETIVO: ${TARGET_SCORE} PTS`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 25)
+    }
+
+    function drawProgressBar() {
+      if (!ctx) return
+
+      const barWidth = INTERNAL_WIDTH - 40
+      const barHeight = 10
+      const barX = 20
+      const barY = 50
+
+      // Background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+      ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4)
+
+      ctx.fillStyle = '#333'
+      ctx.fillRect(barX, barY, barWidth, barHeight)
+
+      // Progress
+      const progress = Math.min(score / TARGET_SCORE, 1)
+      const progressGradient = ctx.createLinearGradient(
+        barX,
+        barY,
+        barX + barWidth * progress,
+        barY
+      )
+      progressGradient.addColorStop(0, '#00ffcc')
+      progressGradient.addColorStop(1, '#0099cc')
+      ctx.fillStyle = progressGradient
+      ctx.fillRect(barX, barY, barWidth * progress, barHeight)
+
+      // Text
+      ctx.fillStyle = '#fff'
+      ctx.font = '7px "Press Start 2P"'
+      ctx.textAlign = 'center'
+      ctx.fillText(`${score}/${TARGET_SCORE}`, INTERNAL_WIDTH / 2, barY + 8)
+    }
+
+    function drawControls() {
+      if (!ctx) return
+
+      const btnSize = 60
+      const btnY = INTERNAL_HEIGHT - 80
+      const margin = 20
+
+      // Left button
+      ctx.fillStyle = leftPressed ? '#555' : '#444'
+      ctx.fillRect(margin, btnY, btnSize, btnSize)
+      ctx.strokeStyle = '#222'
+      ctx.lineWidth = 4
+      ctx.strokeRect(margin, btnY, btnSize, btnSize)
+      ctx.fillStyle = leftPressed ? '#fff' : '#00ffcc'
+      ctx.font = '24px "Press Start 2P"'
+      ctx.textAlign = 'center'
+      ctx.fillText('←', margin + btnSize / 2, btnY + btnSize / 2 + 8)
+
+      // Right button
+      ctx.fillStyle = rightPressed ? '#555' : '#444'
+      ctx.fillRect(INTERNAL_WIDTH - margin - btnSize, btnY, btnSize, btnSize)
+      ctx.strokeStyle = '#222'
+      ctx.lineWidth = 4
+      ctx.strokeRect(INTERNAL_WIDTH - margin - btnSize, btnY, btnSize, btnSize)
+      ctx.fillStyle = rightPressed ? '#fff' : '#00ffcc'
+      ctx.fillText('→', INTERNAL_WIDTH - margin - btnSize / 2, btnY + btnSize / 2 + 8)
+    }
+
+    function drawWinOverlay() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.8)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '22px "Press Start 2P"'
+
+      // Shadow
+      ctx.fillStyle = '#005544'
+      ctx.fillText('¡VICTORIA!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 27)
+
+      // Title
+      ctx.fillStyle = '#00ffcc'
+      ctx.fillText('¡VICTORIA!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 30)
+
+      ctx.font = '14px "Press Start 2P"'
+      ctx.fillStyle = '#fff'
+      ctx.fillText(`PUNTOS: ${score}`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 60)
+      }
+    }
+
+    function drawGameOverOverlay() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.8)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '22px "Press Start 2P"'
+
+      // Shadow
+      ctx.fillStyle = '#550000'
+      ctx.fillText('GAME OVER', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 27)
+
+      // Title
+      ctx.fillStyle = '#ff0055'
+      ctx.fillText('GAME OVER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 30)
+
+      ctx.font = '14px "Press Start 2P"'
+      ctx.fillStyle = '#fff'
+      ctx.fillText(`PUNTOS: ${score}`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText('CLICK PARA REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 60)
+      }
+    }
+
+    function startGame() {
+      initAudio()
+      initGameObjects()
+      score = 0
+      lives = 1
+      currentCharge = 0
+      projectiles = []
+      ball.active = false
+      ball.speed = 300
+
+      gameStatus = 'playing'
+      gameRunning = true
+      lastTime = performance.now()
+      animationId = requestAnimationFrame(gameLoop)
+
+      // Reproducir música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+
+      setTimeout(() => {
+        if (gameRunning) {
+          ball.active = true
+          ball.dx = Math.random() < 0.5 ? -1 : 1
+          ball.dy = -1
+        }
+      }, 800)
+    }
+
+    function gameOver(win: boolean) {
+      gameRunning = false
+      cancelAnimationFrame(animationId)
+      bgMusic.pause()
+
+      if (win) {
+        gameStatus = 'win'
+        playSound('win')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 1500)
+      } else {
+        gameStatus = 'gameover'
+      }
+    }
+
+    function gameLoop(timeStamp: number) {
+      const dt = (timeStamp - lastTime) / 1000 || 0
+      lastTime = timeStamp
+
+      if (gameRunning) {
+        moveEntities(dt)
+        collisionDetection()
+
+        // Check win by score
+        if (score >= TARGET_SCORE && gameStatus === 'playing') {
+          gameOver(true)
+        }
+      }
+
+      draw()
+
+      if (gameRunning || gameStatus === 'start' || gameStatus === 'gameover') {
+        animationId = requestAnimationFrame(gameLoop)
+      }
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function getCanvasCoords(event: MouseEvent | Touch) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      }
+    }
+
+    function handleInput(key: string, pressed: boolean) {
+      if (key === 'right') {
+        rightPressed = pressed
+      } else if (key === 'left') {
+        leftPressed = pressed
+      }
+    }
+
+    function handleInputStart(e: MouseEvent | Touch) {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      const pos = getCanvasCoords(e)
+
+      if (gameStatus === 'start' || gameStatus === 'gameover') {
+        startGame()
+        return
+      }
+
+      if (gameStatus !== 'playing') return
+
+      // Check control buttons
+      const btnSize = 60
+      const btnY = INTERNAL_HEIGHT - 80
+      const margin = 20
+
+      // Left button
+      if (
+        pos.x >= margin &&
+        pos.x <= margin + btnSize &&
+        pos.y >= btnY &&
+        pos.y <= btnY + btnSize
+      ) {
+        handleInput('left', true)
+        return
+      }
+
+      // Right button
+      if (
+        pos.x >= INTERNAL_WIDTH - margin - btnSize &&
+        pos.x <= INTERNAL_WIDTH - margin &&
+        pos.y >= btnY &&
+        pos.y <= btnY + btnSize
+      ) {
+        handleInput('right', true)
+        return
+      }
+
+      // Tap anywhere else to shoot
+      shoot()
+    }
+
+    function handleInputEnd(e: MouseEvent | Touch) {
+      const pos = getCanvasCoords(e)
+      const btnSize = 60
+      const btnY = INTERNAL_HEIGHT - 80
+      const margin = 20
+
+      // Release left
+      if (
+        pos.x >= margin &&
+        pos.x <= margin + btnSize &&
+        pos.y >= btnY &&
+        pos.y <= btnY + btnSize
+      ) {
+        handleInput('left', false)
+      }
+
+      // Release right
+      if (
+        pos.x >= INTERNAL_WIDTH - margin - btnSize &&
+        pos.x <= INTERNAL_WIDTH - margin &&
+        pos.y >= btnY &&
+        pos.y <= btnY + btnSize
+      ) {
+        handleInput('right', false)
+      }
+    }
+
+    function initArkanoidGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      canvas.addEventListener('mousedown', handleInputStart)
+      canvas.addEventListener('mouseup', (e) => handleInputEnd(e))
+      canvas.addEventListener('mouseleave', () => {
+        handleInput('left', false)
+        handleInput('right', false)
+      })
+
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          for (let i = 0; i < e.touches.length; i++) {
+            handleInputStart(e.touches[i])
+          }
+        },
+        { passive: false }
+      )
+
+      canvas.addEventListener(
+        'touchend',
+        (e) => {
+          e.preventDefault()
+          handleInput('left', false)
+          handleInput('right', false)
+        },
+        { passive: false }
+      )
+
+      // Keyboard controls
+      document.addEventListener('keydown', (e) => {
+        if (['Right', 'ArrowRight', 'd'].includes(e.key)) handleInput('right', true)
+        if (['Left', 'ArrowLeft', 'a'].includes(e.key)) handleInput('left', true)
+        if (['Space', 'ArrowUp', ' '].includes(e.key)) shoot()
+      })
+
+      document.addEventListener('keyup', (e) => {
+        if (['Right', 'ArrowRight', 'd'].includes(e.key)) handleInput('right', false)
+        if (['Left', 'ArrowLeft', 'a'].includes(e.key)) handleInput('left', false)
+      })
+
+      document.fonts.ready.then(() => {
+        gameStatus = 'start'
+        lastTime = performance.now()
+        animationId = requestAnimationFrame(gameLoop)
+      })
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initArkanoidGame()
+    })
+  })()
+</script>
