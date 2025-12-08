@@ -12,7 +12,9 @@ import vercel from '@astrojs/vercel'
 export default defineConfig({
   site: 'https://www.bigibai.com',
   adapter: vercel(),
-  integrations: [sitemap()],
+  integrations: [sitemap({
+    filter: (page) => !page.includes('/admin')
+  })],
   output: 'server',
   vite: {
     plugins: [tailwindcss()],

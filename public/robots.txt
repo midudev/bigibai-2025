@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin
 
 # Sitemap
 Sitemap: https://www.bigibai.com/sitemap-index.xml
