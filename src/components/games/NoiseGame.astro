@@ -1,0 +1,729 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  maxNoise: 50,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="noiseCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #noiseCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const INTERNAL_WIDTH = 180
+    const INTERNAL_HEIGHT = 320
+    const MAX_NOISE = 50
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playTone(
+      freq: number,
+      type: OscillatorType,
+      duration: number,
+      release: number,
+      slide = false
+    ) {
+      if (!audioCtx) return
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+
+      osc.type = type
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+      if (slide) {
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + duration)
+      }
+
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration + release)
+
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+
+      osc.start()
+      osc.stop(audioCtx.currentTime + duration + release)
+    }
+
+    const SoundFX = {
+      bounce: () => playTone(440, 'square', 0.1, 0.05),
+      heavyBounce: () => playTone(220, 'sawtooth', 0.2, 0.1),
+      hit: () => playTone(150, 'sawtooth', 0.3, 0.2, true),
+      win: () => {
+        playTone(440, 'sine', 0.1, 0)
+        setTimeout(() => playTone(554, 'sine', 0.1, 0), 100)
+        setTimeout(() => playTone(659, 'sine', 0.4, 0), 200)
+      },
+      lose: () => {
+        playTone(300, 'sawtooth', 0.2, 0)
+        setTimeout(() => playTone(200, 'sawtooth', 0.4, 0), 150)
+      },
+    }
+
+    /**
+     * SPRITES 8x8
+     */
+    const sprites: Record<string, number[][]> = {
+      note1: [
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 1, 1, 1, 1, 0, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 0, 0],
+      ],
+      note2: [
+        [0, 0, 1, 0, 0, 0, 1, 0],
+        [0, 0, 1, 0, 0, 0, 1, 0],
+        [0, 0, 1, 1, 1, 1, 1, 0],
+        [0, 0, 1, 0, 0, 0, 1, 0],
+        [0, 1, 1, 0, 0, 1, 1, 0],
+        [1, 1, 1, 0, 1, 1, 1, 0],
+        [1, 1, 1, 0, 1, 1, 1, 0],
+        [0, 1, 0, 0, 0, 1, 0, 0],
+      ],
+      note3: [
+        [0, 0, 1, 1, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0, 1, 0, 0],
+        [1, 1, 0, 0, 0, 0, 1, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 1, 0],
+        [0, 1, 1, 0, 0, 1, 0, 0],
+        [0, 0, 1, 1, 1, 0, 0, 0],
+      ],
+      note4: [
+        [0, 0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 0, 0],
+      ],
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('noiseCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Estado del juego
+    let gameStatus: 'start' | 'playing' | 'gameover' | 'win' = 'start'
+    let animationId: number
+    let lives = 3
+    let noiseCount = 0
+    let spawnRate = 140
+    let frameCount = 0
+    let screenShake = 0
+
+    // Input
+    let inputY = INTERNAL_HEIGHT / 2
+
+    // Entidades
+    let player: Paddle
+    let projectiles: Projectile[] = []
+    let particles: Particle[] = []
+
+    /**
+     * CLASES
+     */
+    class Paddle {
+      width = 8
+      height = 40
+      x = 10
+      y = INTERNAL_HEIGHT / 2 - 20
+      color = '#4dff4d'
+      glow = 0
+
+      update() {
+        let targetY = inputY - this.height / 2
+        if (targetY < 0) targetY = 0
+        if (targetY + this.height > INTERNAL_HEIGHT) targetY = INTERNAL_HEIGHT - this.height
+        this.y += (targetY - this.y) * 0.25
+
+        if (this.glow > 0) this.glow--
+      }
+
+      draw() {
+        if (!ctx) return
+        ctx.fillStyle = this.glow > 0 ? '#ffffff' : this.color
+        ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height)
+        ctx.strokeStyle = '#2a8a2a'
+        ctx.lineWidth = 1
+        ctx.strokeRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height)
+
+        if (this.glow > 0) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.glow / 10})`
+          ctx.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4)
+        }
+      }
+    }
+
+    class Projectile {
+      variant: 'heavy' | 'fast' | 'normal'
+      size: number
+      spriteKey: string
+      vx: number
+      vy: number
+      color: string
+      mass: number
+      x: number
+      y: number
+      bounced = false
+      active = true
+      wobble = Math.random() * Math.PI * 2
+
+      constructor() {
+        const rand = Math.random()
+
+        if (rand < 0.15) {
+          this.variant = 'heavy'
+          this.size = 16
+          this.spriteKey = 'note4'
+          this.vx = -(0.5 + Math.random() * 0.5)
+          this.vy = (Math.random() < 0.5 ? -1 : 1) * (0.8 + Math.random() * 0.5)
+          this.color = '#ff6600'
+          this.mass = 2
+        } else if (rand < 0.3) {
+          this.variant = 'fast'
+          this.size = 6
+          this.spriteKey = 'note3'
+          this.vx = -(1.3 + Math.random() * 0.5)
+          this.vy = (Math.random() - 0.5) * 0.5
+          this.color = '#ccff00'
+          this.mass = 0.5
+        } else {
+          this.variant = 'normal'
+          this.size = 8
+          this.spriteKey = Math.random() > 0.5 ? 'note1' : 'note2'
+          this.vx = -(1.0 + Math.random() * 0.6)
+          this.vy = (Math.random() - 0.5) * 0.5
+          this.color = Math.random() > 0.5 ? '#ff00ff' : '#00ffff'
+          this.mass = 1
+        }
+
+        this.x = INTERNAL_WIDTH + 10
+
+        const safePadding = 25
+        const safeHeight = INTERNAL_HEIGHT - safePadding * 2 - this.size
+        this.y = safePadding + Math.random() * safeHeight
+
+        if (this.y < 0) this.y = 0
+        if (this.y > INTERNAL_HEIGHT) this.y = INTERNAL_HEIGHT
+      }
+
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+
+        if (this.variant === 'normal') {
+          this.y += Math.sin(this.wobble) * 0.2
+          this.wobble += 0.1
+        }
+
+        // Rebote en paredes superior/inferior
+        if (this.y <= 0 || this.y + this.size >= INTERNAL_HEIGHT) {
+          this.vy = -this.vy
+          if (this.y <= 0) this.y = 0
+          if (this.y + this.size >= INTERNAL_HEIGHT) this.y = INTERNAL_HEIGHT - this.size
+        }
+
+        // Colisión con Paleta
+        if (
+          !this.bounced &&
+          this.x < player.x + player.width &&
+          this.x + this.size > player.x &&
+          this.y < player.y + player.height &&
+          this.y + this.size > player.y
+        ) {
+          this.bounce()
+        }
+
+        // Fallo (Sale por izquierda)
+        if (this.x < -20) {
+          this.active = false
+          loseLife()
+        }
+
+        // Éxito (Sale por derecha tras rebote)
+        if (this.bounced && this.x > INTERNAL_WIDTH + 20) {
+          this.active = false
+        }
+      }
+
+      bounce() {
+        this.vx = Math.abs(this.vx) * 1.2
+        this.bounced = true
+        this.color = '#ffff00'
+
+        if (this.variant === 'heavy') SoundFX.heavyBounce()
+        else SoundFX.bounce()
+
+        player.glow = 10
+        createParticles(this.x, this.y, this.color, this.variant === 'heavy' ? 12 : 5)
+
+        screenShake = this.variant === 'heavy' ? 8 : 4
+      }
+
+      draw() {
+        if (!ctx) return
+        const spriteMap = sprites[this.spriteKey]
+        ctx.fillStyle = this.color
+
+        let scale = this.variant === 'heavy' ? 2 : this.variant === 'fast' ? 0.8 : 1
+
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            if (spriteMap[r][c] === 1) {
+              ctx.fillRect(
+                Math.floor(this.x + c * scale),
+                Math.floor(this.y + r * scale),
+                Math.ceil(scale),
+                Math.ceil(scale)
+              )
+            }
+          }
+        }
+      }
+    }
+
+    class Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      life: number
+      color: string
+
+      constructor(x: number, y: number, color: string) {
+        this.x = x
+        this.y = y
+        this.vx = (Math.random() - 0.5) * 4
+        this.vy = (Math.random() - 0.5) * 4
+        this.life = 20 + Math.random() * 10
+        this.color = color
+      }
+
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+        this.life--
+      }
+
+      draw() {
+        if (!ctx) return
+        ctx.fillStyle = this.color
+        ctx.globalAlpha = this.life / 30
+        ctx.fillRect(this.x, this.y, 2, 2)
+        ctx.globalAlpha = 1
+      }
+    }
+
+    function createParticles(x: number, y: number, color: string, amount = 8) {
+      for (let i = 0; i < amount; i++) {
+        particles.push(new Particle(x, y, color))
+      }
+    }
+
+    /**
+     * LÓGICA DEL JUEGO
+     */
+    function init() {
+      player = new Paddle()
+      projectiles = []
+      particles = []
+      lives = 3
+      noiseCount = 0
+      spawnRate = 140
+      frameCount = 0
+    }
+
+    function spawnEnemy() {
+      if (noiseCount >= MAX_NOISE) return
+
+      projectiles.push(new Projectile())
+      noiseCount++
+
+      if (spawnRate > 50) spawnRate -= 0.2
+    }
+
+    function loseLife() {
+      lives--
+      screenShake = 15
+      SoundFX.hit()
+
+      if (!ctx) return
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      if (lives <= 0) {
+        gameOver()
+      }
+    }
+
+    function startGame() {
+      initAudio()
+      gameStatus = 'playing'
+      init()
+      gameLoop()
+    }
+
+    function gameOver() {
+      gameStatus = 'gameover'
+      SoundFX.lose()
+    }
+
+    function winGame() {
+      gameStatus = 'win'
+      SoundFX.win()
+
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('game-completed'))
+      }, 1500)
+    }
+
+    function update() {
+      if (gameStatus !== 'playing') return
+
+      // Screen Shake
+      let shakeX = 0
+      let shakeY = 0
+      if (screenShake > 0) {
+        shakeX = (Math.random() - 0.5) * screenShake
+        shakeY = (Math.random() - 0.5) * screenShake
+        screenShake *= 0.9
+        if (screenShake < 0.5) screenShake = 0
+      }
+
+      if (!ctx) return
+
+      ctx.save()
+      ctx.translate(shakeX, shakeY)
+
+      // Limpiar
+      ctx.fillStyle = '#0f0f1a'
+      ctx.fillRect(-10, -10, INTERNAL_WIDTH + 20, INTERNAL_HEIGHT + 20)
+
+      // Fondo estrellas
+      ctx.fillStyle = '#1a1a2e'
+      for (let i = 0; i < 20; i++) {
+        const sx = (i * 37) % INTERNAL_WIDTH
+        const sy = (i * 91) % INTERNAL_HEIGHT
+        ctx.fillRect(sx, sy, 1, 1)
+      }
+
+      player.update()
+      player.draw()
+
+      // Spawner
+      frameCount++
+      if (frameCount >= Math.floor(spawnRate) && noiseCount < MAX_NOISE) {
+        spawnEnemy()
+        frameCount = 0
+      }
+
+      // Check Win Condition
+      const activeEnemies = projectiles.filter((p) => p.active).length
+      if (noiseCount === MAX_NOISE && activeEnemies === 0 && lives > 0) {
+        winGame()
+      }
+
+      // Update Projectiles
+      projectiles.forEach((p) => {
+        p.update()
+        if (p.active) p.draw()
+      })
+
+      // Limpiar inactivos
+      projectiles = projectiles.filter((p) => p.active)
+
+      // Partículas
+      particles.forEach((p) => {
+        p.update()
+        p.draw()
+      })
+      particles = particles.filter((p) => p.life > 0)
+
+      ctx.restore()
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      ctx.fillStyle = '#0f0f1a'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      if (gameStatus === 'start') {
+        drawStartScreen()
+        return
+      }
+
+      if (gameStatus === 'playing') {
+        // UI Layer - HUD
+        drawHUD()
+      }
+
+      if (gameStatus === 'gameover') {
+        drawGameOverScreen()
+      }
+
+      if (gameStatus === 'win') {
+        drawWinScreen()
+      }
+    }
+
+    function drawHUD() {
+      if (!ctx) return
+
+      // Fondo del HUD
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'
+      ctx.fillRect(5, 5, INTERNAL_WIDTH - 10, 30)
+
+      ctx.font = '8px "Press Start 2P"'
+      ctx.textAlign = 'left'
+
+      // Ruido
+      ctx.fillStyle = '#4dff4d'
+      ctx.fillText(`RUIDO: ${noiseCount}/${MAX_NOISE}`, 10, 18)
+
+      // Vidas
+      ctx.fillStyle = '#ff4d4d'
+      ctx.textAlign = 'right'
+      ctx.fillText('♥'.repeat(lives), INTERNAL_WIDTH - 10, 28)
+    }
+
+    function drawStartScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '14px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#000'
+      ctx.fillText('DEFENSA', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 42)
+      ctx.fillStyle = '#e0e0ff'
+      ctx.fillText('DEFENSA', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 44)
+
+      ctx.fillStyle = '#000'
+      ctx.fillText('SILENCIOSA', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 22)
+      ctx.fillStyle = '#e0e0ff'
+      ctx.fillText('SILENCIOSA', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 24)
+
+      // Instructions
+      ctx.fillStyle = '#a0a0c0'
+      ctx.font = '6px "Press Start 2P"'
+      ctx.fillText('Usa el ratón o dedo', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
+      ctx.fillText('Ritmo más relajado', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 25)
+      ctx.fillText('Activa el sonido', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 40)
+
+      // Button
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+      }
+    }
+
+    function drawGameOverScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '12px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#550000'
+      ctx.fillText('¡RUIDO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 32)
+      ctx.fillText('TOTAL!', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 12)
+      ctx.fillStyle = '#ff4d4d'
+      ctx.fillText('¡RUIDO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 34)
+      ctx.fillText('TOTAL!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 14)
+
+      ctx.fillStyle = '#a0a0c0'
+      ctx.font = '7px "Press Start 2P"'
+      ctx.fillText('El silencio se ha roto', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 15)
+      ctx.fillText(
+        `Progreso: ${Math.floor((noiseCount / MAX_NOISE) * 100)}%`,
+        INTERNAL_WIDTH / 2,
+        INTERNAL_HEIGHT / 2 + 35
+      )
+
+      // Button
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.fillText('CLICK REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+      }
+    }
+
+    function drawWinScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '10px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#005500'
+      ctx.fillText('¡SILENCIO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 32)
+      ctx.fillText('LOGRADO!', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 12)
+      ctx.fillStyle = '#4dff4d'
+      ctx.fillText('¡SILENCIO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 34)
+      ctx.fillText('LOGRADO!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 14)
+
+      ctx.fillStyle = '#a0a0c0'
+      ctx.font = '7px "Press Start 2P"'
+      ctx.fillText('Has bloqueado el caos', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 15)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 50)
+      }
+    }
+
+    function gameLoop() {
+      if (gameStatus === 'playing') {
+        update()
+      }
+
+      draw()
+
+      if (gameStatus === 'playing' || gameStatus === 'start' || gameStatus === 'gameover') {
+        animationId = requestAnimationFrame(gameLoop)
+      }
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function getCanvasCoords(event: MouseEvent | Touch) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleY = INTERNAL_HEIGHT / rect.height
+      return (event.clientY - rect.top) * scaleY
+    }
+
+    function handleInputStart(e: MouseEvent | Touch) {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      if (gameStatus === 'start' || gameStatus === 'gameover') {
+        startGame()
+        return
+      }
+
+      if (gameStatus === 'playing') {
+        inputY = getCanvasCoords(e)
+      }
+    }
+
+    function handleInputMove(e: MouseEvent | Touch) {
+      if (gameStatus === 'playing') {
+        inputY = getCanvasCoords(e)
+      }
+    }
+
+    function initNoiseGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      // Mouse
+      canvas.addEventListener('mousemove', (e) => {
+        handleInputMove(e)
+      })
+
+      canvas.addEventListener('mousedown', (e) => {
+        handleInputStart(e)
+      })
+
+      // Touch
+      canvas.addEventListener(
+        'touchmove',
+        (e) => {
+          e.preventDefault()
+          handleInputMove(e.touches[0])
+        },
+        { passive: false }
+      )
+
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          handleInputStart(e.touches[0])
+        },
+        { passive: false }
+      )
+
+      document.fonts.ready.then(() => {
+        gameStatus = 'start'
+        init()
+        animationId = requestAnimationFrame(gameLoop)
+      })
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initNoiseGame()
+    })
+  })()
+</script>
