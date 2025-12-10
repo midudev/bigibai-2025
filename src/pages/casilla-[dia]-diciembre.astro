@@ -20,6 +20,7 @@ import ArkanoidGame from '@/components/games/ArkanoidGame.astro'
 import SeaGame from '@/components/games/SeaGame.astro'
 import NoiseGame from '@/components/games/NoiseGame.astro'
 import WalkingGame from '@/components/games/WalkingGame.astro'
+import WindowsGame from '@/components/games/WindowsGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 import SafariGame from '@/components/games/SafariGame.astro'
@@ -295,6 +296,7 @@ if (user) {
             {gameType === 'sea' && <SeaGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'noise' && <NoiseGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'walking' && <WalkingGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'windows' && <WindowsGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
