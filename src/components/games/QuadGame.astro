@@ -1,0 +1,1069 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetDistance: 1000,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="quad-game-container" slot="game">
+    <canvas id="quadCanvas"></canvas>
+
+    <div id="touch-left" class="touch-zone"></div>
+    <div id="touch-right" class="touch-zone"></div>
+
+    <!-- Botones Visuales -->
+    <div class="controls-container">
+      <div id="visual-left" class="control-btn">⬅</div>
+      <div id="visual-right" class="control-btn">➡</div>
+    </div>
+
+    <div id="start-screen" class="screen-overlay">
+      <h1>QUAD<br />DESERT<br />RUSH <span>DX</span></h1>
+      <p>ESQUIVA OBSTÁCULOS<br />SALTA COLINAS<br />USA EL TURBO</p>
+      <p class="score-display">META: 1000m</p>
+      <button class="btn-game" id="btn-start">JUGAR</button>
+    </div>
+
+    <div id="game-over-screen" class="screen-overlay hidden">
+      <h1 class="crash-title">¡CRASH!</h1>
+      <p class="score-display" id="final-score">Distancia: 0m</p>
+      <button class="btn-game" id="btn-restart">REINTENTAR</button>
+    </div>
+
+    <div id="win-screen" class="screen-overlay hidden">
+      <h1 class="win-title">¡VICTORIA!</h1>
+      <p>¡HAS CONQUISTADO EL DESIERTO!</p>
+      <p class="score-display">1000m COMPLETADOS</p>
+      <p class="desbloqueando-text">DESBLOQUEANDO...</p>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #quad-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    touch-action: none;
+    user-select: none;
+  }
+
+  #quadCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .screen-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    pointer-events: auto;
+    z-index: 20;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  h1 {
+    font-size: 20px;
+    color: #ffcc00;
+    text-shadow: 4px 4px #8b4513;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  h1 span {
+    font-size: 14px;
+    color: #ff6600;
+  }
+
+  .crash-title {
+    color: #ff4444;
+    text-shadow: 4px 4px #330000;
+  }
+
+  .win-title {
+    color: #44ff44;
+    text-shadow: 4px 4px #003300;
+  }
+
+  p {
+    font-size: 10px;
+    color: #ddd;
+    margin-bottom: 15px;
+    line-height: 1.8;
+    text-shadow: 2px 2px #000;
+  }
+
+  .score-display {
+    font-size: 12px;
+    color: #ffcc00;
+    margin-bottom: 20px;
+  }
+
+  .btn-game {
+    font-family: 'Press Start 2P', cursive;
+    background: #ffcc00;
+    border: 4px solid #fff;
+    padding: 12px 20px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #333;
+    text-transform: uppercase;
+    box-shadow: 0 6px 0 #b8860b;
+    transition: all 0.1s;
+    text-shadow: 1px 1px #fff;
+  }
+
+  .btn-game:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #b8860b;
+  }
+
+  .desbloqueando-text {
+    animation: blink 0.5s infinite;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  /* Controles visuales */
+  .controls-container {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 15;
+  }
+
+  .control-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 28px;
+    font-weight: 900;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    padding: 0;
+    line-height: 1;
+    box-sizing: border-box;
+    font-family: sans-serif;
+  }
+
+  .control-btn.active {
+    background: rgba(255, 204, 0, 0.4);
+    border-color: #ffcc00;
+    transform: translateY(4px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.5);
+  }
+
+  /* Zonas táctiles invisibles */
+  .touch-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    z-index: 10;
+  }
+
+  #touch-left {
+    left: 0;
+  }
+
+  #touch-right {
+    right: 0;
+  }
+</style>
+
+<script>
+  ;(function () {
+    const GAME_WIDTH = 240
+    const GAME_HEIGHT = 426
+    const TARGET_DISTANCE = 10000
+    const MAX_SPEED = 3.5
+    const TURBO_SPEED = 6.5
+
+    /**
+     * AUDIO SYSTEM
+     */
+    let audioCtx: AudioContext | null = null
+    let audioReady = false
+    let engineOsc: OscillatorNode | null = null
+    let engineGain: GainNode | null = null
+    let backgroundMusic: HTMLAudioElement | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+          audioReady = true
+        })
+      } else {
+        audioReady = true
+      }
+    }
+
+    function playBackgroundMusic() {
+      if (!backgroundMusic) {
+        backgroundMusic = new Audio('https://videos.bigibai.com/music/quad.mp3')
+        backgroundMusic.loop = true
+        backgroundMusic.volume = 0.3
+      }
+      backgroundMusic.play().catch(() => {})
+    }
+
+    function stopBackgroundMusic() {
+      if (backgroundMusic) {
+        backgroundMusic.pause()
+        backgroundMusic.currentTime = 0
+      }
+    }
+
+    const SoundFX = {
+      initEngine: () => {
+        if (!audioReady || !audioCtx || engineOsc) return
+        engineOsc = audioCtx.createOscillator()
+        engineGain = audioCtx.createGain()
+
+        engineOsc.type = 'triangle'
+        engineOsc.frequency.value = 60
+
+        const filter = audioCtx.createBiquadFilter()
+        filter.type = 'lowpass'
+        filter.frequency.value = 200
+
+        engineOsc.connect(filter)
+        filter.connect(engineGain)
+        engineGain.connect(audioCtx.destination)
+
+        engineGain.gain.value = 0
+        engineOsc.start()
+      },
+      updateEngine: (speed: number, maxSpeed: number) => {
+        if (!engineOsc || !engineGain || !audioReady || !audioCtx) return
+
+        const targetFreq = 60 + (speed / maxSpeed) * 50
+        engineOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1)
+
+        const targetVol = speed > 0.1 && gameState === 'PLAYING' ? 0.08 : 0
+        engineGain.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.1)
+      },
+      stopEngine: () => {
+        if (engineGain && audioCtx) {
+          engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1)
+        }
+      },
+      playTone: (
+        type: OscillatorType,
+        freqStart: number,
+        freqEnd: number,
+        duration: number,
+        volume = 0.1
+      ) => {
+        if (!audioReady || !audioCtx || audioCtx.state === 'suspended') return
+        const oscillator = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+        oscillator.type = type
+        oscillator.frequency.setValueAtTime(freqStart, audioCtx.currentTime)
+        oscillator.frequency.exponentialRampToValueAtTime(freqEnd, audioCtx.currentTime + duration)
+        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
+        oscillator.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        oscillator.start()
+        oscillator.stop(audioCtx.currentTime + duration)
+      },
+      playNoise: (duration: number, volume = 0.2) => {
+        if (!audioReady || !audioCtx || audioCtx.state === 'suspended') return
+        const bufferSize = 2 * audioCtx.sampleRate * duration
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate)
+        const output = noiseBuffer.getChannelData(0)
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1
+        }
+        const whiteNoise = audioCtx.createBufferSource()
+        whiteNoise.buffer = noiseBuffer
+        const gainNode = audioCtx.createGain()
+        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
+        whiteNoise.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        whiteNoise.start(0)
+      },
+      slip: () => SoundFX.playNoise(0.2, 0.1),
+      jump: () => SoundFX.playTone('square', 200, 600, 0.3, 0.15),
+      turbo: () => SoundFX.playTone('sawtooth', 600, 1200, 0.5, 0.2),
+      crash: () => {
+        SoundFX.stopEngine()
+        SoundFX.playNoise(0.4, 0.3)
+      },
+      win: () => {
+        SoundFX.stopEngine()
+        ;[523.25, 659.25, 783.99, 1046.5].forEach((note) => {
+          SoundFX.playTone('square', note, note, 0.2, 0.1)
+        })
+      },
+    }
+
+    /**
+     * PALETTES & SPRITES
+     */
+    const PALETTES: Record<string, string[]> = {
+      quad: ['T', '#222', '#444', '#d32f2f', '#ff5252', '#888', '#fff'],
+      quad_slip: ['T', '#222', '#444', '#7e57c2', '#b39ddb', '#888', '#fff'],
+      rider: ['T', '#ff9800', '#e65100', '#333', '#111', '#ffe0b2'],
+      sand: ['#c2b280', '#d4c492', '#a09060'],
+      cactus: ['T', '#1b5e20', '#2e7d32', '#66bb6a'],
+      rock: ['T', '#3e2723', '#5d4037', '#8d6e63'],
+      camel: ['T', '#8d6e63', '#bcaaa4', '#efebe9'],
+      snake: ['T', '#33691e', '#689f38', '#cddc39'],
+      wood: ['T', '#3e2723', '#5d4037', '#8d6e63', '#a1887f'],
+      lightning: ['T', '#f57f17', '#fdd835', '#fff176', '#ffffff'],
+      sun: ['#ffeb3b', '#fdd835', '#f57f17'],
+    }
+
+    const SPRITES: Record<string, number[][]> = {
+      quad_f1: [
+        [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
+        [0, 1, 6, 1, 0, 5, 5, 0, 1, 6, 1, 0],
+        [0, 1, 1, 1, 5, 3, 3, 5, 1, 1, 1, 0],
+        [0, 0, 0, 0, 3, 4, 4, 3, 0, 0, 0, 0],
+        [0, 0, 0, 0, 3, 4, 4, 3, 0, 0, 0, 0],
+        [0, 1, 1, 2, 3, 4, 4, 3, 2, 1, 1, 0],
+        [1, 1, 2, 2, 3, 4, 4, 3, 2, 2, 1, 1],
+        [1, 6, 2, 2, 3, 4, 4, 3, 2, 2, 6, 1],
+        [1, 1, 2, 2, 0, 5, 5, 0, 2, 2, 1, 1],
+        [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
+      ],
+      rider: [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+        [0, 1, 0, 0, 1, 1, 6, 1, 0, 0, 1, 0],
+        [0, 5, 3, 3, 1, 1, 1, 1, 3, 3, 5, 0],
+        [0, 0, 3, 3, 4, 4, 4, 4, 3, 3, 0, 0],
+        [0, 0, 0, 3, 4, 4, 4, 4, 3, 0, 0, 0],
+        [0, 0, 0, 0, 3, 4, 4, 3, 0, 0, 0, 0],
+      ],
+      cactus: [
+        [0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 2, 3, 2, 0, 0, 0, 0, 0],
+        [0, 0, 2, 2, 2, 3, 2, 0, 2, 2, 0, 0],
+        [0, 2, 3, 3, 2, 3, 2, 2, 3, 2, 0, 0],
+        [0, 2, 3, 2, 2, 3, 2, 3, 3, 2, 0, 0],
+        [0, 2, 2, 0, 2, 3, 2, 0, 2, 2, 0, 0],
+        [0, 0, 0, 0, 2, 3, 2, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 2, 3, 2, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0],
+      ],
+      rock: [
+        [0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0],
+        [0, 0, 0, 2, 3, 3, 3, 2, 0, 0, 0],
+        [0, 0, 2, 3, 3, 3, 3, 3, 2, 0, 0],
+        [0, 2, 3, 1, 1, 3, 3, 1, 1, 2, 0],
+        [2, 3, 1, 1, 2, 2, 1, 1, 2, 3, 2],
+        [2, 3, 2, 2, 2, 2, 2, 2, 2, 3, 2],
+        [0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 0],
+      ],
+      camel: [
+        [0, 0, 0, 0, 0, 0, 2, 2, 2, 0],
+        [0, 0, 0, 0, 0, 2, 3, 1, 3, 2],
+        [0, 0, 0, 0, 0, 2, 3, 3, 3, 2],
+        [0, 0, 0, 0, 0, 0, 2, 2, 2, 0],
+        [0, 2, 3, 3, 2, 2, 2, 2, 0, 0],
+        [2, 3, 3, 3, 3, 3, 3, 3, 2, 0],
+        [2, 1, 1, 2, 2, 2, 1, 1, 2, 0],
+        [2, 1, 0, 2, 0, 2, 0, 1, 2, 0],
+        [2, 1, 0, 2, 0, 2, 0, 1, 2, 0],
+      ],
+      snake_h1: [
+        [0, 0, 0, 0, 0, 0, 2, 1, 0],
+        [0, 0, 2, 2, 1, 2, 3, 3, 1],
+        [0, 2, 3, 3, 3, 1, 0, 1, 0],
+        [2, 1, 0, 0, 0, 0, 0, 0, 0],
+      ],
+      snake_h2: [
+        [0, 0, 0, 0, 0, 0, 2, 1, 0],
+        [0, 0, 0, 2, 1, 2, 3, 3, 1],
+        [0, 2, 3, 3, 1, 1, 0, 1, 0],
+        [2, 1, 0, 0, 0, 0, 0, 0, 0],
+      ],
+      ramp: [
+        [0, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 2, 4, 4, 4, 2, 0, 0, 0, 0],
+        [0, 0, 0, 2, 3, 3, 3, 3, 3, 2, 0, 0, 0],
+        [0, 0, 2, 4, 4, 4, 4, 4, 4, 4, 2, 0, 0],
+        [0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 0],
+        [2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2],
+        [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+      ],
+      lightning: [
+        [0, 0, 0, 4, 2, 1, 0, 0],
+        [0, 0, 4, 2, 1, 3, 0, 0],
+        [0, 4, 2, 1, 3, 0, 0, 0],
+        [0, 4, 2, 3, 3, 0, 0, 0],
+        [0, 0, 4, 2, 3, 0, 0, 0],
+        [0, 0, 0, 4, 2, 3, 0, 0],
+        [0, 0, 0, 0, 4, 2, 1, 0],
+        [0, 0, 0, 4, 2, 1, 0, 0],
+        [0, 0, 4, 3, 3, 0, 0, 0],
+      ],
+    }
+
+    /**
+     * GAME STATE
+     */
+    interface Obstacle {
+      x: number
+      y: number
+      width: number
+      height: number
+      type: string
+      spriteKey: string
+      paletteKey: string
+      zBypass: boolean
+      animated: boolean
+      flipX: boolean
+    }
+
+    interface Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      life: number
+      color: string
+      size: number
+    }
+
+    interface TerrainPixel {
+      x: number
+      y: number
+      color: string
+      size: number
+    }
+
+    let gameState = 'MENU'
+    let frames = 0
+    let globalSpeed = 0
+    const playerSpeedX = 4
+
+    let distanceTraveled = 0
+    let turboMode = false
+    let turboTimer = 0
+    let shake = 0
+    let animationFrame = 0
+
+    let isSlipping = false
+    let slipTimer = 0
+    let slipDirection = 0
+
+    const player = {
+      x: GAME_WIDTH / 2 - 18,
+      y: GAME_HEIGHT - 90,
+      width: 36,
+      height: 30,
+      scale: 3,
+      z: 0,
+      velocityZ: 0,
+      isJumping: false,
+    }
+
+    let obstacles: Obstacle[] = []
+    let particles: Particle[] = []
+    let terrainPixels: TerrainPixel[] = []
+
+    const keys: Record<string, boolean> = { ArrowLeft: false, ArrowRight: false }
+
+    let canvas: HTMLCanvasElement | null = null
+    let ctx: CanvasRenderingContext2D | null = null
+
+    /**
+     * DRAWING FUNCTIONS
+     */
+    function drawPaletteSprite(
+      ctx: CanvasRenderingContext2D,
+      spriteData: number[][],
+      paletteId: string,
+      x: number,
+      y: number,
+      scale: number,
+      flipX = false
+    ) {
+      const palette = PALETTES[paletteId]
+      const rows = spriteData.length
+      const cols = spriteData[0].length
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const colIndex = flipX ? cols - 1 - c : c
+          const colorIndex = spriteData[r][colIndex]
+          const color = palette[colorIndex]
+
+          if (color && color !== 'T') {
+            ctx.fillStyle = color
+            ctx.fillRect(x + c * scale, y + r * scale, scale, scale)
+          }
+        }
+      }
+    }
+
+    function drawSun(ctx: CanvasRenderingContext2D) {
+      const progress = distanceTraveled / TARGET_DISTANCE
+      const sunX = 30 + (GAME_WIDTH - 60) * progress
+      const sunY = 30 + Math.sin(progress * Math.PI) * 10
+
+      ctx.fillStyle = 'rgba(255, 235, 59, 0.3)'
+      ctx.beginPath()
+      ctx.arc(sunX, sunY, 15, 0, Math.PI * 2)
+      ctx.fill()
+
+      ctx.fillStyle = PALETTES.sun[0]
+      const s = 4
+      ctx.fillRect(sunX - 2 * s, sunY - s, 4 * s, 2 * s)
+      ctx.fillRect(sunX - s, sunY - 2 * s, 2 * s, 4 * s)
+    }
+
+    function initTerrain() {
+      terrainPixels = []
+      for (let i = 0; i < (GAME_WIDTH * GAME_HEIGHT) / 12; i++) {
+        terrainPixels.push({
+          x: Math.random() * GAME_WIDTH,
+          y: Math.random() * GAME_HEIGHT,
+          color: PALETTES.sand[Math.random() > 0.8 ? 2 : 1],
+          size: Math.random() < 0.5 ? 1 : 2,
+        })
+      }
+    }
+
+    function spawnObstacle() {
+      const types = [
+        { type: 'cactus', sprite: 'cactus', palette: 'cactus', w: 12, h: 9, zBypass: false },
+        { type: 'rock', sprite: 'rock', palette: 'rock', w: 11, h: 7, zBypass: false },
+        {
+          type: 'snake',
+          sprite: 'snake_h1',
+          palette: 'snake',
+          w: 18,
+          h: 8,
+          zBypass: false,
+          animated: true,
+        },
+        { type: 'camel', sprite: 'camel', palette: 'camel', w: 10, h: 9, zBypass: false },
+        { type: 'ramp', sprite: 'ramp', palette: 'wood', w: 13, h: 7, zBypass: true },
+        { type: 'turbo', sprite: 'lightning', palette: 'lightning', w: 8, h: 9, zBypass: true },
+      ]
+
+      const rand = Math.random()
+      let choice
+      if (rand < 0.3) choice = types[0]
+      else if (rand < 0.5) choice = types[1]
+      else if (rand < 0.65) choice = types[2]
+      else if (rand < 0.8) choice = types[3]
+      else if (rand < 0.93) choice = types[4]
+      else choice = types[5]
+
+      const scale = 2.5
+      const obj: Obstacle = {
+        x: Math.random() * (GAME_WIDTH - choice.w * scale),
+        y: -60,
+        width: choice.w * scale,
+        height: choice.h * scale,
+        type: choice.type,
+        spriteKey: choice.sprite,
+        paletteKey: choice.palette,
+        zBypass: choice.zBypass,
+        animated: (choice as any).animated || false,
+        flipX: Math.random() < 0.5 && choice.type !== 'ramp',
+      }
+      obstacles.push(obj)
+    }
+
+    function createParticles(
+      x: number,
+      y: number,
+      colorPalette: string,
+      count: number,
+      explosive = false
+    ) {
+      for (let i = 0; i < count; i++) {
+        const speedVar = explosive ? 5 : 2
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * speedVar,
+          vy: (Math.random() - 0.5) * speedVar - (explosive ? 2 : 0),
+          life: explosive ? 40 : 20,
+          color: PALETTES[colorPalette] ? PALETTES[colorPalette][1] : '#fff',
+          size: Math.random() * 3 + 1,
+        })
+      }
+    }
+
+    function update() {
+      if (gameState !== 'PLAYING') return
+
+      SoundFX.updateEngine(globalSpeed, turboMode ? TURBO_SPEED : MAX_SPEED)
+
+      if (frames % 20 === 0) animationFrame = (animationFrame + 1) % 2
+
+      const targetSpeed = turboMode ? TURBO_SPEED : MAX_SPEED
+      if (globalSpeed < targetSpeed) globalSpeed += 0.02
+      if (globalSpeed > targetSpeed) globalSpeed -= 0.1
+
+      distanceTraveled += globalSpeed
+
+      if (distanceTraveled >= TARGET_DISTANCE) {
+        gameState = 'WIN'
+        stopBackgroundMusic()
+        SoundFX.win()
+        document.getElementById('win-screen')?.classList.remove('hidden')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 1500)
+        return
+      }
+
+      if (isSlipping) {
+        player.x += slipDirection * 3
+        slipTimer--
+        shake = 2
+        if (slipTimer <= 0) {
+          isSlipping = false
+        }
+      } else {
+        if (keys.ArrowLeft) player.x -= playerSpeedX
+        if (keys.ArrowRight) player.x += playerSpeedX
+      }
+
+      const playerActualWidth = player.width
+      if (player.x < 2) {
+        player.x = 2
+        if (isSlipping) slipDirection *= -1
+      }
+      if (player.x > GAME_WIDTH - playerActualWidth - 2) {
+        player.x = GAME_WIDTH - playerActualWidth - 2
+        if (isSlipping) slipDirection *= -1
+      }
+
+      if (player.isJumping) {
+        player.z += player.velocityZ
+        player.velocityZ -= 0.5
+        if (player.z <= 0) {
+          player.z = 0
+          player.isJumping = false
+          createParticles(player.x + playerActualWidth / 2, player.y + player.height, 'sand', 6)
+          shake = 2
+        }
+      }
+
+      if (turboMode) {
+        turboTimer--
+        shake = Math.max(shake, 1.5)
+        if (turboTimer <= 0) {
+          turboMode = false
+        }
+      }
+
+      const spawnRate = Math.floor(70 - globalSpeed * 3)
+      if (frames % spawnRate === 0) {
+        spawnObstacle()
+      }
+
+      obstacles.forEach((obs) => {
+        obs.y += globalSpeed
+
+        if (obs.animated && obs.type === 'snake') {
+          obs.spriteKey = animationFrame === 0 ? 'snake_h1' : 'snake_h2'
+        }
+
+        const pBox = {
+          x: player.x + 8,
+          y: player.y + 15 - player.z,
+          w: playerActualWidth - 16,
+          h: player.height - 10,
+        }
+
+        const obsBox = {
+          x: obs.x + 4,
+          y: obs.y + 4,
+          w: obs.width - 8,
+          h: obs.height - 8,
+        }
+
+        const isFlying = player.z > 15
+
+        if (
+          pBox.x < obsBox.x + obsBox.w &&
+          pBox.x + pBox.w > obsBox.x &&
+          pBox.y < obsBox.y + obsBox.h &&
+          pBox.y + pBox.h > obsBox.y
+        ) {
+          if (obs.type === 'turbo') {
+            SoundFX.turbo()
+            turboMode = true
+            turboTimer = 250
+            obs.y = GAME_HEIGHT + 100
+            createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, 'lightning', 12, true)
+            shake = 5
+          } else if (obs.type === 'ramp') {
+            if (!player.isJumping && player.z < 10) {
+              SoundFX.jump()
+              player.isJumping = true
+              player.velocityZ = 9
+            }
+          } else if (obs.type === 'snake') {
+            if (!isSlipping && !turboMode && !isFlying) {
+              SoundFX.slip()
+              isSlipping = true
+              slipTimer = 40
+              slipDirection = Math.random() < 0.5 ? -1 : 1
+              createParticles(player.x + 10, player.y + 20, 'snake', 5)
+            } else if (turboMode) {
+              obs.y = GAME_HEIGHT + 100
+              createParticles(obs.x, obs.y, 'snake', 5)
+            }
+          } else {
+            if (turboMode) {
+              SoundFX.crash()
+              obs.y = GAME_HEIGHT + 100
+              createParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.paletteKey, 8)
+              shake = 4
+            } else {
+              const canJumpOver = obs.type === 'rock' || obs.type === 'cactus'
+              if (isFlying && canJumpOver) {
+                // Safe
+              } else {
+                gameOver()
+              }
+            }
+          }
+        }
+      })
+
+      obstacles = obstacles.filter((obs) => obs.y < GAME_HEIGHT + 20)
+
+      terrainPixels.forEach((p) => {
+        p.y += globalSpeed
+        if (p.y > GAME_HEIGHT) p.y = -10
+      })
+
+      particles.forEach((p) => {
+        p.x += p.vx
+        p.y += p.vy
+        p.life--
+        p.size *= 0.95
+      })
+      particles = particles.filter((p) => p.life > 0)
+
+      frames++
+    }
+
+    function gameOver() {
+      if (gameState === 'GAMEOVER') return
+      SoundFX.crash()
+      stopBackgroundMusic()
+      gameState = 'GAMEOVER'
+      const m = Math.floor(distanceTraveled / 10)
+      const finalScore = document.getElementById('final-score')
+      if (finalScore) finalScore.innerText = `Distancia: ${m}m / 1000m`
+      document.getElementById('game-over-screen')?.classList.remove('hidden')
+      shake = 15
+      createParticles(player.x + 20, player.y + 20, 'quad', 20, true)
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      ctx.fillStyle = '#87ceeb'
+      ctx.fillRect(0, 0, GAME_WIDTH, 60)
+
+      drawSun(ctx)
+
+      ctx.fillStyle = '#d7ccc8'
+      ctx.beginPath()
+      ctx.moveTo(0, 60)
+      for (let i = 0; i <= GAME_WIDTH; i += 10) {
+        ctx.lineTo(i, 60 - Math.sin(i / 40 + distanceTraveled / 800) * 15)
+      }
+      ctx.lineTo(GAME_WIDTH, 60)
+      ctx.fill()
+
+      ctx.fillStyle = PALETTES.sand[0]
+      ctx.fillRect(0, 60, GAME_WIDTH, GAME_HEIGHT - 60)
+
+      let sx = 0,
+        sy = 0
+      if (shake > 0) {
+        sx = (Math.random() - 0.5) * shake
+        sy = (Math.random() - 0.5) * shake
+        shake *= 0.9
+        if (shake < 0.1) shake = 0
+      }
+      ctx.save()
+      ctx.translate(Math.round(sx), Math.round(sy))
+
+      terrainPixels.forEach((p) => {
+        if (p.y > 60 && ctx) {
+          ctx.fillStyle = p.color
+          ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size)
+        }
+      })
+
+      if (turboMode) {
+        ctx.globalAlpha = 0.2
+        ctx.fillStyle = '#ffff00'
+        for (let i = 0; i < 2; i++) {
+          const w = Math.random() * 8 + 4
+          ctx.fillRect(Math.random() * GAME_WIDTH, 60, w, GAME_HEIGHT)
+        }
+        ctx.globalAlpha = 1.0
+      }
+
+      obstacles.sort((a, b) => a.y - b.y)
+      obstacles.forEach((obs) => {
+        if (!ctx) return
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'
+        ctx.fillRect(obs.x + 2, obs.y + obs.height - 2, obs.width - 4, 4)
+        drawPaletteSprite(
+          ctx,
+          SPRITES[obs.spriteKey],
+          obs.paletteKey,
+          Math.round(obs.x),
+          Math.round(obs.y),
+          2.5,
+          obs.flipX
+        )
+      })
+
+      if (gameState !== 'GAMEOVER') {
+        const pY = player.y - player.z
+
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'
+        const shadowScale = Math.max(0.6, 1 - player.z / 100)
+        const shadowW = 44 * shadowScale
+        const shadowH = 14 * shadowScale
+        ctx.fillRect(
+          player.x + player.width / 2 - shadowW / 2,
+          player.y + player.height + 4 - shadowH / 2,
+          shadowW,
+          shadowH
+        )
+
+        if (turboMode && Math.floor(frames / 5) % 2 === 0) {
+          ctx.globalCompositeOperation = 'lighter'
+        }
+
+        let bounce = globalSpeed > 0 && Math.floor(frames / 5) % 2 === 0 ? 1 : 0
+        if (player.z > 0) bounce = 0
+
+        const currentPalette = isSlipping ? 'quad_slip' : 'quad'
+
+        drawPaletteSprite(ctx, SPRITES.quad_f1, currentPalette, player.x, pY + bounce, player.scale)
+        drawPaletteSprite(ctx, SPRITES.rider, 'rider', player.x, pY + bounce - 3, player.scale)
+
+        ctx.globalCompositeOperation = 'source-over'
+      }
+
+      particles.forEach((p) => {
+        if (!ctx) return
+        ctx.fillStyle = p.color
+        ctx.fillRect(Math.round(p.x), Math.round(p.y), Math.round(p.size), Math.round(p.size))
+      })
+
+      ctx.restore()
+
+      if (gameState === 'PLAYING') {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(0, 0, GAME_WIDTH, 20)
+
+        const pct = Math.min(distanceTraveled / TARGET_DISTANCE, 1)
+
+        ctx.fillStyle = '#444'
+        ctx.fillRect(0, 0, GAME_WIDTH * pct, 20)
+
+        const grad = ctx.createLinearGradient(0, 0, GAME_WIDTH, 0)
+        grad.addColorStop(0, turboMode ? '#ffeb3b' : '#76ff03')
+        grad.addColorStop(1, turboMode ? '#f57f17' : '#00e676')
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 18, GAME_WIDTH * pct, 2)
+
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.textAlign = 'right'
+        ctx.fillText(`${Math.floor(distanceTraveled / 10)}m`, GAME_WIDTH - 10, 14)
+
+        if (turboMode) {
+          ctx.fillStyle = '#ff0'
+          ctx.textAlign = 'left'
+          ctx.fillText('TURBO!', 10, 14)
+        }
+        if (isSlipping) {
+          ctx.fillStyle = '#b39ddb'
+          ctx.textAlign = 'left'
+          ctx.fillText('¡RESBALA!', 10, 14)
+        }
+        ctx.textAlign = 'left'
+      }
+    }
+
+    function gameLoop() {
+      update()
+      draw()
+      requestAnimationFrame(gameLoop)
+    }
+
+    function startGame() {
+      initAudio()
+      playBackgroundMusic()
+      SoundFX.initEngine()
+
+      gameState = 'PLAYING'
+      obstacles = []
+      particles = []
+      distanceTraveled = 0
+      globalSpeed = 0
+      player.x = GAME_WIDTH / 2 - player.width / 2
+      player.z = 0
+      player.velocityZ = 0
+      player.isJumping = false
+      turboMode = false
+      isSlipping = false
+      shake = 0
+      frames = 0
+
+      initTerrain()
+      document.querySelectorAll('.screen-overlay').forEach((el) => el.classList.add('hidden'))
+    }
+
+    function updateVisualControls() {
+      const visualLeft = document.getElementById('visual-left')
+      const visualRight = document.getElementById('visual-right')
+      if (keys.ArrowLeft) visualLeft?.classList.add('active')
+      else visualLeft?.classList.remove('active')
+      if (keys.ArrowRight) visualRight?.classList.add('active')
+      else visualRight?.classList.remove('active')
+    }
+
+    function initQuadGame() {
+      canvas = document.getElementById('quadCanvas') as HTMLCanvasElement
+      if (!canvas) return
+
+      ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      canvas.width = GAME_WIDTH
+      canvas.height = GAME_HEIGHT
+      ctx.imageSmoothingEnabled = false
+
+      // Keyboard
+      document.addEventListener('keydown', (e) => {
+        if (keys.hasOwnProperty(e.code)) {
+          keys[e.code] = true
+          updateVisualControls()
+        }
+      })
+      document.addEventListener('keyup', (e) => {
+        if (keys.hasOwnProperty(e.code)) {
+          keys[e.code] = false
+          updateVisualControls()
+        }
+      })
+
+      // Touch zones
+      const touchLeft = document.getElementById('touch-left')
+      const touchRight = document.getElementById('touch-right')
+
+      const handleTouchStart = (dir: string) => (e: Event) => {
+        e.preventDefault()
+        keys[dir === 'left' ? 'ArrowLeft' : 'ArrowRight'] = true
+        updateVisualControls()
+      }
+
+      const handleTouchEnd = (dir: string) => (e: Event) => {
+        e.preventDefault()
+        keys[dir === 'left' ? 'ArrowLeft' : 'ArrowRight'] = false
+        updateVisualControls()
+      }
+
+      touchLeft?.addEventListener('touchstart', handleTouchStart('left'))
+      touchLeft?.addEventListener('touchend', handleTouchEnd('left'))
+      touchRight?.addEventListener('touchstart', handleTouchStart('right'))
+      touchRight?.addEventListener('touchend', handleTouchEnd('right'))
+
+      // Buttons
+      document.getElementById('btn-start')?.addEventListener('click', startGame)
+      document.getElementById('btn-restart')?.addEventListener('click', startGame)
+
+      initTerrain()
+      requestAnimationFrame(gameLoop)
+    }
+
+    // Listen for start-game event
+    window.addEventListener('start-game', () => {
+      initQuadGame()
+    })
+  })()
+</script>
