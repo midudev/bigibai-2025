@@ -1,5 +1,5 @@
 // Tipos de juegos disponibles
-export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus' | 'safari' | 'hamster' | 'dron' | 'flight' | 'arkanoid' | 'sea' | 'noise' | 'walking'
+export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus' | 'safari' | 'hamster' | 'dron' | 'flight' | 'arkanoid' | 'sea' | 'noise' | 'walking' | 'windows'
 
 // Configuración de cada día
 interface DayConfig {
@@ -59,7 +59,7 @@ const GAME_CONFIG: Record<number, GameType> = {
   10: 'arkanoid',
   11: 'noise',
   12: 'walking',
-  13: 'racer',
+  13: 'windows',
   14: 'racer',
   15: 'racer',
   16: 'racer',
@@ -81,7 +81,7 @@ const VIDEO_URLS: Record<number, string> = {
   4: '04_466A47E3-5C11-450F-AB27-A2FA4858B45E',
   5: '05_AF624A43-6CCC-4078-A72B-1CBB26EDFDE1',
   6: '06_C86A7444-3949-4882-9654-6BBE45EE440B',
-  7: '07_AA0C1848-B6CD-4261-8A51-35E77CE89126',
+  7: '07_AA0C1848-B6CD-4261-8A51-35E77CE89127',
   8: '08_2F2D0FE7-37B2-4F42-9631-02BA19BA432B',
   9: '09_BEC5D794-65D1-4D7D-A131-41CB3AC582AF',
   10: '10_BAE880CD-0208-4D56-A6D1-3C435C0D4194',
