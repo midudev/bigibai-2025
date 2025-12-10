@@ -53,12 +53,29 @@ const GAME_DATA = {
      * SISTEMA DE SONIDO (Web Audio API)
      */
     let audioCtx: AudioContext | null = null
+    let backgroundMusic: HTMLAudioElement | null = null
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
       }
       if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playBackgroundMusic() {
+      if (!backgroundMusic) {
+        backgroundMusic = new Audio('https://videos.bigibai.com/music/noise.mp3')
+        backgroundMusic.loop = true
+        backgroundMusic.volume = 0.3
+      }
+      backgroundMusic.play().catch(() => {})
+    }
+
+    function stopBackgroundMusic() {
+      if (backgroundMusic) {
+        backgroundMusic.pause()
+        backgroundMusic.currentTime = 0
+      }
     }
 
     function playTone(
@@ -414,6 +431,7 @@ const GAME_DATA = {
 
     function startGame() {
       initAudio()
+      playBackgroundMusic()
       gameStatus = 'playing'
       init()
       gameLoop()
@@ -421,11 +439,13 @@ const GAME_DATA = {
 
     function gameOver() {
       gameStatus = 'gameover'
+      stopBackgroundMusic()
       SoundFX.lose()
     }
 
     function winGame() {
       gameStatus = 'win'
+      stopBackgroundMusic()
       SoundFX.win()
 
       setTimeout(() => {
