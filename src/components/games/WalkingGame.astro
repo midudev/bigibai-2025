@@ -210,12 +210,29 @@ const GAME_DATA = {
      * SISTEMA DE AUDIO (Web Audio API)
      */
     let audioCtx: AudioContext | null = null
+    let backgroundMusic: HTMLAudioElement | null = null
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
       }
       if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playBackgroundMusic() {
+      if (!backgroundMusic) {
+        backgroundMusic = new Audio('https://videos.bigibai.com/music/walking.mp3')
+        backgroundMusic.loop = true
+        backgroundMusic.volume = 0.3
+      }
+      backgroundMusic.play().catch(() => {})
+    }
+
+    function stopBackgroundMusic() {
+      if (backgroundMusic) {
+        backgroundMusic.pause()
+        backgroundMusic.currentTime = 0
+      }
     }
 
     function playSound(type: string) {
@@ -727,6 +744,7 @@ const GAME_DATA = {
 
     function startGame() {
       initAudio()
+      playBackgroundMusic()
       initSprites()
 
       gameStatus = 'playing'
@@ -744,6 +762,7 @@ const GAME_DATA = {
     }
 
     function endGame(victory: boolean) {
+      stopBackgroundMusic()
       if (victory) {
         gameStatus = 'win'
         playSound('win')
