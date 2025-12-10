@@ -1,0 +1,943 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetDistance: 250,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="seaCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #seaCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const GOAL_DISTANCE = 250
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+
+    /**
+     * SISTEMA DE SONIDO (Web Audio API)
+     */
+    let audioCtx: AudioContext | null = null
+    let turboOscillator: OscillatorNode | null = null
+    let turboGainNode: GainNode | null = null
+
+    // Música de fondo
+    const bgMusic = new Audio('https://videos.bigibai.com/music/wave.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playSound(type: string) {
+      if (!audioCtx) return
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      const now = audioCtx.currentTime
+
+      if (type === 'engine') {
+        osc.type = 'sawtooth'
+        const freq = turboActive ? 120 : 60
+        osc.frequency.setValueAtTime(freq, now)
+        gainNode.gain.setValueAtTime(0.05, now)
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.1)
+        osc.start(now)
+        osc.stop(now + 0.1)
+      } else if (type === 'crash') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(100, now)
+        osc.frequency.exponentialRampToValueAtTime(20, now + 0.5)
+        gainNode.gain.setValueAtTime(0.2, now)
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.5)
+        osc.start(now)
+        osc.stop(now + 0.5)
+      } else if (type === 'powerup') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(800, now)
+        osc.frequency.linearRampToValueAtTime(1200, now + 0.1)
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.3)
+        osc.start(now)
+        osc.stop(now + 0.3)
+      } else if (type === 'win') {
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(440, now)
+        osc.frequency.setValueAtTime(554, now + 0.1)
+        osc.frequency.setValueAtTime(659, now + 0.2)
+        gainNode.gain.setValueAtTime(0.1, now)
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.6)
+        osc.start(now)
+        osc.stop(now + 0.6)
+      }
+    }
+
+    function startTurboSound() {
+      if (!audioCtx) return
+      turboOscillator = audioCtx.createOscillator()
+      turboGainNode = audioCtx.createGain()
+      turboOscillator.connect(turboGainNode)
+      turboGainNode.connect(audioCtx.destination)
+      turboOscillator.type = 'triangle'
+      turboOscillator.frequency.setValueAtTime(150, audioCtx.currentTime)
+      turboGainNode.gain.setValueAtTime(0.05, audioCtx.currentTime)
+      turboOscillator.start()
+    }
+
+    function stopTurboSound() {
+      if (turboOscillator && turboGainNode && audioCtx) {
+        const now = audioCtx.currentTime
+        turboGainNode.gain.linearRampToValueAtTime(0, now + 0.2)
+        turboOscillator.stop(now + 0.2)
+        turboOscillator = null
+        turboGainNode = null
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('seaCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Estado del juego
+    let gameRunning = false
+    let animationId: number
+    let lastTime = 0
+    let accumulator = 0
+    const FIXED_DT = 1 / 60 // 60fps fijo
+    let distance = 0
+    let gameStatus: 'start' | 'playing' | 'win' | 'gameover' = 'start'
+
+    // Velocidad
+    let gameSpeed = 200
+    const BASE_SPEED = 200
+    const TURBO_SPEED = 600
+
+    // Estado Turbo
+    let turboActive = false
+    let turboDistanceLeft = 0
+
+    // Barco
+    const boat = {
+      width: 28,
+      height: 52,
+      x: 0,
+      y: 0,
+      speed: 300,
+      frame: 0,
+    }
+
+    // Tipos
+    interface Obstacle {
+      type: string
+      x: number
+      y: number
+      width: number
+      height: number
+      speedX: number
+      speedY: number
+    }
+
+    interface Particle {
+      x: number
+      y: number
+      life: number
+      size: number
+      type: string
+    }
+
+    interface WaterParticle {
+      x: number
+      y: number
+      speed: number
+    }
+
+    let obstacles: Obstacle[] = []
+    let particles: Particle[] = []
+    let waterParticles: WaterParticle[] = []
+    let spawnTimer = 0
+    let rightPressed = false
+    let leftPressed = false
+
+    /**
+     * LÓGICA DEL JUEGO
+     */
+    function initGame() {
+      boat.x = INTERNAL_WIDTH / 2 - boat.width / 2
+      boat.y = INTERNAL_HEIGHT - 170
+      obstacles = []
+      particles = []
+      waterParticles = []
+
+      for (let i = 0; i < 40; i++) {
+        waterParticles.push({
+          x: Math.random() * INTERNAL_WIDTH,
+          y: Math.random() * INTERNAL_HEIGHT,
+          speed: Math.random() * 0.5 + 0.5,
+        })
+      }
+
+      distance = 0
+      spawnTimer = 0
+      gameSpeed = BASE_SPEED
+      turboActive = false
+      turboDistanceLeft = 0
+      stopTurboSound()
+    }
+
+    function spawnObstacle() {
+      const rand = Math.random()
+      let type = 'rock'
+
+      if (rand < 0.15) type = 'turbo'
+      else if (rand < 0.5) type = 'rock'
+      else if (rand < 0.75) type = 'log'
+      else if (rand < 0.9) type = 'shark'
+      else type = 'shark_left'
+
+      const obs: Obstacle = {
+        type: type,
+        y: -60,
+        x: 0,
+        width: 30,
+        height: 30,
+        speedX: 0,
+        speedY: gameSpeed,
+      }
+
+      if (type === 'turbo') {
+        obs.x = Math.random() * (INTERNAL_WIDTH - 40) + 20
+        obs.width = 30
+        obs.height = 30
+      } else if (type === 'rock') {
+        obs.x = Math.random() * (INTERNAL_WIDTH - 40) + 20
+        obs.width = 36
+        obs.height = 30
+      } else if (type === 'log') {
+        obs.x = Math.random() * (INTERNAL_WIDTH - 60) + 30
+        obs.width = 18
+        obs.height = 50
+      } else if (type === 'shark') {
+        obs.x = -60
+        obs.y = Math.random() * (INTERNAL_HEIGHT / 3)
+        obs.width = 48
+        obs.height = 24
+        obs.speedX = 150 + Math.random() * 50
+        obs.speedY = gameSpeed * 0.5
+      } else if (type === 'shark_left') {
+        obs.type = 'shark'
+        obs.x = INTERNAL_WIDTH + 10
+        obs.y = Math.random() * (INTERNAL_HEIGHT / 3)
+        obs.width = 48
+        obs.height = 24
+        obs.speedX = -(150 + Math.random() * 50)
+        obs.speedY = gameSpeed * 0.5
+      }
+
+      obstacles.push(obs)
+    }
+
+    function activateTurbo() {
+      if (!turboActive) {
+        turboActive = true
+        playSound('powerup')
+        startTurboSound()
+      }
+      turboDistanceLeft = 50
+    }
+
+    function deactivateTurbo() {
+      turboActive = false
+      stopTurboSound()
+    }
+
+    function update(dt: number) {
+      // Lógica Turbo
+      if (turboActive) {
+        if (gameSpeed < TURBO_SPEED) gameSpeed += 1000 * dt
+        else gameSpeed = TURBO_SPEED
+
+        const distAdded = (gameSpeed * dt) / 50
+        turboDistanceLeft -= distAdded
+
+        if (turboDistanceLeft <= 0) {
+          deactivateTurbo()
+        }
+      } else {
+        if (gameSpeed > BASE_SPEED) gameSpeed -= 1000 * dt
+        else gameSpeed = BASE_SPEED
+      }
+
+      // Actualizar distancia global
+      distance += (gameSpeed * dt) / 50
+
+      if (distance >= GOAL_DISTANCE) {
+        gameOver(true)
+        return
+      }
+
+      // Movimiento Barco
+      let currentBoatSpeed = boat.speed
+      if (turboActive) currentBoatSpeed *= 1.2
+
+      if (rightPressed && boat.x < INTERNAL_WIDTH - boat.width) {
+        boat.x += currentBoatSpeed * dt
+      } else if (leftPressed && boat.x > 0) {
+        boat.x -= currentBoatSpeed * dt
+      }
+
+      // Generar estela del barco
+      if (Math.random() < (turboActive ? 0.8 : 0.3)) {
+        particles.push({
+          x: boat.x + boat.width / 2 + (Math.random() * 10 - 5),
+          y: boat.y + boat.height - 5,
+          life: 1,
+          size: Math.random() * 4 + 2,
+          type: 'boat_wake',
+        })
+      }
+
+      // Generar Speed Lines
+      if (turboActive && Math.random() < 0.5) {
+        particles.push({
+          x: Math.random() < 0.5 ? 0 : INTERNAL_WIDTH,
+          y: -10,
+          life: 0.5,
+          size: Math.random() * 20 + 20,
+          type: 'speed_line',
+        })
+      }
+
+      // Spawn Obstáculos
+      spawnTimer += dt
+      let spawnThreshold = 1.2 - distance / 1000
+      if (turboActive) spawnThreshold = 0.4
+
+      if (spawnTimer > spawnThreshold) {
+        spawnObstacle()
+        spawnTimer = 0
+      }
+
+      // Mover Obstáculos
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i]
+        obs.y += gameSpeed * dt
+        obs.x += obs.speedX * dt
+
+        if (obs.type === 'shark' && Math.random() < 0.2) {
+          const wakeX = obs.speedX > 0 ? obs.x : obs.x + obs.width
+          particles.push({
+            x: wakeX,
+            y: obs.y + obs.height / 2,
+            life: 0.8,
+            size: 2,
+            type: 'shark_wake',
+          })
+        }
+
+        // Colisiones
+        const pad = 6
+        if (
+          boat.x + pad < obs.x + obs.width - pad &&
+          boat.x + boat.width - pad > obs.x + pad &&
+          boat.y + pad < obs.y + obs.height - pad &&
+          boat.y + boat.height - pad > obs.y + pad
+        ) {
+          if (obs.type === 'turbo') {
+            activateTurbo()
+            obstacles.splice(i, 1)
+            continue
+          } else {
+            stopTurboSound()
+            playSound('crash')
+            gameOver(false)
+            return
+          }
+        }
+
+        if (obs.y > INTERNAL_HEIGHT + 50 || obs.x > INTERNAL_WIDTH + 100 || obs.x < -100) {
+          obstacles.splice(i, 1)
+        }
+      }
+
+      // Partículas
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]
+        if (p.type === 'speed_line') {
+          p.y += gameSpeed * 1.5 * dt
+        } else {
+          p.y += gameSpeed * dt
+        }
+        p.life -= dt * 2
+        if (p.life <= 0) particles.splice(i, 1)
+      }
+
+      // Agua de fondo
+      for (const wp of waterParticles) {
+        wp.y += gameSpeed * wp.speed * dt
+        if (wp.y > INTERNAL_HEIGHT) {
+          wp.y = -10
+          wp.x = Math.random() * INTERNAL_WIDTH
+        }
+      }
+
+      if (Math.random() < 0.05) playSound('engine')
+    }
+
+    /**
+     * DIBUJO
+     */
+    function drawRect(x: number, y: number, w: number, h: number, color: string) {
+      if (!ctx) return
+      ctx.fillStyle = color
+      ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h))
+    }
+
+    function drawTurboItem(x: number, y: number, w: number, h: number) {
+      if (!ctx) return
+
+      const glow = Math.abs(Math.sin(Date.now() / 100)) * 15
+
+      ctx.shadowBlur = 15 + glow
+      ctx.shadowColor = '#ffff00'
+
+      ctx.beginPath()
+      ctx.fillStyle = '#ffeb3b'
+
+      ctx.moveTo(x + w * 0.7, y)
+      ctx.lineTo(x + w * 0.1, y + h * 0.6)
+      ctx.lineTo(x + w * 0.45, y + h * 0.6)
+      ctx.lineTo(x + w * 0.3, y + h)
+      ctx.lineTo(x + w * 0.9, y + h * 0.4)
+      ctx.lineTo(x + w * 0.55, y + h * 0.4)
+      ctx.closePath()
+
+      ctx.fill()
+
+      ctx.lineWidth = 3
+      ctx.strokeStyle = '#ff9100'
+      ctx.stroke()
+
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(x + w * 0.5, y + h * 0.1, 4, 4)
+
+      ctx.shadowBlur = 0
+    }
+
+    function drawBoat(x: number, y: number, w: number, h: number) {
+      let shakeX = 0
+      if (turboActive) shakeX = (Math.random() - 0.5) * 4
+
+      drawRect(x + 4 + shakeX, y + 4, w, h, 'rgba(0,0,0,0.2)')
+      drawRect(x + 4 + shakeX, y, w - 8, 8, '#eee')
+      drawRect(x + shakeX, y + 8, w, h - 8, '#eee')
+      drawRect(x + 2 + shakeX, y + 10, w - 4, h - 14, '#d2b48c')
+      drawRect(x + 2 + shakeX, y + 20, 4, h - 24, '#cc0000')
+      drawRect(x + w - 6 + shakeX, y + 20, 4, h - 24, '#cc0000')
+      drawRect(x + 4 + shakeX, y + 28, w - 8, 8, '#87ceeb')
+      drawRect(x + 4 + shakeX, y + 36, w - 8, 2, '#555')
+
+      if (turboActive) {
+        drawRect(x + 10 + shakeX, y + h, 8, Math.random() * 10 + 5, '#ff4400')
+        drawRect(x + 12 + shakeX, y + h, 4, Math.random() * 6 + 2, '#ffff00')
+      } else {
+        drawRect(x + 6 + shakeX, y + h - 6, w - 12, 8, '#444')
+        drawRect(x + 8 + shakeX, y + h - 2, w - 16, 4, '#222')
+      }
+    }
+
+    function drawShark(x: number, y: number, w: number, h: number, facingRight: boolean) {
+      const bodyColor = '#7a8a99'
+      const bellyColor = '#ddeeff'
+      drawRect(x, y + h / 3, w, h / 2, bodyColor)
+      drawRect(x, y + h / 1.5, w, h / 4, bellyColor)
+      if (facingRight) {
+        drawRect(x + w / 2 - 4, y, 8, h / 3, bodyColor)
+        drawRect(x + w - 8, y + h / 2, 4, 4, '#000')
+        drawRect(x, y + 4, 6, h - 4, bodyColor)
+      } else {
+        drawRect(x + w / 2 - 4, y, 8, h / 3, bodyColor)
+        drawRect(x + 4, y + h / 2, 4, 4, '#000')
+        drawRect(x + w - 6, y + 4, 6, h - 4, bodyColor)
+      }
+    }
+
+    function drawRock(x: number, y: number, w: number, h: number) {
+      drawRect(x + 2, y + h - 4, w - 4, 4, 'rgba(0,0,0,0.3)')
+      drawRect(x + 4, y + 4, w - 8, h - 8, '#555')
+      drawRect(x, y + 10, 4, h - 20, '#555')
+      drawRect(x + w - 4, y + 10, 4, h - 20, '#555')
+      drawRect(x + 6, y + 6, 8, 8, '#777')
+      drawRect(x + 10, y + 4, 4, 4, '#4caf50')
+      drawRect(x + 20, y + 8, 4, 4, '#4caf50')
+    }
+
+    function drawLog(x: number, y: number, w: number, h: number) {
+      drawRect(x, y, w, h, '#5c4033')
+      drawRect(x + 2, y + 4, 4, 8, '#8b5a2b')
+      drawRect(x + w - 6, y + 20, 4, 10, '#8b5a2b')
+      drawRect(x + 4, y + 36, 4, 6, '#8b5a2b')
+      drawRect(x, y, w, 4, '#a0522d')
+      drawRect(x, y + h - 4, w, 4, '#a0522d')
+    }
+
+    function drawControls() {
+      if (!ctx) return
+
+      const btnSize = 70
+      const btnY = INTERNAL_HEIGHT - 90
+      const margin = 20
+
+      // Left button
+      ctx.fillStyle = leftPressed ? '#ccc' : '#e0e0e0'
+      ctx.fillRect(margin, btnY, btnSize, btnSize)
+      ctx.strokeStyle = '#fff'
+      ctx.lineWidth = 4
+      ctx.strokeRect(margin, btnY, btnSize, btnSize)
+
+      // Shadow
+      if (!leftPressed) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(margin + 4, btnY + btnSize, btnSize, 4)
+        ctx.fillRect(margin + btnSize, btnY + 4, 4, btnSize)
+      }
+
+      ctx.fillStyle = leftPressed ? '#000' : '#333'
+      ctx.font = '28px "Press Start 2P"'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('←', margin + btnSize / 2, btnY + btnSize / 2)
+
+      // Right button
+      ctx.fillStyle = rightPressed ? '#ccc' : '#e0e0e0'
+      ctx.fillRect(INTERNAL_WIDTH - margin - btnSize, btnY, btnSize, btnSize)
+      ctx.strokeStyle = '#fff'
+      ctx.lineWidth = 4
+      ctx.strokeRect(INTERNAL_WIDTH - margin - btnSize, btnY, btnSize, btnSize)
+
+      // Shadow
+      if (!rightPressed) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(INTERNAL_WIDTH - margin - btnSize + 4, btnY + btnSize, btnSize, 4)
+        ctx.fillRect(INTERNAL_WIDTH - margin, btnY + 4, 4, btnSize)
+      }
+
+      ctx.fillStyle = rightPressed ? '#000' : '#333'
+      ctx.fillText('→', INTERNAL_WIDTH - margin - btnSize / 2, btnY + btnSize / 2)
+      ctx.textBaseline = 'alphabetic' // Restaurar valor por defecto
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      ctx.fillStyle = '#006994'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      if (gameStatus === 'start') {
+        drawStartScreen()
+        return
+      }
+
+      // Agua
+      ctx.fillStyle = '#007bb0'
+      for (const wp of waterParticles) {
+        const height = turboActive ? 20 : 8
+        ctx.fillRect(Math.floor(wp.x), Math.floor(wp.y), 2, height)
+      }
+
+      // Partículas
+      for (const p of particles) {
+        ctx.globalAlpha = p.life
+        if (p.type === 'speed_line') {
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(p.x, p.y, 2, p.size)
+        } else if (p.type === 'boat_wake') {
+          ctx.fillStyle = '#fff'
+          ctx.fillRect(p.x, p.y, p.size, p.size)
+        } else {
+          ctx.fillStyle = '#aaddff'
+          ctx.fillRect(p.x, p.y, p.size, p.size)
+        }
+        ctx.globalAlpha = 1.0
+      }
+
+      // Obstáculos
+      for (const obs of obstacles) {
+        if (obs.type === 'rock') drawRock(obs.x, obs.y, obs.width, obs.height)
+        else if (obs.type === 'log') drawLog(obs.x, obs.y, obs.width, obs.height)
+        else if (obs.type === 'shark')
+          drawShark(obs.x, obs.y, obs.width, obs.height, obs.speedX > 0)
+        else if (obs.type === 'turbo') drawTurboItem(obs.x, obs.y, obs.width, obs.height)
+      }
+
+      // Barco
+      drawBoat(boat.x, boat.y, boat.width, boat.height)
+
+      // HUD
+      drawHUD()
+
+      // Controles
+      drawControls()
+
+      if (gameStatus === 'win') {
+        drawWinOverlay()
+      } else if (gameStatus === 'gameover') {
+        drawGameOverOverlay()
+      }
+    }
+
+    function drawHUD() {
+      if (!ctx) return
+
+      // Fondo del HUD
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'
+      ctx.fillRect(INTERNAL_WIDTH / 2 - 100, 10, 200, 50)
+      ctx.strokeStyle = '#fff'
+      ctx.lineWidth = 2
+      ctx.strokeRect(INTERNAL_WIDTH / 2 - 100, 10, 200, 50)
+
+      // Distancia
+      ctx.fillStyle = '#fff'
+      ctx.font = '12px "Press Start 2P"'
+      ctx.textAlign = 'center'
+      ctx.fillText(`DIST: ${Math.floor(distance)}m`, INTERNAL_WIDTH / 2, 32)
+      ctx.fillText(`/ ${GOAL_DISTANCE}m`, INTERNAL_WIDTH / 2, 50)
+
+      // Barra de progreso
+      const barWidth = INTERNAL_WIDTH - 40
+      const barHeight = 8
+      const barX = 20
+      const barY = 65
+
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'
+      ctx.fillRect(barX, barY, barWidth, barHeight)
+
+      const progress = Math.min(distance / GOAL_DISTANCE, 1)
+      const progressGradient = ctx.createLinearGradient(
+        barX,
+        barY,
+        barX + barWidth * progress,
+        barY
+      )
+      progressGradient.addColorStop(0, '#00ff88')
+      progressGradient.addColorStop(1, '#00cc66')
+      ctx.fillStyle = progressGradient
+      ctx.fillRect(barX, barY, barWidth * progress, barHeight)
+
+      // Indicador de turbo (debajo de la barra de progreso)
+      if (turboActive) {
+        ctx.fillStyle = '#ffcc00'
+        ctx.font = '10px "Press Start 2P"'
+        if (Math.floor(Date.now() / 200) % 2 === 0) {
+          ctx.fillText('¡TURBO!', INTERNAL_WIDTH / 2, barY + barHeight + 15)
+        }
+      }
+    }
+
+    function drawStartScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '24px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#000'
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 57)
+      ctx.fillStyle = '#ffcc00'
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 60)
+
+      ctx.fillStyle = '#000'
+      ctx.fillText('BOAT TRIP', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 17)
+      ctx.fillStyle = '#ffcc00'
+      ctx.fillText('BOAT TRIP', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
+
+      // Blink instruction
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText('CLICK PARA ZARPAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 40)
+      }
+
+      // Instructions
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.font = '8px "Press Start 2P"'
+      ctx.fillText('¡ESQUIVA OBSTÁCULOS!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 60)
+      ctx.fillText('COGE RAYOS PARA TURBO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 45)
+      ctx.fillText(`OBJETIVO: ${GOAL_DISTANCE}m`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT - 25)
+    }
+
+    function drawWinOverlay() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.8)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '16px "Press Start 2P"'
+
+      // Shadow
+      ctx.fillStyle = '#665500'
+      ctx.fillText('¡TIERRA A', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 37)
+      ctx.fillText('LA VISTA!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 7)
+
+      // Title
+      ctx.fillStyle = '#ffcc00'
+      ctx.fillText('¡TIERRA A', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 40)
+      ctx.fillText('LA VISTA!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 10)
+
+      ctx.font = '12px "Press Start 2P"'
+      ctx.fillStyle = '#fff'
+      ctx.fillText(`DISTANCIA: ${GOAL_DISTANCE}m`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+      }
+    }
+
+    function drawGameOverOverlay() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0,0,0,0.8)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '20px "Press Start 2P"'
+
+      // Shadow
+      ctx.fillStyle = '#550000'
+      ctx.fillText('¡NAUFRAGIO!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 27)
+
+      // Title
+      ctx.fillStyle = '#ff4444'
+      ctx.fillText('¡NAUFRAGIO!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 30)
+
+      ctx.font = '10px "Press Start 2P"'
+      ctx.fillStyle = '#fff'
+      ctx.fillText(`Te has chocado a los`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
+      ctx.fillText(`${Math.floor(distance)}m`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText('CLICK PARA REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+      }
+    }
+
+    function startGame() {
+      initAudio()
+      initGame()
+
+      gameStatus = 'playing'
+      gameRunning = true
+      lastTime = performance.now()
+      animationId = requestAnimationFrame(gameLoop)
+
+      // Reproducir música de fondo
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    }
+
+    function gameOver(win: boolean) {
+      gameRunning = false
+      cancelAnimationFrame(animationId)
+      stopTurboSound()
+      bgMusic.pause()
+
+      if (win) {
+        gameStatus = 'win'
+        playSound('win')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 1500)
+      } else {
+        gameStatus = 'gameover'
+      }
+    }
+
+    function gameLoop(timeStamp: number) {
+      const dt = (timeStamp - lastTime) / 1000 || 0
+      lastTime = timeStamp
+
+      if (gameRunning) {
+        update(dt)
+      }
+
+      draw()
+
+      if (gameRunning || gameStatus === 'start' || gameStatus === 'gameover') {
+        animationId = requestAnimationFrame(gameLoop)
+      }
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function getCanvasCoords(event: MouseEvent | Touch) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      }
+    }
+
+    function handleInput(key: string, pressed: boolean) {
+      if (key === 'right') {
+        rightPressed = pressed
+      } else if (key === 'left') {
+        leftPressed = pressed
+      }
+    }
+
+    function handleInputStart(e: MouseEvent | Touch) {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+
+      const pos = getCanvasCoords(e)
+
+      if (gameStatus === 'start' || gameStatus === 'gameover') {
+        startGame()
+        return
+      }
+
+      if (gameStatus !== 'playing') return
+
+      // Check control buttons
+      const btnSize = 70
+      const btnY = INTERNAL_HEIGHT - 90
+      const margin = 20
+
+      // Left button
+      if (
+        pos.x >= margin &&
+        pos.x <= margin + btnSize &&
+        pos.y >= btnY &&
+        pos.y <= btnY + btnSize
+      ) {
+        handleInput('left', true)
+        return
+      }
+
+      // Right button
+      if (
+        pos.x >= INTERNAL_WIDTH - margin - btnSize &&
+        pos.x <= INTERNAL_WIDTH - margin &&
+        pos.y >= btnY &&
+        pos.y <= btnY + btnSize
+      ) {
+        handleInput('right', true)
+        return
+      }
+    }
+
+    function handleInputEnd() {
+      handleInput('left', false)
+      handleInput('right', false)
+    }
+
+    function initSeaGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      canvas.addEventListener('mousedown', handleInputStart)
+      canvas.addEventListener('mouseup', handleInputEnd)
+      canvas.addEventListener('mouseleave', handleInputEnd)
+
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          for (let i = 0; i < e.touches.length; i++) {
+            handleInputStart(e.touches[i])
+          }
+        },
+        { passive: false }
+      )
+
+      canvas.addEventListener(
+        'touchend',
+        (e) => {
+          e.preventDefault()
+          handleInputEnd()
+        },
+        { passive: false }
+      )
+
+      // Keyboard controls
+      document.addEventListener('keydown', (e) => {
+        if (['Right', 'ArrowRight', 'd'].includes(e.key)) handleInput('right', true)
+        if (['Left', 'ArrowLeft', 'a'].includes(e.key)) handleInput('left', true)
+      })
+
+      document.addEventListener('keyup', (e) => {
+        if (['Right', 'ArrowRight', 'd'].includes(e.key)) handleInput('right', false)
+        if (['Left', 'ArrowLeft', 'a'].includes(e.key)) handleInput('left', false)
+      })
+
+      document.fonts.ready.then(() => {
+        gameStatus = 'start'
+        initGame()
+        lastTime = performance.now()
+        animationId = requestAnimationFrame(gameLoop)
+      })
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initSeaGame()
+    })
+  })()
+</script>
+
