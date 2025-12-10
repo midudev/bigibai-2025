@@ -1,0 +1,841 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  goalDistance: 5000,
+  timeLimit: 30,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="walking-game-container" slot="game">
+    <canvas id="walkingCanvas"></canvas>
+
+    <!-- Zonas táctiles invisibles -->
+    <div id="touch-left" class="tap-zone tap-left"></div>
+    <div id="touch-right" class="tap-zone tap-right"></div>
+
+    <div class="ui-layer">
+      <div class="top-hud">
+        <div>
+          <div class="label">PROGRESO (SANTIAGO)</div>
+          <div class="bar-container">
+            <div id="progress-fill" class="bar-fill"></div>
+          </div>
+        </div>
+        <div>
+          <div class="label">VELOCIDAD (Mantén en Verde)</div>
+          <div class="bar-container">
+            <div id="speed-fill" class="bar-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timer-box">
+        <span id="timer-display">30</span>s
+      </div>
+    </div>
+
+    <!-- Guía de controles -->
+    <div class="controls-guide" id="pc-hints">
+      <div class="key-hint">◄ IZQ / A</div>
+      <div class="key-hint">DER / D ►</div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #walking-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+
+  #walkingCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  .tap-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    z-index: 5;
+  }
+
+  .tap-left {
+    left: 0;
+  }
+
+  .tap-right {
+    right: 0;
+  }
+
+  .tap-zone.tap-active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .top-hud {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .bar-container {
+    background: #444;
+    border: 2px solid #fff;
+    height: 16px;
+    width: 100%;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    transition:
+      width 0.2s linear,
+      background-color 0.2s;
+  }
+
+  #progress-fill {
+    background: #f1c40f;
+  }
+
+  #speed-fill {
+    background: #e74c3c;
+  }
+
+  .label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+    margin-bottom: 2px;
+    color: #ecf0f1;
+  }
+
+  .timer-box {
+    font-family: 'Press Start 2P', cursive;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid white;
+    padding: 8px 12px;
+    align-self: center;
+    font-size: 16px;
+    color: #fff;
+  }
+
+  .controls-guide {
+    position: absolute;
+    top: 25%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-sizing: border-box;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .key-hint {
+    font-family: 'Press Start 2P', cursive;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    text-shadow: 1px 1px 0 #000;
+    color: #fff;
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+</style>
+
+<script>
+  ;(function () {
+    /**
+     * CONFIGURACIÓN DEL JUEGO
+     */
+    const INTERNAL_WIDTH = 320
+    const INTERNAL_HEIGHT = 568
+    const GOAL_DISTANCE = 5000
+    const TIME_LIMIT = 30
+
+    /**
+     * SISTEMA DE AUDIO (Web Audio API)
+     */
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playSound(type: string) {
+      if (!audioCtx) return
+
+      const t = audioCtx.currentTime
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+
+      if (type === 'step') {
+        osc.type = 'triangle'
+        const freq = Math.random() > 0.5 ? 150 : 160
+        osc.frequency.setValueAtTime(freq, t)
+        osc.frequency.exponentialRampToValueAtTime(40, t + 0.05)
+
+        gain.gain.setValueAtTime(0.15, t)
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05)
+
+        osc.start(t)
+        osc.stop(t + 0.05)
+      } else if (type === 'stumble') {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(150, t)
+        osc.frequency.linearRampToValueAtTime(50, t + 0.3)
+
+        gain.gain.setValueAtTime(0.1, t)
+        gain.gain.linearRampToValueAtTime(0.01, t + 0.3)
+
+        osc.start(t)
+        osc.stop(t + 0.3)
+      } else if (type === 'win') {
+        const notes = [523.25, 659.25, 783.99, 1046.5]
+        notes.forEach((freq, i) => {
+          if (!audioCtx) return
+          const o = audioCtx.createOscillator()
+          const g = audioCtx.createGain()
+          o.connect(g)
+          g.connect(audioCtx.destination)
+          o.type = 'square'
+          o.frequency.value = freq
+
+          const startTime = t + i * 0.1
+          g.gain.setValueAtTime(0.1, startTime)
+          g.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3)
+
+          o.start(startTime)
+          o.stop(startTime + 0.3)
+        })
+      } else if (type === 'lose') {
+        const notes = [440, 392, 349, 311]
+        notes.forEach((freq, i) => {
+          if (!audioCtx) return
+          const o = audioCtx.createOscillator()
+          const g = audioCtx.createGain()
+          o.connect(g)
+          g.connect(audioCtx.destination)
+          o.type = 'triangle'
+          o.frequency.value = freq
+
+          const startTime = t + i * 0.3
+          g.gain.setValueAtTime(0.1, startTime)
+          g.gain.linearRampToValueAtTime(0.01, startTime + 0.5)
+
+          o.start(startTime)
+          o.stop(startTime + 0.5)
+        })
+      }
+    }
+
+    /**
+     * MOTOR DEL JUEGO
+     */
+    const canvas = document.getElementById('walkingCanvas') as HTMLCanvasElement
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.imageSmoothingEnabled = false
+
+    // Estado del Juego
+    const STATE = {
+      isPlaying: false,
+      speed: 0,
+      maxSpeed: 100,
+      distance: 0,
+      goalDistance: GOAL_DISTANCE,
+      timeLeft: TIME_LIMIT,
+      lastTime: 0,
+      wobble: 0,
+      objects: [] as WorldObject[],
+    }
+
+    // Configuración de renderizado
+    const RENDER = {
+      skyColor: '#63cdda',
+      grassColor: '#55b349',
+      roadColor: '#95a5a6',
+      horizonY: 0.45,
+      zMax: 2000,
+    }
+
+    // Sprites
+    const sprites: Record<string, HTMLCanvasElement> = {}
+
+    let lastInputType: string | null = null
+    let gameStatus: 'start' | 'playing' | 'gameover' | 'win' = 'start'
+
+    /**
+     * CLASES
+     */
+    class WorldObject {
+      x: number
+      z: number
+      type: string
+
+      constructor() {
+        this.x = (Math.random() - 0.5) * 4
+        if (this.x > -1.2 && this.x < 1.2) {
+          this.x = this.x > 0 ? 1.5 + Math.random() : -1.5 - Math.random()
+        }
+        this.z = RENDER.zMax
+        this.type = Math.random() > 0.8 ? 'rock' : 'tree'
+      }
+    }
+
+    /**
+     * GENERACIÓN DE SPRITES PIXEL ART
+     */
+    function createPixelSprite(
+      width: number,
+      height: number,
+      drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
+    ): HTMLCanvasElement {
+      const c = document.createElement('canvas')
+      c.width = width
+      c.height = height
+      const x = c.getContext('2d')
+      if (x) drawFn(x, width, height)
+      return c
+    }
+
+    function initSprites() {
+      // Árbol
+      sprites.tree = createPixelSprite(32, 48, (x, w, h) => {
+        x.fillStyle = '#2d3436'
+        x.fillRect(w * 0.4, h * 0.6, w * 0.2, h * 0.4)
+        x.fillStyle = '#27ae60'
+        x.beginPath()
+        x.moveTo(0, h * 0.7)
+        x.lineTo(w / 2, 0)
+        x.lineTo(w, h * 0.7)
+        x.fill()
+        x.fillStyle = '#2ecc71'
+        x.beginPath()
+        x.moveTo(w * 0.2, h * 0.7)
+        x.lineTo(w / 2, h * 0.1)
+        x.lineTo(w * 0.5, h * 0.7)
+        x.fill()
+      })
+
+      // Piedra/Hito
+      sprites.rock = createPixelSprite(16, 16, (x, w, h) => {
+        x.fillStyle = '#7f8c8d'
+        x.beginPath()
+        x.arc(w / 2, h, w / 2, Math.PI, 0)
+        x.fill()
+        x.fillStyle = '#f1c40f'
+        x.fillRect(w * 0.4, h * 0.5, w * 0.2, h * 0.3)
+      })
+
+      // Jugador (Espalda)
+      sprites.player = createPixelSprite(32, 48, (x, w, h) => {
+        // Piernas
+        x.fillStyle = '#34495e'
+        x.fillRect(8, 30, 6, 18)
+        x.fillRect(18, 30, 6, 18)
+        // Cuerpo
+        x.fillStyle = '#e67e22'
+        x.fillRect(6, 15, 20, 20)
+        // Mochila
+        x.fillStyle = '#3498db'
+        x.fillRect(8, 12, 16, 18)
+        x.fillStyle = '#2980b9'
+        x.fillRect(10, 14, 12, 6)
+        // Cabeza
+        x.fillStyle = '#ecc098'
+        x.fillRect(10, 2, 12, 10)
+        x.fillStyle = '#5d4037'
+        x.fillRect(9, 0, 14, 6)
+      })
+    }
+
+    /**
+     * INPUT HANDLING
+     */
+    function handleInput(side: string) {
+      if (gameStatus !== 'playing') return
+
+      const zone = document.getElementById(side === 'left' ? 'touch-left' : 'touch-right')
+      if (zone) {
+        zone.classList.add('tap-active')
+        setTimeout(() => zone.classList.remove('tap-active'), 100)
+      }
+
+      if (lastInputType === null || lastInputType !== side) {
+        STATE.speed += 20
+        if (STATE.speed > STATE.maxSpeed) STATE.speed = STATE.maxSpeed
+        lastInputType = side
+
+        STATE.wobble = side === 'left' ? -5 : 5
+
+        playSound('step')
+      } else {
+        STATE.speed -= 10
+        if (STATE.speed < 0) STATE.speed = 0
+
+        canvas.style.transform = `translateX(${Math.random() * 10 - 5}px)`
+        setTimeout(() => (canvas.style.transform = 'none'), 50)
+
+        playSound('stumble')
+      }
+    }
+
+    /**
+     * LÓGICA DEL JUEGO
+     */
+    function updatePhysics(dt: number) {
+      STATE.speed *= 0.985
+      if (STATE.speed < 1) STATE.speed = 0
+
+      const moveStep = STATE.speed * dt
+      STATE.distance += moveStep * 5
+
+      if (STATE.speed > 5 && Math.random() < 0.15) {
+        STATE.objects.push(new WorldObject())
+      }
+
+      for (let i = STATE.objects.length - 1; i >= 0; i--) {
+        const obj = STATE.objects[i]
+
+        const speedFactor = Math.max(10, obj.z / 10)
+        obj.z -= STATE.speed * speedFactor * dt * 0.5
+
+        if (obj.z <= 10) {
+          STATE.objects.splice(i, 1)
+        }
+      }
+
+      STATE.objects.sort((a, b) => b.z - a.z)
+
+      STATE.timeLeft -= dt
+      if (STATE.timeLeft <= 0) endGame(false)
+      if (STATE.distance >= STATE.goalDistance) endGame(true)
+
+      STATE.wobble *= 0.9
+    }
+
+    function draw() {
+      if (!ctx) return
+
+      ctx.fillStyle = RENDER.skyColor
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      if (gameStatus === 'start') {
+        drawStartScreen()
+        return
+      }
+
+      const cx = INTERNAL_WIDTH / 2
+      const horizon = INTERNAL_HEIGHT * RENDER.horizonY
+
+      // 1. Suelo
+      const gradient = ctx.createLinearGradient(0, horizon, 0, INTERNAL_HEIGHT)
+      gradient.addColorStop(0, '#2e8b57')
+      gradient.addColorStop(1, '#55b349')
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, horizon, INTERNAL_WIDTH, INTERNAL_HEIGHT - horizon)
+
+      // 2. Camino
+      ctx.fillStyle = RENDER.roadColor
+      ctx.beginPath()
+      const roadEndWidth = 5
+      const roadStartWidth = INTERNAL_WIDTH * 0.8
+
+      ctx.moveTo(cx - roadEndWidth, horizon)
+      ctx.lineTo(cx + roadEndWidth, horizon)
+      ctx.lineTo(cx + roadStartWidth, INTERNAL_HEIGHT)
+      ctx.lineTo(cx - roadStartWidth, INTERNAL_HEIGHT)
+      ctx.fill()
+
+      // 3. Objetos del Mundo
+      STATE.objects.forEach((obj) => {
+        const perspective = 200
+        const scale = perspective / (perspective + obj.z)
+
+        if (scale < 0.01) return
+
+        const screenX = cx + obj.x * INTERNAL_WIDTH * 0.5 * scale
+        const screenY = horizon + (INTERNAL_HEIGHT - horizon) * scale * 0.2 + scale * 200
+
+        const sprite = sprites[obj.type]
+        if (!sprite) return
+
+        const finalW = sprite.width * scale * 4
+        const finalH = sprite.height * scale * 4
+
+        const opacity = Math.min(1, scale * 3)
+        ctx.globalAlpha = opacity
+
+        ctx.drawImage(sprite, screenX - finalW / 2, screenY - finalH + scale * 150, finalW, finalH)
+
+        ctx.globalAlpha = 1.0
+      })
+
+      // 4. Jugador
+      const bobY = Math.abs(Math.sin(Date.now() / 100)) * (STATE.speed / 10)
+      const playerScale = 3
+      const pW = sprites.player.width * playerScale
+      const pH = sprites.player.height * playerScale
+
+      ctx.save()
+      ctx.translate(cx, INTERNAL_HEIGHT - pH + 20 - bobY)
+      ctx.rotate((STATE.wobble * Math.PI) / 180)
+      ctx.drawImage(sprites.player, -pW / 2, -pH / 2, pW, pH)
+      ctx.restore()
+
+      // Efecto viento/velocidad
+      if (STATE.speed > 30) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        const lines = Math.floor(STATE.speed / 10)
+        for (let i = 0; i < lines; i++) {
+          const lx = Math.random() * INTERNAL_WIDTH
+          const ly = Math.random() * INTERNAL_HEIGHT
+          ctx.moveTo(lx, ly)
+          ctx.lineTo(cx, horizon)
+        }
+        ctx.stroke()
+      }
+
+      if (gameStatus === 'gameover') {
+        drawGameOverScreen()
+      }
+
+      if (gameStatus === 'win') {
+        drawWinScreen()
+      }
+    }
+
+    function drawStartScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '16px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#000'
+      ctx.fillText('CAMINO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 72)
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 48)
+      ctx.fillText('RUNNER', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 24)
+      ctx.fillStyle = '#f1c40f'
+      ctx.fillText('CAMINO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 74)
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 50)
+      ctx.fillText('RUNNER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 26)
+
+      // Instructions
+      ctx.fillStyle = '#ccc'
+      ctx.font = '7px "Press Start 2P"'
+      ctx.fillText('¡Llega a Santiago!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
+      ctx.fillText('Alterna IZQ y DER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 28)
+      ctx.fillText('para correr rápido', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 44)
+
+      // Button
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 80)
+      }
+    }
+
+    function drawGameOverScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '12px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#550000'
+      ctx.fillText('TIEMPO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 32)
+      ctx.fillText('AGOTADO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 12)
+      ctx.fillStyle = '#e74c3c'
+      ctx.fillText('TIEMPO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 34)
+      ctx.fillText('AGOTADO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 14)
+
+      ctx.fillStyle = '#ccc'
+      ctx.font = '7px "Press Start 2P"'
+      const remaining = Math.floor(STATE.goalDistance - STATE.distance)
+      ctx.fillText(`Te faltaron ${remaining}m`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 15)
+      ctx.fillText('Descansa y prueba', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 35)
+      ctx.fillText('otra vez', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 50)
+
+      // Button
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.fillText('CLICK REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 80)
+      }
+    }
+
+    function drawWinScreen() {
+      if (!ctx) return
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
+
+      ctx.textAlign = 'center'
+      ctx.font = '14px "Press Start 2P"'
+
+      // Title
+      ctx.fillStyle = '#005500'
+      ctx.fillText('¡LLEGASTE!', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 22)
+      ctx.fillStyle = '#2ecc71'
+      ctx.fillText('¡LLEGASTE!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 24)
+
+      ctx.fillStyle = '#ccc'
+      ctx.font = '7px "Press Start 2P"'
+      ctx.fillText(
+        `Con ${Math.ceil(STATE.timeLeft)}s de sobra`,
+        INTERNAL_WIDTH / 2,
+        INTERNAL_HEIGHT / 2 + 10
+      )
+      ctx.fillText('¡Buen Camino', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+      ctx.fillText('Peregrino!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 45)
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '8px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 75)
+      }
+    }
+
+    function updateUI() {
+      const progressPct = Math.min(100, (STATE.distance / STATE.goalDistance) * 100)
+      const progressFill = document.getElementById('progress-fill')
+      if (progressFill) progressFill.style.width = `${progressPct}%`
+
+      const speedPct = Math.min(100, (STATE.speed / STATE.maxSpeed) * 100)
+      const speedBar = document.getElementById('speed-fill')
+      if (speedBar) {
+        speedBar.style.width = `${speedPct}%`
+
+        const distRemaining = STATE.goalDistance - STATE.distance
+        let requiredSpeed = 0
+        if (STATE.timeLeft > 0) {
+          requiredSpeed = distRemaining / STATE.timeLeft / 5
+        }
+
+        if (STATE.speed >= requiredSpeed * 0.9) {
+          speedBar.style.background = '#2ecc71'
+        } else if (STATE.speed >= requiredSpeed * 0.6) {
+          speedBar.style.background = '#f39c12'
+        } else {
+          speedBar.style.background = '#e74c3c'
+        }
+      }
+
+      const t = Math.max(0, Math.ceil(STATE.timeLeft))
+      const tDisplay = document.getElementById('timer-display')
+      if (tDisplay) {
+        tDisplay.innerText = String(t)
+        tDisplay.style.color = t < 10 ? '#e74c3c' : '#fff'
+      }
+    }
+
+    /**
+     * GAME LOOP
+     */
+    function gameLoop(timestamp: number) {
+      if (gameStatus !== 'playing' && gameStatus !== 'start') {
+        draw()
+        return
+      }
+
+      if (gameStatus === 'playing') {
+        const dt = (timestamp - STATE.lastTime) / 1000
+        STATE.lastTime = timestamp
+
+        updatePhysics(dt)
+        updateUI()
+      }
+
+      draw()
+
+      if (gameStatus === 'playing' || gameStatus === 'start') {
+        requestAnimationFrame(gameLoop)
+      }
+    }
+
+    function startGame() {
+      initAudio()
+      initSprites()
+
+      gameStatus = 'playing'
+      STATE.distance = 0
+      STATE.speed = 0
+      STATE.timeLeft = TIME_LIMIT
+      STATE.objects = []
+      STATE.lastTime = performance.now()
+      lastInputType = null
+
+      const hints = document.getElementById('pc-hints')
+      if (hints) hints.style.opacity = '0.4'
+
+      requestAnimationFrame(gameLoop)
+    }
+
+    function endGame(victory: boolean) {
+      if (victory) {
+        gameStatus = 'win'
+        playSound('win')
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 1500)
+      } else {
+        gameStatus = 'gameover'
+        playSound('lose')
+      }
+    }
+
+    function initWalkingGame() {
+      canvas.width = INTERNAL_WIDTH
+      canvas.height = INTERNAL_HEIGHT
+
+      initSprites()
+
+      // Keyboard
+      document.addEventListener('keydown', (e) => {
+        if (gameStatus === 'start') {
+          startGame()
+          return
+        }
+        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleInput('left')
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') handleInput('right')
+      })
+
+      // Touch zones
+      const touchLeft = document.getElementById('touch-left')
+      const touchRight = document.getElementById('touch-right')
+
+      touchLeft?.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          if (gameStatus === 'start' || gameStatus === 'gameover') {
+            startGame()
+            return
+          }
+          handleInput('left')
+        },
+        { passive: false }
+      )
+
+      touchRight?.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault()
+          if (gameStatus === 'start' || gameStatus === 'gameover') {
+            startGame()
+            return
+          }
+          handleInput('right')
+        },
+        { passive: false }
+      )
+
+      // Mouse
+      touchLeft?.addEventListener('mousedown', () => {
+        if (gameStatus === 'start' || gameStatus === 'gameover') {
+          startGame()
+          return
+        }
+        handleInput('left')
+      })
+
+      touchRight?.addEventListener('mousedown', () => {
+        if (gameStatus === 'start' || gameStatus === 'gameover') {
+          startGame()
+          return
+        }
+        handleInput('right')
+      })
+
+      // Canvas click for start/restart
+      canvas.addEventListener('click', () => {
+        if (gameStatus === 'start' || gameStatus === 'gameover') {
+          startGame()
+        }
+      })
+
+      document.fonts.ready.then(() => {
+        gameStatus = 'start'
+        requestAnimationFrame(gameLoop)
+      })
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initWalkingGame()
+    })
+  })()
+</script>
