@@ -1,0 +1,885 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: 50,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="windows-game-container" slot="game">
+    <!-- DESKTOP ICONS -->
+    <div class="desktop-icons">
+      <div class="icon">
+        <div class="icon-img">💻</div>
+        Mi PC
+      </div>
+      <div class="icon">
+        <div class="icon-img">🗑️</div>
+        Papelera
+      </div>
+      <div class="icon">
+        <div class="icon-img">📄</div>
+        Claves.txt
+      </div>
+      <div class="icon">
+        <div class="icon-img">🛡️</div>
+        Antivirus
+      </div>
+    </div>
+
+    <!-- CPU METER -->
+    <div id="cpu-label">CPU (NO EXPLOTES)</div>
+    <div class="cpu-bar-container">
+      <div id="cpu-fill"></div>
+    </div>
+
+    <!-- TASKBAR -->
+    <div id="taskbar">
+      <div class="start-btn">
+        <span>🪟</span> Inicio
+      </div>
+      <div class="taskbar-divider"></div>
+      <div class="tray">PTS: <span id="score-display">0</span>/50</div>
+      <div class="tray" id="clock">12:00</div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen-overlay">
+      <div class="modal">
+        <div class="title-bar">
+          <span>Asistente de Configuración</span>
+          <div class="close-btn-fake">X</div>
+        </div>
+        <div class="window-body">
+          <p>⚠️ ALERTA CRÍTICA ⚠️<br />¡HACKER DETECTADO!</p>
+          <p>Tu misión: Cierra 50 ventanas para limpiar el sistema.</p>
+          <p style="font-size:10px; color:#555;">(Cuidado con las que se mueven y teleportan)</p>
+          <br />
+          <button class="btn-ok" id="btn-start">PROTEGER PC</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLUE SCREEN OF DEATH (GAME OVER) -->
+    <div id="bsod" class="bsod-screen hidden">
+      <p
+        style="background:#fff; color:#0000AA; display:inline-block; font-weight:bold; padding: 2px 4px;"
+      >
+        Windows
+      </p>
+      <br />
+      <p>Se ha producido un error fatal.</p>
+      <p>LA CPU HA EXPLOTADO POR EXCESO DE POP-UPS.</p>
+      <p>* Pulsa el botón para comprar otro PC.</p>
+      <p>* O inténtalo de nuevo.</p>
+      <br />
+      <p>PROGRESO: <span id="final-score">0</span> / 50</p>
+      <br />
+      <button class="btn-ok btn-bsod" id="btn-retry">REINICIAR</button>
+    </div>
+
+    <!-- WIN SCREEN -->
+    <div id="win-screen" class="win-screen hidden">
+      <h1 style="font-size: 28px; margin-bottom: 10px;">¡SISTEMA SALVADO!</h1>
+      <p>🎉🎉🎉</p>
+      <p>Has eliminado todas las amenazas.</p>
+      <p>Tu PC ahora es seguro (por 5 minutos).</p>
+      <br /><br />
+      <p class="desbloqueando-text">DESBLOQUEANDO...</p>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  /* --- GAME CONTAINER --- */
+  #windows-game-container {
+    width: 100%;
+    height: 100%;
+    background-color: #008080;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Courier New', Courier, monospace;
+    cursor:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='black' stroke='white' stroke-width='1' d='M0,0 L0,18 L4,14 L7,20 L10,18 L7,13 L12,13 Z'/></svg>"),
+      auto;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* --- DESKTOP ICONS --- */
+  .desktop-icons {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 0;
+  }
+
+  .icon {
+    width: 70px;
+    text-align: center;
+    color: white;
+    font-size: 11px;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .icon-img {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    margin: 0 auto 5px;
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  /* --- TASKBAR --- */
+  #taskbar {
+    height: 36px;
+    background: #c0c0c0;
+    border-top: 2px solid #dfdfdf;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    z-index: 1000;
+  }
+
+  .start-btn {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 4px 8px;
+    font-weight: bold;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 5px;
+    box-shadow: 1px 1px 0 #000;
+  }
+
+  .taskbar-divider {
+    flex-grow: 1;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #fff;
+    height: 24px;
+    margin: 0 5px;
+  }
+
+  .tray {
+    border: 2px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 3px 6px;
+    font-size: 10px;
+    background: #c0c0c0;
+    margin-right: 2px;
+    min-width: 60px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  /* --- CPU METER --- */
+  .cpu-bar-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 100px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #808080;
+    z-index: 5;
+    box-shadow: 2px 2px 0 #000;
+  }
+
+  #cpu-fill {
+    height: 100%;
+    width: 0%;
+    background: #000080;
+    transition: width 0.2s;
+  }
+
+  #cpu-label {
+    position: absolute;
+    top: 10px;
+    right: 115px;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 5;
+  }
+
+  /* --- WINDOW POPUPS --- */
+  :global(#windows-game-container .window) {
+    position: absolute;
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #dfdfdf #000 #000 #dfdfdf;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+    width: 180px;
+    height: auto;
+    z-index: 10;
+  }
+
+  :global(#windows-game-container .title-bar) {
+    background: #000080;
+    color: white;
+    padding: 4px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 24px;
+  }
+
+  :global(#windows-game-container .title-bar.warning) {
+    background: #800000;
+  }
+
+  :global(#windows-game-container .title-bar.glitch-bar) {
+    background: #4b0082;
+  }
+
+  :global(#windows-game-container .close-btn) {
+    width: 20px;
+    height: 16px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    color: black;
+    font-size: 12px;
+    line-height: 14px;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+  }
+
+  :global(#windows-game-container .close-btn:active) {
+    border-color: #000 #fff #fff #000;
+    transform: translate(1px, 1px);
+  }
+
+  :global(#windows-game-container .window-body) {
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 10px;
+    color: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-ok {
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    background: #c0c0c0;
+    padding: 6px 16px;
+    font-family: inherit;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+
+  .btn-ok:active {
+    border-color: #000 #fff #fff #000;
+  }
+
+  /* --- SCREENS --- */
+  .screen-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .modal {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 4px;
+    width: 90%;
+    max-width: 280px;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  .modal .title-bar {
+    background: #000080;
+    color: white;
+    padding: 4px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .close-btn-fake {
+    width: 20px;
+    height: 16px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    color: black;
+    font-size: 12px;
+    line-height: 14px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .modal .window-body {
+    padding: 15px 10px;
+    text-align: center;
+    font-size: 12px;
+    color: black;
+    line-height: 1.4;
+  }
+
+  .bsod-screen,
+  .win-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Courier New', monospace;
+    padding: 15px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 10001;
+    font-size: 11px;
+  }
+
+  .bsod-screen {
+    background: #0000aa;
+    color: #fff;
+  }
+
+  .win-screen {
+    background: #008000;
+    color: #fff;
+    text-align: center;
+    align-items: center;
+  }
+
+  .btn-bsod {
+    background: white;
+    color: #0000aa;
+    border: none;
+    font-weight: bold;
+    margin-top: 20px;
+    align-self: center;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .desbloqueando-text {
+    animation: blink 0.5s infinite;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  /* Glitch Animation Effect */
+  @keyframes glitch-anim {
+    0% {
+      clip-path: inset(10% 0 80% 0);
+      transform: translate(-2px, 2px);
+    }
+    20% {
+      clip-path: inset(80% 0 5% 0);
+      transform: translate(2px, -2px);
+    }
+    40% {
+      clip-path: inset(40% 0 40% 0);
+      transform: translate(-2px, 2px);
+    }
+    60% {
+      clip-path: inset(10% 0 60% 0);
+      transform: translate(2px, -2px);
+    }
+    80% {
+      clip-path: inset(20% 0 20% 0);
+      transform: translate(-2px, 2px);
+    }
+    100% {
+      clip-path: inset(50% 0 10% 0);
+      transform: translate(2px, -2px);
+    }
+  }
+
+  :global(#windows-game-container .glitching) {
+    animation: glitch-anim 0.2s linear infinite;
+    filter: hue-rotate(90deg);
+  }
+</style>
+
+<script>
+  ;(function () {
+    /**
+     * SISTEMA DE AUDIO
+     */
+    let audioCtx: AudioContext | null = null
+    let backgroundMusic: HTMLAudioElement | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function playBackgroundMusic() {
+      if (!backgroundMusic) {
+        backgroundMusic = new Audio('https://videos.bigibai.com/music/windows.mp3')
+        backgroundMusic.loop = true
+        backgroundMusic.volume = 0.3
+      }
+      backgroundMusic.play().catch(() => {})
+    }
+
+    function stopBackgroundMusic() {
+      if (backgroundMusic) {
+        backgroundMusic.pause()
+        backgroundMusic.currentTime = 0
+      }
+    }
+
+    function playTone(freq: number, type: OscillatorType, duration: number) {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const osc = audioCtx.createOscillator()
+      const gainNode = audioCtx.createGain()
+      osc.type = type
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
+      osc.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(audioCtx.currentTime + duration)
+    }
+
+    function playSpawnSound() {
+      playTone(600, 'square', 0.1)
+      setTimeout(() => playTone(800, 'square', 0.1), 50)
+    }
+
+    function playCloseSound() {
+      playTone(1200, 'sine', 0.05)
+    }
+
+    function playErrorSound() {
+      playTone(150, 'sawtooth', 0.4)
+      playTone(200, 'square', 0.4)
+    }
+
+    function playGlitchSound() {
+      playTone(50, 'sawtooth', 0.1)
+      setTimeout(() => playTone(500, 'square', 0.1), 50)
+    }
+
+    function playWinSound() {
+      playTone(400, 'square', 0.2)
+      setTimeout(() => playTone(500, 'square', 0.2), 200)
+      setTimeout(() => playTone(600, 'square', 0.2), 400)
+      setTimeout(() => playTone(800, 'square', 0.4), 600)
+    }
+
+    function playGameOverSound() {
+      playTone(100, 'sawtooth', 1)
+      setTimeout(() => playTone(80, 'square', 1), 200)
+      setTimeout(() => playTone(60, 'sawtooth', 1), 400)
+    }
+
+    /**
+     * GAME STATE
+     */
+    interface WindowObj {
+      id: number
+      el: HTMLElement
+      type: string
+      x: number
+      y: number
+      vx: number
+      vy: number
+      shiftyTriggered: boolean
+      lastTeleport: number
+    }
+
+    let gameActive = false
+    let score = 0
+    let windows: WindowObj[] = []
+    let spawnRate = 2000
+    let lastSpawn = 0
+    let cpuUsage = 0
+    let animationId: number
+
+    const popupTitles = [
+      '¡OFERTAZA!',
+      'TU TÍA',
+      'GANASTE 1€',
+      'GRAN IBAI',
+      'ERROR 404',
+      'HACKEADO',
+      'HOLA BEBÉ',
+      'EL TIEMPO',
+      'NOTICIAS',
+      'COTILLEO',
+      'ADMIN',
+      'SISTEMA',
+      '¡CUIDADO!',
+      'TU PRIMO',
+      'ANTIVIRUS',
+      'PRÍNCIPE',
+      'LA VECINA',
+      'CLICK AQUÍ',
+    ]
+
+    const popupTexts = [
+      'Haz clic aquí para ver gatitos 🐈',
+      'Tu PC va lento. Descarga RAM aquí.',
+      '¡Has ganado un iPhone 4! 📱',
+      'Alguien está viendo tu perfil... 👀',
+      'Soy un príncipe nigeriano. ¡Dinero para ti! 👑',
+      'Borra System32 para ir más rápido.',
+      '¡Tu antivirus caducó en 1999!',
+      '¿Quieres ser tu propio jefe? 💰',
+      '¡Felicidades! Eres el usuario 999.',
+      'Instalando barra de herramientas...',
+      'Tu tía te envió una solicitud de Candy Crush.',
+      'Error: Teclado no detectado.',
+      '¡Sorteo de jamón ibérico! 🍖',
+      '¿Quieres una chocolatina? ¡Compra la Gran Ibai! 🍫',
+      'Soy yo, tu primo el informático. Arreglo gratis.',
+      '¿Eres un robot? Pulsa OK si no.',
+      'La vecina te ha robado el Wi-Fi.',
+    ]
+
+    let gameContainer: HTMLElement | null = null
+    let cpuBar: HTMLElement | null = null
+    let scoreDisplay: HTMLElement | null = null
+    let bsodScreen: HTMLElement | null = null
+    let winScreen: HTMLElement | null = null
+    let startScreen: HTMLElement | null = null
+
+    function updateCPU() {
+      const maxWindows = 10
+      const count = windows.length
+      cpuUsage = Math.min(100, (count / maxWindows) * 100)
+      if (cpuBar) cpuBar.style.width = `${cpuUsage}%`
+
+      if (cpuUsage > 80 && cpuBar) cpuBar.style.background = '#ff0000'
+      else if (cpuUsage > 50 && cpuBar) cpuBar.style.background = '#ffff00'
+      else if (cpuBar) cpuBar.style.background = '#000080'
+
+      if (count >= maxWindows) {
+        triggerGameOver()
+      }
+    }
+
+    function triggerGameOver() {
+      gameActive = false
+      stopBackgroundMusic()
+      cancelAnimationFrame(animationId)
+      playGameOverSound()
+      const finalScore = document.getElementById('final-score')
+      if (finalScore) finalScore.innerText = String(score)
+      if (bsodScreen) bsodScreen.classList.remove('hidden')
+    }
+
+    function triggerWin() {
+      gameActive = false
+      stopBackgroundMusic()
+      cancelAnimationFrame(animationId)
+      playWinSound()
+      if (winScreen) winScreen.classList.remove('hidden')
+
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('game-completed'))
+      }, 1500)
+    }
+
+    function createWindow() {
+      if (!gameContainer) return
+
+      const id = Date.now() + Math.random()
+      const typeRoll = Math.random()
+      let type = 'normal'
+
+      if (score >= 5 && typeRoll > 0.6) {
+        const movingCount = windows.filter((w) => w.type === 'moving').length
+        if (movingCount < 2) {
+          type = 'moving'
+        }
+      }
+
+      if (score >= 10 && typeRoll > 0.8) type = 'shifty'
+
+      if (score >= 15 && typeRoll > 0.9) {
+        const glitchExists = windows.some((w) => w.type === 'glitch')
+        if (!glitchExists) {
+          type = 'glitch'
+        } else {
+          type = Math.random() > 0.5 ? 'moving' : 'shifty'
+        }
+      }
+
+      const winEl = document.createElement('div')
+      winEl.className = 'window'
+      winEl.id = `win-${id}`
+
+      const maxX = gameContainer.offsetWidth - 180
+      const maxY = gameContainer.offsetHeight - 200
+
+      let x = Math.floor(Math.random() * maxX)
+      let y = Math.floor(Math.random() * maxY)
+      if (x < 0) x = 0
+      if (y < 35) y = 35
+
+      winEl.style.left = `${x}px`
+      winEl.style.top = `${y}px`
+
+      const titleText = popupTitles[Math.floor(Math.random() * popupTitles.length)]
+      const bodyText = popupTexts[Math.floor(Math.random() * popupTexts.length)]
+
+      winEl.style.zIndex = String(10 + windows.length)
+
+      let titleClass = 'title-bar'
+      if (type === 'shifty') titleClass += ' warning'
+      if (type === 'glitch') titleClass += ' glitch-bar'
+
+      const icon = type === 'glitch' ? '👾' : Math.random() > 0.5 ? '⚠️' : 'ℹ️'
+
+      winEl.innerHTML = `
+        <div class="${titleClass}">
+          <span>${titleText}</span>
+          <div class="close-btn" data-id="${id}">X</div>
+        </div>
+        <div class="window-body">
+          <div style="font-size: 20px;">${icon}</div>
+          <p>${bodyText}</p>
+          <button class="btn-ok">ACEPTAR</button>
+        </div>
+      `
+
+      gameContainer.appendChild(winEl)
+      playSpawnSound()
+
+      const winObj: WindowObj = {
+        id: id,
+        el: winEl,
+        type: type,
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 3,
+        shiftyTriggered: false,
+        lastTeleport: 0,
+      }
+
+      windows.push(winObj)
+      updateCPU()
+
+      const closeBtn = winEl.querySelector('.close-btn') as HTMLElement
+      const okBtn = winEl.querySelector('.btn-ok') as HTMLElement
+
+      const closeHandler = (e: Event) => {
+        e.stopPropagation()
+
+        if (type === 'shifty' && !winObj.shiftyTriggered) {
+          winObj.shiftyTriggered = true
+          playErrorSound()
+          closeBtn.style.order = '-1'
+          return
+        }
+
+        closeWindow(id)
+      }
+
+      closeBtn.addEventListener('mousedown', closeHandler)
+      closeBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault()
+        closeHandler(e)
+      })
+
+      okBtn.addEventListener('click', closeHandler)
+      okBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault()
+        closeHandler(e)
+      })
+    }
+
+    function closeWindow(id: number) {
+      const index = windows.findIndex((w) => w.id === id)
+      if (index > -1) {
+        windows[index].el.remove()
+        windows.splice(index, 1)
+        score++
+        if (scoreDisplay) scoreDisplay.innerText = String(score)
+        playCloseSound()
+
+        if (score <= 28 && spawnRate > 400) {
+          spawnRate -= 30
+        }
+
+        if (score >= 50) {
+          triggerWin()
+        } else {
+          updateCPU()
+        }
+      }
+    }
+
+    function gameLoop(timestamp: number) {
+      if (!gameActive) return
+
+      if (timestamp - lastSpawn > spawnRate) {
+        createWindow()
+        lastSpawn = timestamp
+      }
+
+      if (!gameContainer) return
+
+      const maxX = gameContainer.offsetWidth - 180
+      const maxY = gameContainer.offsetHeight - 200
+
+      windows.forEach((win) => {
+        if (win.type === 'moving') {
+          win.x += win.vx
+          win.y += win.vy
+
+          if (win.x <= 0 || win.x >= maxX) win.vx *= -1
+          if (win.y <= 35 || win.y >= maxY) win.vy *= -1
+
+          win.el.style.left = `${win.x}px`
+          win.el.style.top = `${win.y}px`
+        }
+
+        if (win.type === 'glitch') {
+          if (Math.random() < 0.02) {
+            win.x = Math.max(0, Math.min(maxX, Math.random() * maxX))
+            win.y = Math.max(35, Math.min(maxY, Math.random() * maxY))
+            win.el.style.left = `${win.x}px`
+            win.el.style.top = `${win.y}px`
+
+            win.el.classList.add('glitching')
+            setTimeout(() => win.el.classList.remove('glitching'), 200)
+            playGlitchSound()
+          }
+        }
+      })
+
+      animationId = requestAnimationFrame(gameLoop)
+    }
+
+    function startGame() {
+      initAudio()
+      playBackgroundMusic()
+
+      if (startScreen) startScreen.style.display = 'none'
+      if (bsodScreen) bsodScreen.classList.add('hidden')
+      if (winScreen) winScreen.classList.add('hidden')
+
+      score = 0
+      spawnRate = 2000
+      cpuUsage = 0
+      windows = []
+
+      const existingWindows = gameContainer?.querySelectorAll('.window')
+      existingWindows?.forEach((el) => el.remove())
+
+      if (scoreDisplay) scoreDisplay.innerText = '0'
+      updateCPU()
+      gameActive = true
+      lastSpawn = 0
+      animationId = requestAnimationFrame(gameLoop)
+    }
+
+    function initWindowsGame() {
+      gameContainer = document.getElementById('windows-game-container')
+      cpuBar = document.getElementById('cpu-fill')
+      scoreDisplay = document.getElementById('score-display')
+      bsodScreen = document.getElementById('bsod')
+      winScreen = document.getElementById('win-screen')
+      startScreen = document.getElementById('start-screen')
+
+      const btnStart = document.getElementById('btn-start')
+      const btnRetry = document.getElementById('btn-retry')
+
+      btnStart?.addEventListener('click', startGame)
+      btnStart?.addEventListener('touchstart', (e) => {
+        e.preventDefault()
+        startGame()
+      })
+
+      btnRetry?.addEventListener('click', startGame)
+      btnRetry?.addEventListener('touchstart', (e) => {
+        e.preventDefault()
+        startGame()
+      })
+
+      // Update clock
+      setInterval(() => {
+        const now = new Date()
+        const hrs = String(now.getHours()).padStart(2, '0')
+        const mins = String(now.getMinutes()).padStart(2, '0')
+        const clock = document.getElementById('clock')
+        if (clock) clock.innerText = `${hrs}:${mins}`
+      }, 1000)
+    }
+
+    // Escuchar evento para iniciar el juego
+    window.addEventListener('start-game', () => {
+      initWindowsGame()
+    })
+  })()
+</script>
