@@ -19,6 +19,7 @@ export type GameType =
   | 'windows'
   | 'quad'
   | 'pong'
+  | 'soccer'
 
 // Configuración de cada día
 interface DayConfig {
@@ -89,7 +90,7 @@ const GAME_CONFIG: Record<number, GameType> = {
   21: 'pong',
   22: 'racer',
   23: 'racer',
-  24: 'racer',
+  24: 'soccer',
 }
 
 // Mapeo de videos por día (UUID único para cada video)
