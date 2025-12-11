@@ -180,6 +180,10 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     videoUrl: getVideoUrlForDay(21),
     prize: 'Nintendo Switch 2 con Mario Kart',
   },
+  24: {
+    videoUrl: getVideoUrlForDay(24),
+    prize: 'Final del Mundial en Nueva York',
+  },
 }
 
 function getDescriptionForDay(day: number): string {
