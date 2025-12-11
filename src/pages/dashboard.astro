@@ -26,7 +26,7 @@ const totalCoupons = userCoupons?.length || 0
   <div class="flex min-h-screen flex-col">
     <Header participationCount={totalCoupons} />
 
-    <main class="flex flex-1 flex-col items-center justify-center px-4 pb-12">
+    <main id="main-content" class="flex flex-1 flex-col items-center justify-center px-4 pb-12" tabindex="-1">
       <div id="coupon-section" class="space-y-6">
         <div class="text-center">
           <h2 class="text-shadow-title text-3xl text-balance">
