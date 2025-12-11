@@ -1,0 +1,749 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 7,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="soccerCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #soccerCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: crosshair;
+  }
+</style>
+
+<script>
+  ;(function () {
+    // --- Sistema de Audio (Sintetizador Web Audio API) ---
+    const AudioSys = {
+      ctx: null as AudioContext | null,
+      muted: false,
+
+      init: function () {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume()
+        }
+      },
+
+      toggleMute: function () {
+        this.muted = !this.muted
+        return this.muted
+      },
+
+      playTone: function (
+        freq: number,
+        type: OscillatorType,
+        duration: number,
+        vol = 0.1,
+        slideTo: number | null = null
+      ) {
+        if (this.muted || !this.ctx) return
+
+        const osc = this.ctx.createOscillator()
+        const gain = this.ctx.createGain()
+
+        osc.type = type
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime)
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration)
+        }
+
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration)
+
+        osc.connect(gain)
+        gain.connect(this.ctx.destination)
+
+        osc.start()
+        osc.stop(this.ctx.currentTime + duration)
+      },
+
+      playKick: function () {
+        this.playTone(150, 'square', 0.1, 0.1, 40)
+      },
+
+      playHit: function () {
+        this.playTone(200, 'sawtooth', 0.05, 0.1, 100)
+      },
+
+      playGoal: function () {
+        if (!this.ctx) return
+        const now = this.ctx.currentTime
+        this.playNote(523.25, now, 0.1)
+        this.playNote(659.25, now + 0.1, 0.1)
+        this.playNote(783.99, now + 0.2, 0.2)
+        this.playNote(1046.5, now + 0.4, 0.4)
+      },
+
+      playMiss: function () {
+        this.playTone(300, 'sawtooth', 0.4, 0.1, 50)
+      },
+
+      playWin: function () {
+        if (!this.ctx) return
+        const now = this.ctx.currentTime
+        ;[523, 659, 783, 1046, 783, 1046].forEach((freq, i) => {
+          this.playNote(freq, now + i * 0.15, 0.1, 'square')
+        })
+      },
+
+      playNote: function (
+        freq: number,
+        time: number,
+        duration: number,
+        type: OscillatorType = 'square'
+      ) {
+        if (this.muted || !this.ctx) return
+        const osc = this.ctx.createOscillator()
+        const gain = this.ctx.createGain()
+        osc.type = type
+        osc.frequency.setValueAtTime(freq, time)
+        gain.gain.setValueAtTime(0.1, time)
+        gain.gain.exponentialRampToValueAtTime(0.01, time + duration)
+        osc.connect(gain)
+        gain.connect(this.ctx.destination)
+        osc.start(time)
+        osc.stop(time + duration)
+      },
+    }
+
+    // --- Configuración e Inicialización ---
+    const canvas = document.getElementById('soccerCanvas') as HTMLCanvasElement | null
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Estado del juego
+    type GameState =
+      | 'MENU'
+      | 'PLAYING'
+      | 'AIMING'
+      | 'MOVING_BALL'
+      | 'GOAL'
+      | 'MISS'
+      | 'GAMEOVER'
+      | 'WIN'
+    let gameState: GameState = 'MENU'
+    let score = 0
+    const GOAL_TARGET = 7
+    let timeLeft = 60
+    let timerInterval: ReturnType<typeof setInterval> | null = null
+
+    // Resolución interna baja para Pixel Art
+    const GAME_WIDTH = 180
+    const GAME_HEIGHT = 320
+
+    // Establecemos resolución interna del canvas
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+    ctx.imageSmoothingEnabled = false
+
+    // Dimensiones del campo
+    const PITCH_START_Y = 40
+    const GOAL_WIDTH = 100
+    const GOAL_DEPTH = 20
+
+    // Objetos
+    const ball = { x: 0, y: 0, r: 4, vx: 0, vy: 0 }
+    const keeper = { x: 0, y: 0, w: 24, h: 24, dir: 1, speed: 1.0 }
+    const player = { x: 0, y: 0, w: 16, h: 24 }
+    let defenders: Array<{
+      x: number
+      y: number
+      w: number
+      h: number
+      dir: number
+      speed: number
+      range: number
+    }> = []
+    let particles: Array<{ x: number; y: number; vx: number; vy: number; life: number; color: string }> = []
+
+    // Lógica de apuntado
+    let aimAngle = -Math.PI / 2
+    let isAiming = false
+
+    // --- Inicialización ---
+    function resetRound() {
+      player.x = (GAME_WIDTH - player.w) / 2
+      player.y = GAME_HEIGHT - 60
+
+      ball.x = GAME_WIDTH / 2
+      ball.y = player.y + player.h - 5
+      ball.vx = 0
+      ball.vy = 0
+
+      keeper.x = (GAME_WIDTH - keeper.w) / 2
+      keeper.y = PITCH_START_Y - 5
+
+      defenders = []
+
+      if (score >= 2) {
+        defenders.push({
+          x: GAME_WIDTH / 2 - 8,
+          y: 200,
+          w: 16,
+          h: 24,
+          dir: 1,
+          speed: 1.2,
+          range: 60,
+        })
+      }
+
+      if (score >= 4) {
+        defenders.push({
+          x: GAME_WIDTH / 2 - 8,
+          y: 120,
+          w: 16,
+          h: 24,
+          dir: -1,
+          speed: 1.5,
+          range: 70,
+        })
+      }
+
+      aimAngle = -Math.PI / 2
+
+      if (gameState !== 'GAMEOVER' && gameState !== 'WIN' && gameState !== 'MENU') {
+        gameState = 'PLAYING'
+      }
+    }
+
+    // --- Inputs (Mouse & Touch) ---
+    function getInputCoordinates(e: MouseEvent | TouchEvent) {
+      const rect = canvas!.getBoundingClientRect()
+      let clientX, clientY
+
+      if ('touches' in e && e.touches.length > 0) {
+        clientX = e.touches[0].clientX
+        clientY = e.touches[0].clientY
+      } else if ('clientX' in e) {
+        clientX = e.clientX
+        clientY = e.clientY
+      } else {
+        return { x: 0, y: 0 }
+      }
+
+      const scaleX = GAME_WIDTH / rect.width
+      const scaleY = GAME_HEIGHT / rect.height
+
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY,
+      }
+    }
+
+    function handleStart(e: MouseEvent | TouchEvent) {
+      AudioSys.init()
+
+      if (gameState === 'MENU') {
+        initGame()
+        return
+      }
+
+      if (gameState === 'PLAYING') {
+        isAiming = true
+        gameState = 'AIMING'
+        handleMove(e)
+      }
+    }
+
+    function handleMove(e: MouseEvent | TouchEvent) {
+      if (gameState === 'AIMING' && isAiming) {
+        e.preventDefault()
+        const pos = getInputCoordinates(e)
+
+        let dx = pos.x - ball.x
+        let dy = pos.y - ball.y
+        let angle = Math.atan2(dy, dx)
+
+        if (angle > -0.2) angle = -0.2
+        if (angle < -2.9) angle = -2.9
+        if (angle > 0) angle = -Math.PI / 2
+
+        aimAngle = angle
+      }
+    }
+
+    function handleEnd() {
+      if (gameState === 'AIMING' && isAiming) {
+        isAiming = false
+        shootBall()
+      }
+    }
+
+    canvas.addEventListener('mousedown', handleStart)
+    document.addEventListener('mousemove', handleMove)
+    document.addEventListener('mouseup', handleEnd)
+
+    canvas.addEventListener('touchstart', handleStart, { passive: false })
+    document.addEventListener('touchmove', handleMove, { passive: false })
+    document.addEventListener('touchend', handleEnd, { passive: false })
+
+    // --- Lógica del Juego ---
+    function initGame() {
+      score = 0
+      timeLeft = 60
+
+      gameState = 'PLAYING'
+      resetRound()
+
+      if (timerInterval) clearInterval(timerInterval)
+      timerInterval = setInterval(() => {
+        if (gameState === 'PLAYING' || gameState === 'AIMING' || gameState === 'MOVING_BALL') {
+          timeLeft--
+
+          if (timeLeft <= 0) {
+            endGame(false)
+          }
+        }
+      }, 1000)
+    }
+
+    function shootBall() {
+      gameState = 'MOVING_BALL'
+      const speed = 7
+      ball.vx = Math.cos(aimAngle) * speed
+      ball.vy = Math.sin(aimAngle) * speed
+
+      AudioSys.playKick()
+      createParticles(ball.x, ball.y, 5, '#fff')
+    }
+
+    function endGame(win: boolean) {
+      if (timerInterval) clearInterval(timerInterval)
+      gameState = win ? 'WIN' : 'GAMEOVER'
+
+      if (win) {
+        AudioSys.playWin()
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 1500)
+      } else {
+        AudioSys.playMiss()
+      }
+    }
+
+    function createParticles(x: number, y: number, count: number, color: string) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 3,
+          vy: (Math.random() - 0.5) * 3,
+          life: 20 + Math.random() * 10,
+          color: color,
+        })
+      }
+    }
+
+    function update() {
+      if (gameState !== 'MENU' && gameState !== 'GAMEOVER' && gameState !== 'WIN') {
+        keeper.x += keeper.speed * keeper.dir
+        const goalX = (GAME_WIDTH - GOAL_WIDTH) / 2
+
+        if (Math.random() < 0.02) keeper.dir *= -1
+
+        if (keeper.x <= goalX - 10) keeper.dir = 1
+        if (keeper.x + keeper.w >= goalX + GOAL_WIDTH + 10) keeper.dir = -1
+
+        defenders.forEach((def) => {
+          def.x += def.speed * def.dir
+          if (def.x > GAME_WIDTH - def.w - 10 || def.x > GAME_WIDTH / 2 + def.range) def.dir = -1
+          if (def.x < 10 || def.x < GAME_WIDTH / 2 - def.range) def.dir = 1
+        })
+      }
+
+      if (gameState === 'MOVING_BALL') {
+        ball.x += ball.vx
+        ball.y += ball.vy
+
+        // Colisión Defensas
+        for (const def of defenders) {
+          if (
+            ball.y < def.y + def.h &&
+            ball.y > def.y &&
+            ball.x > def.x &&
+            ball.x < def.x + def.w
+          ) {
+            ball.vy *= -0.5
+            ball.vx *= -0.5
+            gameState = 'MISS'
+            AudioSys.playHit()
+            createParticles(ball.x, ball.y, 5, '#FFFF00')
+            handleResult(false)
+            return
+          }
+        }
+
+        // Colisión Portero
+        if (
+          ball.y < keeper.y + keeper.h &&
+          ball.y > keeper.y &&
+          ball.x > keeper.x &&
+          ball.x < keeper.x + keeper.w
+        ) {
+          ball.vy *= -0.5
+          ball.vx *= -0.5
+          gameState = 'MISS'
+          AudioSys.playHit()
+          handleResult(false)
+        }
+
+        // Colisión Postes
+        const goalX = (GAME_WIDTH - GOAL_WIDTH) / 2
+        if (ball.y < PITCH_START_Y + 5 && ball.y > PITCH_START_Y - 10) {
+          if (Math.abs(ball.x - goalX) < 5 || Math.abs(ball.x - (goalX + GOAL_WIDTH)) < 5) {
+            ball.vx *= -1
+            gameState = 'MISS'
+            AudioSys.playHit()
+            handleResult(false)
+          }
+        }
+
+        if (ball.y < PITCH_START_Y) {
+          if (ball.x > goalX + 2 && ball.x < goalX + GOAL_WIDTH - 2) {
+            if (ball.y < PITCH_START_Y - 15) {
+              gameState = 'GOAL'
+              handleResult(true)
+            }
+          } else {
+            gameState = 'MISS'
+            AudioSys.playMiss()
+            handleResult(false)
+          }
+        }
+
+        if (ball.y < -10 || ball.x < 0 || ball.x > GAME_WIDTH || ball.y > GAME_HEIGHT) {
+          if (gameState === 'MOVING_BALL') {
+            gameState = 'MISS'
+            AudioSys.playMiss()
+            handleResult(false)
+          }
+        }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]
+        p.x += p.vx
+        p.y += p.vy
+        p.life--
+        if (p.life <= 0) particles.splice(i, 1)
+      }
+    }
+
+    function handleResult(isGoal: boolean) {
+      if (isGoal) {
+        AudioSys.playGoal()
+        score++
+        createParticles(ball.x, ball.y, 40, '#ffeb3b')
+        drawTextOverlay('¡GOL!', '#ffeb3b')
+
+        keeper.speed += 0.3
+
+        if (score >= GOAL_TARGET) {
+          setTimeout(() => endGame(true), 1000)
+          return
+        }
+      } else {
+        createParticles(ball.x, ball.y, 10, '#fff')
+        drawTextOverlay('FALLO', '#ff5252')
+      }
+
+      setTimeout(() => {
+        resetRound()
+      }, 1000)
+    }
+
+    // --- Renderizado ---
+    function draw() {
+      ctx!.fillStyle = '#1a1a1a'
+      ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+      const goalX = (GAME_WIDTH - GOAL_WIDTH) / 2
+
+      // Red de la portería
+      ctx!.fillStyle = '#2e2e2e'
+      ctx!.fillRect(goalX, PITCH_START_Y - GOAL_DEPTH, GOAL_WIDTH, GOAL_DEPTH)
+
+      ctx!.strokeStyle = '#555'
+      ctx!.lineWidth = 1
+      ctx!.beginPath()
+      for (let i = 0; i <= GOAL_WIDTH; i += 10) {
+        ctx!.moveTo(goalX + i, PITCH_START_Y - GOAL_DEPTH)
+        ctx!.lineTo(goalX + i, PITCH_START_Y)
+      }
+      for (let i = 0; i <= GOAL_DEPTH; i += 5) {
+        ctx!.moveTo(goalX, PITCH_START_Y - i)
+        ctx!.lineTo(goalX + GOAL_WIDTH, PITCH_START_Y - i)
+      }
+      ctx!.stroke()
+
+      // Césped
+      ctx!.fillStyle = '#4CAF50'
+      ctx!.fillRect(0, PITCH_START_Y, GAME_WIDTH, GAME_HEIGHT - PITCH_START_Y)
+
+      // Líneas del campo
+      ctx!.strokeStyle = 'rgba(255,255,255,0.8)'
+      ctx!.lineWidth = 2
+
+      ctx!.beginPath()
+      ctx!.moveTo(goalX, PITCH_START_Y)
+      ctx!.lineTo(goalX + GOAL_WIDTH, PITCH_START_Y)
+      ctx!.stroke()
+
+      ctx!.strokeRect((GAME_WIDTH - 120) / 2, PITCH_START_Y, 120, 60)
+      ctx!.strokeRect((GAME_WIDTH - 60) / 2, PITCH_START_Y, 60, 25)
+
+      ctx!.beginPath()
+      ctx!.arc(GAME_WIDTH / 2, PITCH_START_Y + 60, 20, 0, Math.PI, false)
+      ctx!.stroke()
+
+      ctx!.fillStyle = 'white'
+      ctx!.fillRect(GAME_WIDTH / 2 - 1.5, PITCH_START_Y + 45, 3, 3)
+
+      // Postes
+      ctx!.fillStyle = '#ddd'
+      ctx!.fillRect(goalX - 3, PITCH_START_Y - GOAL_DEPTH, 3, GOAL_DEPTH)
+      ctx!.fillRect(goalX + GOAL_WIDTH, PITCH_START_Y - GOAL_DEPTH, 3, GOAL_DEPTH)
+      ctx!.fillRect(goalX - 3, PITCH_START_Y - GOAL_DEPTH - 2, GOAL_WIDTH + 6, 3)
+
+      // Portero
+      ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx!.fillRect(keeper.x + 2, keeper.y + keeper.h - 2, keeper.w - 4, 4)
+      drawPixelSprite(keeper.x, keeper.y, '#FF5722', '#333')
+
+      // Defensas
+      defenders.forEach((def) => {
+        ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+        ctx!.fillRect(def.x + 2, def.y + def.h - 2, def.w - 4, 4)
+        drawPixelSprite(def.x, def.y, '#FFEB3B', '#3F51B5')
+      })
+
+      // Jugador
+      ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx!.fillRect(player.x + 2, player.y + player.h - 2, player.w - 4, 4)
+      drawPixelSprite(player.x, player.y, '#2196F3', '#eee')
+
+      // Línea de apuntado
+      if ((gameState === 'AIMING' || gameState === 'PLAYING') && isAiming) {
+        ctx!.fillStyle = '#ffeb3b'
+        for (let i = 1; i < 8; i++) {
+          const spacing = i * 15
+          const dotX = ball.x + Math.cos(aimAngle) * spacing
+          const dotY = ball.y + Math.sin(aimAngle) * spacing
+          ctx!.globalAlpha = 1 - i / 9
+          ctx!.fillRect(dotX - 1.5, dotY - 1.5, 3, 3)
+        }
+        ctx!.globalAlpha = 1.0
+      }
+
+      // Balón
+      drawBall(ball.x, ball.y)
+
+      // Partículas
+      particles.forEach((p) => {
+        ctx!.fillStyle = p.color
+        ctx!.fillRect(p.x, p.y, 2, 2)
+      })
+
+      // UI
+      drawUI()
+    }
+
+    function drawUI() {
+      ctx!.fillStyle = 'rgba(0,0,0,0.6)'
+      ctx!.fillRect(0, 0, GAME_WIDTH, 30)
+
+      ctx!.fillStyle = '#fff'
+      ctx!.font = '8px "Press Start 2P"'
+      ctx!.textAlign = 'left'
+      ctx!.fillText(`GOLES: ${score}/${GOAL_TARGET}`, 8, 12)
+
+      ctx!.textAlign = 'right'
+      ctx!.fillStyle = timeLeft <= 10 ? '#ff5252' : '#fff'
+      ctx!.fillText(`TIEMPO: ${timeLeft}`, GAME_WIDTH - 8, 12)
+
+      if (gameState === 'MENU') {
+        ctx!.fillStyle = 'rgba(0,0,0,0.85)'
+        ctx!.fillRect(0, GAME_HEIGHT / 2 - 80, GAME_WIDTH, 160)
+
+        ctx!.fillStyle = '#ffeb3b'
+        ctx!.font = '12px "Press Start 2P"'
+        ctx!.textAlign = 'center'
+        ctx!.fillText('RETO', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40)
+        ctx!.fillText('7 GOLES', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx!.fillStyle = '#fff'
+          ctx!.font = '10px "Press Start 2P"'
+          ctx!.fillText('CLICK PARA', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 15)
+          ctx!.fillText('JUGAR', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30)
+        }
+
+        ctx!.fillStyle = '#888'
+        ctx!.font = '6px "Press Start 2P"'
+        ctx!.fillText('MANTEN PRESIONADO', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 55)
+        ctx!.fillText('PARA APUNTAR', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 65)
+      }
+
+      if (gameState === 'WIN') {
+        ctx!.fillStyle = 'rgba(0,0,0,0.85)'
+        ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+        ctx!.textAlign = 'center'
+        ctx!.font = '14px "Press Start 2P"'
+
+        ctx!.fillStyle = '#4CAF50'
+        ctx!.fillText('¡VICTORIA!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30)
+
+        ctx!.fillStyle = '#fff'
+        ctx!.font = '8px "Press Start 2P"'
+        ctx!.fillText(`¡CONSEGUIDO EN ${60 - timeLeft}s!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 10)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx!.fillStyle = '#ffeb3b'
+          ctx!.font = '8px "Press Start 2P"'
+          ctx!.fillText('DESBLOQUEANDO...', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50)
+        }
+      }
+
+      if (gameState === 'GAMEOVER') {
+        ctx!.fillStyle = 'rgba(0,0,0,0.85)'
+        ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+        ctx!.textAlign = 'center'
+        ctx!.font = '12px "Press Start 2P"'
+
+        ctx!.fillStyle = '#ff5252'
+        ctx!.fillText('TIEMPO FUERA', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30)
+
+        ctx!.fillStyle = '#fff'
+        ctx!.font = '8px "Press Start 2P"'
+        ctx!.fillText(`SOLO ${score} GOLES`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 10)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx!.fillStyle = '#ffeb3b'
+          ctx!.font = '8px "Press Start 2P"'
+          ctx!.fillText('CLICK PARA', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 45)
+          ctx!.fillText('REINTENTAR', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 58)
+        }
+      }
+    }
+
+    function drawPixelSprite(x: number, y: number, shirtColor: string, pantsColor: string) {
+      // Cabeza
+      ctx!.fillStyle = '#ffccaa'
+      ctx!.fillRect(x + 4, y, 8, 8)
+      // Pelo
+      ctx!.fillStyle = '#5d4037'
+      ctx!.fillRect(x + 4, y, 8, 3)
+
+      // Camiseta
+      ctx!.fillStyle = shirtColor
+      ctx!.fillRect(x + 2, y + 8, 12, 10)
+
+      // Pantalones
+      ctx!.fillStyle = pantsColor
+      ctx!.fillRect(x + 2, y + 18, 12, 4)
+
+      // Piernas
+      ctx!.fillStyle = '#ffccaa'
+      ctx!.fillRect(x + 3, y + 22, 3, 2)
+      ctx!.fillRect(x + 10, y + 22, 3, 2)
+
+      // Botas
+      ctx!.fillStyle = '#111'
+      ctx!.fillRect(x + 2, y + 23, 4, 2)
+      ctx!.fillRect(x + 10, y + 23, 4, 2)
+    }
+
+    function drawBall(x: number, y: number) {
+      if (gameState !== 'MOVING_BALL') {
+        ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+        ctx!.fillRect(x - 2, y + 3, 6, 2)
+      }
+      ctx!.fillStyle = '#fff'
+      const r = ball.r
+      ctx!.fillRect(x - r + 1, y - r, r * 2 - 2, r * 2)
+      ctx!.fillRect(x - r, y - r + 1, r * 2, r * 2 - 2)
+      ctx!.fillStyle = '#000'
+      ctx!.fillRect(x, y, 2, 2)
+      ctx!.fillRect(x - 2, y - 2, 1, 1)
+    }
+
+    function drawTextOverlay(text: string, color: string) {
+      ctx!.save()
+      ctx!.fillStyle = color
+      ctx!.strokeStyle = '#000'
+      ctx!.lineWidth = 4
+      ctx!.font = '14px "Press Start 2P"'
+      ctx!.textAlign = 'center'
+      ctx!.strokeText(text, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20)
+      ctx!.fillText(text, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20)
+      ctx!.restore()
+    }
+
+    // --- Game Loop ---
+    let lastTime = 0
+    const TARGET_FPS = 60
+    const FRAME_DELAY = 1000 / TARGET_FPS
+
+    function loop(currentTime: number) {
+      requestAnimationFrame(loop)
+
+      if (!lastTime) {
+        lastTime = currentTime
+        return
+      }
+
+      const deltaTime = currentTime - lastTime
+
+      if (deltaTime >= FRAME_DELAY) {
+        update()
+        draw()
+        lastTime = currentTime - (deltaTime % FRAME_DELAY)
+      }
+    }
+
+    // Manejar click para reintentar en GAMEOVER
+    canvas.addEventListener('click', () => {
+      if (gameState === 'GAMEOVER') {
+        initGame()
+      }
+    })
+
+    requestAnimationFrame(loop)
+  })()
+</script>
