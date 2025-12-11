@@ -5,6 +5,8 @@ import Header from '@/sections/Header.astro'
 
 import { supabaseAdmin } from '@/supabase-admin'
 import TicketContainer from '@/components/TicketContainer.astro'
+import GamesContainer from '@/components/GamesContainer.astro'
+import Footer from '@/sections/Footer.astro'
 
 if (!Astro.locals.user) {
   return Astro.redirect('/registro')
@@ -24,7 +26,7 @@ const totalCoupons = userCoupons?.length || 0
   <div class="flex min-h-screen flex-col">
     <Header participationCount={totalCoupons} />
 
-    <main class="flex flex-1 flex-col items-center justify-center px-4 py-8">
+    <main class="flex flex-1 flex-col items-center justify-center px-4 pb-12">
       <div id="coupon-section" class="space-y-6">
         <div class="text-center">
           <h2 class="text-shadow-title text-3xl text-balance">
@@ -36,11 +38,14 @@ const totalCoupons = userCoupons?.length || 0
       </div>
 
       <section
-        class="mt-4 w-full sm:w-[80%] max-w-xl px-4 font-sans"
+        class="mt-4 w-full sm:w-[80%] max-w-xl px-4 font-sans space-y-4"
         aria-labelledby="participation-status"
       >
+        <GamesContainer totalCoupons={totalCoupons} />
         <TicketContainer totalCoupons={totalCoupons} />
       </section>
     </main>
+
+    <Footer />
   </div>
 </Layout>
