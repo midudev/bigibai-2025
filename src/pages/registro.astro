@@ -15,7 +15,7 @@ if (user) return Astro.redirect('/dashboard')
   <div class="flex min-h-screen flex-col">
     <Header participationCount={0} />
 
-    <main class="flex flex-1 items-center justify-center px-4 py-8">
+    <main id="main-content" class="flex flex-1 items-center justify-center px-4 py-8" tabindex="-1">
       <div class="mx-auto w-full max-w-md">
         <!-- Estado sin sesión: Opciones de login -->
         {
@@ -105,6 +105,8 @@ if (user) return Astro.redirect('/dashboard')
                 <div
                   id="message"
                   class="invisible translate-y-2 scale-95 rounded-lg bg-linear-to-r p-3 text-center text-sm font-medium opacity-0 transition-all duration-300"
+                  role="status"
+                  aria-live="polite"
                 />
               </form>
             </div>
