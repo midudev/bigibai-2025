@@ -53,7 +53,7 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
       crossorigin="anonymous"
     />
 
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="keywords" content="bigibai" />
     <meta name="author" content="Ibai Llanos" />
@@ -92,6 +92,7 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     <ClientRouter />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
     <div class="overflow-hidden">
       <div id="mask" class={isInternalNavigation ? 'unlocked' : ''}>
         <div id="background">
