@@ -1,5 +1,24 @@
 // Tipos de juegos disponibles
-export type GameType = 'anagram' | 'trivia' | 'puzzle' | 'memory' | 'racer' | 'camper' | 'snake' | 'circus' | 'safari' | 'hamster' | 'dron' | 'flight' | 'arkanoid' | 'sea' | 'noise' | 'walking' | 'windows' | 'quad'
+export type GameType =
+  | 'anagram'
+  | 'trivia'
+  | 'puzzle'
+  | 'memory'
+  | 'racer'
+  | 'camper'
+  | 'snake'
+  | 'circus'
+  | 'safari'
+  | 'hamster'
+  | 'dron'
+  | 'flight'
+  | 'arkanoid'
+  | 'sea'
+  | 'noise'
+  | 'walking'
+  | 'windows'
+  | 'quad'
+  | 'pong'
 
 // Configuración de cada día
 interface DayConfig {
@@ -7,7 +26,7 @@ interface DayConfig {
   description: string
   gameType: GameType
   prize?: string
-  gameData?: {  
+  gameData?: {
     targetScore?: number
     anagram?: string
     answer?: string
@@ -67,7 +86,7 @@ const GAME_CONFIG: Record<number, GameType> = {
   18: 'racer',
   19: 'racer',
   20: 'racer',
-  21: 'racer',
+  21: 'pong',
   22: 'racer',
   23: 'racer',
   24: 'racer',
@@ -154,8 +173,12 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
   },
   12: {
     videoUrl: getVideoUrlForDay(12),
-    prize: 'Camino Legendario para 2 personas'
-  }, 
+    prize: 'Camino Legendario para 2 personas',
+  },
+  21: {
+    videoUrl: getVideoUrlForDay(21),
+    prize: 'Nintendo Switch 2 con Mario Kart',
+  },
 }
 
 function getDescriptionForDay(day: number): string {
