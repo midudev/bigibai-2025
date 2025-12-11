@@ -24,11 +24,7 @@ const sizeMap = {
 const dimension = sizeMap[size] ?? sizeMap.md
 ---
 
-<span
-  class:list={['avatar', className]}
-  style={`--avatar-size: ${dimension}px`}
-  aria-hidden={src ? 'true' : 'false'}
->
+<span class:list={['avatar', className]} style={`--avatar-size: ${dimension}px`}>
   {
     src ? (
       <img
@@ -40,7 +36,7 @@ const dimension = sizeMap[size] ?? sizeMap.md
         onerror="this.onerror=null; this.src='/fallback-avatar.webp'"
       />
     ) : (
-      <span class="avatar" aria-label={alt}>
+      <span class="avatar" aria-label={alt} role="img">
         {fallback}
       </span>
     )
