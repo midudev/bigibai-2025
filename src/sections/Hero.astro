@@ -15,7 +15,11 @@ interface Props {
 const { isLoggedIn, participationCount, userAchievements } = Astro.props
 ---
 
-<main class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20">
+<main
+  id="main-content"
+  class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20"
+  tabindex="-1"
+>
   <!-- Bento Grid -->
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
     <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
