@@ -11,28 +11,26 @@ import Clicker from '@/components/Clicker.astro'
 // Verificar si el usuario está logueado
 const user = Astro.locals.user
 
-// Si el usuario está logueado, obtener sus cupones
+// Si el usuario está logueado, obtener sus cupones y logros en paralelo para reducir latencia
 let totalCoupons = 0
-if (user) {
-  const { data: userCoupons } = await supabaseAdmin
-    .from('coupons')
-    .select('used_at')
-    .eq('used_by', user.id)
-    .eq('is_used', true)
-
-  totalCoupons = userCoupons?.length || 0
-  totalCoupons = userCoupons?.length || 0
-}
-
 let userAchievements = {}
-if (user) {
-  const { data: achievementsData } = await supabaseAdmin
-    .from('user_achievements')
-    .select('achievements')
-    .eq('user_id', user.id)
-    .single()
 
-  userAchievements = achievementsData?.achievements || {}
+if (user) {
+  const [userCouponsResult, achievementsResult] = await Promise.all([
+    supabaseAdmin
+      .from('coupons')
+      .select('used_at')
+      .eq('used_by', user.id)
+      .eq('is_used', true),
+    supabaseAdmin
+      .from('user_achievements')
+      .select('achievements')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
+
+  totalCoupons = userCouponsResult.data?.length ?? 0
+  userAchievements = achievementsResult.data?.achievements ?? {}
 }
 ---
 
