@@ -1,0 +1,169 @@
+---
+interface Props {
+  totalCoupons: number
+}
+
+const { totalCoupons } = Astro.props
+
+// Obtener el día actual en hora CET
+const today = new Date()
+const cetTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
+const currentMonth = cetTime.getMonth()
+const currentDay = cetTime.getDate()
+
+// Solo mostrar casillas si estamos en diciembre y el usuario tiene cupones
+const isDecember = currentMonth === 11
+const availableDays = isDecember ? Math.min(currentDay, 24) : 0
+const hasGames = availableDays > 0 && totalCoupons > 0
+
+// Generar array de días disponibles
+const days = Array.from({ length: availableDays }, (_, i) => i + 1)
+---
+
+{
+  hasGames && (
+    <article
+      class:list={[
+        'games-card rounded-lg [box-shadow:0_10px_40px_rgba(0,0,0,0.4)] group relative bg-linear-to-br from-emerald-900/40 via-emerald-800/30 to-teal-900/40 backdrop-blur transition-all duration-500',
+        '',
+      ]}
+      role="region"
+      aria-label="Acceso a los juegos diarios"
+    >
+      <div class="relative z-10 p-6">
+        <div class="text-center mb-4">
+          <h3 class="text-lg md:text-xl font-bold text-white/90 mb-1">🎮 Juegos disponibles</h3>
+          <p class="text-white/60 text-xs md:text-sm">Haz clic en una chocolatina para jugar</p>
+        </div>
+
+        <div class="chocolates-grid">
+          {days.map((day) => (
+            <a
+              href={`/casilla-${day}-diciembre`}
+              class="chocolate-item group/choco"
+              aria-label={`Ir al juego del día ${day}`}
+            >
+              <div class="chocolate-wrapper">
+                <img
+                  src={`/chocolatinas/${day <= 12 ? day : 'mock'}.webp`}
+                  alt={`Chocolatina día ${day}`}
+                  class="chocolate-img"
+                  loading="lazy"
+                  width="80"
+                  height="80"
+                />
+                <span class="day-badge aspect-square w-4 h-4 items-center justify-center rounded-full inline-flex">
+                  {day}
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+<style>
+  .games-card {
+    mask:
+      radial-gradient(circle 8px at 15% 0, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 35% 0, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 50% 0, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 65% 0, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 85% 0, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 15% 100%, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 35% 100%, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 50% 100%, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 65% 100%, transparent 0, transparent 8px, black 8px),
+      radial-gradient(circle 8px at 85% 100%, transparent 0, transparent 8px, black 8px);
+    mask-composite: intersect;
+  }
+
+  .chocolates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.75rem;
+    justify-items: center;
+  }
+
+  @media (min-width: 400px) {
+    .chocolates-grid {
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+  }
+
+  .chocolate-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .chocolate-item:hover {
+    transform: translateY(-4px) scale(1.1);
+  }
+
+  .chocolate-wrapper {
+    position: relative;
+    width: 50px;
+    height: 50px;
+  }
+
+  @media (min-width: 400px) {
+    .chocolate-wrapper {
+      width: 60px;
+      height: 60px;
+    }
+  }
+
+  .chocolate-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+    transition: filter 0.3s ease;
+  }
+
+  .chocolate-item:hover .chocolate-img {
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  }
+
+  .day-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: linear-gradient(135deg, #f8b134 0%, #e6a02c 100%);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+  }
+
+  .chocolate-item:hover .day-badge {
+    transform: scale(1.1);
+  }
+
+  @keyframes float-chocolate {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-3px) rotate(2deg);
+    }
+  }
+
+  .chocolate-item:nth-child(odd) .chocolate-img {
+    animation: float-chocolate 4s ease-in-out infinite;
+  }
+
+  .chocolate-item:nth-child(even) .chocolate-img {
+    animation: float-chocolate 4s ease-in-out infinite reverse;
+    animation-delay: 0.5s;
+  }
+</style>
