@@ -1,0 +1,520 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 1,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <canvas id="pongCanvas" slot="game"></canvas>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #pongCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+
+<script>
+  ;(function () {
+    // --- CONFIGURACIÓN E INICIALIZACIÓN ---
+    const canvas = document.getElementById('pongCanvas') as HTMLCanvasElement | null
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Resolución lógica del juego (estilo retro)
+    // Aspecto 9:16 vertical - igual que los otros juegos
+    const GAME_WIDTH = 360
+    const GAME_HEIGHT = 640
+
+    // Establecemos la resolución interna del canvas
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+
+    // Colores Oficiales Switch Neon
+    const COLORES = {
+      AZUL: '#00dcff', // Joy-Con Izquierdo (Jugador - Abajo)
+      ROJO: '#ff3c28', // Joy-Con Derecho (IA - Arriba)
+      GRIS: '#333333', // Cuerpo consola
+      NEGRO: '#000000',
+      BLANCO: '#ffffff',
+      BOLA_NORMAL: '#ffffff',
+      BOLA_SMASH: '#ffff00', // Amarillo eléctrico
+    }
+
+    // Puntos necesarios para ganar
+    const TARGET_SCORE = 5
+
+    // Estado del juego
+    let estadoJuego: 'MENU' | 'JUGANDO' | 'WIN' = 'MENU'
+    let frames = 0 // Para animaciones
+
+    // --- SISTEMA DE AUDIO (Web Audio API) ---
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+    }
+
+    function reproducirSonido(tipo: string) {
+      if (!audioCtx) return
+
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+
+      let freq = 400
+      let duracion = 0.05
+      let formaOnda: OscillatorType = 'square'
+
+      switch (tipo) {
+        case 'golpe':
+          freq = 400
+          duracion = 0.05
+          formaOnda = 'square'
+          break
+        case 'pared':
+          freq = 200
+          duracion = 0.05
+          formaOnda = 'square'
+          break
+        case 'smash':
+          freq = 800
+          duracion = 0.15
+          formaOnda = 'sawtooth'
+          break
+        case 'punto':
+          freq = 600
+          duracion = 0.2
+          formaOnda = 'sine'
+          break
+        case 'fallo':
+          freq = 100
+          duracion = 0.4
+          formaOnda = 'sawtooth'
+          break
+        case 'inicio':
+          freq = 500
+          duracion = 0.3
+          formaOnda = 'triangle'
+          break
+        case 'win':
+          freq = 800
+          duracion = 0.5
+          formaOnda = 'sine'
+          break
+      }
+
+      osc.type = formaOnda
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+
+      // Efecto de caída de tono para fallo
+      if (tipo === 'fallo') {
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + duracion)
+      }
+      // Efecto de subida para smash
+      if (tipo === 'smash') {
+        osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + duracion)
+      }
+      // Efecto de victoria
+      if (tipo === 'win') {
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime)
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15)
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3)
+      }
+
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duracion)
+
+      osc.start()
+      osc.stop(audioCtx.currentTime + duracion)
+    }
+
+    // --- OBJETOS ---
+
+    const jugador = {
+      x: GAME_WIDTH / 2 - 48,
+      y: GAME_HEIGHT - 50,
+      ancho: 96,
+      alto: 28,
+      color: COLORES.AZUL,
+      dx: 0, // Velocidad actual (para calcular smash)
+      xAnterior: 0,
+      puntos: 0,
+    }
+
+    const ia = {
+      x: GAME_WIDTH / 2 - 48,
+      y: 30,
+      ancho: 96,
+      alto: 28,
+      color: COLORES.ROJO,
+      velocidad: 4.2, // Velocidad de la IA
+      puntos: 0,
+    }
+
+    const bola = {
+      x: GAME_WIDTH / 2,
+      y: GAME_HEIGHT / 2,
+      tamano: 12,
+      vx: 0,
+      vy: 0,
+      velocidadBase: 6.4,
+      esSmash: false,
+      estela: [] as { x: number; y: number }[],
+
+      reset: function (ganador: string) {
+        this.x = GAME_WIDTH / 2
+        this.y = GAME_HEIGHT / 2
+        this.vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 4 + 2)
+
+        // La bola va hacia el que ganó el punto
+        this.vy = (ganador === 'jugador' ? 1 : -1) * this.velocidadBase
+
+        this.esSmash = false
+        this.estela = []
+      },
+
+      mover: function () {
+        // Guardar estela si es smash
+        if (this.esSmash) {
+          this.estela.push({ x: this.x, y: this.y })
+          if (this.estela.length > 8) this.estela.shift()
+        } else {
+          this.estela = []
+        }
+
+        this.x += this.vx
+        this.y += this.vy
+
+        // Rebote paredes
+        if (this.x <= 0 || this.x + this.tamano >= GAME_WIDTH) {
+          this.vx = -this.vx
+          reproducirSonido('pared')
+        }
+
+        // Puntuación
+        if (this.y > GAME_HEIGHT) {
+          ia.puntos++
+          reproducirSonido('fallo')
+          this.reset('ia')
+        } else if (this.y < -this.tamano) {
+          jugador.puntos++
+          reproducirSonido('punto')
+          // Incremento ligero de dificultad
+          this.velocidadBase += 0.2
+          this.reset('jugador')
+
+          // Verificar victoria
+          if (jugador.puntos >= TARGET_SCORE) {
+            estadoJuego = 'WIN'
+            reproducirSonido('win')
+            // Disparar evento de juego completado
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('game-completed'))
+            }, 1500)
+          }
+        }
+      },
+
+      checkColision: function (pala: typeof jugador | typeof ia) {
+        // Colisión simple AABB
+        if (
+          this.x < pala.x + pala.ancho &&
+          this.x + this.tamano > pala.x &&
+          this.y < pala.y + pala.alto &&
+          this.y + this.tamano > pala.y
+        ) {
+          // Determinar dirección para evitar rebotes múltiples dentro de la pala
+          const direccionCorrecta =
+            (pala === jugador && this.vy > 0) || (pala === ia && this.vy < 0)
+
+          if (direccionCorrecta) {
+            this.vy = -this.vy
+
+            // 1. MECÁNICA DE EFECTO (SPIN)
+            // Calculamos dónde golpeó la bola en la pala (-1 izq, 0 centro, 1 der)
+            const puntoImpacto = this.x + this.tamano / 2 - (pala.x + pala.ancho / 2)
+            const impactoNormalizado = puntoImpacto / (pala.ancho / 2)
+
+            // Añadimos velocidad horizontal basada en el impacto
+            this.vx += impactoNormalizado * 6
+
+            // 2. MECÁNICA DE SMASH (Solo jugador)
+            if (pala === jugador && Math.abs(jugador.dx) > 8) {
+              this.esSmash = true
+              this.vy *= 1.5 // 50% más rápido
+              reproducirSonido('smash')
+            } else {
+              this.esSmash = false
+              // Normalizar velocidad Y
+              this.vy = Math.sign(this.vy) * this.velocidadBase
+              reproducirSonido('golpe')
+            }
+          }
+        }
+      },
+    }
+
+    // --- INPUT HANDLING ---
+    let inputX = GAME_WIDTH / 2
+
+    function actualizarInput(clienteX: number) {
+      // Calcular posición relativa al canvas manteniendo el aspect ratio
+      const rect = canvas!.getBoundingClientRect()
+      const escala = GAME_WIDTH / rect.width
+      inputX = (clienteX - rect.left) * escala
+    }
+
+    const onMouseMove = (e: MouseEvent) => actualizarInput(e.clientX)
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault() // Evitar scroll
+      actualizarInput(e.touches[0].clientX)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+
+    // Click para iniciar
+    const iniciarJuego = () => {
+      if (estadoJuego === 'MENU') {
+        initAudio() // Inicializar audio en interacción de usuario
+        estadoJuego = 'JUGANDO'
+        bola.reset('jugador') // Saca el jugador
+        reproducirSonido('inicio')
+      }
+    }
+
+    window.addEventListener('mousedown', iniciarJuego)
+    window.addEventListener('touchstart', iniciarJuego)
+
+    // --- BUCLE DE JUEGO ---
+
+    function actualizar() {
+      if (estadoJuego !== 'JUGANDO') return
+
+      // Actualizar Jugador
+      jugador.xAnterior = jugador.x
+      // El jugador sigue al input, centrado
+      jugador.x = inputX - jugador.ancho / 2
+      // Límites
+      if (jugador.x < 0) jugador.x = 0
+      if (jugador.x + jugador.ancho > GAME_WIDTH) jugador.x = GAME_WIDTH - jugador.ancho
+
+      // Calcular inercia para Smash
+      jugador.dx = jugador.x - jugador.xAnterior
+
+      // Actualizar IA
+      const centroIa = ia.x + ia.ancho / 2
+
+      // La IA solo reacciona si la bola entra en su campo
+      let objetivoX
+      if (bola.vy < 0 && bola.y < GAME_HEIGHT * 0.6) {
+        objetivoX = bola.x
+      } else {
+        objetivoX = GAME_WIDTH / 2 // Vuelve al centro si no hay peligro inmediato
+      }
+
+      const distancia = objetivoX - centroIa
+      if (Math.abs(distancia) > ia.velocidad) {
+        ia.x += Math.sign(distancia) * ia.velocidad
+      } else {
+        ia.x += distancia
+      }
+
+      // Límites IA
+      if (ia.x < 0) ia.x = 0
+      if (ia.x + ia.ancho > GAME_WIDTH) ia.x = GAME_WIDTH - ia.ancho
+
+      // Actualizar Bola
+      bola.mover()
+      bola.checkColision(jugador)
+      bola.checkColision(ia)
+    }
+
+    function dibujarJoyCon(
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      ancho: number,
+      alto: number,
+      color: string,
+      esJugador: boolean
+    ) {
+      // Cuerpo principal
+      ctx.fillStyle = color
+      ctx.fillRect(x, y, ancho, alto)
+
+      // Detalles (Botones) - escalados x2
+      ctx.fillStyle = '#222'
+      if (esJugador) {
+        // Joy-Con Azul (D-Pad + Stick)
+        ctx.fillRect(x + 10, y + 6, 16, 16) // Stick
+        // Flechas
+        ctx.fillRect(x + 60, y + 4, 6, 6) // Arriba
+        ctx.fillRect(x + 60, y + 16, 6, 6) // Abajo
+        ctx.fillRect(x + 54, y + 10, 6, 6) // Izq
+        ctx.fillRect(x + 66, y + 10, 6, 6) // Der
+      } else {
+        // Joy-Con Rojo (Botones + Stick)
+        ctx.fillRect(x + 70, y + 6, 16, 16) // Stick
+        // Botones ABXY
+        ctx.fillRect(x + 26, y + 4, 6, 6) // X
+        ctx.fillRect(x + 26, y + 16, 6, 6) // B
+        ctx.fillRect(x + 20, y + 10, 6, 6) // Y
+        ctx.fillRect(x + 32, y + 10, 6, 6) // A
+      }
+    }
+
+    function dibujar() {
+      if (!ctx) return
+
+      // 1. Fondo
+      ctx.fillStyle = '#000'
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+      if (estadoJuego === 'MENU') {
+        // Pantalla de Título
+        ctx.fillStyle = COLORES.AZUL
+        ctx.font = '32px "Press Start 2P"'
+        ctx.textAlign = 'center'
+        ctx.fillText('SWITCH', GAME_WIDTH / 2, 180)
+
+        ctx.fillStyle = COLORES.ROJO
+        ctx.fillText('PONG', GAME_WIDTH / 2, 220)
+
+        // Parpadeo de texto
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.fillStyle = '#FFF'
+          ctx.font = '16px "Press Start 2P"'
+          ctx.fillText('CLICK PARA', GAME_WIDTH / 2, 400)
+          ctx.fillText('JUGAR', GAME_WIDTH / 2, 425)
+        }
+
+        // Instrucciones
+        ctx.fillStyle = '#888'
+        ctx.font = '14px "Press Start 2P"'
+        ctx.fillText('Mueve rápido', GAME_WIDTH / 2, 300)
+        ctx.fillText('para hacer SMASH', GAME_WIDTH / 2, 325)
+
+        ctx.fillStyle = '#666'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText(`Gana ${TARGET_SCORE} puntos`, GAME_WIDTH / 2, 360)
+      } else if (estadoJuego === 'WIN') {
+        // Pantalla de Victoria
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+        ctx.textAlign = 'center'
+        ctx.font = '28px "Press Start 2P"'
+
+        // Título
+        ctx.fillStyle = '#005500'
+        ctx.fillText('¡GANASTE!', GAME_WIDTH / 2 + 3, GAME_HEIGHT / 2 - 47)
+        ctx.fillStyle = '#2ecc71'
+        ctx.fillText('¡GANASTE!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50)
+
+        ctx.fillStyle = '#ccc'
+        ctx.font = '12px "Press Start 2P"'
+        ctx.fillText(`${jugador.puntos} - ${ia.puntos}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 10)
+        ctx.fillText('¡Eres el mejor!', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 45)
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+          ctx.fillStyle = '#fff'
+          ctx.font = '14px "Press Start 2P"'
+          ctx.fillText('DESBLOQUEANDO...', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100)
+        }
+      } else {
+        // Interfaz de juego
+
+        // Línea central
+        ctx.setLineDash([8, 8])
+        ctx.beginPath()
+        ctx.moveTo(0, GAME_HEIGHT / 2)
+        ctx.lineTo(GAME_WIDTH, GAME_HEIGHT / 2)
+        ctx.strokeStyle = '#333'
+        ctx.stroke()
+        ctx.setLineDash([])
+
+        // Puntuación en el fondo
+        ctx.font = '80px "Press Start 2P"'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        // Score IA
+        ctx.fillStyle = 'rgba(255, 60, 40, 0.2)' // Rojo transparente
+        ctx.fillText(String(ia.puntos), GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100)
+
+        // Score Jugador
+        ctx.fillStyle = 'rgba(0, 220, 255, 0.2)' // Azul transparente
+        ctx.fillText(String(jugador.puntos), GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100)
+
+        // Meta
+        ctx.fillStyle = '#444'
+        ctx.font = '10px "Press Start 2P"'
+        ctx.fillText(`Gana ${TARGET_SCORE}`, GAME_WIDTH / 2, 15)
+
+        // Palas
+        dibujarJoyCon(ctx, jugador.x, jugador.y, jugador.ancho, jugador.alto, jugador.color, true)
+        dibujarJoyCon(ctx, ia.x, ia.y, ia.ancho, ia.alto, ia.color, false)
+
+        // Bola
+        // Dibujar estela
+        for (let i = 0; i < bola.estela.length; i++) {
+          const pos = bola.estela[i]
+          const opacidad = (i + 1) / bola.estela.length
+          ctx.fillStyle = `rgba(255, 255, 0, ${opacidad * 0.5})`
+          ctx.fillRect(pos.x, pos.y, bola.tamano, bola.tamano)
+        }
+
+        ctx.fillStyle = bola.esSmash ? COLORES.BOLA_SMASH : COLORES.BOLA_NORMAL
+        // Pequeño borde para visibilidad
+        ctx.fillRect(bola.x - 2, bola.y - 2, bola.tamano + 4, bola.tamano + 4)
+        ctx.fillStyle = bola.esSmash ? COLORES.BOLA_SMASH : COLORES.BOLA_NORMAL
+        ctx.fillRect(bola.x, bola.y, bola.tamano, bola.tamano)
+      }
+    }
+
+    // Bucle principal de animación
+    function loop() {
+      frames++
+      actualizar()
+      dibujar()
+      requestAnimationFrame(loop)
+    }
+
+    loop() // Arrancar
+  })()
+</script>
