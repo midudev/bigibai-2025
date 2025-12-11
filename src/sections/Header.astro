@@ -72,7 +72,7 @@ const isHomePage = currentPath === '/'
   }
 
   <div class="absolute top-4 right-4 z-20">
-    <div id="header-auth-section" class="flex items-center gap-3">
+    <nav id="header-auth-section" class="flex items-center gap-3" aria-label="Acciones de usuario">
       {
         !user && !isRegistroPage && (
           <a href="/registro">
@@ -130,7 +130,7 @@ const isHomePage = currentPath === '/'
           </div>
         )
       }
-    </div>
+    </nav>
   </div>
 
   <div class="logo-container relative mx-auto flex justify-center">
