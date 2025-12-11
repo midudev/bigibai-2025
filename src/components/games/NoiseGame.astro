@@ -45,9 +45,9 @@ const GAME_DATA = {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const INTERNAL_WIDTH = 180
-    const INTERNAL_HEIGHT = 320
-    const MAX_NOISE = 50
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
+    const MAX_NOISE = 30
 
     /**
      * SISTEMA DE SONIDO (Web Audio API)
@@ -196,10 +196,10 @@ const GAME_DATA = {
      * CLASES
      */
     class Paddle {
-      width = 8
-      height = 40
-      x = 10
-      y = INTERNAL_HEIGHT / 2 - 20
+      width = 16
+      height = 80
+      x = 20
+      y = INTERNAL_HEIGHT / 2 - 40
       color = '#4dff4d'
       glow = 0
 
@@ -222,7 +222,7 @@ const GAME_DATA = {
 
         if (this.glow > 0) {
           ctx.fillStyle = `rgba(255, 255, 255, ${this.glow / 10})`
-          ctx.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4)
+          ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8)
         }
       }
     }
@@ -246,33 +246,33 @@ const GAME_DATA = {
 
         if (rand < 0.15) {
           this.variant = 'heavy'
-          this.size = 16
+          this.size = 32
           this.spriteKey = 'note4'
-          this.vx = -(0.5 + Math.random() * 0.5)
-          this.vy = (Math.random() < 0.5 ? -1 : 1) * (0.8 + Math.random() * 0.5)
+          this.vx = -(1.0 + Math.random() * 1.0)
+          this.vy = (Math.random() < 0.5 ? -1 : 1) * (1.6 + Math.random() * 1.0)
           this.color = '#ff6600'
           this.mass = 2
         } else if (rand < 0.3) {
           this.variant = 'fast'
-          this.size = 6
+          this.size = 12
           this.spriteKey = 'note3'
-          this.vx = -(1.3 + Math.random() * 0.5)
-          this.vy = (Math.random() - 0.5) * 0.5
+          this.vx = -(2.6 + Math.random() * 1.0)
+          this.vy = (Math.random() - 0.5) * 1.0
           this.color = '#ccff00'
           this.mass = 0.5
         } else {
           this.variant = 'normal'
-          this.size = 8
+          this.size = 16
           this.spriteKey = Math.random() > 0.5 ? 'note1' : 'note2'
-          this.vx = -(1.0 + Math.random() * 0.6)
-          this.vy = (Math.random() - 0.5) * 0.5
+          this.vx = -(2.0 + Math.random() * 1.2)
+          this.vy = (Math.random() - 0.5) * 1.0
           this.color = Math.random() > 0.5 ? '#ff00ff' : '#00ffff'
           this.mass = 1
         }
 
-        this.x = INTERNAL_WIDTH + 10
+        this.x = INTERNAL_WIDTH + 20
 
-        const safePadding = 25
+        const safePadding = 50
         const safeHeight = INTERNAL_HEIGHT - safePadding * 2 - this.size
         this.y = safePadding + Math.random() * safeHeight
 
@@ -338,7 +338,7 @@ const GAME_DATA = {
         const spriteMap = sprites[this.spriteKey]
         ctx.fillStyle = this.color
 
-        let scale = this.variant === 'heavy' ? 2 : this.variant === 'fast' ? 0.8 : 1
+        let scale = this.variant === 'heavy' ? 4 : this.variant === 'fast' ? 1.5 : 2
 
         for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
@@ -366,8 +366,8 @@ const GAME_DATA = {
       constructor(x: number, y: number, color: string) {
         this.x = x
         this.y = y
-        this.vx = (Math.random() - 0.5) * 4
-        this.vy = (Math.random() - 0.5) * 4
+        this.vx = (Math.random() - 0.5) * 8
+        this.vy = (Math.random() - 0.5) * 8
         this.life = 20 + Math.random() * 10
         this.color = color
       }
@@ -382,7 +382,7 @@ const GAME_DATA = {
         if (!ctx) return
         ctx.fillStyle = this.color
         ctx.globalAlpha = this.life / 30
-        ctx.fillRect(this.x, this.y, 2, 2)
+        ctx.fillRect(this.x, this.y, 4, 4)
         ctx.globalAlpha = 1
       }
     }
@@ -456,35 +456,7 @@ const GAME_DATA = {
     function update() {
       if (gameStatus !== 'playing') return
 
-      // Screen Shake
-      let shakeX = 0
-      let shakeY = 0
-      if (screenShake > 0) {
-        shakeX = (Math.random() - 0.5) * screenShake
-        shakeY = (Math.random() - 0.5) * screenShake
-        screenShake *= 0.9
-        if (screenShake < 0.5) screenShake = 0
-      }
-
-      if (!ctx) return
-
-      ctx.save()
-      ctx.translate(shakeX, shakeY)
-
-      // Limpiar
-      ctx.fillStyle = '#0f0f1a'
-      ctx.fillRect(-10, -10, INTERNAL_WIDTH + 20, INTERNAL_HEIGHT + 20)
-
-      // Fondo estrellas
-      ctx.fillStyle = '#1a1a2e'
-      for (let i = 0; i < 20; i++) {
-        const sx = (i * 37) % INTERNAL_WIDTH
-        const sy = (i * 91) % INTERNAL_HEIGHT
-        ctx.fillRect(sx, sy, 1, 1)
-      }
-
       player.update()
-      player.draw()
 
       // Spawner
       frameCount++
@@ -502,7 +474,6 @@ const GAME_DATA = {
       // Update Projectiles
       projectiles.forEach((p) => {
         p.update()
-        if (p.active) p.draw()
       })
 
       // Limpiar inactivos
@@ -511,16 +482,14 @@ const GAME_DATA = {
       // Partículas
       particles.forEach((p) => {
         p.update()
-        p.draw()
       })
       particles = particles.filter((p) => p.life > 0)
-
-      ctx.restore()
     }
 
     function draw() {
       if (!ctx) return
 
+      // Limpiar canvas
       ctx.fillStyle = '#0f0f1a'
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
@@ -529,18 +498,55 @@ const GAME_DATA = {
         return
       }
 
-      if (gameStatus === 'playing') {
-        // UI Layer - HUD
-        drawHUD()
-      }
-
       if (gameStatus === 'gameover') {
         drawGameOverScreen()
+        return
       }
 
       if (gameStatus === 'win') {
         drawWinScreen()
+        return
       }
+
+      // --- PLAYING STATE ---
+      // Screen Shake
+      let shakeX = 0
+      let shakeY = 0
+      if (screenShake > 0) {
+        shakeX = (Math.random() - 0.5) * screenShake
+        shakeY = (Math.random() - 0.5) * screenShake
+        screenShake *= 0.9
+        if (screenShake < 0.5) screenShake = 0
+      }
+
+      ctx.save()
+      ctx.translate(shakeX, shakeY)
+
+      // Fondo estrellas
+      ctx.fillStyle = '#1a1a2e'
+      for (let i = 0; i < 40; i++) {
+        const sx = (i * 37) % INTERNAL_WIDTH
+        const sy = (i * 91) % INTERNAL_HEIGHT
+        ctx.fillRect(sx, sy, 2, 2)
+      }
+
+      // Dibujar pala
+      player.draw()
+
+      // Dibujar proyectiles
+      projectiles.forEach((p) => {
+        if (p.active) p.draw()
+      })
+
+      // Dibujar partículas
+      particles.forEach((p) => {
+        p.draw()
+      })
+
+      ctx.restore()
+
+      // HUD (fuera del shake)
+      drawHUD()
     }
 
     function drawHUD() {
@@ -548,19 +554,19 @@ const GAME_DATA = {
 
       // Fondo del HUD
       ctx.fillStyle = 'rgba(0,0,0,0.5)'
-      ctx.fillRect(5, 5, INTERNAL_WIDTH - 10, 30)
+      ctx.fillRect(10, 10, INTERNAL_WIDTH - 20, 50)
 
-      ctx.font = '8px "Press Start 2P"'
+      ctx.font = '14px "Press Start 2P"'
       ctx.textAlign = 'left'
 
       // Ruido
       ctx.fillStyle = '#4dff4d'
-      ctx.fillText(`RUIDO: ${noiseCount}/${MAX_NOISE}`, 10, 18)
+      ctx.fillText(`RUIDO: ${noiseCount}/${MAX_NOISE}`, 20, 35)
 
       // Vidas
       ctx.fillStyle = '#ff4d4d'
       ctx.textAlign = 'right'
-      ctx.fillText('♥'.repeat(lives), INTERNAL_WIDTH - 10, 28)
+      ctx.fillText('♥'.repeat(lives), INTERNAL_WIDTH - 20, 50)
     }
 
     function drawStartScreen() {
@@ -570,31 +576,29 @@ const GAME_DATA = {
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.font = '14px "Press Start 2P"'
+      ctx.font = '28px "Press Start 2P"'
 
       // Title
       ctx.fillStyle = '#000'
-      ctx.fillText('DEFENSA', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 42)
+      ctx.fillText('DEFENSA', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 82)
       ctx.fillStyle = '#e0e0ff'
-      ctx.fillText('DEFENSA', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 44)
+      ctx.fillText('DEFENSA', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 85)
 
       ctx.fillStyle = '#000'
-      ctx.fillText('SILENCIOSA', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 22)
+      ctx.fillText('SILENCIOSA', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 42)
       ctx.fillStyle = '#e0e0ff'
-      ctx.fillText('SILENCIOSA', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 24)
+      ctx.fillText('SILENCIOSA', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 45)
 
       // Instructions
       ctx.fillStyle = '#a0a0c0'
-      ctx.font = '6px "Press Start 2P"'
-      ctx.fillText('Usa el ratón o dedo', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
-      ctx.fillText('Ritmo más relajado', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 25)
-      ctx.fillText('Activa el sonido', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 40)
+      ctx.font = '12px "Press Start 2P"'
+      ctx.fillText('Usa el ratón o dedo', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 20)
 
       // Button
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
-        ctx.font = '8px "Press Start 2P"'
-        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+        ctx.font = '16px "Press Start 2P"'
+        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 140)
       }
     }
 
@@ -605,30 +609,30 @@ const GAME_DATA = {
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.font = '12px "Press Start 2P"'
+      ctx.font = '24px "Press Start 2P"'
 
       // Title
       ctx.fillStyle = '#550000'
-      ctx.fillText('¡RUIDO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 32)
-      ctx.fillText('TOTAL!', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 12)
+      ctx.fillText('¡RUIDO', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 62)
+      ctx.fillText('TOTAL!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 22)
       ctx.fillStyle = '#ff4d4d'
-      ctx.fillText('¡RUIDO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 34)
-      ctx.fillText('TOTAL!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 14)
+      ctx.fillText('¡RUIDO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 65)
+      ctx.fillText('TOTAL!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 25)
 
       ctx.fillStyle = '#a0a0c0'
-      ctx.font = '7px "Press Start 2P"'
-      ctx.fillText('El silencio se ha roto', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 15)
+      ctx.font = '14px "Press Start 2P"'
+      ctx.fillText('El silencio se ha roto', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
       ctx.fillText(
         `Progreso: ${Math.floor((noiseCount / MAX_NOISE) * 100)}%`,
         INTERNAL_WIDTH / 2,
-        INTERNAL_HEIGHT / 2 + 35
+        INTERNAL_HEIGHT / 2 + 70
       )
 
       // Button
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
-        ctx.font = '8px "Press Start 2P"'
-        ctx.fillText('CLICK REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 70)
+        ctx.font = '16px "Press Start 2P"'
+        ctx.fillText('CLICK REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 140)
       }
     }
 
@@ -639,24 +643,24 @@ const GAME_DATA = {
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.font = '10px "Press Start 2P"'
+      ctx.font = '22px "Press Start 2P"'
 
       // Title
       ctx.fillStyle = '#005500'
-      ctx.fillText('¡SILENCIO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 32)
-      ctx.fillText('LOGRADO!', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 12)
+      ctx.fillText('¡SILENCIO', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 62)
+      ctx.fillText('LOGRADO!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 22)
       ctx.fillStyle = '#4dff4d'
-      ctx.fillText('¡SILENCIO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 34)
-      ctx.fillText('LOGRADO!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 14)
+      ctx.fillText('¡SILENCIO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 65)
+      ctx.fillText('LOGRADO!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 25)
 
       ctx.fillStyle = '#a0a0c0'
-      ctx.font = '7px "Press Start 2P"'
-      ctx.fillText('Has bloqueado el caos', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 15)
+      ctx.font = '14px "Press Start 2P"'
+      ctx.fillText('Has bloqueado el caos', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
 
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
-        ctx.font = '8px "Press Start 2P"'
-        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 50)
+        ctx.font = '16px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 100)
       }
     }
 
