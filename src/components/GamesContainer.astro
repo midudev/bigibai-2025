@@ -11,10 +11,11 @@ const cetTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Madri
 const currentMonth = cetTime.getMonth()
 const currentDay = cetTime.getDate()
 
-// Solo mostrar casillas si estamos en diciembre y el usuario tiene cupones
+// Mostrar casillas si estamos en diciembre
 const isDecember = currentMonth === 11
 const availableDays = isDecember ? Math.min(currentDay, 24) : 0
-const hasGames = availableDays > 0 && totalCoupons > 0
+const hasGames = availableDays > 0
+const hasCoupons = totalCoupons > 0
 
 // Generar array de días disponibles
 const days = Array.from({ length: availableDays }, (_, i) => i + 1)
@@ -33,7 +34,13 @@ const days = Array.from({ length: availableDays }, (_, i) => i + 1)
       <div class="relative z-10 p-6">
         <div class="text-center mb-4">
           <h3 class="text-lg md:text-xl font-bold text-white/90 mb-1">🎮 Juegos disponibles</h3>
-          <p class="text-white/60 text-xs md:text-sm">Haz clic en una chocolatina para jugar</p>
+          <p
+            class:list={['text-xs md:text-sm', hasCoupons ? 'text-white/60' : 'text-amber-400/80']}
+          >
+            {hasCoupons
+              ? 'Haz clic en una chocolatina para jugar'
+              : 'Necesitas haber validado algún cupón para jugar'}
+          </p>
         </div>
 
         <div class="chocolates-grid">
