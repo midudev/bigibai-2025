@@ -201,8 +201,8 @@ const GAME_DATA = {
     /**
      * CONFIGURACIÓN DEL JUEGO
      */
-    const INTERNAL_WIDTH = 320
-    const INTERNAL_HEIGHT = 568
+    const INTERNAL_WIDTH = 360
+    const INTERNAL_HEIGHT = 640
     const GOAL_DISTANCE = 5000
     const TIME_LIMIT = 30
 
@@ -594,30 +594,30 @@ const GAME_DATA = {
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.font = '16px "Press Start 2P"'
+      ctx.font = '24px "Press Start 2P"'
 
       // Title
       ctx.fillStyle = '#000'
-      ctx.fillText('CAMINO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 72)
-      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 48)
-      ctx.fillText('RUNNER', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 24)
+      ctx.fillText('CAMINO', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 97)
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 57)
+      ctx.fillText('RUNNER', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 17)
       ctx.fillStyle = '#f1c40f'
-      ctx.fillText('CAMINO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 74)
-      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 50)
-      ctx.fillText('RUNNER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 26)
+      ctx.fillText('CAMINO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 100)
+      ctx.fillText('PIXEL', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 60)
+      ctx.fillText('RUNNER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
 
       // Instructions
       ctx.fillStyle = '#ccc'
-      ctx.font = '7px "Press Start 2P"'
-      ctx.fillText('¡Llega a Santiago!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 10)
-      ctx.fillText('Alterna IZQ y DER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 28)
-      ctx.fillText('para correr rápido', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 44)
+      ctx.font = '12px "Press Start 2P"'
+      ctx.fillText('¡Llega a Santiago!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+      ctx.fillText('Alterna IZQ y DER', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 55)
+      ctx.fillText('para correr rápido', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 80)
 
       // Button
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
-        ctx.font = '10px "Press Start 2P"'
-        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 80)
+        ctx.font = '14px "Press Start 2P"'
+        ctx.fillText('CLICK PARA JUGAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 130)
       }
     }
 
@@ -628,28 +628,28 @@ const GAME_DATA = {
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.font = '12px "Press Start 2P"'
+      ctx.font = '22px "Press Start 2P"'
 
       // Title
       ctx.fillStyle = '#550000'
-      ctx.fillText('TIEMPO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 32)
-      ctx.fillText('AGOTADO', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 12)
+      ctx.fillText('TIEMPO', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 57)
+      ctx.fillText('AGOTADO', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 17)
       ctx.fillStyle = '#e74c3c'
-      ctx.fillText('TIEMPO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 34)
-      ctx.fillText('AGOTADO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 14)
+      ctx.fillText('TIEMPO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 60)
+      ctx.fillText('AGOTADO', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 20)
 
       ctx.fillStyle = '#ccc'
-      ctx.font = '7px "Press Start 2P"'
+      ctx.font = '12px "Press Start 2P"'
       const remaining = Math.floor(STATE.goalDistance - STATE.distance)
-      ctx.fillText(`Te faltaron ${remaining}m`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 15)
-      ctx.fillText('Descansa y prueba', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 35)
-      ctx.fillText('otra vez', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 50)
+      ctx.fillText(`Te faltaron ${remaining}m`, INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
+      ctx.fillText('Descansa y prueba', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 55)
+      ctx.fillText('otra vez', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 80)
 
       // Button
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
-        ctx.font = '8px "Press Start 2P"'
-        ctx.fillText('CLICK REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 80)
+        ctx.font = '14px "Press Start 2P"'
+        ctx.fillText('CLICK REINTENTAR', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 130)
       }
     }
 
@@ -660,28 +660,28 @@ const GAME_DATA = {
       ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT)
 
       ctx.textAlign = 'center'
-      ctx.font = '14px "Press Start 2P"'
+      ctx.font = '26px "Press Start 2P"'
 
       // Title
       ctx.fillStyle = '#005500'
-      ctx.fillText('¡LLEGASTE!', INTERNAL_WIDTH / 2 + 2, INTERNAL_HEIGHT / 2 - 22)
+      ctx.fillText('¡LLEGASTE!', INTERNAL_WIDTH / 2 + 3, INTERNAL_HEIGHT / 2 - 47)
       ctx.fillStyle = '#2ecc71'
-      ctx.fillText('¡LLEGASTE!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 24)
+      ctx.fillText('¡LLEGASTE!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 - 50)
 
       ctx.fillStyle = '#ccc'
-      ctx.font = '7px "Press Start 2P"'
+      ctx.font = '12px "Press Start 2P"'
       ctx.fillText(
         `Con ${Math.ceil(STATE.timeLeft)}s de sobra`,
         INTERNAL_WIDTH / 2,
-        INTERNAL_HEIGHT / 2 + 10
+        INTERNAL_HEIGHT / 2 + 20
       )
-      ctx.fillText('¡Buen Camino', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 30)
-      ctx.fillText('Peregrino!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 45)
+      ctx.fillText('¡Buen Camino', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 50)
+      ctx.fillText('Peregrino!', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 75)
 
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#fff'
-        ctx.font = '8px "Press Start 2P"'
-        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 75)
+        ctx.font = '14px "Press Start 2P"'
+        ctx.fillText('DESBLOQUEANDO...', INTERNAL_WIDTH / 2, INTERNAL_HEIGHT / 2 + 130)
       }
     }
 
