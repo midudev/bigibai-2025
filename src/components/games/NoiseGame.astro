@@ -48,6 +48,7 @@ const GAME_DATA = {
     const INTERNAL_WIDTH = 360
     const INTERNAL_HEIGHT = 640
     const MAX_NOISE = 30
+    const TICK_MS = 1000 / 60 // step base a 60 FPS para desacoplar de los Hz reales
 
     /**
      * SISTEMA DE SONIDO (Web Audio API)
@@ -180,9 +181,10 @@ const GAME_DATA = {
     let animationId: number
     let lives = 3
     let noiseCount = 0
-    let spawnRate = 140
-    let frameCount = 0
+    let spawnIntervalMs = 120 * TICK_MS
+    let spawnTimer = 0
     let screenShake = 0
+    let lastTime = 0
 
     // Input
     let inputY = INTERNAL_HEIGHT / 2
@@ -203,13 +205,15 @@ const GAME_DATA = {
       color = '#4dff4d'
       glow = 0
 
-      update() {
+      update(deltaFactor: number) {
         let targetY = inputY - this.height / 2
         if (targetY < 0) targetY = 0
         if (targetY + this.height > INTERNAL_HEIGHT) targetY = INTERNAL_HEIGHT - this.height
-        this.y += (targetY - this.y) * 0.25
+        const smoothing = 0.25 * deltaFactor
+        this.y += (targetY - this.y) * Math.min(smoothing, 1)
 
-        if (this.glow > 0) this.glow--
+        if (this.glow > 0) this.glow -= deltaFactor
+        if (this.glow < 0) this.glow = 0
       }
 
       draw() {
@@ -248,24 +252,24 @@ const GAME_DATA = {
           this.variant = 'heavy'
           this.size = 32
           this.spriteKey = 'note4'
-          this.vx = -(1.0 + Math.random() * 1.0)
-          this.vy = (Math.random() < 0.5 ? -1 : 1) * (1.6 + Math.random() * 1.0)
+          this.vx = -(1.3 + Math.random() * 1.2)
+          this.vy = (Math.random() < 0.5 ? -1 : 1) * (1.8 + Math.random() * 1.2)
           this.color = '#ff6600'
           this.mass = 2
         } else if (rand < 0.3) {
           this.variant = 'fast'
           this.size = 12
           this.spriteKey = 'note3'
-          this.vx = -(2.6 + Math.random() * 1.0)
-          this.vy = (Math.random() - 0.5) * 1.0
+          this.vx = -(3.0 + Math.random() * 1.2)
+          this.vy = (Math.random() - 0.5) * 1.2
           this.color = '#ccff00'
           this.mass = 0.5
         } else {
           this.variant = 'normal'
           this.size = 16
           this.spriteKey = Math.random() > 0.5 ? 'note1' : 'note2'
-          this.vx = -(2.0 + Math.random() * 1.2)
-          this.vy = (Math.random() - 0.5) * 1.0
+          this.vx = -(2.4 + Math.random() * 1.4)
+          this.vy = (Math.random() - 0.5) * 1.2
           this.color = Math.random() > 0.5 ? '#ff00ff' : '#00ffff'
           this.mass = 1
         }
@@ -280,13 +284,13 @@ const GAME_DATA = {
         if (this.y > INTERNAL_HEIGHT) this.y = INTERNAL_HEIGHT
       }
 
-      update() {
-        this.x += this.vx
-        this.y += this.vy
+      update(deltaFactor: number) {
+        this.x += this.vx * deltaFactor
+        this.y += this.vy * deltaFactor
 
         if (this.variant === 'normal') {
-          this.y += Math.sin(this.wobble) * 0.2
-          this.wobble += 0.1
+          this.y += Math.sin(this.wobble) * 0.2 * deltaFactor
+          this.wobble += 0.1 * deltaFactor
         }
 
         // Rebote en paredes superior/inferior
@@ -372,10 +376,10 @@ const GAME_DATA = {
         this.color = color
       }
 
-      update() {
-        this.x += this.vx
-        this.y += this.vy
-        this.life--
+      update(deltaFactor: number) {
+        this.x += this.vx * deltaFactor
+        this.y += this.vy * deltaFactor
+        this.life -= deltaFactor
       }
 
       draw() {
@@ -402,8 +406,8 @@ const GAME_DATA = {
       particles = []
       lives = 3
       noiseCount = 0
-      spawnRate = 140
-      frameCount = 0
+      spawnIntervalMs = 120 * TICK_MS
+      spawnTimer = 0
     }
 
     function spawnEnemy() {
@@ -412,7 +416,7 @@ const GAME_DATA = {
       projectiles.push(new Projectile())
       noiseCount++
 
-      if (spawnRate > 50) spawnRate -= 0.2
+      if (spawnIntervalMs > 50 * TICK_MS) spawnIntervalMs -= 0.2 * TICK_MS
     }
 
     function loseLife() {
@@ -430,11 +434,19 @@ const GAME_DATA = {
     }
 
     function startGame() {
+      // Cancelar cualquier loop de animación previo para evitar múltiples loops
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+
       initAudio()
       playBackgroundMusic()
       gameStatus = 'playing'
       init()
-      gameLoop()
+
+      // Reiniciar lastTime para evitar saltos de delta time
+      lastTime = performance.now()
+      animationId = requestAnimationFrame(gameLoop)
     }
 
     function gameOver() {
@@ -453,16 +465,16 @@ const GAME_DATA = {
       }, 1500)
     }
 
-    function update() {
+    function update(deltaMs: number, deltaFactor: number) {
       if (gameStatus !== 'playing') return
 
-      player.update()
+      player.update(deltaFactor)
 
-      // Spawner
-      frameCount++
-      if (frameCount >= Math.floor(spawnRate) && noiseCount < MAX_NOISE) {
+      // Spawner basado en tiempo
+      spawnTimer += deltaMs
+      if (spawnTimer >= spawnIntervalMs && noiseCount < MAX_NOISE) {
         spawnEnemy()
-        frameCount = 0
+        spawnTimer -= spawnIntervalMs
       }
 
       // Check Win Condition
@@ -473,7 +485,7 @@ const GAME_DATA = {
 
       // Update Projectiles
       projectiles.forEach((p) => {
-        p.update()
+        p.update(deltaFactor)
       })
 
       // Limpiar inactivos
@@ -481,12 +493,12 @@ const GAME_DATA = {
 
       // Partículas
       particles.forEach((p) => {
-        p.update()
+        p.update(deltaFactor)
       })
       particles = particles.filter((p) => p.life > 0)
     }
 
-    function draw() {
+    function draw(deltaFactor: number) {
       if (!ctx) return
 
       // Limpiar canvas
@@ -515,7 +527,7 @@ const GAME_DATA = {
       if (screenShake > 0) {
         shakeX = (Math.random() - 0.5) * screenShake
         shakeY = (Math.random() - 0.5) * screenShake
-        screenShake *= 0.9
+        screenShake *= Math.pow(0.9, deltaFactor)
         if (screenShake < 0.5) screenShake = 0
       }
 
@@ -664,12 +676,17 @@ const GAME_DATA = {
       }
     }
 
-    function gameLoop() {
+    function gameLoop(now: number) {
+      const deltaMsRaw = now - lastTime
+      const deltaMs = Math.min(deltaMsRaw, 100) // evita saltos grandes al volver de pestañas
+      const deltaFactor = deltaMs / TICK_MS
+      lastTime = now
+
       if (gameStatus === 'playing') {
-        update()
+        update(deltaMs, deltaFactor)
       }
 
-      draw()
+      draw(deltaFactor)
 
       if (gameStatus === 'playing' || gameStatus === 'start' || gameStatus === 'gameover') {
         animationId = requestAnimationFrame(gameLoop)
@@ -741,12 +758,14 @@ const GAME_DATA = {
       document.fonts.ready.then(() => {
         gameStatus = 'start'
         init()
+        lastTime = performance.now()
         animationId = requestAnimationFrame(gameLoop)
       })
     }
 
     // Escuchar evento para iniciar el juego
     window.addEventListener('start-game', () => {
+      lastTime = performance.now()
       initNoiseGame()
     })
   })()
