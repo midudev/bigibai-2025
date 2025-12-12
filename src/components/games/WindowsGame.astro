@@ -95,7 +95,11 @@ const GAME_DATA = {
 
     <!-- WIN SCREEN -->
     <div id="win-screen" class="win-screen hidden">
-      <h1 style="font-size: 28px; margin-bottom: 10px;">¡SISTEMA SALVADO!</h1>
+      <h1
+        style="font-size: 28px; margin-bottom: 10px; font-family: 'Courier New', Courier, monospace;"
+      >
+        ¡SISTEMA SALVADO!
+      </h1>
       <p>🎉🎉🎉</p>
       <p>Has eliminado todas las amenazas.</p>
       <p>Tu PC ahora es seguro (por 5 minutos).</p>
@@ -108,13 +112,12 @@ const GAME_DATA = {
 <style>
   /* --- GAME CONTAINER --- */
   #windows-game-container {
+    display: block;
     width: 100%;
     height: 100%;
     background-color: #008080;
     position: relative;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     font-family: 'Courier New', Courier, monospace;
     cursor:
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='black' stroke='white' stroke-width='1' d='M0,0 L0,18 L4,14 L7,20 L10,18 L7,13 L12,13 Z'/></svg>"),
@@ -299,19 +302,39 @@ const GAME_DATA = {
   }
 
   .btn-ok {
+    background: #c0c0c0;
     border: 2px solid;
     border-color: #fff #000 #000 #fff;
-    background: #c0c0c0;
     padding: 6px 16px;
     font-family: inherit;
     cursor: pointer;
     font-size: 12px;
     font-weight: bold;
     margin-top: 5px;
+    box-shadow: 1px 1px 0 #000;
   }
 
   .btn-ok:active {
     border-color: #000 #fff #fff #000;
+    box-shadow: none;
+  }
+
+  :global(#windows-game-container .window .btn-ok) {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 5px 14px;
+    font-family: inherit;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+    margin-top: 4px;
+    box-shadow: 1px 1px 0 #000;
+  }
+
+  :global(#windows-game-container .window .btn-ok:active) {
+    border-color: #000 #fff #fff #000;
+    box-shadow: none;
   }
 
   /* --- SCREENS --- */
@@ -555,13 +578,19 @@ const GAME_DATA = {
       lastTeleport: number
     }
 
+    // Constantes de tiempo (60 FPS target)
+    const TARGET_FPS = 60
+    const FRAME_TIME = 1000 / TARGET_FPS // ~16.67ms
+
     let gameActive = false
     let score = 0
     let windows: WindowObj[] = []
     let spawnRate = 2000
-    let lastSpawn = 0
+    let spawnAccumulator = 0
     let cpuUsage = 0
     let animationId: number
+    let lastTime = 0
+    let accumulator = 0
 
     const popupTitles = [
       '¡OFERTAZA!',
@@ -779,15 +808,15 @@ const GAME_DATA = {
       }
     }
 
-    function gameLoop(timestamp: number) {
-      if (!gameActive) return
+    function update() {
+      if (!gameActive || !gameContainer) return
 
-      if (timestamp - lastSpawn > spawnRate) {
+      // Spawn control con acumulador
+      spawnAccumulator += FRAME_TIME
+      if (spawnAccumulator >= spawnRate) {
         createWindow()
-        lastSpawn = timestamp
+        spawnAccumulator = 0
       }
-
-      if (!gameContainer) return
 
       const maxX = gameContainer.offsetWidth - 180
       const maxY = gameContainer.offsetHeight - 200
@@ -805,7 +834,8 @@ const GAME_DATA = {
         }
 
         if (win.type === 'glitch') {
-          if (Math.random() < 0.02) {
+          // Probabilidad ajustada para 60 FPS (~1.2% por frame = ~72% por segundo)
+          if (Math.random() < 0.012) {
             win.x = Math.max(0, Math.min(maxX, Math.random() * maxX))
             win.y = Math.max(35, Math.min(maxY, Math.random() * maxY))
             win.el.style.left = `${win.x}px`
@@ -817,6 +847,24 @@ const GAME_DATA = {
           }
         }
       })
+    }
+
+    function gameLoop(currentTime: number) {
+      if (!gameActive) return
+
+      // Calcular delta time
+      const deltaTime = currentTime - lastTime
+      lastTime = currentTime
+
+      // Acumular el tiempo transcurrido
+      accumulator += deltaTime
+
+      // Fixed timestep: actualizar la lógica del juego a una tasa fija
+      // Esto asegura que el juego funcione a la misma velocidad en todos los dispositivos
+      while (accumulator >= FRAME_TIME) {
+        update()
+        accumulator -= FRAME_TIME
+      }
 
       animationId = requestAnimationFrame(gameLoop)
     }
@@ -831,8 +879,11 @@ const GAME_DATA = {
 
       score = 0
       spawnRate = 2000
+      spawnAccumulator = 0
       cpuUsage = 0
       windows = []
+      lastTime = performance.now()
+      accumulator = 0
 
       const existingWindows = gameContainer?.querySelectorAll('.window')
       existingWindows?.forEach((el) => el.remove())
@@ -840,7 +891,6 @@ const GAME_DATA = {
       if (scoreDisplay) scoreDisplay.innerText = '0'
       updateCPU()
       gameActive = true
-      lastSpawn = 0
       animationId = requestAnimationFrame(gameLoop)
     }
 
