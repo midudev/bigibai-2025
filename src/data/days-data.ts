@@ -180,6 +180,10 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     videoUrl: getVideoUrlForDay(13),
     prize: 'Apple iMac M4',
   },
+  14: {
+    videoUrl: getVideoUrlForDay(14),
+    prize: 'Viaje y Quads en Marruecos',
+  },
   21: {
     videoUrl: getVideoUrlForDay(21),
     prize: 'Nintendo Switch 2 con Mario Kart',
