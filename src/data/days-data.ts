@@ -176,6 +176,10 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     videoUrl: getVideoUrlForDay(12),
     prize: 'Camino Legendario para 2 personas',
   },
+  13: {
+    videoUrl: getVideoUrlForDay(13),
+    prize: 'Apple iMac M4',
+  },
   21: {
     videoUrl: getVideoUrlForDay(21),
     prize: 'Nintendo Switch 2 con Mario Kart',
