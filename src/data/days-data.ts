@@ -184,9 +184,41 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
     videoUrl: getVideoUrlForDay(14),
     prize: 'Viaje y Quads en Marruecos',
   },
+  15: {
+    videoUrl: getVideoUrlForDay(15),
+    prize: 'MacBook Air M2',
+  },
+  16: {
+    videoUrl: getVideoUrlForDay(16),
+    prize: 'Full Kit Ropa Nike',
+  },
+  17: {
+    videoUrl: getVideoUrlForDay(17),
+    prize: 'Gafas Inteligentes Ray-Ban Meta',
+  },
+  18: {
+    videoUrl: getVideoUrlForDay(18),
+    prize: 'PlayStation 5 + Pre-Reserva GTA VI',
+  },
+  19: {
+    videoUrl: getVideoUrlForDay(19),
+    prize: 'Viaje a Copenhague + Tour Dulces',
+  },
+  20: {
+    videoUrl: getVideoUrlForDay(20),
+    prize: 'Finde para dos en casa del árbol',
+  },
   21: {
     videoUrl: getVideoUrlForDay(21),
     prize: 'Nintendo Switch 2 con Mario Kart',
+  },
+  22: {
+    videoUrl: getVideoUrlForDay(22),
+    prize: 'Zapatillas y Experiencia: Nike By You',
+  },
+  23: {
+    videoUrl: getVideoUrlForDay(23),
+    prize: 'Finde todo pagado en Europa Park',
   },
   24: {
     videoUrl: getVideoUrlForDay(24),
