@@ -81,7 +81,7 @@ const GAME_CONFIG: Record<number, GameType> = {
   12: 'walking',
   13: 'windows',
   14: 'quad',
-  15: 'racer',
+  15: 'windows',
   16: 'racer',
   17: 'racer',
   18: 'racer',
