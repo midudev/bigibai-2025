@@ -1,0 +1,709 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 1,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="lift-game-container" slot="game">
+    <!-- UI -->
+    <div class="ui-top">
+      <div class="stat-row">
+        <span id="level-display">NIVEL 1</span>
+        <span id="weight-display">50 KG</span>
+      </div>
+      <div id="stamina-container">
+        <div id="stamina-label">TIEMPO</div>
+        <div id="stamina-bar"></div>
+      </div>
+    </div>
+
+    <!-- Canvas para el juego Pixel Art -->
+    <canvas id="liftCanvas"></canvas>
+
+    <!-- Zona de Click -->
+    <div id="click-zone"></div>
+
+    <!-- PANTALLA INICIO -->
+    <div id="start-screen" class="modal active">
+      <h1>PIXEL<br />LIFTER</h1>
+      <p>¡Dale click rápido a la pantalla para levantar el peso antes de que se agote el tiempo!</p>
+      <button class="btn" id="btn-start">¡EMPEZAR!</button>
+    </div>
+
+    <!-- PANTALLA NIVEL COMPLETADO (MEJORAS) -->
+    <div id="upgrade-screen" class="modal">
+      <h1>¡PESO SUBIDO!</h1>
+      <p>Elige tu recompensa:</p>
+      <button class="btn btn-strength" id="btn-strength">
+        + FUERZA<br /><span style="font-size:8px">(Sube más rápido)</span>
+      </button>
+      <button class="btn btn-stamina" id="btn-stamina">
+        + RESISTENCIA<br /><span style="font-size:8px">(Más tiempo)</span>
+      </button>
+    </div>
+
+    <!-- PANTALLA GAME OVER -->
+    <div id="game-over-screen" class="modal">
+      <h1 class="danger">¡FALLO!</h1>
+      <p>El peso te ha vencido.</p>
+      <p id="final-stats"></p>
+      <button class="btn" id="btn-retry">REINTENTAR</button>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #lift-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #87ceeb;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* CAPA UI SUPERIOR */
+  .ui-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 10;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 12px;
+  }
+
+  /* BARRA DE TIEMPO (RESISTENCIA) */
+  #stamina-container {
+    width: 80%;
+    height: 15px;
+    background: #333;
+    border: 2px solid #000;
+    margin: 10px auto;
+    position: relative;
+  }
+
+  #stamina-bar {
+    width: 100%;
+    height: 100%;
+    background-color: #ff4444;
+    transition: width 0.1s linear;
+    transform-origin: left;
+  }
+
+  #stamina-label {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    width: 100%;
+    font-size: 10px;
+    color: white;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* CANVAS DE JUEGO (PIXEL ART) */
+  #liftCanvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    display: block;
+    touch-action: manipulation;
+  }
+
+  /* BOTÓN DE TAP INVISIBLE (Cubre toda la pantalla de juego) */
+  #click-zone {
+    position: absolute;
+    top: 100px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* EFECTOS VISUALES */
+  .shake {
+    animation: shake 0.1s;
+    animation-iteration-count: 1;
+  }
+
+  @keyframes shake {
+    0% {
+      transform: translate(1px, 1px) rotate(0deg);
+    }
+    10% {
+      transform: translate(-1px, -2px) rotate(-1deg);
+    }
+    20% {
+      transform: translate(-3px, 0px) rotate(1deg);
+    }
+    30% {
+      transform: translate(3px, 2px) rotate(0deg);
+    }
+    40% {
+      transform: translate(1px, -1px) rotate(1deg);
+    }
+    50% {
+      transform: translate(-1px, 2px) rotate(-1deg);
+    }
+    60% {
+      transform: translate(-3px, 1px) rotate(0deg);
+    }
+    70% {
+      transform: translate(3px, 1px) rotate(-1deg);
+    }
+    80% {
+      transform: translate(-1px, -1px) rotate(1deg);
+    }
+    90% {
+      transform: translate(1px, 2px) rotate(0deg);
+    }
+    100% {
+      transform: translate(1px, -2px) rotate(-1deg);
+    }
+  }
+
+  /* PANTALLAS (Menús) */
+  .modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    text-align: center;
+    display: none;
+    pointer-events: all;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  h1 {
+    font-size: 24px;
+    color: #ffcc00;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    line-height: 1.5;
+    text-shadow: 3px 3px 0 #000;
+  }
+
+  h1.danger {
+    color: #ff4444;
+  }
+
+  p {
+    font-size: 10px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+    padding: 0 20px;
+  }
+
+  .btn {
+    background: #fff;
+    color: #000;
+    border: 4px solid #000;
+    padding: 15px 20px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 10px;
+    box-shadow: 4px 4px 0px #444;
+    transition: transform 0.1s;
+    text-transform: uppercase;
+    width: 80%;
+  }
+
+  .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #444;
+  }
+
+  .btn-strength {
+    background: #ffaaaa;
+  }
+  .btn-stamina {
+    background: #aaaaff;
+  }
+
+  /* Floating Text */
+  :global(.float-text) {
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    pointer-events: none;
+    animation: floatUp 0.8s ease-out forwards;
+    text-shadow: 2px 2px 0 #000;
+    font-weight: bold;
+    z-index: 15;
+    font-family: 'Press Start 2P', cursive;
+  }
+
+  @keyframes floatUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-50px) scale(1.5);
+    }
+  }
+</style>
+
+<script>
+  ;(function () {
+    // --- SISTEMA DE AUDIO (SINTETIZADOR) ---
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext()
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+    }
+
+    const sfx = {
+      playTone: (freq: number, type: OscillatorType, duration: number, vol = 0.1) => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+
+        osc.type = type
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
+
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+
+        osc.start()
+        osc.stop(audioCtx.currentTime + duration)
+      },
+
+      click: () => {
+        sfx.playTone(100 + Math.random() * 50, 'sawtooth', 0.1, 0.1)
+      },
+
+      uiClick: () => {
+        sfx.playTone(600, 'square', 0.05, 0.05)
+      },
+
+      win: () => {
+        if (!audioCtx) return
+        ;[440, 554, 659, 880].forEach((freq, i) => {
+          setTimeout(() => sfx.playTone(freq, 'square', 0.2, 0.1), i * 100)
+        })
+      },
+
+      lose: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5)
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime)
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.5)
+      },
+    }
+
+    // --- CONFIGURACIÓN Y ESTADO ---
+    const canvas = document.getElementById('liftCanvas') as HTMLCanvasElement | null
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Resolución lógica del canvas (se escala al contenedor)
+    const GAME_WIDTH = 360
+    const GAME_HEIGHT = 640
+
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+
+    // Desactivar suavizado para efecto Pixel Art puro
+    ctx.imageSmoothingEnabled = false
+
+    const state = {
+      level: 1,
+      weight: 50,
+      currentProgress: 0,
+      maxProgress: 100,
+
+      // Stats Jugador
+      strength: 10,
+      maxTime: 10.0,
+      currentTime: 10.0,
+
+      // Estado Juego
+      isPlaying: false,
+      lastFrameTime: 0,
+      lifterColor: '#e0ac69',
+      shirtColor: '#3366cc',
+      pantsColor: '#222222',
+    }
+
+    // Niveles para ganar (objetivo: subir 3 niveles)
+    const TARGET_LEVELS = 3
+
+    // --- ELEMENTOS DOM ---
+    const ui = {
+      level: document.getElementById('level-display') as HTMLElement,
+      weight: document.getElementById('weight-display') as HTMLElement,
+      staminaBar: document.getElementById('stamina-bar') as HTMLElement,
+      clickZone: document.getElementById('click-zone') as HTMLElement,
+      container: document.getElementById('lift-game-container') as HTMLElement,
+      startScreen: document.getElementById('start-screen') as HTMLElement,
+      upgradeScreen: document.getElementById('upgrade-screen') as HTMLElement,
+      gameOverScreen: document.getElementById('game-over-screen') as HTMLElement,
+      finalStats: document.getElementById('final-stats') as HTMLElement,
+    }
+
+    // --- MOTOR GRÁFICO (PIXEL ART PROCEDURAL) ---
+
+    function drawRect(x: number, y: number, w: number, h: number, color: string) {
+      ctx!.fillStyle = color
+      ctx!.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h))
+    }
+
+    function drawLine(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      color: string,
+      thickness: number
+    ) {
+      const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+      const angle = Math.atan2(y2 - y1, x2 - x1)
+
+      ctx!.save()
+      ctx!.translate(x1, y1)
+      ctx!.rotate(angle)
+      ctx!.fillStyle = color
+      ctx!.fillRect(0, -thickness / 2, length, thickness)
+      ctx!.restore()
+    }
+
+    function render() {
+      if (!ctx) return
+
+      // 1. Fondo
+      // Cielo
+      drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT, '#87CEEB')
+      // Suelo
+      drawRect(0, 510, GAME_WIDTH, 130, '#4a3c31')
+      // Hierba/Detalle suelo
+      drawRect(0, 510, GAME_WIDTH, 10, '#44aa44')
+
+      const p = state.currentProgress / state.maxProgress
+
+      // Y del centro del cuerpo
+      const bodyBaseY = 460 - p * 120
+
+      const centerX = GAME_WIDTH / 2
+
+      // PIERNAS
+      ctx.fillStyle = state.pantsColor
+      if (p < 0.5) {
+        // Squat
+        drawRect(centerX - 40, bodyBaseY + 72, 30, 60, state.pantsColor)
+        drawRect(centerX + 10, bodyBaseY + 72, 30, 60, state.pantsColor)
+      } else {
+        // Stand
+        drawRect(centerX - 30, bodyBaseY + 72, 25, 84, state.pantsColor)
+        drawRect(centerX + 5, bodyBaseY + 72, 25, 84, state.pantsColor)
+      }
+
+      // ZAPATOS
+      drawRect(centerX - 45, bodyBaseY + 132 + (p < 0.5 ? -12 : 12), 35, 18, '#eeeeee')
+      drawRect(centerX + 10, bodyBaseY + 132 + (p < 0.5 ? -12 : 12), 35, 18, '#eeeeee')
+
+      // TORSO
+      drawRect(centerX - 35, bodyBaseY, 70, 84, state.shirtColor)
+      // Detalles músculos (sombra)
+      drawRect(centerX - 10, bodyBaseY + 12, 20, 48, 'rgba(0,0,0,0.1)')
+
+      // CABEZA
+      drawRect(centerX - 25, bodyBaseY - 54, 50, 54, state.lifterColor)
+      // Pelo
+      drawRect(centerX - 30, bodyBaseY - 66, 60, 24, '#331a00')
+      // Ojos
+      const eyeColor = '#000'
+      if (state.currentProgress >= 100) {
+        // Ojos felices
+        drawRect(centerX - 15, bodyBaseY - 36, 10, 6, eyeColor)
+        drawRect(centerX + 5, bodyBaseY - 36, 10, 6, eyeColor)
+      } else {
+        // Ojos esfuerzo
+        drawRect(centerX - 20, bodyBaseY - 36, 15, 6, eyeColor)
+        drawRect(centerX + 5, bodyBaseY - 36, 15, 6, eyeColor)
+        // Boca abierta gritando
+        drawRect(centerX - 10, bodyBaseY - 18, 20, 12, '#aa4444')
+        // Sudor
+        if (Math.random() > 0.8) drawRect(centerX - 35, bodyBaseY - 48, 6, 6, '#aaf')
+        if (Math.random() > 0.8) drawRect(centerX + 30, bodyBaseY - 30, 6, 6, '#aaf')
+      }
+
+      // BRAZOS Y BARRA
+      let barY = 460 - p * 330
+
+      // Brazos
+      const shoulderY = bodyBaseY + 12
+      drawLine(centerX - 35, shoulderY, centerX - 60, barY + 12, state.lifterColor, 18)
+      drawLine(centerX + 35, shoulderY, centerX + 60, barY + 12, state.lifterColor, 18)
+
+      // LA BARRA (PESAS)
+      drawRect(centerX - 140, barY, 280, 12, '#aaaaaa')
+
+      // Discos
+      const discSize = Math.min(36 + Math.floor(state.weight / 20), 84)
+      const discColor = '#111111'
+
+      // Disco Izq
+      drawRect(centerX - 140 - discSize / 2, barY - discSize / 2 + 6, 24, discSize, discColor)
+      drawRect(centerX - 165 - discSize / 2, barY - discSize / 2 + 6, 12, discSize, discColor)
+
+      // Disco Der
+      drawRect(centerX + 140 + discSize / 2 - 24, barY - discSize / 2 + 6, 24, discSize, discColor)
+      drawRect(centerX + 165 + discSize / 2 - 12, barY - discSize / 2 + 6, 12, discSize, discColor)
+    }
+
+    // --- LÓGICA DE JUEGO ---
+
+    function gameLoop(timestamp: number) {
+      if (!state.isPlaying) return
+
+      // Calcular deltaTime correctamente para independencia de Hz
+      const deltaTime = Math.min((timestamp - state.lastFrameTime) / 1000, 0.1) // Cap a 100ms para evitar saltos
+      state.lastFrameTime = timestamp
+
+      // Reducir tiempo (Stamina)
+      state.currentTime -= deltaTime
+
+      // Actualizar UI Barra
+      const timePct = (state.currentTime / state.maxTime) * 100
+      ui.staminaBar.style.width = `${Math.max(0, timePct)}%`
+
+      // Color barra peligro
+      if (timePct < 30) ui.staminaBar.style.backgroundColor = '#ff0000'
+      else ui.staminaBar.style.backgroundColor = '#ff4444'
+
+      // Caída lenta del progreso si no clickeas (gravedad) - usando deltaTime
+      state.currentProgress -= state.weight * 0.2 * deltaTime
+      if (state.currentProgress < 0) state.currentProgress = 0
+
+      // Renderizar
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height)
+      render()
+
+      // Chequear condiciones
+      if (state.currentProgress >= state.maxProgress) {
+        winLevel()
+      } else if (state.currentTime <= 0) {
+        loseLevel()
+      } else {
+        requestAnimationFrame(gameLoop)
+      }
+    }
+
+    function handleClick(e: PointerEvent) {
+      if (!state.isPlaying) return
+
+      // AUDIO FX
+      sfx.click()
+
+      // Efecto visual
+      createFloatText(e.clientX, e.clientY)
+      shakeScreen()
+
+      // Lógica Progreso
+      const gain = (state.strength / state.weight) * 20
+      const finalGain = Math.max(gain, 1)
+
+      state.currentProgress += finalGain
+
+      // Redibujar inmediatamente
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height)
+      render()
+    }
+
+    function shakeScreen() {
+      ui.container.classList.remove('shake')
+      void ui.container.offsetWidth
+      ui.container.classList.add('shake')
+    }
+
+    function createFloatText(x: number, y: number) {
+      const el = document.createElement('div')
+      el.classList.add('float-text')
+      el.innerText = 'UP!'
+      const rect = ui.container.getBoundingClientRect()
+      const rX = Math.random() * 40 - 20
+
+      el.style.left = x - rect.left + rX + 'px'
+      el.style.top = y - rect.top - 20 + 'px'
+
+      ui.container.appendChild(el)
+      setTimeout(() => el.remove(), 800)
+    }
+
+    // --- ESTADOS DEL JUEGO ---
+
+    function startGame() {
+      sfx.uiClick()
+      initAudio()
+      state.level = 1
+      state.weight = 50
+      state.strength = 10
+      state.maxTime = 10
+
+      startLevel()
+    }
+
+    function startLevel() {
+      // Ocultar menús
+      document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'))
+
+      // Reset Estado Nivel
+      state.currentProgress = 0
+      state.currentTime = state.maxTime
+      state.isPlaying = true
+      state.lastFrameTime = performance.now()
+
+      // UI Updates
+      ui.level.innerText = `NIVEL ${state.level}`
+      ui.weight.innerText = `${state.weight} KG`
+      ui.staminaBar.style.width = '100%'
+
+      requestAnimationFrame(gameLoop)
+    }
+
+    function winLevel() {
+      state.isPlaying = false
+      render()
+      sfx.win()
+
+      // Verificar si se alcanzó el objetivo
+      if (state.level >= TARGET_LEVELS) {
+        // ¡Juego completado!
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 500)
+      } else {
+        // Mostrar pantalla de mejoras
+        setTimeout(() => {
+          ui.upgradeScreen.classList.add('active')
+        }, 500)
+      }
+    }
+
+    function loseLevel() {
+      state.isPlaying = false
+      state.currentProgress = 0
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height)
+      render()
+      sfx.lose()
+
+      ui.finalStats.innerHTML = `Llegaste al Nivel ${state.level}<br>Peso: ${state.weight}kg`
+      ui.gameOverScreen.classList.add('active')
+    }
+
+    function chooseUpgrade(type: 'strength' | 'stamina') {
+      sfx.uiClick()
+      if (type === 'strength') {
+        state.strength += 5
+      } else if (type === 'stamina') {
+        state.maxTime += 3
+      }
+
+      state.level++
+      state.weight += 15
+
+      startLevel()
+    }
+
+    function resetGame() {
+      sfx.uiClick()
+      startGame()
+    }
+
+    // --- EVENT LISTENERS ---
+    ui.clickZone?.addEventListener('pointerdown', (e) => {
+      e.preventDefault()
+      handleClick(e)
+    })
+
+    document.getElementById('btn-start')?.addEventListener('click', startGame)
+    document.getElementById('btn-retry')?.addEventListener('click', resetGame)
+    document
+      .getElementById('btn-strength')
+      ?.addEventListener('click', () => chooseUpgrade('strength'))
+    document.getElementById('btn-stamina')?.addEventListener('click', () => chooseUpgrade('stamina'))
+
+    // Deshabilitar menú contextual
+    ui.container?.addEventListener('contextmenu', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      return false
+    })
+
+    // Render inicial
+    render()
+  })()
+</script>
+
