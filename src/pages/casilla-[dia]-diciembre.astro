@@ -24,6 +24,7 @@ import WindowsGame from '@/components/games/WindowsGame.astro'
 import QuadGame from '@/components/games/QuadGame.astro'
 import PongGame from '@/components/games/PongGame.astro'
 import SoccerGame from '@/components/games/SoccerGame.astro'
+import LiftGame from '@/components/games/LiftGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 import SafariGame from '@/components/games/SafariGame.astro'
@@ -303,6 +304,7 @@ if (user) {
             {gameType === 'quad' && <QuadGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'pong' && <PongGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'soccer' && <SoccerGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'lift' && <LiftGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
