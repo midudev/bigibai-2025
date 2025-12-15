@@ -693,7 +693,9 @@ const GAME_DATA = {
     document
       .getElementById('btn-strength')
       ?.addEventListener('click', () => chooseUpgrade('strength'))
-    document.getElementById('btn-stamina')?.addEventListener('click', () => chooseUpgrade('stamina'))
+    document
+      .getElementById('btn-stamina')
+      ?.addEventListener('click', () => chooseUpgrade('stamina'))
 
     // Deshabilitar menú contextual
     ui.container?.addEventListener('contextmenu', (event) => {
@@ -706,4 +708,3 @@ const GAME_DATA = {
     render()
   })()
 </script>
-
