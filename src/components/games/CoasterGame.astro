@@ -608,7 +608,13 @@ const GAME_DATA = {
     }
 
     function spawnCollectible(x: number) {
-      const types: ('ticket' | 'popcorn' | 'cotton')[] = ['ticket', 'ticket', 'ticket', 'popcorn', 'cotton']
+      const types: ('ticket' | 'popcorn' | 'cotton')[] = [
+        'ticket',
+        'ticket',
+        'ticket',
+        'popcorn',
+        'cotton',
+      ]
       const type = types[Math.floor(Math.random() * types.length)]
       const yOffset = Math.random() > 0.5 ? 0 : -60 - Math.random() * 40
 
@@ -799,7 +805,10 @@ const GAME_DATA = {
       }
     }
 
-    function checkCollision(a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean {
+    function checkCollision(
+      a: { x: number; y: number; width: number; height: number },
+      b: { x: number; y: number; width: number; height: number }
+    ): boolean {
       const margin = 6 // Hitbox más pequeño para ser más permisivo
       return (
         a.x - a.width / 2 + margin < b.x + b.width / 2 - margin &&
@@ -868,7 +877,12 @@ const GAME_DATA = {
       for (const p of particles) {
         ctx!.fillStyle = p.color
         ctx!.globalAlpha = Math.max(0, p.life * 2)
-        ctx!.fillRect(Math.floor(p.x - p.size / 2), Math.floor(p.y - p.size / 2), Math.ceil(p.size), Math.ceil(p.size))
+        ctx!.fillRect(
+          Math.floor(p.x - p.size / 2),
+          Math.floor(p.y - p.size / 2),
+          Math.ceil(p.size),
+          Math.ceil(p.size)
+        )
       }
       ctx!.globalAlpha = 1
     }
@@ -1118,10 +1132,14 @@ const GAME_DATA = {
     })
 
     // Touch on canvas for mobile
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault()
-      jump()
-    }, { passive: false })
+    canvas.addEventListener(
+      'touchstart',
+      (e) => {
+        e.preventDefault()
+        jump()
+      },
+      { passive: false }
+    )
 
     canvas.addEventListener('mousedown', (e) => {
       if (gameState === 'PLAYING') {
@@ -1163,4 +1181,3 @@ const GAME_DATA = {
     requestAnimationFrame(gameLoop)
   })()
 </script>
-
