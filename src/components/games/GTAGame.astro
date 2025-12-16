@@ -100,7 +100,12 @@ const GAME_DATA = {
 
       <div class="action-wrapper">
         <div id="btn-boost" class="action-btn">
-          <span class="btn-letter">🔥</span>
+          <svg class="fire-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+            ><path
+              fill="currentColor"
+              d="M19 13v-3h-1V9h-1V6h-1V4h-1V3h-1V2h-1V1h-2v1h1v2h-1v2h-1v1H9v1H8v1H7v1H6v3h1v2H6v-1H5v-2H4v2H3v3h1v2h1v1h1v1h1v1h1v1h8v-1h1v-1h1v-1h1v-2h1v-5zm-2 7h-1v1h-2v1h-4v-1H9v-4h1v-1h1v-1h1v-1h1v-3h-1v-1h-1V9h1v1h2v2h1v5h-1v2h1v-1h1v-1h1z"
+            ></path></svg
+          >
         </div>
         <div class="control-label">NITRO</div>
       </div>
@@ -273,15 +278,20 @@ const GAME_DATA = {
 
   /* Game Boy Style Controls */
   #gameboy-controls {
-    height: 150px;
-    background: linear-gradient(to bottom, #2d2d3a 0%, #1f1f28 100%);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, rgba(45, 45, 58, 0.95) 0%, rgba(31, 31, 40, 0.98) 100%);
     border-top: 3px solid #444;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 25px;
+    padding: 8px 20px;
     box-sizing: border-box;
     flex-shrink: 0;
+    z-index: 10;
   }
 
   .dpad-wrapper,
@@ -297,13 +307,14 @@ const GAME_DATA = {
     color: #666;
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin-top: 6px;
   }
 
   /* D-Pad Grid */
   .dpad-grid {
     display: grid;
-    grid-template-columns: repeat(3, 44px);
-    grid-template-rows: repeat(3, 44px);
+    grid-template-columns: repeat(3, 32px);
+    grid-template-rows: repeat(3, 32px);
     gap: 2px;
   }
 
@@ -332,8 +343,8 @@ const GAME_DATA = {
   }
 
   .dpad-arrow {
-    font-size: 14px;
-    color: #888;
+    font-size: 12px;
+    color: #aaa;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     pointer-events: none;
   }
@@ -347,14 +358,14 @@ const GAME_DATA = {
 
   .dpad-btn:active .dpad-arrow,
   .dpad-btn.pressed .dpad-arrow {
-    color: #4cd137;
-    text-shadow: 0 0 8px rgba(76, 209, 55, 0.6);
+    color: #f39c12;
+    text-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
   }
 
   /* Action Button */
   .action-btn {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     background: linear-gradient(145deg, #e67e22, #d35400);
     border: 3px solid #a04000;
     border-radius: 50%;
@@ -374,6 +385,14 @@ const GAME_DATA = {
   .btn-letter {
     font-size: 24px;
     pointer-events: none;
+  }
+
+  .fire-icon {
+    width: 32px;
+    height: 32px;
+    color: #fff;
+    pointer-events: none;
+    filter: drop-shadow(0 0 4px rgba(255, 100, 0, 0.6));
   }
 
   .action-btn:active,
@@ -504,14 +523,22 @@ const GAME_DATA = {
   @media (min-width: 768px) {
     #gameboy-controls {
       height: 130px;
+      padding: 10px 25px;
     }
     .dpad-grid {
-      grid-template-columns: repeat(3, 48px);
-      grid-template-rows: repeat(3, 48px);
+      grid-template-columns: repeat(3, 38px);
+      grid-template-rows: repeat(3, 38px);
+    }
+    .dpad-arrow {
+      font-size: 14px;
     }
     .action-btn {
-      width: 75px;
-      height: 75px;
+      width: 65px;
+      height: 65px;
+    }
+    .fire-icon {
+      width: 36px;
+      height: 36px;
     }
   }
 </style>
@@ -697,6 +724,9 @@ const GAME_DATA = {
     interface PoliceCar extends Entity {
       speed: number
       targetX: number
+      rotation: number
+      erraticTimer: number
+      erraticOffset: number
     }
 
     interface Pedestrian extends Entity {
@@ -745,10 +775,10 @@ const GAME_DATA = {
     const PEDESTRIAN_COLORS = ['#f39c12', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6']
 
     function initGame() {
-      // Player starts on the road
+      // Player starts on the road (above controls overlay)
       player = {
         x: GAME_WIDTH / 2,
-        y: GAME_HEIGHT - 120,
+        y: GAME_HEIGHT - 180,
         width: 20,
         height: 32,
         speed: 180,
@@ -787,12 +817,15 @@ const GAME_DATA = {
 
     function spawnPolice() {
       police.push({
-        x: GAME_WIDTH / 2,
+        x: GAME_WIDTH / 2 + (Math.random() - 0.5) * 100,
         y: -80,
         width: 20,
         height: 32,
         speed: 100,
         targetX: player.x,
+        rotation: 0,
+        erraticTimer: 0,
+        erraticOffset: 0,
       })
     }
 
@@ -970,11 +1003,11 @@ const GAME_DATA = {
       if (input.up) player.y -= moveSpeed * 0.7 * FIXED_DT
       if (input.down) player.y += moveSpeed * 0.7 * FIXED_DT
 
-      // Clamp to screen
+      // Clamp to screen (leave space for controls overlay at bottom)
       player.x = Math.max(player.width / 2, Math.min(GAME_WIDTH - player.width / 2, player.x))
       player.y = Math.max(
         player.height / 2 + 50,
-        Math.min(GAME_HEIGHT - player.height / 2 - 20, player.y)
+        Math.min(GAME_HEIGHT - player.height / 2 - 140, player.y)
       )
 
       // Update nitro bar
@@ -1001,18 +1034,34 @@ const GAME_DATA = {
       for (let i = police.length - 1; i >= 0; i--) {
         const cop = police[i]
 
-        // Move towards player X
-        cop.targetX = player.x
-        const dx = cop.targetX - cop.x
-        cop.x += Math.sign(dx) * Math.min(Math.abs(dx), 120 * FIXED_DT)
+        // Erratic behavior timer - occasional swerves
+        cop.erraticTimer -= FIXED_DT
+        if (cop.erraticTimer <= 0) {
+          cop.erraticTimer = 1 + Math.random() * 1.5
+          cop.erraticOffset = (Math.random() - 0.5) * 40
+        }
 
-        // Move down (chase player)
-        cop.y += (cop.speed + SCROLL_SPEED * 0.5) * FIXED_DT
+        // Always chase player X position with some erratic offset
+        const targetX = player.x + cop.erraticOffset
+        const dx = targetX - cop.x
+        const chaseSpeedX = 120
+        const moveX = Math.sign(dx) * Math.min(Math.abs(dx), chaseSpeedX * FIXED_DT)
+        cop.x += moveX
+
+        // Update rotation based on horizontal movement
+        const targetRotation = (moveX / (chaseSpeedX * FIXED_DT)) * 0.4
+        cop.rotation += (targetRotation - cop.rotation) * 0.2
+
+        // Move down with scroll - always chasing downward
+        cop.y += (cop.speed + SCROLL_SPEED * 0.7) * FIXED_DT
 
         // Increase speed over time
-        cop.speed = Math.min(cop.speed + 5 * FIXED_DT, 200)
+        cop.speed = Math.min(cop.speed + 10 * FIXED_DT, 200)
 
-        // Remove if off screen
+        // Clamp X to screen bounds (can go anywhere, not just road!)
+        cop.x = Math.max(cop.width / 2, Math.min(GAME_WIDTH - cop.width / 2, cop.x))
+
+        // Remove if off screen bottom
         if (cop.y > GAME_HEIGHT + 100) {
           police.splice(i, 1)
           continue
@@ -1021,9 +1070,9 @@ const GAME_DATA = {
         // Collision with player
         if (checkCollision(player, cop)) {
           takeDamage(20)
-          // Push police back
-          cop.y -= 50
-          cop.speed = 50
+          // Push police back up
+          cop.y -= 60
+          cop.speed = 60
         }
       }
     }
@@ -1151,7 +1200,7 @@ const GAME_DATA = {
 
       // Draw police
       for (const cop of police) {
-        drawCar(cop.x, cop.y, cop.width, cop.height, '#1a5276', true)
+        drawPoliceCar(cop.x, cop.y, cop.width, cop.height, '#1a5276', cop.rotation)
       }
 
       // Draw player
@@ -1219,6 +1268,53 @@ const GAME_DATA = {
       ctx!.fillRect(px + w - 1, py + 4, 3, 6)
       ctx!.fillRect(px - 2, py + h - 10, 3, 6)
       ctx!.fillRect(px + w - 1, py + h - 10, 3, 6)
+    }
+
+    function drawPoliceCar(
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      color: string,
+      rotation: number
+    ) {
+      ctx!.save()
+      ctx!.translate(x, y)
+      ctx!.rotate(rotation)
+
+      const px = (-w / 2) | 0
+      const py = (-h / 2) | 0
+
+      // Shadow
+      ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx!.fillRect(px + 2, py + 2, w, h)
+
+      // Body
+      ctx!.fillStyle = color
+      ctx!.fillRect(px, py, w, h)
+
+      // Windows
+      ctx!.fillStyle = '#2c3e50'
+      ctx!.fillRect(px + 3, py + 5, w - 6, 8)
+
+      // Police lights
+      ctx!.fillStyle = frames % 20 < 10 ? '#e74c3c' : '#3498db'
+      ctx!.fillRect(px + 2, py + 2, 5, 4)
+      ctx!.fillRect(px + w - 7, py + 2, 5, 4)
+
+      // Tail lights
+      ctx!.fillStyle = '#c0392b'
+      ctx!.fillRect(px + 2, py + h - 5, 4, 3)
+      ctx!.fillRect(px + w - 6, py + h - 5, 4, 3)
+
+      // Wheels
+      ctx!.fillStyle = '#111'
+      ctx!.fillRect(px - 2, py + 4, 3, 6)
+      ctx!.fillRect(px + w - 1, py + 4, 3, 6)
+      ctx!.fillRect(px - 2, py + h - 10, 3, 6)
+      ctx!.fillRect(px + w - 1, py + h - 10, 3, 6)
+
+      ctx!.restore()
     }
 
     function drawPlayerCar(
@@ -1322,10 +1418,10 @@ const GAME_DATA = {
     const btnRight = document.getElementById('btn-right')
 
     function updateButtonVisuals() {
-      btnUp?.classList.toggle('pressed', keys['ArrowUp'] || keys['KeyW'])
-      btnDown?.classList.toggle('pressed', keys['ArrowDown'] || keys['KeyS'])
-      btnLeft?.classList.toggle('pressed', keys['ArrowLeft'] || keys['KeyA'])
-      btnRight?.classList.toggle('pressed', keys['ArrowRight'] || keys['KeyD'])
+      btnUp?.classList.toggle('pressed', !!(keys['ArrowUp'] || keys['KeyW']))
+      btnDown?.classList.toggle('pressed', !!(keys['ArrowDown'] || keys['KeyS']))
+      btnLeft?.classList.toggle('pressed', !!(keys['ArrowLeft'] || keys['KeyA']))
+      btnRight?.classList.toggle('pressed', !!(keys['ArrowRight'] || keys['KeyD']))
     }
 
     window.addEventListener('keydown', (e) => {
