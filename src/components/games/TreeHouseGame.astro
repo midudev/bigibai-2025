@@ -21,71 +21,78 @@ const GAME_DATA = {
 
 <GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
   <div id="treehouse-game-container" slot="game">
-    <!-- UI Layer -->
-    <div id="ui-layer">
-      <div class="ui-box">
-        <div class="ui-row">
-          <span class="ui-label">COINS</span>
-          <span id="coins-count" class="ui-value">000</span>
+    <!-- Canvas Wrapper -->
+    <div class="canvas-wrapper">
+      <!-- UI Layer -->
+      <div id="ui-layer">
+        <div class="ui-box">
+          <div class="ui-row">
+            <span class="ui-label">COINS</span>
+            <span id="coins-count" class="ui-value">000</span>
+          </div>
+          <div class="ui-row">
+            <span class="ui-label">WORLD</span>
+            <span class="ui-value">1-1</span>
+          </div>
         </div>
-        <div class="ui-row">
-          <span class="ui-label">WORLD</span>
-          <span class="ui-value">1-1</span>
-        </div>
-      </div>
-      <div class="ui-box">
-        <div class="ui-row lives-row">
-          <span id="lives-icons">♥♥♥</span>
-        </div>
-      </div>
-    </div>
-
-    <canvas id="treeCanvas"></canvas>
-
-    <!-- Start Screen -->
-    <div id="start-screen" class="modal active">
-      <div class="title-box">
-        <h1 style="font-family: 'Press Start 2P', monospace;">TREE<br />HOUSE<br />ADVENTURE</h1>
-      </div>
-
-      <div class="instructions">
-        <p class="subtitle">🌳 ¡LLEGA A LA CASA DEL ÁRBOL! 🏠</p>
-        <div class="instruction-list">
-          <p>► Salta sobre los enemigos</p>
-          <p>► Recoge setas para crecer</p>
-          <p>► Golpea bloques [?] desde abajo</p>
+        <div class="ui-box">
+          <div class="ui-row lives-row" id="lives-icons">
+            <!-- Hearts will be inserted by JS -->
+          </div>
         </div>
       </div>
 
-      <button id="start-btn" class="menu-btn">► START</button>
-    </div>
+      <canvas id="treeCanvas"></canvas>
 
-    <!-- Game Over Screen -->
-    <div id="game-over-screen" class="modal hidden">
-      <h1 class="danger">GAME OVER</h1>
-      <p class="score-text">Has perdido todas las vidas</p>
-      <button id="restart-btn" class="menu-btn">► RETRY</button>
-    </div>
+      <!-- Start Screen -->
+      <div id="start-screen" class="modal active">
+        <div class="title-box">
+          <h1 style="font-family: 'Press Start 2P', monospace;">TREE<br />HOUSE<br />ADVENTURE</h1>
+        </div>
 
-    <!-- Win Screen -->
-    <div id="win-screen" class="modal hidden">
-      <h1 class="win">★ VICTORY! ★</h1>
-      <p class="score-text">¡Has llegado a la casa del árbol!</p>
+        <div class="instructions">
+          <p class="subtitle">🌳 ¡LLEGA A LA CASA DEL ÁRBOL! 🏠</p>
+          <div class="instruction-list">
+            <p>► Salta sobre los enemigos</p>
+            <p>► Recoge setas para crecer</p>
+            <p>► Golpea bloques [?] desde abajo</p>
+          </div>
+        </div>
+
+        <button id="start-btn" class="menu-btn">► START</button>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="game-over-screen" class="modal hidden">
+        <h1 class="danger" style="font-family: 'Press Start 2P', monospace;">GAME OVER</h1>
+        <p class="score-text">Has perdido todas las vidas</p>
+        <button id="restart-btn" class="menu-btn">► RETRY</button>
+      </div>
+
+      <!-- Win Screen -->
+      <div id="win-screen" class="modal hidden">
+        <h1 class="win" style="font-family: 'Press Start 2P', monospace;">★ ¡VICTORIA! ★</h1>
+        <p class="score-text">¡Has llegado a la casa del árbol!</p>
+      </div>
     </div>
 
     <!-- Mobile Controls - NES Style -->
     <div id="mobile-controls">
       <div class="dpad-container">
         <div class="dpad-cross">
-          <div id="btn-left" class="dpad-horizontal dpad-left"></div>
+          <button id="btn-left" class="dpad-btn dpad-left" type="button" aria-label="Left">
+            <span class="dpad-arrow">◀</span>
+          </button>
           <div class="dpad-center-piece"></div>
-          <div id="btn-right" class="dpad-horizontal dpad-right"></div>
+          <button id="btn-right" class="dpad-btn dpad-right" type="button" aria-label="Right">
+            <span class="dpad-arrow">▶</span>
+          </button>
         </div>
       </div>
       <div class="action-btns">
         <div class="action-row">
-          <div id="btn-run" class="action-btn btn-b">B</div>
-          <div id="btn-jump" class="action-btn btn-a">A</div>
+          <button id="btn-run" class="action-btn btn-b" type="button" aria-label="Run">B</button>
+          <button id="btn-jump" class="action-btn btn-a" type="button" aria-label="Jump">A</button>
         </div>
         <div class="action-labels">
           <span>RUN</span>
@@ -145,13 +152,13 @@ const GAME_DATA = {
   }
 
   .ui-label {
-    font-size: 8px;
+    font-size: 10px;
     color: #fff;
     text-shadow: 2px 2px 0 #000;
   }
 
   .ui-value {
-    font-size: 8px;
+    font-size: 12px;
     color: #fff;
     text-shadow: 2px 2px 0 #000;
   }
@@ -161,16 +168,31 @@ const GAME_DATA = {
   }
 
   .lives-row {
-    font-size: 10px;
-    color: #fc5454;
-    text-shadow: 2px 2px 0 #000;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .lives-row svg {
+    width: 24px;
+    height: 24px;
+    color: #ff0000;
+    filter: drop-shadow(2px 2px 0 #000);
+  }
+
+  /* Canvas wrapper */
+  .canvas-wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
   /* Canvas */
   #treeCanvas {
     display: block;
     width: 100%;
-    flex: 1;
+    height: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
   }
@@ -181,15 +203,15 @@ const GAME_DATA = {
 
   /* Mobile Controls - NES Controller Style */
   #mobile-controls {
-    height: 150px;
-    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
-    border-top: 4px solid #1a1a1a;
+    flex-shrink: 0;
+    height: 120px;
+    background: linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%);
+    border-top: 3px solid #555;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 25px;
+    padding: 10px 20px;
     box-sizing: border-box;
-    flex-shrink: 0;
   }
 
   .dpad-container {
@@ -204,52 +226,46 @@ const GAME_DATA = {
     background: transparent;
   }
 
-  .dpad-horizontal {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 3px solid #111;
+  .dpad-btn {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(180deg, #555 0%, #333 100%);
+    border: 3px solid #222;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    position: relative;
+    font-family: inherit;
+    padding: 0;
   }
 
-  .dpad-horizontal::after {
-    content: '';
-    width: 0;
-    height: 0;
-    border-style: solid;
+  .dpad-arrow {
+    font-size: 18px;
+    color: #aaa;
+    pointer-events: none;
   }
 
   .dpad-left {
-    border-radius: 6px 0 0 6px;
-    box-shadow: -2px 2px 0 #000;
-  }
-
-  .dpad-left::after {
-    border-width: 8px 10px 8px 0;
-    border-color: transparent #666 transparent transparent;
+    border-radius: 8px 0 0 8px;
+    box-shadow:
+      -2px 3px 0 #111,
+      inset 1px 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .dpad-right {
-    border-radius: 0 6px 6px 0;
-    box-shadow: 2px 2px 0 #000;
-  }
-
-  .dpad-right::after {
-    border-width: 8px 0 8px 10px;
-    border-color: transparent transparent transparent #666;
+    border-radius: 0 8px 8px 0;
+    box-shadow:
+      2px 3px 0 #111,
+      inset 1px 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .dpad-center-piece {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-    border-top: 3px solid #111;
-    border-bottom: 3px solid #111;
+    width: 30px;
+    height: 50px;
+    background: linear-gradient(180deg, #555 0%, #333 100%);
+    border-top: 3px solid #222;
+    border-bottom: 3px solid #222;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -257,32 +273,30 @@ const GAME_DATA = {
 
   .dpad-center-piece::after {
     content: '';
-    width: 12px;
-    height: 12px;
-    background: #333;
+    width: 10px;
+    height: 10px;
+    background: #444;
     border-radius: 50%;
+    border: 2px solid #333;
   }
 
-  .dpad-horizontal:active,
-  .dpad-horizontal.pressed {
-    background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+  .dpad-btn:active,
+  .dpad-btn.pressed {
+    background: linear-gradient(180deg, #333 0%, #222 100%);
+    box-shadow: 0 1px 0 #111;
+    transform: translateY(2px);
   }
 
-  .dpad-horizontal:active::after,
-  .dpad-horizontal.pressed::after {
-    border-color: transparent #4cd137 transparent transparent;
-  }
-
-  .dpad-right:active::after,
-  .dpad-right.pressed::after {
-    border-color: transparent transparent transparent #4cd137;
+  .dpad-btn:active .dpad-arrow,
+  .dpad-btn.pressed .dpad-arrow {
+    color: #4cd137;
   }
 
   .action-btns {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   .action-row {
@@ -291,13 +305,14 @@ const GAME_DATA = {
   }
 
   .action-btn {
-    width: 52px;
-    height: 52px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -306,30 +321,36 @@ const GAME_DATA = {
   }
 
   .btn-a {
-    background: linear-gradient(180deg, #c92a2a 0%, #8b1a1a 100%);
-    border-color: #5c0f0f;
-    color: #ffcccc;
-    box-shadow: 0 4px 0 #4a0a0a;
+    background: linear-gradient(180deg, #e53935 0%, #b71c1c 100%);
+    border: 4px solid #7f0000;
+    color: #fff;
+    box-shadow:
+      0 5px 0 #5f0000,
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   }
 
   .btn-b {
-    background: linear-gradient(180deg, #c92a2a 0%, #8b1a1a 100%);
-    border-color: #5c0f0f;
-    color: #ffcccc;
-    box-shadow: 0 4px 0 #4a0a0a;
+    background: linear-gradient(180deg, #e53935 0%, #b71c1c 100%);
+    border: 4px solid #7f0000;
+    color: #fff;
+    box-shadow:
+      0 5px 0 #5f0000,
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   }
 
   .action-btn:active,
   .action-btn.pressed {
     transform: translateY(4px);
-    box-shadow: 0 0 0 #4a0a0a;
+    box-shadow: 0 1px 0 #5f0000;
   }
 
   .action-labels {
     display: flex;
-    gap: 30px;
-    font-size: 7px;
-    color: #666;
+    gap: 34px;
+    font-size: 10px;
+    color: #aaa;
   }
 
   /* Modals */
@@ -1043,9 +1064,12 @@ const GAME_DATA = {
       generateLevel()
     }
 
+    const HEART_SVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="#ff0000" d="M23 6v5h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-2v-1h-1v-1H9v-1H8v-1H7v-1H6v-1H5v-1H4v-1H3v-1H2v-1H1V6h1V5h1V4h1V3h6v1h1v1h2V4h1V3h6v1h1v1h1v1z"/></svg>'
+
     function updateUI() {
       coinsDisplay.textContent = String(coins).padStart(3, '0')
-      livesDisplay.textContent = '♥'.repeat(Math.max(0, lives))
+      livesDisplay.innerHTML = HEART_SVG.repeat(Math.max(0, lives))
     }
 
     // Input
@@ -1130,10 +1154,24 @@ const GAME_DATA = {
     window.addEventListener('keydown', (e) => {
       keys[e.code] = true
       if (e.code === 'Space') e.preventDefault()
+
+      // Visual feedback on buttons
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') btnLeft?.classList.add('pressed')
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') btnRight?.classList.add('pressed')
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')
+        btnJump?.classList.add('pressed')
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') btnRun?.classList.add('pressed')
     })
 
     window.addEventListener('keyup', (e) => {
       keys[e.code] = false
+
+      // Remove visual feedback
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') btnLeft?.classList.remove('pressed')
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') btnRight?.classList.remove('pressed')
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')
+        btnJump?.classList.remove('pressed')
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') btnRun?.classList.remove('pressed')
     })
 
     function checkCollision(
@@ -1208,7 +1246,13 @@ const GAME_DATA = {
         if (flagDescending) {
           flagY += 150 * FIXED_DT
           player.y += 100 * FIXED_DT
-          if (flagY >= 120) {
+          // Keep player on the pole
+          player.x = goalX + 6 - player.width / 2
+          player.vx = 0
+
+          const groundY = GAME_HEIGHT - TILE_SIZE * 2 - player.height
+          if (player.y >= groundY || flagY >= 120) {
+            player.y = groundY
             gameState = 'WIN'
             stopMusic()
             sfx.win()
@@ -1512,6 +1556,8 @@ const GAME_DATA = {
       if (player.x > goalX - 20 && !reachedGoal) {
         reachedGoal = true
         flagDescending = true
+        // Position player exactly on the flagpole
+        player.x = goalX + 6 - player.width / 2
         player.vx = 0
         player.vy = 0
         sfx.flagpole()
@@ -1595,6 +1641,7 @@ const GAME_DATA = {
       // NES-style Mario cloud - well defined pixel art
       const baseX = Math.floor(x)
       const baseY = Math.floor(y)
+      const eyeColor = '#a8d8ff' // Light blue for eyes
 
       if (size === 1) {
         // Small cloud (single puff)
@@ -1605,9 +1652,9 @@ const GAME_DATA = {
         drawRect(baseX + 2, baseY + 4, 20, 4, COLORS.white)
         drawRect(baseX + 4, baseY + 8, 16, 2, COLORS.white)
         drawRect(baseX + 6, baseY + 10, 12, 2, COLORS.white)
-        // Eyes
-        drawRect(baseX + 8, baseY + 4, 2, 2, COLORS.black)
-        drawRect(baseX + 14, baseY + 4, 2, 2, COLORS.black)
+        // Eyes - light blue
+        drawRect(baseX + 8, baseY + 4, 2, 2, eyeColor)
+        drawRect(baseX + 14, baseY + 4, 2, 2, eyeColor)
         // Shading
         drawRect(baseX + 4, baseY + 8, 4, 2, COLORS.skyLight)
         drawRect(baseX + 16, baseY + 8, 4, 2, COLORS.skyLight)
@@ -1623,9 +1670,9 @@ const GAME_DATA = {
         drawRect(baseX + 2, baseY + 4, 32, 6, COLORS.white)
         drawRect(baseX + 4, baseY + 10, 28, 2, COLORS.white)
         drawRect(baseX + 8, baseY + 12, 20, 2, COLORS.white)
-        // Eyes
-        drawRect(baseX + 8, baseY + 6, 2, 2, COLORS.black)
-        drawRect(baseX + 14, baseY + 6, 2, 2, COLORS.black)
+        // Eyes - light blue
+        drawRect(baseX + 8, baseY + 6, 2, 2, eyeColor)
+        drawRect(baseX + 14, baseY + 6, 2, 2, eyeColor)
         // Shading
         drawRect(baseX + 4, baseY + 10, 6, 2, COLORS.skyLight)
         drawRect(baseX + 26, baseY + 10, 6, 2, COLORS.skyLight)
@@ -1644,9 +1691,9 @@ const GAME_DATA = {
         drawRect(baseX + 4, baseY + 10, 42, 2, COLORS.white)
         drawRect(baseX + 8, baseY + 12, 34, 2, COLORS.white)
         drawRect(baseX + 14, baseY + 14, 22, 2, COLORS.white)
-        // Eyes on first puff
-        drawRect(baseX + 8, baseY + 6, 2, 2, COLORS.black)
-        drawRect(baseX + 14, baseY + 6, 2, 2, COLORS.black)
+        // Eyes on first puff - light blue
+        drawRect(baseX + 8, baseY + 6, 2, 2, eyeColor)
+        drawRect(baseX + 14, baseY + 6, 2, 2, eyeColor)
         // Shading
         drawRect(baseX + 4, baseY + 10, 8, 2, COLORS.skyLight)
         drawRect(baseX + 38, baseY + 10, 8, 2, COLORS.skyLight)
@@ -1974,120 +2021,120 @@ const GAME_DATA = {
       }
 
       if (player.dying) {
-        // Death pose - arms up, eyes X
+        // Death pose
         // Cap
-        drawRect(x + 3, y, 6, 2, COLORS.red)
-        drawRect(x + 2, y + 2, 8, 2, COLORS.red)
+        drawRect(x + 2, y, 8, 3, COLORS.red)
         // Face
-        drawRect(x + 2, y + 4, 8, 4, COLORS.brownLight)
+        drawRect(x + 2, y + 3, 8, 5, COLORS.brownLight)
         // X eyes
-        drawRect(x + 3, y + 5, 1, 1, COLORS.black)
-        drawRect(x + 4, y + 6, 1, 1, COLORS.black)
+        drawRect(x + 3, y + 4, 1, 1, COLORS.black)
+        drawRect(x + 5, y + 4, 1, 1, COLORS.black)
         drawRect(x + 4, y + 5, 1, 1, COLORS.black)
-        drawRect(x + 3, y + 6, 1, 1, COLORS.black)
-        drawRect(x + 7, y + 5, 1, 1, COLORS.black)
-        drawRect(x + 8, y + 6, 1, 1, COLORS.black)
+        drawRect(x + 7, y + 4, 1, 1, COLORS.black)
+        drawRect(x + 9, y + 4, 1, 1, COLORS.black)
         drawRect(x + 8, y + 5, 1, 1, COLORS.black)
-        drawRect(x + 7, y + 6, 1, 1, COLORS.black)
         // Body
         drawRect(x + 3, y + 8, 6, 4, COLORS.red)
         // Arms up
-        drawRect(x, y + 4, 2, 6, COLORS.brownLight)
-        drawRect(x + 10, y + 4, 2, 6, COLORS.brownLight)
+        drawRect(x, y + 5, 2, 5, COLORS.brownLight)
+        drawRect(x + 10, y + 5, 2, 5, COLORS.brownLight)
         ctx!.restore()
         return
       }
 
       const frame = player.onGround ? player.animFrame : 1
 
-      // ===== NES Mario-style Small Player =====
+      // ===== IMPROVED SMALL PLAYER =====
 
-      // Cap top
-      drawRect(x + 3, y, 6, 1, COLORS.red)
-      drawRect(x + 2, y + 1, 8, 1, COLORS.red)
-      drawRect(x + 1, y + 2, 10, 2, COLORS.red)
-
-      // Hair/sideburn
-      drawRect(x + 2, y + 4, 3, 1, COLORS.brown)
+      // Hat top (rounded)
+      drawRect(x + 4, y, 4, 1, COLORS.red)
+      drawRect(x + 3, y + 1, 6, 1, COLORS.red)
+      drawRect(x + 2, y + 2, 8, 2, COLORS.red)
+      // Hat visor
+      drawRect(x + 8, y + 3, 3, 1, COLORS.red)
 
       // Face
       drawRect(x + 2, y + 4, 8, 4, COLORS.brownLight)
-      drawRect(x + 1, y + 5, 1, 2, COLORS.brownLight) // Ear
 
-      // Eye
+      // Hair (side)
+      drawRect(x + 2, y + 4, 2, 2, COLORS.brown)
+
+      // Eye white
+      drawRect(x + 6, y + 5, 3, 2, COLORS.white)
+      // Eye pupil
       drawRect(x + 7, y + 5, 2, 2, COLORS.black)
 
-      // Sideburn detail
-      drawRect(x + 2, y + 5, 2, 2, COLORS.brown)
-
       // Nose
-      drawRect(x + 9, y + 5, 2, 2, COLORS.brownLight)
-      drawRect(x + 10, y + 6, 1, 1, COLORS.brownLight)
+      drawRect(x + 9, y + 6, 2, 2, COLORS.brownLight)
 
       if (!player.onGround) {
         // ===== JUMPING POSE =====
         // Shirt
-        drawRect(x + 3, y + 8, 6, 3, COLORS.red)
-        // Arm raised
-        drawRect(x + 9, y + 6, 2, 3, COLORS.red)
-        drawRect(x + 10, y + 4, 2, 3, COLORS.brownLight)
-        // Other arm
-        drawRect(x + 1, y + 9, 2, 2, COLORS.brownLight)
+        drawRect(x + 2, y + 8, 8, 3, COLORS.red)
+        // Arm up
+        drawRect(x + 10, y + 5, 2, 4, COLORS.brownLight)
+        // Other arm back
+        drawRect(x, y + 9, 2, 2, COLORS.brownLight)
         // Overalls
-        drawRect(x + 4, y + 10, 4, 2, COLORS.blue)
+        drawRect(x + 3, y + 10, 6, 2, COLORS.blue)
+        // Straps
+        drawRect(x + 4, y + 8, 1, 3, COLORS.blue)
+        drawRect(x + 7, y + 8, 1, 3, COLORS.blue)
+        // Buttons
+        drawRect(x + 4, y + 9, 1, 1, COLORS.yellow)
+        drawRect(x + 7, y + 9, 1, 1, COLORS.yellow)
         // Legs spread
-        drawRect(x + 2, y + 11, 3, 3, COLORS.blue)
+        drawRect(x + 2, y + 12, 3, 3, COLORS.blue)
         drawRect(x + 7, y + 12, 3, 3, COLORS.blue)
         // Shoes
-        drawRect(x + 1, y + 13, 3, 2, COLORS.brown)
-        drawRect(x + 8, y + 14, 3, 1, COLORS.brown)
-        // Strap buttons
-        drawRect(x + 4, y + 10, 1, 1, COLORS.yellow)
-        drawRect(x + 7, y + 10, 1, 1, COLORS.yellow)
+        drawRect(x + 1, y + 14, 3, 2, COLORS.brown)
+        drawRect(x + 8, y + 14, 3, 2, COLORS.brown)
       } else if (frame === 1 || frame === 2) {
         // ===== WALKING ANIMATION =====
         // Shirt
-        drawRect(x + 3, y + 8, 6, 3, COLORS.red)
-        // Arm swinging
-        if (frame === 1) {
-          drawRect(x + 9, y + 9, 2, 3, COLORS.brownLight)
-        } else {
-          drawRect(x + 9, y + 8, 2, 3, COLORS.brownLight)
-        }
+        drawRect(x + 2, y + 8, 8, 3, COLORS.red)
+        // Arm
+        drawRect(x + 10, y + 8, 2, 3, COLORS.brownLight)
         // Overalls
-        drawRect(x + 4, y + 10, 4, 2, COLORS.blue)
+        drawRect(x + 3, y + 10, 6, 2, COLORS.blue)
+        // Straps
+        drawRect(x + 4, y + 8, 1, 3, COLORS.blue)
+        drawRect(x + 7, y + 8, 1, 3, COLORS.blue)
+        // Buttons
+        drawRect(x + 4, y + 9, 1, 1, COLORS.yellow)
+        drawRect(x + 7, y + 9, 1, 1, COLORS.yellow)
         // Legs alternating
         if (frame === 1) {
-          drawRect(x + 2, y + 11, 3, 4, COLORS.blue)
+          drawRect(x + 2, y + 12, 3, 4, COLORS.blue)
           drawRect(x + 7, y + 12, 3, 3, COLORS.blue)
-          drawRect(x + 1, y + 14, 3, 2, COLORS.brown)
+          drawRect(x + 1, y + 15, 3, 1, COLORS.brown)
           drawRect(x + 8, y + 14, 3, 1, COLORS.brown)
         } else {
           drawRect(x + 3, y + 12, 3, 3, COLORS.blue)
-          drawRect(x + 6, y + 11, 3, 4, COLORS.blue)
+          drawRect(x + 6, y + 12, 3, 4, COLORS.blue)
           drawRect(x + 2, y + 14, 3, 1, COLORS.brown)
-          drawRect(x + 7, y + 14, 3, 2, COLORS.brown)
+          drawRect(x + 7, y + 15, 3, 1, COLORS.brown)
         }
-        // Strap buttons
-        drawRect(x + 4, y + 10, 1, 1, COLORS.yellow)
-        drawRect(x + 7, y + 10, 1, 1, COLORS.yellow)
       } else {
         // ===== STANDING POSE =====
         // Shirt
-        drawRect(x + 3, y + 8, 6, 3, COLORS.red)
-        // Arm at side
-        drawRect(x + 9, y + 9, 2, 3, COLORS.brownLight)
+        drawRect(x + 2, y + 8, 8, 3, COLORS.red)
+        // Arm
+        drawRect(x + 10, y + 8, 2, 3, COLORS.brownLight)
         // Overalls
-        drawRect(x + 4, y + 10, 4, 2, COLORS.blue)
+        drawRect(x + 3, y + 10, 6, 2, COLORS.blue)
+        // Straps
+        drawRect(x + 4, y + 8, 1, 3, COLORS.blue)
+        drawRect(x + 7, y + 8, 1, 3, COLORS.blue)
+        // Buttons
+        drawRect(x + 4, y + 9, 1, 1, COLORS.yellow)
+        drawRect(x + 7, y + 9, 1, 1, COLORS.yellow)
         // Legs together
-        drawRect(x + 3, y + 11, 3, 4, COLORS.blue)
-        drawRect(x + 6, y + 11, 3, 4, COLORS.blue)
+        drawRect(x + 3, y + 12, 3, 4, COLORS.blue)
+        drawRect(x + 6, y + 12, 3, 4, COLORS.blue)
         // Shoes
-        drawRect(x + 2, y + 14, 4, 2, COLORS.brown)
-        drawRect(x + 6, y + 14, 4, 2, COLORS.brown)
-        // Strap buttons
-        drawRect(x + 4, y + 10, 1, 1, COLORS.yellow)
-        drawRect(x + 7, y + 10, 1, 1, COLORS.yellow)
+        drawRect(x + 2, y + 15, 4, 1, COLORS.brown)
+        drawRect(x + 6, y + 15, 4, 1, COLORS.brown)
       }
 
       ctx!.restore()
