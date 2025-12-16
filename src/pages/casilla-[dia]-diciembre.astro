@@ -28,6 +28,8 @@ import LiftGame from '@/components/games/LiftGame.astro'
 import PangGame from '@/components/games/PangGame.astro'
 import GTAGame from '@/components/games/GTAGame.astro'
 import CandyGame from '@/components/games/CandyGame.astro'
+import TreeHouseGame from '@/components/games/TreeHouseGame.astro'
+import TrackGame from '@/components/games/TrackGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 import SafariGame from '@/components/games/SafariGame.astro'
@@ -329,6 +331,8 @@ if (user) {
             {gameType === 'pang' && <PangGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'gta' && <GTAGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'candy' && <CandyGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'treehouse' && <TreeHouseGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'track' && <TrackGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
