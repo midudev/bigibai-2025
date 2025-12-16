@@ -1,0 +1,1009 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 250,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="track-game-container" slot="game" data-target-score={GAME_DATA.targetScore}>
+    <canvas id="trackCanvas"></canvas>
+
+    <!-- Touch Areas for Mobile -->
+    <div id="touch-left" class="touch-area left">
+      <span class="touch-key">A</span>
+    </div>
+    <div id="touch-right" class="touch-area right">
+      <span class="touch-key">D</span>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal active">
+      <h1>SPRINT<br/>250M</h1>
+      
+      <div class="instructions">
+        <p class="controls-title">CÓMO JUGAR</p>
+        <p>Alterna los botones</p>
+        <p>para correr más rápido</p>
+        <br/>
+        <div class="keys-display">
+          <span class="key-hint">A</span>
+          <span class="key-hint">D</span>
+        </div>
+        <p class="hint">🏃 ¡Pulsa alternando!</p>
+        <p class="hint">🏆 ¡Gana la carrera!</p>
+      </div>
+      
+      <button id="start-btn" class="menu-btn blink">EMPEZAR</button>
+    </div>
+
+    <!-- Countdown Screen -->
+    <div id="countdown-screen" class="modal hidden">
+      <div id="countdown-number">3</div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="modal hidden">
+      <h1 class="danger">¡PERDISTE!</h1>
+      <p>Posición: <span id="final-position">4</span>º</p>
+      <p class="small-text">No llegaste primero</p>
+      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="modal hidden">
+      <h1 class="win">¡VICTORIA!</h1>
+      <div class="medal">🥇</div>
+      <p>¡Has ganado la carrera!</p>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #track-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #1a472a;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  #trackCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* Touch Areas */
+  .touch-area {
+    position: absolute;
+    bottom: 0;
+    width: 50%;
+    height: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.1s, background 0.1s;
+    pointer-events: none;
+  }
+
+  .touch-area.active {
+    pointer-events: auto;
+    opacity: 1;
+  }
+
+  .touch-area.left {
+    left: 0;
+    background: linear-gradient(to top, rgba(74, 222, 128, 0.3), transparent);
+  }
+
+  .touch-area.right {
+    right: 0;
+    background: linear-gradient(to top, rgba(96, 165, 250, 0.3), transparent);
+  }
+
+  .touch-area.pressed {
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.4), transparent);
+  }
+
+  .touch-key {
+    font-size: 48px;
+    color: rgba(255, 255, 255, 0.6);
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Modals */
+  .modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .modal.hidden {
+    display: none !important;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal h1 {
+    color: #4ade80;
+    text-shadow: 4px 4px #166534;
+    font-size: 28px;
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+
+  .modal h1.danger {
+    color: #ef4444;
+    text-shadow: 3px 3px #000;
+  }
+
+  .modal h1.win {
+    color: #fbbf24;
+    text-shadow: 3px 3px #92400e;
+  }
+
+  .modal p {
+    font-size: 10px;
+    margin: 5px 0;
+  }
+
+  .small-text {
+    font-size: 8px !important;
+    color: #aaa;
+  }
+
+  .medal {
+    font-size: 64px;
+    margin: 10px 0;
+    animation: medal-bounce 0.5s ease infinite alternate;
+  }
+
+  @keyframes medal-bounce {
+    from { transform: translateY(0) scale(1); }
+    to { transform: translateY(-10px) scale(1.1); }
+  }
+
+  .instructions {
+    font-size: 11px;
+    margin: 20px 10px;
+    line-height: 2;
+    color: #ddd;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #555;
+  }
+
+  .controls-title {
+    color: #4ade80;
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .keys-display {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 10px 0;
+  }
+
+  .key-hint {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(180deg, #444 0%, #222 100%);
+    border: 3px solid #666;
+    border-radius: 6px;
+    line-height: 34px;
+    font-size: 16px;
+    box-shadow: 0 4px 0 #111;
+  }
+
+  .hint {
+    color: #fbbf24;
+    font-size: 10px !important;
+  }
+
+  .menu-btn {
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-family: 'Press Start 2P', cursive;
+    background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+    color: #052e16;
+    border: 4px solid #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 0 #166534;
+    transition: transform 0.1s;
+  }
+
+  .menu-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #166534;
+  }
+
+  .blink {
+    animation: blinker 1s linear infinite;
+  }
+
+  @keyframes blinker {
+    50% { opacity: 0.6; }
+  }
+
+  /* Countdown */
+  #countdown-screen {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  #countdown-number {
+    font-size: 120px;
+    color: #fbbf24;
+    text-shadow: 0 0 40px #fbbf24, 4px 4px 0 #92400e;
+    animation: countdown-pulse 0.5s ease-out;
+  }
+
+  @keyframes countdown-pulse {
+    0% { transform: scale(2); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+</style>
+
+<script>
+;(function() {
+  const container = document.getElementById('track-game-container')
+  const canvas = document.getElementById('trackCanvas') as HTMLCanvasElement | null
+  if (!canvas || !container) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  // Disable image smoothing for pixel-perfect rendering
+  ctx.imageSmoothingEnabled = false
+
+  // Configuration
+  const RACE_DISTANCE = 250 // meters
+  const LANE_COUNT = 4
+  const GAME_WIDTH = 315
+  const GAME_HEIGHT = 560
+
+  canvas.width = GAME_WIDTH
+  canvas.height = GAME_HEIGHT
+
+  // UI Elements
+  const startScreen = document.getElementById('start-screen') as HTMLElement
+  const countdownScreen = document.getElementById('countdown-screen') as HTMLElement
+  const countdownNumber = document.getElementById('countdown-number') as HTMLElement
+  const gameOverScreen = document.getElementById('game-over-screen') as HTMLElement
+  const winScreen = document.getElementById('win-screen') as HTMLElement
+  const startBtn = document.getElementById('start-btn') as HTMLElement
+  const restartBtn = document.getElementById('restart-btn') as HTMLElement
+  const finalPositionEl = document.getElementById('final-position') as HTMLElement
+  const touchLeft = document.getElementById('touch-left') as HTMLElement
+  const touchRight = document.getElementById('touch-right') as HTMLElement
+
+  // Game State
+  type GameState = 'MENU' | 'COUNTDOWN' | 'PLAYING' | 'GAMEOVER' | 'WIN'
+  let gameState: GameState = 'MENU'
+  let lastTime = 0
+  let raceStartTime = 0
+
+  // Player state
+  interface Runner {
+    lane: number
+    distance: number // meters traveled
+    speed: number // current speed
+    maxSpeed: number
+    y: number // visual Y position on screen
+    color: string
+    isPlayer: boolean
+    lastKeyPressed: 'left' | 'right' | null
+    keyPressCount: number
+    animFrame: number
+    name: string
+  }
+
+  let runners: Runner[] = []
+  let playerRunner: Runner | null = null
+  let trackOffset = 0
+
+  // Input tracking for alternating keys
+  let lastKeyTime = 0
+  let keyCombo = 0
+  const KEY_TIMEOUT = 300 // ms before combo resets
+
+  // Runner colors (pixel art style)
+  const RUNNER_COLORS = [
+    { body: '#4ade80', shorts: '#166534', skin: '#fcd9bd' }, // Player - Green
+    { body: '#ef4444', shorts: '#7f1d1d', skin: '#d4a574' }, // Red
+    { body: '#3b82f6', shorts: '#1e3a8a', skin: '#8b6f5c' }, // Blue
+    { body: '#f59e0b', shorts: '#92400e', skin: '#fcd9bd' }, // Orange
+  ]
+
+  const RUNNER_NAMES = ['TÚ', 'BOLT', 'FLASH', 'SONIC']
+
+  // Audio
+  const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+  let audioCtx: AudioContext | null = null
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new AudioContext()
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume()
+    }
+  }
+
+  // Background music (with fallback)
+  let bgMusic: HTMLAudioElement | null = null
+  try {
+    bgMusic = new Audio('https://videos.bigibai.com/music/track.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+  } catch (e) {
+    console.warn('Could not load background music')
+  }
+
+  function startMusic() {
+    if (bgMusic) {
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    }
+  }
+
+  function stopMusic() {
+    if (bgMusic) {
+      bgMusic.pause()
+      bgMusic.currentTime = 0
+    }
+  }
+
+  const sfx = {
+    step: () => {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const now = audioCtx.currentTime
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(100 + Math.random() * 50, now)
+      gain.gain.setValueAtTime(0.05, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(now + 0.05)
+    },
+    countdown: () => {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const now = audioCtx.currentTime
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(440, now)
+      gain.gain.setValueAtTime(0.15, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(now + 0.2)
+    },
+    start: () => {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const now = audioCtx.currentTime
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(880, now)
+      gain.gain.setValueAtTime(0.2, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(now + 0.4)
+    },
+    win: () => {
+      if (!audioCtx) return
+      ;[523, 659, 784, 1047].forEach((freq, i) => {
+        setTimeout(() => {
+          if (!audioCtx) return
+          const osc = audioCtx.createOscillator()
+          const gain = audioCtx.createGain()
+          osc.type = 'square'
+          osc.frequency.value = freq
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3)
+          osc.connect(gain)
+          gain.connect(audioCtx.destination)
+          osc.start()
+          osc.stop(audioCtx.currentTime + 0.3)
+        }, i * 150)
+      })
+    },
+    lose: () => {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const now = audioCtx.currentTime
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(200, now)
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.3)
+      gain.gain.setValueAtTime(0.15, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(now + 0.3)
+    }
+  }
+
+  // Initialize runners
+  function initRunners() {
+    runners = []
+    for (let i = 0; i < LANE_COUNT; i++) {
+      const isPlayer = i === 1 // Player is in lane 2
+      const runner: Runner = {
+        lane: i,
+        distance: 0,
+        speed: 0,
+        maxSpeed: isPlayer ? 12 : 8 + Math.random() * 3, // Player can go faster
+        y: GAME_HEIGHT - 150,
+        color: RUNNER_COLORS[i].body,
+        isPlayer,
+        lastKeyPressed: null,
+        keyPressCount: 0,
+        animFrame: 0,
+        name: RUNNER_NAMES[i]
+      }
+      runners.push(runner)
+      if (isPlayer) playerRunner = runner
+    }
+    trackOffset = 0
+  }
+
+  // Handle key press for player
+  function handleKeyPress(key: 'left' | 'right') {
+    if (gameState !== 'PLAYING' || !playerRunner) return
+
+    const now = Date.now()
+    
+    // Check if alternating correctly
+    if (playerRunner.lastKeyPressed !== key) {
+      // Correct alternation!
+      if (now - lastKeyTime < KEY_TIMEOUT) {
+        keyCombo++
+      } else {
+        keyCombo = 1
+      }
+      
+      // Increase speed based on combo
+      const speedBoost = 0.5 + Math.min(keyCombo * 0.1, 1)
+      playerRunner.speed = Math.min(playerRunner.speed + speedBoost, playerRunner.maxSpeed)
+      
+      playerRunner.lastKeyPressed = key
+      playerRunner.keyPressCount++
+      lastKeyTime = now
+      
+      sfx.step()
+    } else {
+      // Same key pressed - penalty
+      keyCombo = 0
+      playerRunner.speed = Math.max(playerRunner.speed - 0.5, 0)
+    }
+  }
+
+  // Input handling
+  function handleKeyDown(e: KeyboardEvent) {
+    if (gameState === 'MENU') return
+    
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      e.preventDefault()
+      handleKeyPress('left')
+      touchLeft.classList.add('pressed')
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      e.preventDefault()
+      handleKeyPress('right')
+      touchRight.classList.add('pressed')
+    }
+  }
+
+  function handleKeyUp(e: KeyboardEvent) {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      touchLeft.classList.remove('pressed')
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      touchRight.classList.remove('pressed')
+    }
+  }
+
+  function handleTouchStart(e: TouchEvent, side: 'left' | 'right') {
+    e.preventDefault()
+    handleKeyPress(side)
+    if (side === 'left') {
+      touchLeft.classList.add('pressed')
+    } else {
+      touchRight.classList.add('pressed')
+    }
+  }
+
+  function handleTouchEnd(e: TouchEvent, side: 'left' | 'right') {
+    e.preventDefault()
+    if (side === 'left') {
+      touchLeft.classList.remove('pressed')
+    } else {
+      touchRight.classList.remove('pressed')
+    }
+  }
+
+  // Event listeners
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp)
+  
+  touchLeft.addEventListener('touchstart', (e) => handleTouchStart(e, 'left'), { passive: false })
+  touchLeft.addEventListener('touchend', (e) => handleTouchEnd(e, 'left'), { passive: false })
+  touchLeft.addEventListener('mousedown', () => { handleKeyPress('left'); touchLeft.classList.add('pressed') })
+  touchLeft.addEventListener('mouseup', () => touchLeft.classList.remove('pressed'))
+  touchLeft.addEventListener('mouseleave', () => touchLeft.classList.remove('pressed'))
+  
+  touchRight.addEventListener('touchstart', (e) => handleTouchStart(e, 'right'), { passive: false })
+  touchRight.addEventListener('touchend', (e) => handleTouchEnd(e, 'right'), { passive: false })
+  touchRight.addEventListener('mousedown', () => { handleKeyPress('right'); touchRight.classList.add('pressed') })
+  touchRight.addEventListener('mouseup', () => touchRight.classList.remove('pressed'))
+  touchRight.addEventListener('mouseleave', () => touchRight.classList.remove('pressed'))
+
+  // Update game logic
+  function update(dt: number) {
+    if (gameState !== 'PLAYING') return
+
+    // Update all runners
+    for (const runner of runners) {
+      if (runner.isPlayer) {
+        // Player speed naturally decreases
+        runner.speed = Math.max(runner.speed - dt * 3, 0)
+      } else {
+        // AI runners have varying speeds
+        const targetSpeed = runner.maxSpeed * (0.7 + Math.random() * 0.3)
+        runner.speed += (targetSpeed - runner.speed) * dt * 2
+      }
+
+      // Update distance
+      runner.distance += runner.speed * dt * 2 // Scale for meters
+
+      // Update animation frame
+      if (runner.speed > 0.5) {
+        runner.animFrame += runner.speed * dt * 8
+      }
+
+      // Check for finish
+      if (runner.distance >= RACE_DISTANCE) {
+        if (runner.isPlayer) {
+          // Player wins!
+          gameState = 'WIN'
+          stopMusic()
+          sfx.win()
+          winScreen.classList.remove('hidden')
+          touchLeft.classList.remove('active')
+          touchRight.classList.remove('active')
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('game-completed'))
+          }, 1500)
+        } else {
+          // Player loses
+          gameState = 'GAMEOVER'
+          stopMusic()
+          sfx.lose()
+          
+          // Calculate player position
+          const sortedRunners = [...runners].sort((a, b) => b.distance - a.distance)
+          const playerPosition = sortedRunners.findIndex(r => r.isPlayer) + 1
+          finalPositionEl.textContent = String(playerPosition)
+          
+          gameOverScreen.classList.remove('hidden')
+          touchLeft.classList.remove('active')
+          touchRight.classList.remove('active')
+        }
+        return
+      }
+    }
+
+    // Update track offset based on player position
+    if (playerRunner) {
+      trackOffset = playerRunner.distance * 10 // Scale for visual
+    }
+  }
+
+  // Draw the track and runners
+  function draw() {
+    ctx!.imageSmoothingEnabled = false
+
+    // Track background - grass
+    ctx!.fillStyle = '#1a472a'
+    ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+    // Calculate lane dimensions
+    const trackMargin = 20
+    const trackWidth = GAME_WIDTH - trackMargin * 2
+    const laneWidth = trackWidth / LANE_COUNT
+    const laneHeight = GAME_HEIGHT
+
+    // Draw track (terracotta/red track color)
+    ctx!.fillStyle = '#c9544d'
+    ctx!.fillRect(trackMargin, 0, trackWidth, laneHeight)
+
+    // Draw lane lines
+    ctx!.strokeStyle = '#ffffff'
+    ctx!.lineWidth = 2
+    for (let i = 0; i <= LANE_COUNT; i++) {
+      const x = trackMargin + i * laneWidth
+      ctx!.beginPath()
+      ctx!.moveTo(x, 0)
+      ctx!.lineTo(x, GAME_HEIGHT)
+      ctx!.stroke()
+    }
+
+    // Draw distance markers (every 50m)
+    const markersOffset = trackOffset % 200 // Visual repeat
+    ctx!.fillStyle = '#fff'
+    ctx!.font = '8px "Press Start 2P"'
+    ctx!.textAlign = 'center'
+    
+    for (let y = -200; y < GAME_HEIGHT + 200; y += 200) {
+      const markerY = y + markersOffset % 200
+      if (markerY >= 0 && markerY <= GAME_HEIGHT) {
+        // Dashed line across track
+        ctx!.strokeStyle = '#ffffff88'
+        ctx!.setLineDash([4, 4])
+        ctx!.beginPath()
+        ctx!.moveTo(trackMargin, markerY)
+        ctx!.lineTo(GAME_WIDTH - trackMargin, markerY)
+        ctx!.stroke()
+        ctx!.setLineDash([])
+      }
+    }
+
+    // Draw finish line if close
+    if (playerRunner) {
+      const distanceToFinish = RACE_DISTANCE - playerRunner.distance
+      if (distanceToFinish < 50) {
+        const finishY = GAME_HEIGHT / 2 - distanceToFinish * 10
+        if (finishY > -50 && finishY < GAME_HEIGHT + 50) {
+          // Checkered pattern
+          const squareSize = 8
+          for (let i = 0; i < trackWidth / squareSize; i++) {
+            for (let j = 0; j < 3; j++) {
+              ctx!.fillStyle = (i + j) % 2 === 0 ? '#fff' : '#000'
+              ctx!.fillRect(
+                trackMargin + i * squareSize,
+                finishY + j * squareSize - squareSize,
+                squareSize,
+                squareSize
+              )
+            }
+          }
+        }
+      }
+    }
+
+    // Sort runners by distance for proper z-ordering
+    const sortedRunners = [...runners].sort((a, b) => b.distance - a.distance)
+
+    // Draw runners
+    for (const runner of sortedRunners) {
+      const colors = RUNNER_COLORS[runner.lane]
+      const laneX = trackMargin + runner.lane * laneWidth + laneWidth / 2
+
+      // Calculate Y position relative to player
+      let runnerY = GAME_HEIGHT - 150
+      if (playerRunner && !runner.isPlayer) {
+        const distanceDiff = runner.distance - playerRunner.distance
+        runnerY = (GAME_HEIGHT - 150) - distanceDiff * 10
+      }
+
+      // Only draw if on screen
+      if (runnerY < -50 || runnerY > GAME_HEIGHT + 50) continue
+
+      // Animation based on speed
+      const bobAmount = runner.speed > 0.5 ? Math.sin(runner.animFrame) * 2 : 0
+      const legPhase = Math.floor(runner.animFrame * 2) % 4
+
+      // Draw shadow
+      ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx!.beginPath()
+      ctx!.ellipse(laneX, runnerY + 20, 10, 4, 0, 0, Math.PI * 2)
+      ctx!.fill()
+
+      // Draw runner (pixel art style - from above/behind view)
+      const runnerWidth = 16
+      const runnerHeight = 24
+
+      // Body
+      ctx!.fillStyle = colors.body
+      ctx!.fillRect(laneX - 6, runnerY - 10 + bobAmount, 12, 14)
+
+      // Head
+      ctx!.fillStyle = colors.skin
+      ctx!.fillRect(laneX - 4, runnerY - 18 + bobAmount, 8, 10)
+
+      // Hair (darker)
+      ctx!.fillStyle = '#2d2d2d'
+      ctx!.fillRect(laneX - 4, runnerY - 18 + bobAmount, 8, 4)
+
+      // Shorts
+      ctx!.fillStyle = colors.shorts
+      ctx!.fillRect(laneX - 5, runnerY + 4 + bobAmount, 10, 6)
+
+      // Legs (animated)
+      ctx!.fillStyle = colors.skin
+      if (runner.speed > 0.5) {
+        if (legPhase === 0 || legPhase === 2) {
+          // Legs together
+          ctx!.fillRect(laneX - 4, runnerY + 10 + bobAmount, 3, 10)
+          ctx!.fillRect(laneX + 1, runnerY + 10 + bobAmount, 3, 10)
+        } else if (legPhase === 1) {
+          // Left leg forward
+          ctx!.fillRect(laneX - 5, runnerY + 8 + bobAmount, 3, 10)
+          ctx!.fillRect(laneX + 2, runnerY + 12 + bobAmount, 3, 10)
+        } else {
+          // Right leg forward
+          ctx!.fillRect(laneX - 5, runnerY + 12 + bobAmount, 3, 10)
+          ctx!.fillRect(laneX + 2, runnerY + 8 + bobAmount, 3, 10)
+        }
+      } else {
+        // Standing
+        ctx!.fillRect(laneX - 4, runnerY + 10 + bobAmount, 3, 10)
+        ctx!.fillRect(laneX + 1, runnerY + 10 + bobAmount, 3, 10)
+      }
+
+      // Shoes
+      ctx!.fillStyle = '#222'
+      if (runner.speed > 0.5) {
+        if (legPhase === 1) {
+          ctx!.fillRect(laneX - 6, runnerY + 18 + bobAmount, 4, 3)
+          ctx!.fillRect(laneX + 1, runnerY + 22 + bobAmount, 4, 3)
+        } else if (legPhase === 3) {
+          ctx!.fillRect(laneX - 6, runnerY + 22 + bobAmount, 4, 3)
+          ctx!.fillRect(laneX + 1, runnerY + 18 + bobAmount, 4, 3)
+        } else {
+          ctx!.fillRect(laneX - 5, runnerY + 20 + bobAmount, 4, 3)
+          ctx!.fillRect(laneX + 1, runnerY + 20 + bobAmount, 4, 3)
+        }
+      } else {
+        ctx!.fillRect(laneX - 5, runnerY + 20 + bobAmount, 4, 3)
+        ctx!.fillRect(laneX + 1, runnerY + 20 + bobAmount, 4, 3)
+      }
+
+      // Lane number / name
+      ctx!.fillStyle = runner.isPlayer ? '#4ade80' : '#fff'
+      ctx!.font = '6px "Press Start 2P"'
+      ctx!.textAlign = 'center'
+      ctx!.fillText(runner.name, laneX, runnerY - 24 + bobAmount)
+    }
+
+    // Draw UI
+    drawUI()
+  }
+
+  function drawUI() {
+    // Distance display
+    ctx!.fillStyle = 'rgba(0,0,0,0.7)'
+    ctx!.fillRect(10, 10, 130, 50)
+    ctx!.strokeStyle = '#4ade80'
+    ctx!.lineWidth = 2
+    ctx!.strokeRect(10, 10, 130, 50)
+
+    ctx!.fillStyle = '#4ade80'
+    ctx!.font = '8px "Press Start 2P"'
+    ctx!.textAlign = 'left'
+    ctx!.fillText('DISTANCIA', 18, 28)
+
+    if (playerRunner) {
+      ctx!.fillStyle = '#fff'
+      ctx!.font = '14px "Press Start 2P"'
+      ctx!.fillText(`${Math.floor(playerRunner.distance)}m`, 18, 48)
+      
+      ctx!.fillStyle = '#aaa'
+      ctx!.font = '8px "Press Start 2P"'
+      ctx!.fillText(`/${RACE_DISTANCE}m`, 75, 48)
+    }
+
+    // Progress bar
+    if (playerRunner) {
+      const barX = 150
+      const barY = 20
+      const barWidth = GAME_WIDTH - 160
+      const barHeight = 16
+      
+      ctx!.fillStyle = 'rgba(0,0,0,0.7)'
+      ctx!.fillRect(barX, barY, barWidth, barHeight)
+      
+      const progress = Math.min(playerRunner.distance / RACE_DISTANCE, 1)
+      ctx!.fillStyle = '#4ade80'
+      ctx!.fillRect(barX + 2, barY + 2, (barWidth - 4) * progress, barHeight - 4)
+      
+      // Finish flag icon
+      ctx!.fillStyle = '#fff'
+      ctx!.font = '10px "Press Start 2P"'
+      ctx!.textAlign = 'right'
+      ctx!.fillText('🏁', GAME_WIDTH - 15, 33)
+    }
+
+    // Speed indicator
+    if (playerRunner && gameState === 'PLAYING') {
+      const speedPercent = playerRunner.speed / playerRunner.maxSpeed
+      const barWidth = 60
+      const barHeight = 8
+      const barX = GAME_WIDTH / 2 - barWidth / 2
+      const barY = GAME_HEIGHT - 50
+      
+      ctx!.fillStyle = 'rgba(0,0,0,0.5)'
+      ctx!.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4)
+      
+      // Speed gradient from red to green
+      const gradient = ctx!.createLinearGradient(barX, 0, barX + barWidth, 0)
+      gradient.addColorStop(0, '#ef4444')
+      gradient.addColorStop(0.5, '#fbbf24')
+      gradient.addColorStop(1, '#4ade80')
+      
+      ctx!.fillStyle = '#333'
+      ctx!.fillRect(barX, barY, barWidth, barHeight)
+      
+      ctx!.fillStyle = gradient
+      ctx!.fillRect(barX, barY, barWidth * speedPercent, barHeight)
+      
+      ctx!.fillStyle = '#fff'
+      ctx!.font = '6px "Press Start 2P"'
+      ctx!.textAlign = 'center'
+      ctx!.fillText('VELOCIDAD', GAME_WIDTH / 2, barY - 6)
+    }
+
+    // Position indicator
+    if (gameState === 'PLAYING') {
+      const sortedRunners = [...runners].sort((a, b) => b.distance - a.distance)
+      const playerPosition = sortedRunners.findIndex(r => r.isPlayer) + 1
+      
+      ctx!.fillStyle = 'rgba(0,0,0,0.7)'
+      ctx!.fillRect(GAME_WIDTH - 60, 50, 50, 30)
+      ctx!.strokeStyle = playerPosition === 1 ? '#fbbf24' : '#fff'
+      ctx!.lineWidth = 2
+      ctx!.strokeRect(GAME_WIDTH - 60, 50, 50, 30)
+      
+      ctx!.fillStyle = playerPosition === 1 ? '#fbbf24' : '#fff'
+      ctx!.font = '16px "Press Start 2P"'
+      ctx!.textAlign = 'center'
+      ctx!.fillText(`${playerPosition}º`, GAME_WIDTH - 35, 72)
+    }
+  }
+
+  // Game loop
+  function gameLoop(timestamp: number) {
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.1)
+    lastTime = timestamp
+
+    update(dt)
+    draw()
+
+    requestAnimationFrame(gameLoop)
+  }
+
+  // Start countdown
+  function startCountdown() {
+    initAudio()
+    startScreen.classList.add('hidden')
+    countdownScreen.classList.remove('hidden')
+    
+    let count = 3
+    countdownNumber.textContent = String(count)
+    countdownNumber.style.animation = 'none'
+    countdownNumber.offsetHeight // Trigger reflow
+    countdownNumber.style.animation = 'countdown-pulse 0.5s ease-out'
+    sfx.countdown()
+    
+    const countdownInterval = setInterval(() => {
+      count--
+      if (count > 0) {
+        countdownNumber.textContent = String(count)
+        countdownNumber.style.animation = 'none'
+        countdownNumber.offsetHeight
+        countdownNumber.style.animation = 'countdown-pulse 0.5s ease-out'
+        sfx.countdown()
+      } else {
+        clearInterval(countdownInterval)
+        countdownNumber.textContent = '¡YA!'
+        countdownNumber.style.color = '#4ade80'
+        countdownNumber.style.animation = 'none'
+        countdownNumber.offsetHeight
+        countdownNumber.style.animation = 'countdown-pulse 0.5s ease-out'
+        sfx.start()
+        
+        setTimeout(() => {
+          countdownScreen.classList.add('hidden')
+          countdownNumber.style.color = '#fbbf24'
+          startGame()
+        }, 500)
+      }
+    }, 1000)
+  }
+
+  // Start the actual game
+  function startGame() {
+    gameState = 'PLAYING'
+    initRunners()
+    keyCombo = 0
+    lastKeyTime = 0
+    raceStartTime = Date.now()
+    
+    // Show touch areas
+    touchLeft.classList.add('active')
+    touchRight.classList.add('active')
+    
+    startMusic()
+  }
+
+  // Restart game
+  function restartGame() {
+    gameOverScreen.classList.add('hidden')
+    winScreen.classList.add('hidden')
+    startCountdown()
+  }
+
+  // Event listeners for buttons
+  startBtn?.addEventListener('click', startCountdown)
+  restartBtn?.addEventListener('click', restartGame)
+
+  // Start game loop
+  lastTime = performance.now()
+  requestAnimationFrame(gameLoop)
+})()
+</script>
+
