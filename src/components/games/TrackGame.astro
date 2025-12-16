@@ -820,8 +820,9 @@ const GAME_DATA = {
       // Draw finish line if close
       if (playerRunner) {
         const distanceToFinish = RACE_DISTANCE - playerRunner.distance
-        if (distanceToFinish < 50) {
-          const finishY = GAME_HEIGHT / 2 - distanceToFinish * 10
+        if (distanceToFinish < 60) {
+          // Position finish line so it's at player's Y position when they cross
+          const finishY = GAME_HEIGHT - 150 - distanceToFinish * 10
           if (finishY > -50 && finishY < GAME_HEIGHT + 50) {
             // Checkered pattern
             const squareSize = 8
