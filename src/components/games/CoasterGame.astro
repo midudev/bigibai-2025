@@ -1,0 +1,1166 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 1500,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="coaster-game-container" slot="game" data-target-score={GAME_DATA.targetScore}>
+    <!-- UI Layer -->
+    <div id="ui-layer">
+      <div class="ui-left">
+        <span class="score-label">PUNTOS</span>
+        <span id="score-display">0</span>
+      </div>
+      <div class="ui-right">
+        <span class="score-label">META</span>
+        <span id="target-score">{GAME_DATA.targetScore}</span>
+      </div>
+    </div>
+
+    <canvas id="coasterCanvas"></canvas>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal active">
+      <h1>ROLLER<br />COASTER<br />RUSH</h1>
+
+      <div class="instructions">
+        <p class="controls-title">CÓMO JUGAR</p>
+        <p>🎢 Salta para recoger premios</p>
+        <p>⚠️ Esquiva los obstáculos</p>
+        <br />
+        <p class="hint">🎟️ Tickets = +10 pts</p>
+        <p class="hint">🍿 Palomitas = +25 pts</p>
+        <p class="hint">🎠 Doble salto disponible</p>
+      </div>
+
+      <button id="start-btn" class="menu-btn blink">¡VAMOS!</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="modal hidden">
+      <h1 class="danger">💥 CRASH!</h1>
+      <p>Te has chocado con un obstáculo</p>
+      <p>Puntuación: <span id="final-score">0</span></p>
+      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="modal hidden">
+      <h1 class="win">¡VICTORIA!</h1>
+      <p>Has conseguido <span id="win-score">0</span> puntos</p>
+    </div>
+
+    <!-- Jump Button -->
+    <div id="jump-controls">
+      <div id="btn-jump" class="jump-btn">
+        <span class="btn-icon">⬆️</span>
+        <span class="btn-text">SALTAR</span>
+      </div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #coaster-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a0533 0%, #2d1052 50%, #0f0a1a 100%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  /* UI Layer */
+  #ui-layer {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: white;
+    z-index: 5;
+    text-shadow: 2px 2px 0 #000;
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  .ui-left,
+  .ui-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .score-label {
+    font-size: 8px;
+    color: #ff6b9d;
+  }
+
+  #score-display,
+  #target-score {
+    font-size: 16px;
+    color: #fff;
+    text-shadow:
+      0 0 10px #ff6b9d,
+      2px 2px 0 #000;
+  }
+
+  /* Canvas */
+  #coasterCanvas {
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* Jump Controls */
+  #jump-controls {
+    height: 120px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(15, 10, 26, 0.95) 100%);
+    border-top: 3px solid #ff6b9d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .jump-btn {
+    width: 100%;
+    max-width: 280px;
+    height: 80px;
+    background: linear-gradient(180deg, #ff6b9d 0%, #d44a7a 100%);
+    border: 4px solid #fff;
+    border-radius: 12px;
+    box-shadow:
+      0 6px 0 #8b2a4a,
+      0 8px 15px rgba(0, 0, 0, 0.5),
+      inset 0 2px 10px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.05s ease;
+  }
+
+  .btn-icon {
+    font-size: 24px;
+    pointer-events: none;
+  }
+
+  .btn-text {
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #8b2a4a;
+    pointer-events: none;
+  }
+
+  .jump-btn:active,
+  .jump-btn.pressed {
+    transform: translateY(6px);
+    box-shadow:
+      0 0 0 #8b2a4a,
+      0 2px 8px rgba(0, 0, 0, 0.5),
+      inset 0 2px 10px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(180deg, #d44a7a 0%, #a03860 100%);
+  }
+
+  /* Modals */
+  .modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .modal.hidden {
+    display: none !important;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal h1 {
+    color: #ff6b9d;
+    text-shadow: 4px 4px #8b2a4a;
+    font-size: 28px;
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+
+  .modal h1.danger {
+    color: #e74c3c;
+    text-shadow: 3px 3px #000;
+  }
+
+  .modal h1.win {
+    color: #2ecc71;
+    text-shadow: 3px 3px #000;
+  }
+
+  .modal p {
+    font-size: 10px;
+    margin: 5px 0;
+  }
+
+  .instructions {
+    font-size: 11px;
+    margin: 20px 10px;
+    line-height: 2;
+    color: #ddd;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #555;
+  }
+
+  .controls-title {
+    color: #ff6b9d;
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .hint {
+    color: #4cd137;
+    font-size: 10px !important;
+  }
+
+  .menu-btn {
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-family: 'Press Start 2P', cursive;
+    background: linear-gradient(180deg, #ff6b9d 0%, #d44a7a 100%);
+    color: #fff;
+    border: 4px solid #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 0 #8b2a4a;
+    transition: transform 0.1s;
+  }
+
+  .menu-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #8b2a4a;
+  }
+
+  .blink {
+    animation: blinker 1s linear infinite;
+  }
+
+  @keyframes blinker {
+    50% {
+      opacity: 0.6;
+    }
+  }
+</style>
+
+<script>
+  ;(function () {
+    const container = document.getElementById('coaster-game-container')
+    const canvas = document.getElementById('coasterCanvas') as HTMLCanvasElement | null
+    if (!canvas || !container) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Disable image smoothing for pixel-perfect rendering
+    ctx.imageSmoothingEnabled = false
+
+    // Configuración
+    const TARGET_SCORE = parseInt(container.dataset.targetScore || '1500', 10)
+
+    // Resolución lógica del juego
+    const GAME_WIDTH = 360
+    const GAME_HEIGHT = 480
+
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+
+    // Física
+    const GRAVITY = 1800
+    const JUMP_FORCE = -550
+    const GROUND_Y = GAME_HEIGHT - 100
+    const SCROLL_SPEED = 180
+
+    // UI Elements
+    const scoreDisplay = document.getElementById('score-display') as HTMLElement
+    const startScreen = document.getElementById('start-screen') as HTMLElement
+    const gameOverScreen = document.getElementById('game-over-screen') as HTMLElement
+    const winScreen = document.getElementById('win-screen') as HTMLElement
+    const startBtn = document.getElementById('start-btn') as HTMLElement
+    const restartBtn = document.getElementById('restart-btn') as HTMLElement
+    const finalScoreEl = document.getElementById('final-score') as HTMLElement
+    const winScoreEl = document.getElementById('win-score') as HTMLElement
+    const jumpBtn = document.getElementById('btn-jump') as HTMLElement
+
+    // Game State
+    type GameState = 'MENU' | 'PLAYING' | 'GAMEOVER' | 'WIN'
+    let gameState: GameState = 'MENU'
+    let score = 0
+    let lastTime = 0
+    let gameTime = 0
+
+    // Player
+    interface Player {
+      x: number
+      y: number
+      vy: number
+      width: number
+      height: number
+      jumpsLeft: number
+      isOnGround: boolean
+    }
+
+    let player: Player = {
+      x: 80,
+      y: GROUND_Y,
+      vy: 0,
+      width: 32,
+      height: 40,
+      jumpsLeft: 2,
+      isOnGround: true,
+    }
+
+    // Collectibles
+    interface Collectible {
+      x: number
+      y: number
+      width: number
+      height: number
+      type: 'ticket' | 'popcorn' | 'cotton'
+      collected: boolean
+    }
+
+    let collectibles: Collectible[] = []
+
+    // Obstacles
+    interface Obstacle {
+      x: number
+      y: number
+      width: number
+      height: number
+      type: 'balloon' | 'bird' | 'barrier'
+    }
+
+    let obstacles: Obstacle[] = []
+
+    // Track rails
+    interface RailSegment {
+      x: number
+      y: number
+    }
+
+    let railSegments: RailSegment[] = []
+
+    // Particles
+    interface Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      size: number
+      color: string
+      life: number
+    }
+
+    let particles: Particle[] = []
+
+    // Stars in background
+    interface Star {
+      x: number
+      y: number
+      size: number
+      twinkle: number
+    }
+
+    let stars: Star[] = []
+
+    // Background buildings
+    interface Building {
+      x: number
+      width: number
+      height: number
+      color: string
+      windows: { x: number; y: number; lit: boolean }[]
+    }
+
+    let buildings: Building[] = []
+
+    // Audio
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
+
+    // Background music
+    const bgMusic = new Audio('https://videos.bigibai.com/music/coaster.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    function startMusic() {
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    }
+
+    function stopMusic() {
+      bgMusic.pause()
+      bgMusic.currentTime = 0
+    }
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext()
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+    }
+
+    const sfx = {
+      jump: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const now = audioCtx.currentTime
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1)
+        gain.gain.setValueAtTime(0.1, now)
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(now + 0.15)
+      },
+      collect: (pitch: number = 1) => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const now = audioCtx.currentTime
+        const baseFreq = 523 * pitch
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(baseFreq, now)
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.1)
+        gain.gain.setValueAtTime(0.15, now)
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(now + 0.2)
+      },
+      crash: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const now = audioCtx.currentTime
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(200, now)
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3)
+        gain.gain.setValueAtTime(0.2, now)
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(now + 0.3)
+      },
+      win: () => {
+        if (!audioCtx) return
+        ;[523, 659, 784, 1047].forEach((freq, i) => {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3)
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + 0.3)
+          }, i * 150)
+        })
+      },
+    }
+
+    // Initialize game objects
+    function initGame() {
+      score = 0
+      gameTime = 0
+      scoreDisplay.textContent = '0'
+
+      player = {
+        x: 80,
+        y: GROUND_Y - 40,
+        vy: 0,
+        width: 32,
+        height: 40,
+        jumpsLeft: 2,
+        isOnGround: true,
+      }
+
+      collectibles = []
+      obstacles = []
+      particles = []
+
+      // Initialize stars
+      stars = []
+      for (let i = 0; i < 50; i++) {
+        stars.push({
+          x: Math.random() * GAME_WIDTH,
+          y: Math.random() * (GAME_HEIGHT - 150),
+          size: Math.random() * 2 + 1,
+          twinkle: Math.random() * Math.PI * 2,
+        })
+      }
+
+      // Initialize buildings
+      buildings = []
+      let bx = 0
+      while (bx < GAME_WIDTH + 200) {
+        const w = 40 + Math.random() * 60
+        const h = 80 + Math.random() * 120
+        const hue = Math.random() > 0.5 ? 280 : 320
+        const windows: { x: number; y: number; lit: boolean }[] = []
+        for (let wy = 10; wy < h - 20; wy += 15) {
+          for (let wx = 8; wx < w - 8; wx += 12) {
+            windows.push({ x: wx, y: wy, lit: Math.random() > 0.4 })
+          }
+        }
+        buildings.push({
+          x: bx,
+          width: w,
+          height: h,
+          color: `hsl(${hue}, 30%, ${15 + Math.random() * 10}%)`,
+          windows,
+        })
+        bx += w + 5
+      }
+
+      // Initialize rail segments
+      railSegments = []
+      for (let i = 0; i < 30; i++) {
+        railSegments.push({
+          x: i * 20,
+          y: GROUND_Y,
+        })
+      }
+
+      // Spawn initial collectibles and obstacles
+      for (let i = 0; i < 5; i++) {
+        spawnCollectible(GAME_WIDTH + i * 150)
+      }
+      for (let i = 0; i < 3; i++) {
+        spawnObstacle(GAME_WIDTH + 200 + i * 250)
+      }
+    }
+
+    function spawnCollectible(x: number) {
+      const types: ('ticket' | 'popcorn' | 'cotton')[] = ['ticket', 'ticket', 'ticket', 'popcorn', 'cotton']
+      const type = types[Math.floor(Math.random() * types.length)]
+      const yOffset = Math.random() > 0.5 ? 0 : -60 - Math.random() * 40
+
+      collectibles.push({
+        x: x,
+        y: GROUND_Y - 40 + yOffset,
+        width: 24,
+        height: 24,
+        type,
+        collected: false,
+      })
+    }
+
+    function spawnObstacle(x: number) {
+      const types: ('balloon' | 'bird' | 'barrier')[] = ['balloon', 'bird', 'barrier']
+      const type = types[Math.floor(Math.random() * types.length)]
+
+      let y = GROUND_Y - 30
+      let height = 40
+
+      if (type === 'bird') {
+        y = GROUND_Y - 80 - Math.random() * 40
+        height = 24
+      } else if (type === 'balloon') {
+        y = GROUND_Y - 60 - Math.random() * 50
+        height = 32
+      }
+
+      obstacles.push({
+        x: x,
+        y: y,
+        width: type === 'barrier' ? 20 : 28,
+        height: height,
+        type,
+      })
+    }
+
+    function createParticles(x: number, y: number, color: string, count: number) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 200,
+          vy: (Math.random() - 0.5) * 200 - 50,
+          size: Math.random() * 6 + 3,
+          color,
+          life: 0.5 + Math.random() * 0.3,
+        })
+      }
+    }
+
+    function jump() {
+      if (gameState !== 'PLAYING') return
+      if (player.jumpsLeft > 0) {
+        player.vy = JUMP_FORCE
+        player.jumpsLeft--
+        player.isOnGround = false
+        sfx.jump()
+        createParticles(player.x, player.y + player.height / 2, '#ff6b9d', 5)
+      }
+    }
+
+    function update(dt: number) {
+      if (gameState !== 'PLAYING') return
+
+      gameTime += dt
+
+      // Update player physics
+      player.vy += GRAVITY * dt
+      player.y += player.vy * dt
+
+      // Ground collision
+      if (player.y >= GROUND_Y - player.height / 2) {
+        player.y = GROUND_Y - player.height / 2
+        player.vy = 0
+        player.jumpsLeft = 2
+        player.isOnGround = true
+      }
+
+      // Update collectibles
+      for (let i = collectibles.length - 1; i >= 0; i--) {
+        const c = collectibles[i]
+        c.x -= SCROLL_SPEED * dt
+
+        // Check collision
+        if (!c.collected && checkCollision(player, c)) {
+          c.collected = true
+          let points = 0
+          let color = '#ffd700'
+
+          switch (c.type) {
+            case 'ticket':
+              points = 10
+              color = '#ffd700'
+              sfx.collect(1)
+              break
+            case 'popcorn':
+              points = 25
+              color = '#ff6b6b'
+              sfx.collect(1.2)
+              break
+            case 'cotton':
+              points = 15
+              color = '#ff9ff3'
+              sfx.collect(1.1)
+              break
+          }
+
+          score += points
+          scoreDisplay.textContent = String(score)
+          createParticles(c.x, c.y, color, 8)
+
+          // Check win condition
+          if (score >= TARGET_SCORE) {
+            gameState = 'WIN'
+            stopMusic()
+            sfx.win()
+            winScoreEl.textContent = String(score)
+            winScreen.classList.remove('hidden')
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('game-completed'))
+            }, 1500)
+            return
+          }
+        }
+
+        // Remove off-screen collectibles
+        if (c.x < -50) {
+          collectibles.splice(i, 1)
+          spawnCollectible(GAME_WIDTH + Math.random() * 100)
+        }
+      }
+
+      // Update obstacles
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const o = obstacles[i]
+        o.x -= SCROLL_SPEED * dt
+
+        // Bird bobbing
+        if (o.type === 'bird') {
+          o.y += Math.sin(gameTime * 5 + o.x) * 0.5
+        }
+
+        // Check collision
+        if (checkCollision(player, o)) {
+          gameState = 'GAMEOVER'
+          stopMusic()
+          sfx.crash()
+          finalScoreEl.textContent = String(score)
+          gameOverScreen.classList.remove('hidden')
+          createParticles(player.x, player.y, '#ff0000', 15)
+          return
+        }
+
+        // Remove off-screen obstacles
+        if (o.x < -50) {
+          obstacles.splice(i, 1)
+          spawnObstacle(GAME_WIDTH + Math.random() * 150 + 100)
+        }
+      }
+
+      // Update particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]
+        p.x += p.vx * dt
+        p.y += p.vy * dt
+        p.vy += 300 * dt
+        p.life -= dt
+        p.size -= 5 * dt
+
+        if (p.life <= 0 || p.size <= 0) {
+          particles.splice(i, 1)
+        }
+      }
+
+      // Update buildings (parallax)
+      for (const b of buildings) {
+        b.x -= SCROLL_SPEED * 0.3 * dt
+        if (b.x + b.width < 0) {
+          b.x = GAME_WIDTH + Math.random() * 50
+          b.height = 80 + Math.random() * 120
+        }
+      }
+
+      // Update stars twinkle
+      for (const s of stars) {
+        s.twinkle += dt * 3
+      }
+    }
+
+    function checkCollision(a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean {
+      const margin = 6 // Hitbox más pequeño para ser más permisivo
+      return (
+        a.x - a.width / 2 + margin < b.x + b.width / 2 - margin &&
+        a.x + a.width / 2 - margin > b.x - b.width / 2 + margin &&
+        a.y - a.height / 2 + margin < b.y + b.height / 2 - margin &&
+        a.y + a.height / 2 - margin > b.y - b.height / 2 + margin
+      )
+    }
+
+    function draw() {
+      ctx!.imageSmoothingEnabled = false
+
+      // Sky gradient (night theme park)
+      const gradient = ctx!.createLinearGradient(0, 0, 0, GAME_HEIGHT)
+      gradient.addColorStop(0, '#0a0515')
+      gradient.addColorStop(0.5, '#1a0533')
+      gradient.addColorStop(1, '#2d1052')
+      ctx!.fillStyle = gradient
+      ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+      // Draw stars
+      for (const s of stars) {
+        const alpha = 0.5 + Math.sin(s.twinkle) * 0.5
+        ctx!.fillStyle = `rgba(255, 255, 255, ${alpha})`
+        ctx!.fillRect(Math.floor(s.x), Math.floor(s.y), Math.ceil(s.size), Math.ceil(s.size))
+      }
+
+      // Draw buildings (background)
+      for (const b of buildings) {
+        ctx!.fillStyle = b.color
+        ctx!.fillRect(Math.floor(b.x), GROUND_Y - b.height, Math.ceil(b.width), b.height + 50)
+
+        // Windows
+        for (const w of b.windows) {
+          ctx!.fillStyle = w.lit ? '#ffeb3b' : '#111'
+          ctx!.fillRect(Math.floor(b.x + w.x), GROUND_Y - b.height + w.y, 6, 8)
+        }
+      }
+
+      // Draw Ferris wheel in background
+      drawFerrisWheel(GAME_WIDTH - 80, GROUND_Y - 100)
+
+      // Draw ground
+      ctx!.fillStyle = '#1a0a2e'
+      ctx!.fillRect(0, GROUND_Y, GAME_WIDTH, GAME_HEIGHT - GROUND_Y)
+
+      // Draw rails
+      drawRails()
+
+      // Draw collectibles
+      for (const c of collectibles) {
+        if (!c.collected) {
+          drawCollectible(c)
+        }
+      }
+
+      // Draw obstacles
+      for (const o of obstacles) {
+        drawObstacle(o)
+      }
+
+      // Draw player (coaster cart)
+      drawPlayer()
+
+      // Draw particles
+      for (const p of particles) {
+        ctx!.fillStyle = p.color
+        ctx!.globalAlpha = Math.max(0, p.life * 2)
+        ctx!.fillRect(Math.floor(p.x - p.size / 2), Math.floor(p.y - p.size / 2), Math.ceil(p.size), Math.ceil(p.size))
+      }
+      ctx!.globalAlpha = 1
+    }
+
+    function drawFerrisWheel(cx: number, cy: number) {
+      const radius = 50
+      const spokes = 8
+
+      // Wheel frame
+      ctx!.strokeStyle = '#ff6b9d'
+      ctx!.lineWidth = 3
+      ctx!.beginPath()
+      ctx!.arc(cx, cy, radius, 0, Math.PI * 2)
+      ctx!.stroke()
+
+      // Spokes and cabins
+      for (let i = 0; i < spokes; i++) {
+        const angle = (i / spokes) * Math.PI * 2 + gameTime * 0.5
+        const x = cx + Math.cos(angle) * radius
+        const y = cy + Math.sin(angle) * radius
+
+        // Spoke
+        ctx!.strokeStyle = '#ff6b9d55'
+        ctx!.lineWidth = 2
+        ctx!.beginPath()
+        ctx!.moveTo(cx, cy)
+        ctx!.lineTo(x, y)
+        ctx!.stroke()
+
+        // Cabin
+        ctx!.fillStyle = ['#ff6b9d', '#4cd137', '#ffd700', '#3498db'][i % 4]
+        ctx!.fillRect(x - 6, y - 4, 12, 10)
+      }
+
+      // Center
+      ctx!.fillStyle = '#ff6b9d'
+      ctx!.fillRect(cx - 4, cy - 4, 8, 8)
+
+      // Support
+      ctx!.fillStyle = '#666'
+      ctx!.fillRect(cx - 3, cy + radius, 6, 60)
+    }
+
+    function drawRails() {
+      // Main rail
+      ctx!.fillStyle = '#8b4513'
+      ctx!.fillRect(0, GROUND_Y - 8, GAME_WIDTH, 8)
+
+      // Rail supports
+      ctx!.fillStyle = '#654321'
+      const offset = (gameTime * SCROLL_SPEED) % 40
+      for (let x = -offset; x < GAME_WIDTH + 40; x += 40) {
+        ctx!.fillRect(x, GROUND_Y - 8, 4, 30)
+      }
+
+      // Rail top highlight
+      ctx!.fillStyle = '#a0522d'
+      ctx!.fillRect(0, GROUND_Y - 8, GAME_WIDTH, 2)
+    }
+
+    function drawPlayer() {
+      const px = player.x
+      const py = player.y
+
+      // Squash and stretch based on velocity
+      const stretch = 1 + Math.abs(player.vy) * 0.0005
+      const squash = 1 / stretch
+
+      ctx!.save()
+      ctx!.translate(px, py)
+      ctx!.scale(squash, stretch)
+
+      // Cart body
+      ctx!.fillStyle = '#e74c3c'
+      ctx!.fillRect(-16, -20, 32, 24)
+
+      // Cart detail
+      ctx!.fillStyle = '#c0392b'
+      ctx!.fillRect(-16, -20, 32, 6)
+
+      // Wheels
+      ctx!.fillStyle = '#333'
+      ctx!.fillRect(-14, 4, 8, 8)
+      ctx!.fillRect(6, 4, 8, 8)
+
+      // Wheel shine
+      ctx!.fillStyle = '#666'
+      ctx!.fillRect(-12, 6, 4, 4)
+      ctx!.fillRect(8, 6, 4, 4)
+
+      // Character in cart (simple pixel person)
+      ctx!.fillStyle = '#f5d0a9' // Skin
+      ctx!.fillRect(-4, -16, 8, 8)
+
+      // Hair
+      ctx!.fillStyle = '#2c1810'
+      ctx!.fillRect(-4, -18, 8, 4)
+
+      // Arms up when jumping
+      if (!player.isOnGround) {
+        ctx!.fillStyle = '#e74c3c'
+        ctx!.fillRect(-10, -14, 4, 8)
+        ctx!.fillRect(6, -14, 4, 8)
+      }
+
+      ctx!.restore()
+
+      // Double jump indicator
+      if (player.jumpsLeft > 0 && !player.isOnGround) {
+        ctx!.fillStyle = 'rgba(255, 107, 157, 0.6)'
+        ctx!.fillRect(px - 12, py + 24, 24, 4)
+      }
+    }
+
+    function drawCollectible(c: Collectible) {
+      const bob = Math.sin(gameTime * 4 + c.x) * 3
+
+      ctx!.save()
+      ctx!.translate(c.x, c.y + bob)
+
+      switch (c.type) {
+        case 'ticket':
+          // Golden ticket
+          ctx!.fillStyle = '#ffd700'
+          ctx!.fillRect(-10, -8, 20, 16)
+          ctx!.fillStyle = '#ffeb3b'
+          ctx!.fillRect(-8, -6, 16, 12)
+          ctx!.fillStyle = '#ff6b00'
+          ctx!.fillRect(-2, -4, 4, 8)
+          break
+
+        case 'popcorn':
+          // Popcorn box
+          ctx!.fillStyle = '#e74c3c'
+          ctx!.fillRect(-8, -4, 16, 16)
+          ctx!.fillStyle = '#c0392b'
+          ctx!.fillRect(-8, 8, 16, 4)
+          // Popcorn
+          ctx!.fillStyle = '#fff8dc'
+          ctx!.fillRect(-6, -10, 4, 6)
+          ctx!.fillRect(0, -12, 5, 8)
+          ctx!.fillRect(-3, -8, 4, 4)
+          break
+
+        case 'cotton':
+          // Cotton candy
+          ctx!.fillStyle = '#ff9ff3'
+          ctx!.beginPath()
+          ctx!.arc(0, -4, 10, 0, Math.PI * 2)
+          ctx!.fill()
+          ctx!.fillStyle = '#f368e0'
+          ctx!.beginPath()
+          ctx!.arc(-3, -6, 6, 0, Math.PI * 2)
+          ctx!.fill()
+          // Stick
+          ctx!.fillStyle = '#8b4513'
+          ctx!.fillRect(-2, 6, 4, 10)
+          break
+      }
+
+      ctx!.restore()
+    }
+
+    function drawObstacle(o: Obstacle) {
+      ctx!.save()
+      ctx!.translate(o.x, o.y)
+
+      switch (o.type) {
+        case 'balloon':
+          // Balloon
+          const hue = (o.x * 37) % 360
+          ctx!.fillStyle = `hsl(${hue}, 70%, 50%)`
+          ctx!.beginPath()
+          ctx!.ellipse(0, 0, 14, 18, 0, 0, Math.PI * 2)
+          ctx!.fill()
+          // Shine
+          ctx!.fillStyle = 'rgba(255,255,255,0.4)'
+          ctx!.fillRect(-6, -10, 4, 6)
+          // String
+          ctx!.strokeStyle = '#666'
+          ctx!.lineWidth = 2
+          ctx!.beginPath()
+          ctx!.moveTo(0, 18)
+          ctx!.lineTo(0, 35)
+          ctx!.stroke()
+          break
+
+        case 'bird':
+          // Pixel bird
+          const flap = Math.sin(gameTime * 15) * 5
+          ctx!.fillStyle = '#555'
+          // Body
+          ctx!.fillRect(-8, -4, 16, 10)
+          // Head
+          ctx!.fillRect(8, -6, 8, 10)
+          // Beak
+          ctx!.fillStyle = '#f39c12'
+          ctx!.fillRect(16, -2, 6, 4)
+          // Eye
+          ctx!.fillStyle = '#fff'
+          ctx!.fillRect(10, -4, 4, 4)
+          ctx!.fillStyle = '#000'
+          ctx!.fillRect(12, -3, 2, 2)
+          // Wings
+          ctx!.fillStyle = '#444'
+          ctx!.fillRect(-4, -8 + flap, 8, 4)
+          break
+
+        case 'barrier':
+          // Construction barrier
+          ctx!.fillStyle = '#e74c3c'
+          ctx!.fillRect(-10, -20, 20, 40)
+          ctx!.fillStyle = '#f1c40f'
+          for (let i = 0; i < 3; i++) {
+            ctx!.fillRect(-10, -20 + i * 14, 20, 7)
+          }
+          // Post
+          ctx!.fillStyle = '#333'
+          ctx!.fillRect(-3, 20, 6, 20)
+          break
+      }
+
+      ctx!.restore()
+    }
+
+    // Input handling
+    function handleJump(e: Event) {
+      e.preventDefault()
+      jump()
+    }
+
+    jumpBtn?.addEventListener('touchstart', handleJump, { passive: false })
+    jumpBtn?.addEventListener('mousedown', handleJump)
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        e.preventDefault()
+        jump()
+        jumpBtn?.classList.add('pressed')
+      }
+    })
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        jumpBtn?.classList.remove('pressed')
+      }
+    })
+
+    // Touch on canvas for mobile
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault()
+      jump()
+    }, { passive: false })
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (gameState === 'PLAYING') {
+        jump()
+      }
+    })
+
+    // Game loop
+    function gameLoop(timestamp: number) {
+      const dt = Math.min((timestamp - lastTime) / 1000, 0.1)
+      lastTime = timestamp
+
+      update(dt)
+      draw()
+
+      requestAnimationFrame(gameLoop)
+    }
+
+    function startGame() {
+      initAudio()
+      startMusic()
+      startScreen.classList.add('hidden')
+      gameState = 'PLAYING'
+      initGame()
+    }
+
+    function restartGame() {
+      gameOverScreen.classList.add('hidden')
+      startMusic()
+      gameState = 'PLAYING'
+      initGame()
+    }
+
+    startBtn?.addEventListener('click', startGame)
+    restartBtn?.addEventListener('click', restartGame)
+
+    // Initial draw
+    initGame()
+    requestAnimationFrame(gameLoop)
+  })()
+</script>
+
