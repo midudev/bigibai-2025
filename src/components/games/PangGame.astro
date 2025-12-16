@@ -863,7 +863,12 @@ const GAME_DATA = {
         for (let k = 0; k < 8; k++) {
           particles.push(new Particle(offendingBubble.x, offendingBubble.y, offendingBubble.color))
         }
-        spawnBubbles(offendingBubble.x, offendingBubble.y, offendingBubble.radius, offendingBubble.color)
+        spawnBubbles(
+          offendingBubble.x,
+          offendingBubble.y,
+          offendingBubble.radius,
+          offendingBubble.color
+        )
       }
 
       if (player.lives > 0) {
@@ -1043,4 +1048,3 @@ const GAME_DATA = {
     requestAnimationFrame(loop)
   })()
 </script>
-
