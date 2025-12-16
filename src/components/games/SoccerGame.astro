@@ -42,6 +42,8 @@ const GAME_DATA = {
 </style>
 
 <script>
+  import { actions } from 'astro:actions'
+  import { showAchievement } from '@/utils/show-achievement'
   ;(function () {
     // --- Sistema de Audio (Sintetizador Web Audio API) ---
     const AudioSys = {
@@ -188,7 +190,14 @@ const GAME_DATA = {
       speed: number
       range: number
     }> = []
-    let particles: Array<{ x: number; y: number; vx: number; vy: number; life: number; color: string }> = []
+    let particles: Array<{
+      x: number
+      y: number
+      vx: number
+      vy: number
+      life: number
+      color: string
+    }> = []
 
     // Lógica de apuntado
     let aimAngle = -Math.PI / 2
@@ -349,6 +358,22 @@ const GAME_DATA = {
         AudioSys.playWin()
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('game-completed'))
+
+          // Otorgar logro específico del juego
+          actions
+            .grantGameAchievement({ achievementId: 'all-unlocked' })
+            .then((result) => {
+              if (result.data?.achievement) {
+                showAchievement('achievement-notification', {
+                  title: result.data.achievement.title,
+                  description: result.data.achievement.description,
+                  icon: result.data.achievement.image,
+                })
+              }
+            })
+            .catch((error) => {
+              console.error('Error granting achievement:', error)
+            })
         }, 1500)
       } else {
         AudioSys.playMiss()
