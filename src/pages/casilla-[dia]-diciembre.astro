@@ -26,6 +26,8 @@ import PongGame from '@/components/games/PongGame.astro'
 import SoccerGame from '@/components/games/SoccerGame.astro'
 import LiftGame from '@/components/games/LiftGame.astro'
 import PangGame from '@/components/games/PangGame.astro'
+import GTAGame from '@/components/games/GTAGame.astro'
+import CandyGame from '@/components/games/CandyGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 import SafariGame from '@/components/games/SafariGame.astro'
@@ -237,6 +239,29 @@ if (user) {
 
           <canvas id="confetti-canvas" class="confetti-canvas w-full h-full" />
 
+          {/* Botón de cerrar - aparece 5s después del vídeo */}
+          <a
+            id="close-btn"
+            href="/"
+            class="close-btn hidden"
+            aria-label="Volver al inicio"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="text-brand"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </a>
+
           {/* Pantalla 1: Animación de apertura con calendario */}
           <div id="screen-opening" class="screen active">
             <div class="opening-animation relative">
@@ -307,6 +332,8 @@ if (user) {
             {gameType === 'soccer' && <SoccerGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'lift' && <LiftGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'pang' && <PangGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'gta' && <GTAGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'candy' && <CandyGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
@@ -670,6 +697,50 @@ if (user) {
       line-height: 1.3;
     }
   }
+
+  /* Botón de cerrar */
+  .close-btn {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: scale(0.8);
+    animation: closeButtonFadeIn 0.5s ease forwards;
+  }
+
+  .close-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+  }
+
+  .close-btn:active {
+    transform: scale(0.95);
+  }
+
+  .close-btn.hidden {
+    display: none;
+  }
+
+  @keyframes closeButtonFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 </style>
 
 <script>
@@ -885,6 +956,17 @@ if (user) {
 
       document.getElementById('btn-start-game')?.addEventListener('click', () => {
         transitionToScreen('game')
+      })
+
+      // Escuchar cuando se completa el juego para mostrar el botón de cerrar
+      window.addEventListener('game-completed', () => {
+        const closeBtn = document.getElementById('close-btn')
+        if (closeBtn) {
+          // Mostrar el botón 5 segundos después de que se muestre el vídeo
+          setTimeout(() => {
+            closeBtn.classList.remove('hidden')
+          }, 5000)
+        }
       })
     }
 
