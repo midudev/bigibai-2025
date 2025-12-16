@@ -49,6 +49,7 @@ const GAME_DATA = {
     const AudioSys = {
       ctx: null as AudioContext | null,
       muted: false,
+      bgMusic: null as HTMLAudioElement | null,
 
       init: function () {
         if (!this.ctx) {
@@ -59,8 +60,32 @@ const GAME_DATA = {
         }
       },
 
+      initBgMusic: function () {
+        if (!this.bgMusic) {
+          this.bgMusic = new Audio('https://videos.bigibai.com/music/soccer.mp3')
+          this.bgMusic.loop = true
+          this.bgMusic.volume = 0.3
+        }
+      },
+
+      playBgMusic: function () {
+        if (this.bgMusic && !this.muted) {
+          this.bgMusic.play().catch(() => {})
+        }
+      },
+
+      stopBgMusic: function () {
+        if (this.bgMusic) {
+          this.bgMusic.pause()
+          this.bgMusic.currentTime = 0
+        }
+      },
+
       toggleMute: function () {
         this.muted = !this.muted
+        if (this.bgMusic) {
+          this.bgMusic.muted = this.muted
+        }
         return this.muted
       },
 
@@ -328,6 +353,10 @@ const GAME_DATA = {
       gameState = 'PLAYING'
       resetRound()
 
+      // Iniciar música de fondo
+      AudioSys.initBgMusic()
+      AudioSys.playBgMusic()
+
       if (timerInterval) clearInterval(timerInterval)
       timerInterval = setInterval(() => {
         if (gameState === 'PLAYING' || gameState === 'AIMING' || gameState === 'MOVING_BALL') {
@@ -353,6 +382,9 @@ const GAME_DATA = {
     function endGame(win: boolean) {
       if (timerInterval) clearInterval(timerInterval)
       gameState = win ? 'WIN' : 'GAMEOVER'
+
+      // Detener música de fondo
+      AudioSys.stopBgMusic()
 
       if (win) {
         AudioSys.playWin()
