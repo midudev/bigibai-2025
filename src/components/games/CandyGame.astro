@@ -461,6 +461,21 @@ const GAME_DATA = {
       candyImages.push(img)
     }
 
+    // Background music
+    const bgMusic = new Audio('https://videos.bigibai.com/music/candy.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    function startMusic() {
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    }
+
+    function stopMusic() {
+      bgMusic.pause()
+      bgMusic.currentTime = 0
+    }
+
     // Audio
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext
     let audioCtx: AudioContext | null = null
@@ -1149,6 +1164,7 @@ const GAME_DATA = {
 
     function startGame() {
       initAudio()
+      startMusic()
       startScreen.classList.add('hidden')
       gameState = 'PLAYING'
       score = 0
