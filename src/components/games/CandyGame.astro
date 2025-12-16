@@ -1128,6 +1128,7 @@ const GAME_DATA = {
 
     function showBombExplosion() {
       gameState = 'GAMEOVER'
+      stopMusic()
       bombWarning.classList.remove('hidden')
 
       let countdown = 3
