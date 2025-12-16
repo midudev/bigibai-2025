@@ -848,6 +848,7 @@ const GAME_DATA = {
       // Check win
       if (score >= TARGET_SCORE) {
         gameState = 'WIN'
+        stopMusic()
         sfx.win()
         winScoreEl.textContent = String(score)
         winScreen.classList.remove('hidden')
