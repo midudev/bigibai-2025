@@ -94,8 +94,8 @@ const GAME_CONFIG: Record<number, GameType> = {
   18: 'gta',
   19: 'candy',
   20: 'treehouse',
-  21: 'track',
-  22: 'racer',
+  21: 'pong',
+  22: 'track',
   23: 'coaster',
   24: 'soccer',
 }
