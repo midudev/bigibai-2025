@@ -156,7 +156,7 @@ const GAME_DATA = {
     align-items: center;
     justify-content: space-between;
     padding: 10px 15px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(20,10,30,0.9) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(20, 10, 30, 0.9) 100%);
     gap: 10px;
     flex-shrink: 0;
     border-top: 2px solid rgba(248, 177, 52, 0.3);
@@ -184,8 +184,13 @@ const GAME_DATA = {
   }
 
   @keyframes runner-shake {
-    0%, 100% { transform: translateX(-2px) rotate(-8deg); }
-    50% { transform: translateX(2px) rotate(8deg); }
+    0%,
+    100% {
+      transform: translateX(-2px) rotate(-8deg);
+    }
+    50% {
+      transform: translateX(2px) rotate(8deg);
+    }
   }
 
   #goal-candy {
@@ -194,8 +199,13 @@ const GAME_DATA = {
   }
 
   @keyframes goal-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
   }
 
   #progress-track {
@@ -718,7 +728,11 @@ const GAME_DATA = {
       for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS - 2; col++) {
           const candy = board[row][col]
-          if (candy && board[row][col + 1]?.type === candy.type && board[row][col + 2]?.type === candy.type) {
+          if (
+            candy &&
+            board[row][col + 1]?.type === candy.type &&
+            board[row][col + 2]?.type === candy.type
+          ) {
             let end = col + 2
             while (end + 1 < COLS && board[row][end + 1]?.type === candy.type) {
               end++
@@ -734,7 +748,11 @@ const GAME_DATA = {
       for (let col = 0; col < COLS; col++) {
         for (let row = 0; row < ROWS - 2; row++) {
           const candy = board[row][col]
-          if (candy && board[row + 1]?.[col]?.type === candy.type && board[row + 2]?.[col]?.type === candy.type) {
+          if (
+            candy &&
+            board[row + 1]?.[col]?.type === candy.type &&
+            board[row + 2]?.[col]?.type === candy.type
+          ) {
             let end = row + 2
             while (end + 1 < ROWS && board[end + 1]?.[col]?.type === candy.type) {
               end++
@@ -778,7 +796,13 @@ const GAME_DATA = {
       return false
     }
 
-    function swapCandies(row1: number, col1: number, row2: number, col2: number, silent: boolean = false) {
+    function swapCandies(
+      row1: number,
+      col1: number,
+      row2: number,
+      col2: number,
+      silent: boolean = false
+    ) {
       const temp = board[row1][col1]
       board[row1][col1] = board[row2][col2]
       board[row2][col2] = temp
@@ -1057,7 +1081,7 @@ const GAME_DATA = {
     function draw() {
       // Ensure pixel-perfect rendering
       ctx!.imageSmoothingEnabled = false
-      
+
       // Background
       const gradient = ctx!.createLinearGradient(0, 0, 0, GAME_HEIGHT)
       gradient.addColorStop(0, '#1a0a2e')
@@ -1112,7 +1136,7 @@ const GAME_DATA = {
       if (gameState !== 'PLAYING' && gameState !== 'ANIMATING') return
 
       timeLeft -= dt
-      
+
       // Update progress bar - runner moves towards the goal (chocolate)
       const progress = Math.max(0, Math.min(100, ((GAME_TIME - timeLeft) / GAME_TIME) * 100))
       progressTrack.style.setProperty('--progress', `${progress}%`)
@@ -1202,4 +1226,3 @@ const GAME_DATA = {
     requestAnimationFrame(gameLoop)
   })()
 </script>
-
