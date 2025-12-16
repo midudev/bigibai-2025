@@ -44,8 +44,8 @@ const GAME_DATA = {
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <div class="title-box">
-        <h1>TREE<br/>HOUSE<br/>ADVENTURE</h1>
+      <div class="title-box" style="font-family: 'Press Start 2P', monospace;">
+        <h1>TREE<br />HOUSE<br />ADVENTURE</h1>
       </div>
 
       <div class="instructions">
@@ -355,8 +355,13 @@ const GAME_DATA = {
   }
 
   @keyframes flash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
   }
 
   .score-text {
@@ -401,7 +406,9 @@ const GAME_DATA = {
   }
 
   @keyframes blink {
-    50% { opacity: 0.5; }
+    50% {
+      opacity: 0.5;
+    }
   }
 
   @media (min-width: 768px) {
@@ -665,7 +672,7 @@ const GAME_DATA = {
             osc.stop(audioCtx.currentTime + 0.08)
           }, i * 50)
         }
-      }
+      },
     }
 
     // Level data
@@ -763,7 +770,7 @@ const GAME_DATA = {
       dying: false,
       deathTimer: 0,
       growing: false,
-      growTimer: 0
+      growTimer: 0,
     }
 
     // Goal
@@ -797,21 +804,21 @@ const GAME_DATA = {
         clouds.push({
           x: i * 180 + Math.random() * 80,
           y: 30 + Math.random() * 60,
-          size: 1 + Math.floor(Math.random() * 3)
+          size: 1 + Math.floor(Math.random() * 3),
         })
       }
 
       for (let i = 0; i < 40; i++) {
         hills.push({
           x: i * 120 + Math.random() * 60,
-          size: 1 + Math.floor(Math.random() * 2)
+          size: 1 + Math.floor(Math.random() * 2),
         })
       }
 
       for (let i = 0; i < 50; i++) {
         bushes.push({
           x: i * 90 + Math.random() * 40,
-          size: 1 + Math.floor(Math.random() * 3)
+          size: 1 + Math.floor(Math.random() * 3),
         })
       }
 
@@ -833,7 +840,7 @@ const GAME_DATA = {
           type: 'ground',
           hit: false,
           hasMushroom: false,
-          bounceTime: 0
+          bounceTime: 0,
         })
         x += TILE_SIZE
       }
@@ -847,11 +854,15 @@ const GAME_DATA = {
         { x: 900, y: GAME_HEIGHT - 80, blocks: ['question', 'brick', 'brick', 'question'] },
         { x: 1100, y: GAME_HEIGHT - 96, blocks: ['brick', 'brick'] },
         { x: 1250, y: GAME_HEIGHT - 64, blocks: ['question'] },
-        { x: 1400, y: GAME_HEIGHT - 112, blocks: ['brick', 'question', 'brick', 'question', 'brick'] },
+        {
+          x: 1400,
+          y: GAME_HEIGHT - 112,
+          blocks: ['brick', 'question', 'brick', 'question', 'brick'],
+        },
         { x: 1600, y: GAME_HEIGHT - 80, blocks: ['question'] },
       ]
 
-      platformGroups.forEach(group => {
+      platformGroups.forEach((group) => {
         group.blocks.forEach((type, i) => {
           const hasMushroom = type === 'question' && Math.random() < 0.4
           platforms.push({
@@ -862,7 +873,7 @@ const GAME_DATA = {
             type: type as 'brick' | 'question',
             hit: false,
             hasMushroom,
-            bounceTime: 0
+            bounceTime: 0,
           })
 
           // Add coin collectible above non-mushroom question blocks
@@ -879,7 +890,7 @@ const GAME_DATA = {
               active: false,
               animFrame: 0,
               rising: false,
-              riseY: 0
+              riseY: 0,
             })
           }
 
@@ -897,7 +908,7 @@ const GAME_DATA = {
               active: false,
               animFrame: 0,
               rising: false,
-              riseY: 0
+              riseY: 0,
             })
           }
         })
@@ -916,7 +927,7 @@ const GAME_DATA = {
         { x: 1300, y: GAME_HEIGHT - 100 },
       ]
 
-      coinPositions.forEach(pos => {
+      coinPositions.forEach((pos) => {
         collectibles.push({
           x: pos.x,
           y: pos.y,
@@ -929,7 +940,7 @@ const GAME_DATA = {
           active: true,
           animFrame: Math.random() * 4,
           rising: false,
-          riseY: 0
+          riseY: 0,
         })
       })
 
@@ -947,7 +958,7 @@ const GAME_DATA = {
         { x: 1550, type: 'koopa' },
       ]
 
-      enemyPositions.forEach(pos => {
+      enemyPositions.forEach((pos) => {
         enemies.push({
           x: pos.x,
           y: GAME_HEIGHT - TILE_SIZE * 2 - 14,
@@ -959,7 +970,7 @@ const GAME_DATA = {
           squished: false,
           squishedTime: 0,
           type: pos.type as 'goomba' | 'koopa',
-          animFrame: 0
+          animFrame: 0,
         })
       })
 
@@ -988,7 +999,7 @@ const GAME_DATA = {
         dying: false,
         deathTimer: 0,
         growing: false,
-        growTimer: 0
+        growTimer: 0,
       }
 
       cameraX = 0
@@ -998,7 +1009,7 @@ const GAME_DATA = {
       flagDescending = false
       flagY = 0
       globalTime = 0
-      
+
       updateUI()
       generateLevel()
     }
@@ -1020,7 +1031,7 @@ const GAME_DATA = {
         left: keys['ArrowLeft'] || keys['KeyA'] || touchLeft,
         right: keys['ArrowRight'] || keys['KeyD'] || touchRight,
         jump: keys['ArrowUp'] || keys['KeyW'] || keys['Space'] || touchJump,
-        run: keys['ShiftLeft'] || keys['ShiftRight'] || touchRun
+        run: keys['ShiftLeft'] || keys['ShiftRight'] || touchRun,
       }
     }
 
@@ -1050,10 +1061,42 @@ const GAME_DATA = {
       elem.addEventListener('mouseleave', handleEnd)
     }
 
-    addTouchControl(btnLeft, () => { touchLeft = true }, () => { touchLeft = false })
-    addTouchControl(btnRight, () => { touchRight = true }, () => { touchRight = false })
-    addTouchControl(btnJump, () => { touchJump = true }, () => { touchJump = false })
-    addTouchControl(btnRun, () => { touchRun = true }, () => { touchRun = false })
+    addTouchControl(
+      btnLeft,
+      () => {
+        touchLeft = true
+      },
+      () => {
+        touchLeft = false
+      }
+    )
+    addTouchControl(
+      btnRight,
+      () => {
+        touchRight = true
+      },
+      () => {
+        touchRight = false
+      }
+    )
+    addTouchControl(
+      btnJump,
+      () => {
+        touchJump = true
+      },
+      () => {
+        touchJump = false
+      }
+    )
+    addTouchControl(
+      btnRun,
+      () => {
+        touchRun = true
+      },
+      () => {
+        touchRun = false
+      }
+    )
 
     window.addEventListener('keydown', (e) => {
       keys[e.code] = true
@@ -1064,12 +1107,13 @@ const GAME_DATA = {
       keys[e.code] = false
     })
 
-    function checkCollision(a: { x: number, y: number, width: number, height: number },
-                           b: { x: number, y: number, width: number, height: number }): boolean {
-      return a.x < b.x + b.width &&
-             a.x + a.width > b.x &&
-             a.y < b.y + b.height &&
-             a.y + a.height > b.y
+    function checkCollision(
+      a: { x: number; y: number; width: number; height: number },
+      b: { x: number; y: number; width: number; height: number }
+    ): boolean {
+      return (
+        a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+      )
     }
 
     function addScoreParticle(x: number, y: number, score: number) {
@@ -1080,7 +1124,7 @@ const GAME_DATA = {
         vy: -60,
         life: 1,
         type: 'score',
-        score: score
+        score: score,
       })
     }
 
@@ -1109,7 +1153,7 @@ const GAME_DATA = {
         if (player.deathTimer > 2.5) {
           lives--
           updateUI()
-          
+
           if (lives <= 0) {
             gameState = 'GAMEOVER'
             stopMusic()
@@ -1155,7 +1199,7 @@ const GAME_DATA = {
 
       // Horizontal movement
       const speed = input.run ? PLAYER_SPEED * RUN_MULTIPLIER : PLAYER_SPEED
-      
+
       if (input.left) {
         player.vx = -speed
         player.facing = -1
@@ -1212,10 +1256,10 @@ const GAME_DATA = {
 
         if (!checkCollision(player, plat)) continue
 
-        const overlapLeft = (player.x + player.width) - plat.x
-        const overlapRight = (plat.x + plat.width) - player.x
-        const overlapTop = (player.y + player.height) - plat.y
-        const overlapBottom = (plat.y + plat.height) - player.y
+        const overlapLeft = player.x + player.width - plat.x
+        const overlapRight = plat.x + plat.width - player.x
+        const overlapTop = player.y + player.height - plat.y
+        const overlapBottom = plat.y + plat.height - player.y
 
         const minOverlapX = Math.min(overlapLeft, overlapRight)
         const minOverlapY = Math.min(overlapTop, overlapBottom)
@@ -1241,9 +1285,12 @@ const GAME_DATA = {
 
                 // Activate collectible
                 for (const c of collectibles) {
-                  if (!c.active && !c.collected &&
-                      Math.abs(c.x - plat.x) < TILE_SIZE &&
-                      Math.abs(c.y - (plat.y - TILE_SIZE)) < TILE_SIZE) {
+                  if (
+                    !c.active &&
+                    !c.collected &&
+                    Math.abs(c.x - plat.x) < TILE_SIZE &&
+                    Math.abs(c.y - (plat.y - TILE_SIZE)) < TILE_SIZE
+                  ) {
                     c.active = true
                     c.rising = true
                     c.riseY = 0
@@ -1267,7 +1314,7 @@ const GAME_DATA = {
                     vx: (i < 2 ? -1 : 1) * (50 + Math.random() * 50),
                     vy: -150 - Math.random() * 100,
                     life: 1,
-                    type: 'brick'
+                    type: 'brick',
                   })
                 }
               }
@@ -1362,7 +1409,7 @@ const GAME_DATA = {
           c.x += c.vx * FIXED_DT
           c.vy += GRAVITY * FIXED_DT * 0.4
           c.y += c.vy * FIXED_DT
-          
+
           // Ground collision
           for (const plat of platforms) {
             if (plat.type === 'ground' && checkCollision(c, plat)) {
@@ -1533,7 +1580,7 @@ const GAME_DATA = {
       const h = 16 * size
       // Draw hill as pixel stacked
       for (let row = 0; row < h; row++) {
-        const rowWidth = w - (row * w / h)
+        const rowWidth = w - (row * w) / h
         const startX = x + (w - rowWidth) / 2
         drawRect(startX, y - row, rowWidth, 1, COLORS.greenLight)
       }
@@ -1565,7 +1612,7 @@ const GAME_DATA = {
 
       // Bounce offset
       if (plat.bounceTime > 0) {
-        y -= Math.sin(plat.bounceTime * Math.PI / 0.15) * 4
+        y -= Math.sin((plat.bounceTime * Math.PI) / 0.15) * 4
       }
 
       if (plat.type === 'ground') {
@@ -1574,16 +1621,16 @@ const GAME_DATA = {
         // Grass detail
         drawRect(x + 2, y + 2, 2, 2, COLORS.grass)
         drawRect(x + 10, y + 2, 2, 2, COLORS.grass)
-        
+
         // Dirt body
         drawRect(x, y + 2, w, h - 2, COLORS.ground)
-        
+
         // Dirt texture
         drawRect(x + 4, y + 6, 2, 2, COLORS.groundDark)
         drawRect(x + 10, y + 10, 2, 2, COLORS.groundDark)
         drawRect(x + 2, y + 14, 2, 2, COLORS.groundDark)
         drawRect(x + 12, y + 18, 2, 2, COLORS.groundDark)
-        
+
         // Highlight
         drawRect(x + 6, y + 8, 2, 2, COLORS.groundLight)
         drawRect(x + 8, y + 16, 2, 2, COLORS.groundLight)
@@ -1593,34 +1640,34 @@ const GAME_DATA = {
         // Dark lines
         drawRect(x, y, w, 1, COLORS.brickDark)
         drawRect(x, y, 1, h, COLORS.brickDark)
-        drawRect(x + w/2 - 1, y, 2, h, COLORS.brickDark)
-        drawRect(x, y + h/2 - 1, w, 2, COLORS.brickDark)
+        drawRect(x + w / 2 - 1, y, 2, h, COLORS.brickDark)
+        drawRect(x, y + h / 2 - 1, w, 2, COLORS.brickDark)
         // Highlight
         drawRect(x + 2, y + 2, 4, 4, COLORS.brickLight)
         drawRect(x + 10, y + 10, 4, 4, COLORS.brickLight)
       } else if (plat.type === 'question') {
         // Question block with animated shine
         const shinePhase = Math.floor(globalTime * 4) % 8
-        
+
         // Base block
         drawRect(x, y, w, h, COLORS.question)
-        
+
         // Border
         drawRect(x, y, w, 2, COLORS.questionDark)
         drawRect(x, y, 2, h, COLORS.questionDark)
         drawRect(x + w - 2, y, 2, h, COLORS.questionDark)
         drawRect(x, y + h - 2, w, 2, COLORS.questionDark)
-        
+
         // Inner border (light)
         drawRect(x + 2, y + 2, w - 4, 1, COLORS.questionLight)
         drawRect(x + 2, y + 2, 1, h - 4, COLORS.questionLight)
-        
+
         // Question mark
         drawRect(x + 5, y + 3, 6, 2, COLORS.questionDark)
         drawRect(x + 9, y + 5, 2, 2, COLORS.questionDark)
         drawRect(x + 7, y + 7, 2, 2, COLORS.questionDark)
         drawRect(x + 7, y + 11, 2, 2, COLORS.questionDark)
-        
+
         // Animated shine effect
         if (shinePhase < 4) {
           const shineX = x + 2 + shinePhase * 3
@@ -1643,11 +1690,11 @@ const GAME_DATA = {
       // Flag pole
       drawRect(x + 6, y - 140, 4, 144, COLORS.greenLight)
       drawRect(x + 6, y - 140, 2, 144, COLORS.green)
-      
+
       // Pole top ball
       drawRect(x + 4, y - 144, 8, 4, COLORS.greenLight)
       drawRect(x + 5, y - 145, 6, 6, COLORS.greenLight)
-      
+
       // Flag
       const flagOffset = Math.min(Math.floor(flagY), 100)
       drawRect(x + 10, y - 140 + flagOffset, 20, 14, COLORS.green)
@@ -1656,23 +1703,23 @@ const GAME_DATA = {
       drawRect(x + 18, y - 136 + flagOffset, 4, 2, COLORS.green)
       drawRect(x + 16, y - 134 + flagOffset, 8, 2, COLORS.green)
       drawRect(x + 18, y - 132 + flagOffset, 4, 4, COLORS.brown)
-      
+
       // Treehouse platform
       drawRect(x + 40, y - 80, 50, 8, COLORS.brown)
       drawRect(x + 38, y - 82, 54, 4, COLORS.brownLight)
-      
+
       // Treehouse
       drawRect(x + 45, y - 130, 40, 50, COLORS.brownLight)
       drawRect(x + 45, y - 130, 2, 50, COLORS.brown)
       drawRect(x + 83, y - 130, 2, 50, COLORS.brown)
-      
+
       // Roof
       for (let i = 0; i < 15; i++) {
         const roofY = y - 130 - 15 + i
         drawRect(x + 42 + i, roofY, 46 - i * 2, 2, COLORS.red)
       }
       drawRect(x + 43, y - 144, 44, 2, COLORS.redDark)
-      
+
       // Window
       drawRect(x + 55, y - 120, 20, 16, COLORS.skyLight)
       drawRect(x + 55, y - 120, 2, 16, COLORS.brown)
@@ -1681,25 +1728,25 @@ const GAME_DATA = {
       drawRect(x + 55, y - 106, 20, 2, COLORS.brown)
       drawRect(x + 64, y - 118, 2, 12, COLORS.brown)
       drawRect(x + 57, y - 112, 14, 2, COLORS.brown)
-      
+
       // Door
       drawRect(x + 60, y - 95, 12, 15, COLORS.brown)
       drawRect(x + 62, y - 93, 8, 11, COLORS.brownLight)
       drawRect(x + 68, y - 88, 2, 2, COLORS.yellow)
-      
+
       // Tree trunk (supports)
       drawRect(x + 55, y - 80, 8, 80, COLORS.brown)
       drawRect(x + 55, y - 80, 2, 80, COLORS.brownLight)
       drawRect(x + 75, y - 80, 8, 80, COLORS.brown)
       drawRect(x + 75, y - 80, 2, 80, COLORS.brownLight)
-      
+
       // Ladder
       for (let i = 0; i < 8; i++) {
         drawRect(x + 87, y - 78 + i * 10, 8, 2, COLORS.brownLight)
       }
       drawRect(x + 87, y - 80, 2, 80, COLORS.brown)
       drawRect(x + 93, y - 80, 2, 80, COLORS.brown)
-      
+
       // Leaves/foliage around treehouse
       for (let i = 0; i < 5; i++) {
         drawRect(x + 35 + i * 12, y - 145 - (i % 2) * 8, 14, 12, COLORS.green)
@@ -1718,11 +1765,11 @@ const GAME_DATA = {
         const offsets = [0, 1, 3, 1]
         const w = widths[frame]
         const ox = offsets[frame]
-        
+
         // Coin body
         drawRect(x + ox, y, w, 14, COLORS.coin)
         drawRect(x + ox + 1, y + 1, w - 2, 12, COLORS.coinLight)
-        
+
         // Coin shine
         if (frame === 0) {
           drawRect(x + 2, y + 2, 2, 2, COLORS.white)
@@ -1732,16 +1779,16 @@ const GAME_DATA = {
         // Cap
         drawRect(x + 1, y, 12, 8, COLORS.red)
         drawRect(x, y + 2, 14, 6, COLORS.red)
-        
+
         // White spots
         drawRect(x + 2, y + 2, 4, 4, COLORS.white)
         drawRect(x + 8, y + 2, 4, 4, COLORS.white)
         drawRect(x + 5, y + 1, 4, 2, COLORS.white)
-        
+
         // Stem
         drawRect(x + 3, y + 8, 8, 6, COLORS.brownLight)
         drawRect(x + 4, y + 9, 6, 4, COLORS.white)
-        
+
         // Eyes
         drawRect(x + 4, y + 10, 2, 2, COLORS.black)
         drawRect(x + 8, y + 10, 2, 2, COLORS.black)
@@ -1765,20 +1812,20 @@ const GAME_DATA = {
         // Body
         drawRect(x + 2, y, 10, 10, COLORS.brown)
         drawRect(x, y + 2, 14, 8, COLORS.brown)
-        
+
         // Face
         drawRect(x + 2, y + 2, 10, 6, COLORS.brownLight)
-        
+
         // Eyes (angry)
         drawRect(x + 3, y + 3, 3, 3, COLORS.white)
         drawRect(x + 8, y + 3, 3, 3, COLORS.white)
         drawRect(x + 4, y + 4, 2, 2, COLORS.black)
         drawRect(x + 9, y + 4, 2, 2, COLORS.black)
-        
+
         // Eyebrows
         drawRect(x + 2, y + 2, 4, 1, COLORS.black)
         drawRect(x + 8, y + 2, 4, 1, COLORS.black)
-        
+
         // Feet animation
         if (frame === 0) {
           drawRect(x, y + 10, 4, 4, COLORS.black)
@@ -1793,14 +1840,14 @@ const GAME_DATA = {
         drawRect(x + 1, y + 2, 12, 10, COLORS.green)
         drawRect(x + 2, y + 1, 10, 12, COLORS.green)
         drawRect(x + 3, y + 3, 8, 8, COLORS.greenLight)
-        
+
         // Shell pattern
         drawRect(x + 5, y + 4, 4, 6, COLORS.grass)
-        
+
         // Head
         drawRect(x + 10, y, 4, 6, COLORS.greenLight)
         drawRect(x + 12, y + 1, 2, 2, COLORS.black) // Eye
-        
+
         // Feet animation
         if (frame === 0) {
           drawRect(x, y + 11, 4, 3, COLORS.orange)
@@ -1872,30 +1919,30 @@ const GAME_DATA = {
 
       // Head
       drawRect(x + 2, y, 8, 8, COLORS.brownLight)
-      
+
       // Cap
       drawRect(x + 1, y, 10, 3, COLORS.red)
       drawRect(x + 2, y - 1, 8, 2, COLORS.red)
       drawRect(x + 8, y + 1, 3, 2, COLORS.red) // Cap brim
-      
+
       // Hair
       drawRect(x + 2, y + 3, 2, 2, COLORS.brown)
-      
+
       // Eyes
       drawRect(x + 6, y + 3, 2, 3, COLORS.black)
-      
+
       // Nose
       drawRect(x + 8, y + 4, 3, 2, COLORS.brownLight)
-      
+
       // Body
       drawRect(x + 3, y + 8, 6, 4, COLORS.red)
-      
+
       // Overall
       drawRect(x + 4, y + 9, 4, 3, COLORS.blue)
-      
+
       // Buttons
       drawRect(x + 5, y + 10, 1, 1, COLORS.yellow)
-      
+
       if (!player.onGround) {
         // Jumping pose
         drawRect(x, y + 7, 3, 3, COLORS.brownLight) // Arm up
@@ -1941,36 +1988,36 @@ const GAME_DATA = {
       drawRect(x + 2, y, 10, 4, COLORS.red)
       drawRect(x + 3, y - 2, 8, 3, COLORS.red)
       drawRect(x + 10, y + 2, 4, 3, COLORS.red) // Brim
-      
+
       // Head
       drawRect(x + 3, y + 4, 10, 10, COLORS.brownLight)
-      
+
       // Hair
       drawRect(x + 3, y + 6, 3, 3, COLORS.brown)
-      
+
       // Eye
       drawRect(x + 8, y + 7, 3, 4, COLORS.black)
-      
+
       // Nose
       drawRect(x + 11, y + 8, 3, 3, COLORS.brownLight)
-      
+
       // Mustache (for big version)
       drawRect(x + 6, y + 11, 6, 2, COLORS.brown)
-      
+
       // Body
       drawRect(x + 4, y + 14, 8, 6, COLORS.red)
-      
+
       // Overall straps
       drawRect(x + 5, y + 14, 2, 6, COLORS.blue)
       drawRect(x + 9, y + 14, 2, 6, COLORS.blue)
-      
+
       // Overall body
       drawRect(x + 4, y + 18, 8, 4, COLORS.blue)
-      
+
       // Buttons
       drawRect(x + 6, y + 19, 1, 1, COLORS.yellow)
       drawRect(x + 9, y + 19, 1, 1, COLORS.yellow)
-      
+
       if (!player.onGround) {
         // Jumping
         drawRect(x, y + 12, 4, 4, COLORS.brownLight) // Arm up
