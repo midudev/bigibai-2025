@@ -30,6 +30,7 @@ import GTAGame from '@/components/games/GTAGame.astro'
 import CandyGame from '@/components/games/CandyGame.astro'
 import TreeHouseGame from '@/components/games/TreeHouseGame.astro'
 import TrackGame from '@/components/games/TrackGame.astro'
+import CoasterGame from '@/components/games/CoasterGame.astro'
 import { isAdmin } from '@/utils/admin'
 import { supabaseAdmin } from '@/supabase-admin'
 import SafariGame from '@/components/games/SafariGame.astro'
@@ -333,6 +334,7 @@ if (user) {
             {gameType === 'candy' && <CandyGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'treehouse' && <TreeHouseGame day={paramDayNumber} gameData={gameData} />}
             {gameType === 'track' && <TrackGame day={paramDayNumber} gameData={gameData} />}
+            {gameType === 'coaster' && <CoasterGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
       )
