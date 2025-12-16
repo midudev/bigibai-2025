@@ -44,8 +44,8 @@ const GAME_DATA = {
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <div class="title-box" style="font-family: 'Press Start 2P', monospace;">
-        <h1>TREE<br />HOUSE<br />ADVENTURE</h1>
+      <div class="title-box">
+        <h1 style="font-family: 'Press Start 2P', monospace;">TREE<br />HOUSE<br />ADVENTURE</h1>
       </div>
 
       <div class="instructions">
@@ -173,6 +173,10 @@ const GAME_DATA = {
     flex: 1;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+  }
+
+  #start-screen {
+    background: #568bf3;
   }
 
   /* Mobile Controls - NES Controller Style */
@@ -478,9 +482,11 @@ const GAME_DATA = {
     const restartBtn = document.getElementById('restart-btn') as HTMLElement
 
     // Game constants
-    const GRAVITY = 1200
-    const JUMP_FORCE = -380
-    const JUMP_HOLD_FORCE = -25
+    // Physics tuned to feel like Super Mario Bros
+    const GRAVITY = 2400
+    const JUMP_FORCE = -520
+    const JUMP_HOLD_FORCE = -15
+    const MAX_FALL_SPEED = 400
     const PLAYER_SPEED = 100
     const RUN_MULTIPLIER = 1.6
     const TILE_SIZE = 16
@@ -1221,8 +1227,8 @@ const GAME_DATA = {
         sfx.jump()
       }
 
-      // Variable jump height
-      if (player.jumping && input.jump && player.jumpHeld && player.jumpTime < 0.2) {
+      // Variable jump height (shorter window like Mario)
+      if (player.jumping && input.jump && player.jumpHeld && player.jumpTime < 0.15) {
         player.vy += JUMP_HOLD_FORCE
         player.jumpTime += FIXED_DT
       }
@@ -1235,7 +1241,7 @@ const GAME_DATA = {
       player.vy += GRAVITY * FIXED_DT
 
       // Cap fall speed
-      if (player.vy > 500) player.vy = 500
+      if (player.vy > MAX_FALL_SPEED) player.vy = MAX_FALL_SPEED
 
       // Apply velocity
       player.x += player.vx * FIXED_DT
