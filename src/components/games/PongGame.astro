@@ -312,7 +312,7 @@ const GAME_DATA = {
       if (estadoJuego === 'MENU') {
         initAudio() // Inicializar audio en interacción de usuario
         estadoJuego = 'JUGANDO'
-        bola.reset('jugador') // Saca el jugador
+        bola.reset('ia') // La bola va primero hacia la IA, dando tiempo al jugador
         reproducirSonido('inicio')
       }
     }
@@ -518,4 +518,3 @@ const GAME_DATA = {
     loop() // Arrancar
   })()
 </script>
-
