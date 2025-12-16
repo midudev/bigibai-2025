@@ -359,6 +359,7 @@ const GAME_DATA = {
       distance: number // meters traveled
       speed: number // current speed
       maxSpeed: number
+      baseMaxSpeed: number // for AI turbo calculations
       y: number // visual Y position on screen
       color: string
       isPlayer: boolean
@@ -366,16 +367,23 @@ const GAME_DATA = {
       keyPressCount: number
       animFrame: number
       name: string
+      // Turbo system for AI
+      hasTurbo: boolean
+      turboTimer: number
+      turboCooldown: number
+      auraFrame: number
     }
 
     let runners: Runner[] = []
     let playerRunner: Runner | null = null
     let trackOffset = 0
+    let raceFinished = false
+    let winnerDetermined = false
 
     // Input tracking for alternating keys
     let lastKeyTime = 0
     let keyCombo = 0
-    const KEY_TIMEOUT = 300 // ms before combo resets
+    const KEY_TIMEOUT = 250 // ms before combo resets (slightly harder)
 
     // Runner colors (pixel art style)
     const RUNNER_COLORS = [
@@ -385,7 +393,7 @@ const GAME_DATA = {
       { body: '#f59e0b', shorts: '#92400e', skin: '#fcd9bd' }, // Orange
     ]
 
-    const RUNNER_NAMES = ['TÚ', 'BOLT', 'FLASH', 'SONIC']
+    const RUNNER_NAMES = ['LAURON', 'TÚ', 'RUBIOS', 'PILLOJAN']
 
     // Audio
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext
@@ -509,13 +517,17 @@ const GAME_DATA = {
     // Initialize runners
     function initRunners() {
       runners = []
+      raceFinished = false
+      winnerDetermined = false
       for (let i = 0; i < LANE_COUNT; i++) {
         const isPlayer = i === 1 // Player is in lane 2
+        const baseSpeed = isPlayer ? 12 : 9 + Math.random() * 2.5 // AI are faster now
         const runner: Runner = {
           lane: i,
           distance: 0,
           speed: 0,
-          maxSpeed: isPlayer ? 12 : 8 + Math.random() * 3, // Player can go faster
+          maxSpeed: baseSpeed,
+          baseMaxSpeed: baseSpeed,
           y: GAME_HEIGHT - 150,
           color: RUNNER_COLORS[i].body,
           isPlayer,
@@ -523,6 +535,11 @@ const GAME_DATA = {
           keyPressCount: 0,
           animFrame: 0,
           name: RUNNER_NAMES[i],
+          // Turbo system
+          hasTurbo: false,
+          turboTimer: 0,
+          turboCooldown: Math.random() * 3 + 2, // Random initial cooldown 2-5s
+          auraFrame: 0,
         }
         runners.push(runner)
         if (isPlayer) playerRunner = runner
@@ -532,7 +549,7 @@ const GAME_DATA = {
 
     // Handle key press for player
     function handleKeyPress(key: 'left' | 'right') {
-      if (gameState !== 'PLAYING' || !playerRunner) return
+      if (gameState !== 'PLAYING' || !playerRunner || raceFinished) return
 
       const now = Date.now()
 
@@ -545,8 +562,8 @@ const GAME_DATA = {
           keyCombo = 1
         }
 
-        // Increase speed based on combo
-        const speedBoost = 0.5 + Math.min(keyCombo * 0.1, 1)
+        // Increase speed based on combo (slightly reduced for more difficulty)
+        const speedBoost = 0.4 + Math.min(keyCombo * 0.08, 0.8)
         playerRunner.speed = Math.min(playerRunner.speed + speedBoost, playerRunner.maxSpeed)
 
         playerRunner.lastKeyPressed = key
@@ -555,9 +572,9 @@ const GAME_DATA = {
 
         sfx.step()
       } else {
-        // Same key pressed - penalty
+        // Same key pressed - penalty (bigger penalty)
         keyCombo = 0
-        playerRunner.speed = Math.max(playerRunner.speed - 0.5, 0)
+        playerRunner.speed = Math.max(playerRunner.speed - 1, 0)
       }
     }
 
@@ -629,19 +646,70 @@ const GAME_DATA = {
     touchRight.addEventListener('mouseup', () => touchRight.classList.remove('pressed'))
     touchRight.addEventListener('mouseleave', () => touchRight.classList.remove('pressed'))
 
+    // Turbo sound effect
+    const sfxTurbo = () => {
+      if (!audioCtx) return
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+      const now = audioCtx.currentTime
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(200, now)
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.1)
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.3)
+      gain.gain.setValueAtTime(0.08, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(now + 0.3)
+    }
+
     // Update game logic
     function update(dt: number) {
       if (gameState !== 'PLAYING') return
 
+      // Track who crosses finish line first
+      let finisher: Runner | null = null
+
       // Update all runners
       for (const runner of runners) {
         if (runner.isPlayer) {
-          // Player speed naturally decreases
-          runner.speed = Math.max(runner.speed - dt * 3, 0)
+          // Player speed naturally decreases (slightly faster decay)
+          runner.speed = Math.max(runner.speed - dt * 3.5, 0)
         } else {
+          // AI runners with turbo system
+          runner.auraFrame += dt * 10
+
+          // Turbo cooldown
+          if (!runner.hasTurbo) {
+            runner.turboCooldown -= dt
+            if (runner.turboCooldown <= 0) {
+              // Activate turbo! More likely when behind or in last stretch
+              const behindPlayer = playerRunner && runner.distance < playerRunner.distance
+              const inLastStretch = runner.distance > RACE_DISTANCE * 0.6
+              const turboChance = behindPlayer ? 0.7 : inLastStretch ? 0.5 : 0.3
+
+              if (Math.random() < turboChance) {
+                runner.hasTurbo = true
+                runner.turboTimer = 1.5 + Math.random() * 1 // Turbo lasts 1.5-2.5s
+                runner.maxSpeed = runner.baseMaxSpeed * 1.4 // 40% speed boost
+                sfxTurbo()
+              }
+              runner.turboCooldown = 3 + Math.random() * 4 // Reset cooldown 3-7s
+            }
+          } else {
+            // Turbo active
+            runner.turboTimer -= dt
+            if (runner.turboTimer <= 0) {
+              runner.hasTurbo = false
+              runner.maxSpeed = runner.baseMaxSpeed
+            }
+          }
+
           // AI runners have varying speeds
-          const targetSpeed = runner.maxSpeed * (0.7 + Math.random() * 0.3)
-          runner.speed += (targetSpeed - runner.speed) * dt * 2
+          const targetSpeed = runner.maxSpeed * (0.75 + Math.random() * 0.25)
+          runner.speed += (targetSpeed - runner.speed) * dt * 2.5
         }
 
         // Update distance
@@ -652,36 +720,46 @@ const GAME_DATA = {
           runner.animFrame += runner.speed * dt * 8
         }
 
-        // Check for finish
-        if (runner.distance >= RACE_DISTANCE) {
-          if (runner.isPlayer) {
-            // Player wins!
-            gameState = 'WIN'
-            stopMusic()
-            sfx.win()
-            winScreen.classList.remove('hidden')
-            touchLeft.classList.remove('active')
-            touchRight.classList.remove('active')
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('game-completed'))
-            }, 1500)
-          } else {
-            // Player loses
-            gameState = 'GAMEOVER'
-            stopMusic()
-            sfx.lose()
-
-            // Calculate player position
-            const sortedRunners = [...runners].sort((a, b) => b.distance - a.distance)
-            const playerPosition = sortedRunners.findIndex((r) => r.isPlayer) + 1
-            finalPositionEl.textContent = String(playerPosition)
-
-            gameOverScreen.classList.remove('hidden')
-            touchLeft.classList.remove('active')
-            touchRight.classList.remove('active')
+        // Check for finish - track first to cross
+        if (runner.distance >= RACE_DISTANCE && !raceFinished) {
+          if (!finisher || runner.distance > finisher.distance) {
+            finisher = runner
           }
-          return
         }
+      }
+
+      // Determine winner when someone crosses the finish line
+      if (finisher && !winnerDetermined) {
+        raceFinished = true
+        winnerDetermined = true
+
+        if (finisher.isPlayer) {
+          // Player wins!
+          gameState = 'WIN'
+          stopMusic()
+          sfx.win()
+          winScreen.classList.remove('hidden')
+          touchLeft.classList.remove('active')
+          touchRight.classList.remove('active')
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('game-completed'))
+          }, 1500)
+        } else {
+          // Player loses
+          gameState = 'GAMEOVER'
+          stopMusic()
+          sfx.lose()
+
+          // Calculate player position
+          const sortedRunners = [...runners].sort((a, b) => b.distance - a.distance)
+          const playerPosition = sortedRunners.findIndex((r) => r.isPlayer) + 1
+          finalPositionEl.textContent = String(playerPosition)
+
+          gameOverScreen.classList.remove('hidden')
+          touchLeft.classList.remove('active')
+          touchRight.classList.remove('active')
+        }
+        return
       }
 
       // Update track offset based on player position
@@ -784,27 +862,112 @@ const GAME_DATA = {
         const bobAmount = runner.speed > 0.5 ? Math.sin(runner.animFrame) * 2 : 0
         const legPhase = Math.floor(runner.animFrame * 2) % 4
 
+        // Draw Super Saiyan aura if turbo is active
+        if (runner.hasTurbo && !runner.isPlayer) {
+          const auraWave = Math.sin(runner.auraFrame) * 3
+          const auraWave2 = Math.cos(runner.auraFrame * 1.3) * 2
+
+          // Outer glow (yellow/gold)
+          ctx!.save()
+          ctx!.globalAlpha = 0.3 + Math.sin(runner.auraFrame * 2) * 0.1
+
+          // Draw multiple aura layers for flame effect
+          for (let layer = 3; layer >= 0; layer--) {
+            const layerOffset = layer * 4
+            const flameHeight = 20 + layer * 8 + auraWave * 2
+
+            // Create gradient for aura
+            const auraGradient = ctx!.createLinearGradient(
+              laneX,
+              runnerY - 30 - flameHeight,
+              laneX,
+              runnerY + 25
+            )
+            auraGradient.addColorStop(0, 'rgba(255, 255, 100, 0)')
+            auraGradient.addColorStop(0.3, `rgba(255, 220, 50, ${0.6 - layer * 0.15})`)
+            auraGradient.addColorStop(0.7, `rgba(255, 180, 0, ${0.4 - layer * 0.1})`)
+            auraGradient.addColorStop(1, 'rgba(255, 100, 0, 0)')
+
+            ctx!.fillStyle = auraGradient
+
+            // Draw flame-like aura shape
+            ctx!.beginPath()
+            ctx!.moveTo(laneX - 12 - layerOffset + auraWave2, runnerY + 25)
+
+            // Left side of flame
+            ctx!.quadraticCurveTo(
+              laneX - 15 - layerOffset - auraWave,
+              runnerY - 10,
+              laneX - 8 - layerOffset / 2 + auraWave2,
+              runnerY - 30 - flameHeight
+            )
+
+            // Top of flame
+            ctx!.quadraticCurveTo(
+              laneX + auraWave,
+              runnerY - 35 - flameHeight - auraWave * 2,
+              laneX + 8 + layerOffset / 2 - auraWave2,
+              runnerY - 30 - flameHeight
+            )
+
+            // Right side of flame
+            ctx!.quadraticCurveTo(
+              laneX + 15 + layerOffset + auraWave,
+              runnerY - 10,
+              laneX + 12 + layerOffset - auraWave2,
+              runnerY + 25
+            )
+
+            ctx!.closePath()
+            ctx!.fill()
+          }
+
+          // Draw energy particles
+          ctx!.globalAlpha = 0.8
+          for (let i = 0; i < 6; i++) {
+            const particleY = runnerY - 20 - ((runner.auraFrame * 30 + i * 40) % 60) + bobAmount
+            const particleX = laneX + Math.sin(runner.auraFrame * 2 + i * 1.5) * (8 + i * 2)
+            const particleSize = 2 + Math.sin(runner.auraFrame * 3 + i) * 1
+
+            ctx!.fillStyle = i % 2 === 0 ? '#ffff00' : '#ffaa00'
+            ctx!.fillRect(
+              Math.floor(particleX - particleSize / 2),
+              Math.floor(particleY),
+              Math.floor(particleSize),
+              Math.floor(particleSize)
+            )
+          }
+
+          ctx!.restore()
+        }
+
         // Draw shadow
-        ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+        ctx!.fillStyle = runner.hasTurbo ? 'rgba(255,200,0,0.4)' : 'rgba(0,0,0,0.3)'
         ctx!.beginPath()
-        ctx!.ellipse(laneX, runnerY + 20, 10, 4, 0, 0, Math.PI * 2)
+        ctx!.ellipse(laneX, runnerY + 20, runner.hasTurbo ? 14 : 10, 4, 0, 0, Math.PI * 2)
         ctx!.fill()
 
         // Draw runner (pixel art style - from above/behind view)
         const runnerWidth = 16
         const runnerHeight = 24
 
-        // Body
-        ctx!.fillStyle = colors.body
+        // Body (golden tint if turbo)
+        ctx!.fillStyle = runner.hasTurbo ? '#ffd700' : colors.body
         ctx!.fillRect(laneX - 6, runnerY - 10 + bobAmount, 12, 14)
 
         // Head
         ctx!.fillStyle = colors.skin
         ctx!.fillRect(laneX - 4, runnerY - 18 + bobAmount, 8, 10)
 
-        // Hair (darker)
-        ctx!.fillStyle = '#2d2d2d'
+        // Hair (golden if turbo - Super Saiyan style!)
+        ctx!.fillStyle = runner.hasTurbo ? '#ffd700' : '#2d2d2d'
         ctx!.fillRect(laneX - 4, runnerY - 18 + bobAmount, 8, 4)
+        // Spiky hair when turbo
+        if (runner.hasTurbo) {
+          ctx!.fillRect(laneX - 5, runnerY - 22 + bobAmount, 3, 5)
+          ctx!.fillRect(laneX - 1, runnerY - 24 + bobAmount, 3, 7)
+          ctx!.fillRect(laneX + 3, runnerY - 21 + bobAmount, 3, 4)
+        }
 
         // Shorts
         ctx!.fillStyle = colors.shorts
@@ -850,11 +1013,12 @@ const GAME_DATA = {
           ctx!.fillRect(laneX + 1, runnerY + 20 + bobAmount, 4, 3)
         }
 
-        // Lane number / name
-        ctx!.fillStyle = runner.isPlayer ? '#4ade80' : '#fff'
+        // Lane number / name (with turbo indicator)
+        ctx!.fillStyle = runner.isPlayer ? '#4ade80' : runner.hasTurbo ? '#ffd700' : '#fff'
         ctx!.font = '6px "Press Start 2P"'
         ctx!.textAlign = 'center'
-        ctx!.fillText(runner.name, laneX, runnerY - 24 + bobAmount)
+        const displayName = runner.hasTurbo ? `⚡${runner.name}` : runner.name
+        ctx!.fillText(displayName, laneX, runnerY - 24 + bobAmount - (runner.hasTurbo ? 6 : 0))
       }
 
       // Draw UI
