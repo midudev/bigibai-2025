@@ -182,12 +182,12 @@ const GAME_DATA = {
   /* Mobile Controls - NES Controller Style */
   #mobile-controls {
     height: 150px;
-    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-    border-top: 4px solid #444;
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-top: 4px solid #1a1a1a;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
+    padding: 10px 25px;
     box-sizing: border-box;
     flex-shrink: 0;
   }
@@ -197,62 +197,85 @@ const GAME_DATA = {
     align-items: center;
   }
 
-  .dpad {
-    position: relative;
-    width: 100px;
-    height: 100px;
+  /* NES-style D-Pad Cross */
+  .dpad-cross {
+    display: flex;
+    align-items: center;
+    background: transparent;
   }
 
-  .dpad-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 32px;
-    height: 32px;
-    background: #333;
-    border-radius: 4px;
-  }
-
-  .dpad-btn {
-    position: absolute;
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(180deg, #4a4a4a 0%, #2a2a2a 100%);
-    border: 2px solid #222;
-    border-radius: 4px;
+  .dpad-horizontal {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 3px solid #111;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 14px;
-    color: #888;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 3px 0 #111;
+    position: relative;
+  }
+
+  .dpad-horizontal::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-style: solid;
   }
 
   .dpad-left {
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    border-radius: 6px 0 0 6px;
+    box-shadow: -2px 2px 0 #000;
+  }
+
+  .dpad-left::after {
+    border-width: 8px 10px 8px 0;
+    border-color: transparent #666 transparent transparent;
   }
 
   .dpad-right {
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    border-radius: 0 6px 6px 0;
+    box-shadow: 2px 2px 0 #000;
   }
 
-  .dpad-btn:active,
-  .dpad-btn.pressed {
-    background: linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%);
-    box-shadow: 0 1px 0 #111;
-    transform: translateY(calc(-50% + 2px));
+  .dpad-right::after {
+    border-width: 8px 0 8px 10px;
+    border-color: transparent transparent transparent #666;
   }
 
-  .dpad-btn:active,
-  .dpad-btn.pressed {
-    color: #4cd137;
+  .dpad-center-piece {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-top: 3px solid #111;
+    border-bottom: 3px solid #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .dpad-center-piece::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: #333;
+    border-radius: 50%;
+  }
+
+  .dpad-horizontal:active,
+  .dpad-horizontal.pressed {
+    background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+  }
+
+  .dpad-horizontal:active::after,
+  .dpad-horizontal.pressed::after {
+    border-color: transparent #4cd137 transparent transparent;
+  }
+
+  .dpad-right:active::after,
+  .dpad-right.pressed::after {
+    border-color: transparent transparent transparent #4cd137;
   }
 
   .action-btns {
@@ -1569,16 +1592,65 @@ const GAME_DATA = {
     }
 
     function drawCloud(x: number, y: number, size: number) {
-      const w = 16 * size
-      const h = 12
-      // Main body
-      for (let i = 0; i < size + 1; i++) {
-        drawRect(x + i * 8, y + 4, 16, h - 4, COLORS.white)
+      // NES-style Mario cloud - well defined pixel art
+      const baseX = Math.floor(x)
+      const baseY = Math.floor(y)
+
+      if (size === 1) {
+        // Small cloud (single puff)
+        // Top highlight
+        drawRect(baseX + 6, baseY, 12, 2, COLORS.white)
+        // Main body
+        drawRect(baseX + 4, baseY + 2, 16, 2, COLORS.white)
+        drawRect(baseX + 2, baseY + 4, 20, 4, COLORS.white)
+        drawRect(baseX + 4, baseY + 8, 16, 2, COLORS.white)
+        drawRect(baseX + 6, baseY + 10, 12, 2, COLORS.white)
+        // Eyes
+        drawRect(baseX + 8, baseY + 4, 2, 2, COLORS.black)
+        drawRect(baseX + 14, baseY + 4, 2, 2, COLORS.black)
+        // Shading
+        drawRect(baseX + 4, baseY + 8, 4, 2, COLORS.skyLight)
+        drawRect(baseX + 16, baseY + 8, 4, 2, COLORS.skyLight)
+      } else if (size === 2) {
+        // Medium cloud (two puffs)
+        // Top bumps
+        drawRect(baseX + 6, baseY, 8, 2, COLORS.white)
+        drawRect(baseX + 22, baseY + 2, 8, 2, COLORS.white)
+        // Upper body
+        drawRect(baseX + 4, baseY + 2, 12, 2, COLORS.white)
+        drawRect(baseX + 20, baseY + 4, 12, 2, COLORS.white)
+        // Main body
+        drawRect(baseX + 2, baseY + 4, 32, 6, COLORS.white)
+        drawRect(baseX + 4, baseY + 10, 28, 2, COLORS.white)
+        drawRect(baseX + 8, baseY + 12, 20, 2, COLORS.white)
+        // Eyes
+        drawRect(baseX + 8, baseY + 6, 2, 2, COLORS.black)
+        drawRect(baseX + 14, baseY + 6, 2, 2, COLORS.black)
+        // Shading
+        drawRect(baseX + 4, baseY + 10, 6, 2, COLORS.skyLight)
+        drawRect(baseX + 26, baseY + 10, 6, 2, COLORS.skyLight)
+      } else {
+        // Large cloud (three puffs)
+        // Top bumps
+        drawRect(baseX + 6, baseY, 8, 2, COLORS.white)
+        drawRect(baseX + 20, baseY - 2, 10, 2, COLORS.white)
+        drawRect(baseX + 36, baseY + 2, 8, 2, COLORS.white)
+        // Upper connections
+        drawRect(baseX + 4, baseY + 2, 12, 2, COLORS.white)
+        drawRect(baseX + 18, baseY, 14, 2, COLORS.white)
+        drawRect(baseX + 34, baseY + 4, 12, 2, COLORS.white)
+        // Main body
+        drawRect(baseX + 2, baseY + 4, 46, 6, COLORS.white)
+        drawRect(baseX + 4, baseY + 10, 42, 2, COLORS.white)
+        drawRect(baseX + 8, baseY + 12, 34, 2, COLORS.white)
+        drawRect(baseX + 14, baseY + 14, 22, 2, COLORS.white)
+        // Eyes on first puff
+        drawRect(baseX + 8, baseY + 6, 2, 2, COLORS.black)
+        drawRect(baseX + 14, baseY + 6, 2, 2, COLORS.black)
+        // Shading
+        drawRect(baseX + 4, baseY + 10, 8, 2, COLORS.skyLight)
+        drawRect(baseX + 38, baseY + 10, 8, 2, COLORS.skyLight)
       }
-      // Top bumps
-      drawRect(x + 4, y, 8, 6, COLORS.white)
-      if (size > 1) drawRect(x + 16, y - 2, 8, 6, COLORS.white)
-      if (size > 2) drawRect(x + 28, y + 2, 8, 6, COLORS.white)
     }
 
     function drawHill(x: number, y: number, size: number) {
@@ -1902,74 +1974,120 @@ const GAME_DATA = {
       }
 
       if (player.dying) {
-        // Death pose
-        // Head
-        drawRect(x + 2, y, 8, 8, COLORS.brownLight)
+        // Death pose - arms up, eyes X
         // Cap
-        drawRect(x + 1, y, 10, 3, COLORS.red)
-        drawRect(x + 2, y - 1, 8, 2, COLORS.red)
-        // Eyes (X_X)
-        drawRect(x + 3, y + 4, 2, 2, COLORS.black)
-        drawRect(x + 7, y + 4, 2, 2, COLORS.black)
+        drawRect(x + 3, y, 6, 2, COLORS.red)
+        drawRect(x + 2, y + 2, 8, 2, COLORS.red)
+        // Face
+        drawRect(x + 2, y + 4, 8, 4, COLORS.brownLight)
+        // X eyes
+        drawRect(x + 3, y + 5, 1, 1, COLORS.black)
+        drawRect(x + 4, y + 6, 1, 1, COLORS.black)
+        drawRect(x + 4, y + 5, 1, 1, COLORS.black)
+        drawRect(x + 3, y + 6, 1, 1, COLORS.black)
+        drawRect(x + 7, y + 5, 1, 1, COLORS.black)
+        drawRect(x + 8, y + 6, 1, 1, COLORS.black)
+        drawRect(x + 8, y + 5, 1, 1, COLORS.black)
+        drawRect(x + 7, y + 6, 1, 1, COLORS.black)
         // Body
         drawRect(x + 3, y + 8, 6, 4, COLORS.red)
         // Arms up
-        drawRect(x, y + 6, 3, 4, COLORS.brownLight)
-        drawRect(x + 9, y + 6, 3, 4, COLORS.brownLight)
+        drawRect(x, y + 4, 2, 6, COLORS.brownLight)
+        drawRect(x + 10, y + 4, 2, 6, COLORS.brownLight)
         ctx!.restore()
         return
       }
 
-      // Running/standing animation
       const frame = player.onGround ? player.animFrame : 1
 
-      // Head
-      drawRect(x + 2, y, 8, 8, COLORS.brownLight)
+      // ===== NES Mario-style Small Player =====
 
-      // Cap
-      drawRect(x + 1, y, 10, 3, COLORS.red)
-      drawRect(x + 2, y - 1, 8, 2, COLORS.red)
-      drawRect(x + 8, y + 1, 3, 2, COLORS.red) // Cap brim
+      // Cap top
+      drawRect(x + 3, y, 6, 1, COLORS.red)
+      drawRect(x + 2, y + 1, 8, 1, COLORS.red)
+      drawRect(x + 1, y + 2, 10, 2, COLORS.red)
 
-      // Hair
-      drawRect(x + 2, y + 3, 2, 2, COLORS.brown)
+      // Hair/sideburn
+      drawRect(x + 2, y + 4, 3, 1, COLORS.brown)
 
-      // Eyes
-      drawRect(x + 6, y + 3, 2, 3, COLORS.black)
+      // Face
+      drawRect(x + 2, y + 4, 8, 4, COLORS.brownLight)
+      drawRect(x + 1, y + 5, 1, 2, COLORS.brownLight) // Ear
+
+      // Eye
+      drawRect(x + 7, y + 5, 2, 2, COLORS.black)
+
+      // Sideburn detail
+      drawRect(x + 2, y + 5, 2, 2, COLORS.brown)
 
       // Nose
-      drawRect(x + 8, y + 4, 3, 2, COLORS.brownLight)
-
-      // Body
-      drawRect(x + 3, y + 8, 6, 4, COLORS.red)
-
-      // Overall
-      drawRect(x + 4, y + 9, 4, 3, COLORS.blue)
-
-      // Buttons
-      drawRect(x + 5, y + 10, 1, 1, COLORS.yellow)
+      drawRect(x + 9, y + 5, 2, 2, COLORS.brownLight)
+      drawRect(x + 10, y + 6, 1, 1, COLORS.brownLight)
 
       if (!player.onGround) {
-        // Jumping pose
-        drawRect(x, y + 7, 3, 3, COLORS.brownLight) // Arm up
-        drawRect(x + 9, y + 10, 3, 2, COLORS.brownLight) // Arm down
-        drawRect(x + 2, y + 12, 4, 4, COLORS.brown) // One leg
-        drawRect(x + 6, y + 14, 4, 2, COLORS.brown) // Other leg stretched
-      } else if (frame === 1) {
-        // Walk frame 1
-        drawRect(x + 9, y + 9, 3, 2, COLORS.brownLight) // Arm
-        drawRect(x + 2, y + 12, 4, 4, COLORS.brown)
-        drawRect(x + 8, y + 12, 4, 4, COLORS.brown)
-      } else if (frame === 2) {
-        // Walk frame 2
-        drawRect(x + 9, y + 10, 3, 2, COLORS.brownLight)
-        drawRect(x + 1, y + 12, 4, 4, COLORS.brown)
-        drawRect(x + 7, y + 13, 4, 3, COLORS.brown)
+        // ===== JUMPING POSE =====
+        // Shirt
+        drawRect(x + 3, y + 8, 6, 3, COLORS.red)
+        // Arm raised
+        drawRect(x + 9, y + 6, 2, 3, COLORS.red)
+        drawRect(x + 10, y + 4, 2, 3, COLORS.brownLight)
+        // Other arm
+        drawRect(x + 1, y + 9, 2, 2, COLORS.brownLight)
+        // Overalls
+        drawRect(x + 4, y + 10, 4, 2, COLORS.blue)
+        // Legs spread
+        drawRect(x + 2, y + 11, 3, 3, COLORS.blue)
+        drawRect(x + 7, y + 12, 3, 3, COLORS.blue)
+        // Shoes
+        drawRect(x + 1, y + 13, 3, 2, COLORS.brown)
+        drawRect(x + 8, y + 14, 3, 1, COLORS.brown)
+        // Strap buttons
+        drawRect(x + 4, y + 10, 1, 1, COLORS.yellow)
+        drawRect(x + 7, y + 10, 1, 1, COLORS.yellow)
+      } else if (frame === 1 || frame === 2) {
+        // ===== WALKING ANIMATION =====
+        // Shirt
+        drawRect(x + 3, y + 8, 6, 3, COLORS.red)
+        // Arm swinging
+        if (frame === 1) {
+          drawRect(x + 9, y + 9, 2, 3, COLORS.brownLight)
+        } else {
+          drawRect(x + 9, y + 8, 2, 3, COLORS.brownLight)
+        }
+        // Overalls
+        drawRect(x + 4, y + 10, 4, 2, COLORS.blue)
+        // Legs alternating
+        if (frame === 1) {
+          drawRect(x + 2, y + 11, 3, 4, COLORS.blue)
+          drawRect(x + 7, y + 12, 3, 3, COLORS.blue)
+          drawRect(x + 1, y + 14, 3, 2, COLORS.brown)
+          drawRect(x + 8, y + 14, 3, 1, COLORS.brown)
+        } else {
+          drawRect(x + 3, y + 12, 3, 3, COLORS.blue)
+          drawRect(x + 6, y + 11, 3, 4, COLORS.blue)
+          drawRect(x + 2, y + 14, 3, 1, COLORS.brown)
+          drawRect(x + 7, y + 14, 3, 2, COLORS.brown)
+        }
+        // Strap buttons
+        drawRect(x + 4, y + 10, 1, 1, COLORS.yellow)
+        drawRect(x + 7, y + 10, 1, 1, COLORS.yellow)
       } else {
-        // Standing
-        drawRect(x + 9, y + 9, 3, 3, COLORS.brownLight) // Arm
-        drawRect(x + 2, y + 12, 4, 4, COLORS.brown)
-        drawRect(x + 6, y + 12, 4, 4, COLORS.brown)
+        // ===== STANDING POSE =====
+        // Shirt
+        drawRect(x + 3, y + 8, 6, 3, COLORS.red)
+        // Arm at side
+        drawRect(x + 9, y + 9, 2, 3, COLORS.brownLight)
+        // Overalls
+        drawRect(x + 4, y + 10, 4, 2, COLORS.blue)
+        // Legs together
+        drawRect(x + 3, y + 11, 3, 4, COLORS.blue)
+        drawRect(x + 6, y + 11, 3, 4, COLORS.blue)
+        // Shoes
+        drawRect(x + 2, y + 14, 4, 2, COLORS.brown)
+        drawRect(x + 6, y + 14, 4, 2, COLORS.brown)
+        // Strap buttons
+        drawRect(x + 4, y + 10, 1, 1, COLORS.yellow)
+        drawRect(x + 7, y + 10, 1, 1, COLORS.yellow)
       }
 
       ctx!.restore()
@@ -1989,59 +2107,97 @@ const GAME_DATA = {
 
       const frame = player.onGround ? player.animFrame : 1
 
-      // Big version (taller)
+      // ===== NES Mario-style Big Player =====
+
       // Cap
-      drawRect(x + 2, y, 10, 4, COLORS.red)
-      drawRect(x + 3, y - 2, 8, 3, COLORS.red)
-      drawRect(x + 10, y + 2, 4, 3, COLORS.red) // Brim
+      drawRect(x + 4, y, 6, 1, COLORS.red)
+      drawRect(x + 3, y + 1, 8, 2, COLORS.red)
+      drawRect(x + 2, y + 3, 10, 2, COLORS.red)
+      drawRect(x + 10, y + 5, 4, 2, COLORS.red) // Brim
 
-      // Head
-      drawRect(x + 3, y + 4, 10, 10, COLORS.brownLight)
+      // Hair/sideburn
+      drawRect(x + 2, y + 5, 4, 2, COLORS.brown)
 
-      // Hair
-      drawRect(x + 3, y + 6, 3, 3, COLORS.brown)
+      // Face
+      drawRect(x + 2, y + 5, 10, 8, COLORS.brownLight)
+      drawRect(x + 1, y + 7, 1, 4, COLORS.brownLight) // Ear
 
       // Eye
-      drawRect(x + 8, y + 7, 3, 4, COLORS.black)
+      drawRect(x + 8, y + 7, 3, 3, COLORS.black)
+
+      // Sideburn detail
+      drawRect(x + 2, y + 7, 3, 3, COLORS.brown)
 
       // Nose
       drawRect(x + 11, y + 8, 3, 3, COLORS.brownLight)
 
-      // Mustache (for big version)
-      drawRect(x + 6, y + 11, 6, 2, COLORS.brown)
-
-      // Body
-      drawRect(x + 4, y + 14, 8, 6, COLORS.red)
-
-      // Overall straps
-      drawRect(x + 5, y + 14, 2, 6, COLORS.blue)
-      drawRect(x + 9, y + 14, 2, 6, COLORS.blue)
-
-      // Overall body
-      drawRect(x + 4, y + 18, 8, 4, COLORS.blue)
-
-      // Buttons
-      drawRect(x + 6, y + 19, 1, 1, COLORS.yellow)
-      drawRect(x + 9, y + 19, 1, 1, COLORS.yellow)
+      // Mustache
+      drawRect(x + 4, y + 11, 8, 2, COLORS.brown)
 
       if (!player.onGround) {
-        // Jumping
-        drawRect(x, y + 12, 4, 4, COLORS.brownLight) // Arm up
-        drawRect(x + 12, y + 16, 4, 3, COLORS.brownLight) // Arm
-        drawRect(x + 3, y + 22, 5, 6, COLORS.brown)
-        drawRect(x + 8, y + 24, 5, 4, COLORS.brown)
-      } else if (frame === 1) {
-        drawRect(x + 12, y + 15, 4, 4, COLORS.brownLight)
-        drawRect(x + 3, y + 22, 5, 6, COLORS.brown)
-        drawRect(x + 9, y + 22, 5, 6, COLORS.brown)
-      } else if (frame === 2) {
-        drawRect(x + 12, y + 16, 4, 4, COLORS.brownLight)
-        drawRect(x + 2, y + 22, 5, 6, COLORS.brown)
-        drawRect(x + 8, y + 23, 5, 5, COLORS.brown)
+        // ===== JUMPING POSE =====
+        // Shirt
+        drawRect(x + 3, y + 13, 8, 5, COLORS.red)
+        // Arm raised up
+        drawRect(x + 11, y + 11, 3, 4, COLORS.red)
+        drawRect(x + 12, y + 8, 2, 4, COLORS.brownLight)
+        // Other arm
+        drawRect(x + 1, y + 14, 2, 3, COLORS.brownLight)
+        // Overalls
+        drawRect(x + 4, y + 16, 6, 3, COLORS.blue)
+        // Legs spread
+        drawRect(x + 2, y + 18, 4, 6, COLORS.blue)
+        drawRect(x + 8, y + 20, 4, 5, COLORS.blue)
+        // Shoes
+        drawRect(x + 1, y + 23, 4, 3, COLORS.brown)
+        drawRect(x + 9, y + 24, 4, 2, COLORS.brown)
+        // Buttons
+        drawRect(x + 5, y + 17, 1, 1, COLORS.yellow)
+        drawRect(x + 8, y + 17, 1, 1, COLORS.yellow)
+      } else if (frame === 1 || frame === 2) {
+        // ===== WALKING =====
+        // Shirt
+        drawRect(x + 3, y + 13, 8, 5, COLORS.red)
+        // Arm
+        if (frame === 1) {
+          drawRect(x + 11, y + 14, 3, 4, COLORS.brownLight)
+        } else {
+          drawRect(x + 11, y + 13, 3, 4, COLORS.brownLight)
+        }
+        // Overalls
+        drawRect(x + 4, y + 16, 6, 3, COLORS.blue)
+        // Legs alternating
+        if (frame === 1) {
+          drawRect(x + 2, y + 18, 4, 7, COLORS.blue)
+          drawRect(x + 8, y + 19, 4, 6, COLORS.blue)
+          drawRect(x + 1, y + 24, 4, 3, COLORS.brown)
+          drawRect(x + 9, y + 24, 4, 2, COLORS.brown)
+        } else {
+          drawRect(x + 3, y + 19, 4, 6, COLORS.blue)
+          drawRect(x + 7, y + 18, 4, 7, COLORS.blue)
+          drawRect(x + 2, y + 24, 4, 2, COLORS.brown)
+          drawRect(x + 8, y + 24, 4, 3, COLORS.brown)
+        }
+        // Buttons
+        drawRect(x + 5, y + 17, 1, 1, COLORS.yellow)
+        drawRect(x + 8, y + 17, 1, 1, COLORS.yellow)
       } else {
-        drawRect(x + 12, y + 15, 4, 5, COLORS.brownLight)
-        drawRect(x + 3, y + 22, 5, 6, COLORS.brown)
-        drawRect(x + 8, y + 22, 5, 6, COLORS.brown)
+        // ===== STANDING =====
+        // Shirt
+        drawRect(x + 3, y + 13, 8, 5, COLORS.red)
+        // Arm
+        drawRect(x + 11, y + 14, 3, 5, COLORS.brownLight)
+        // Overalls
+        drawRect(x + 4, y + 16, 6, 3, COLORS.blue)
+        // Legs
+        drawRect(x + 3, y + 18, 4, 7, COLORS.blue)
+        drawRect(x + 7, y + 18, 4, 7, COLORS.blue)
+        // Shoes
+        drawRect(x + 2, y + 24, 4, 3, COLORS.brown)
+        drawRect(x + 8, y + 24, 4, 3, COLORS.brown)
+        // Buttons
+        drawRect(x + 5, y + 17, 1, 1, COLORS.yellow)
+        drawRect(x + 8, y + 17, 1, 1, COLORS.yellow)
       }
 
       ctx!.restore()
