@@ -59,16 +59,30 @@ const GAME_DATA = {
       <p>¡Has completado los 3 niveles!</p>
     </div>
 
-    <!-- Touch Controls -->
-    <div id="touch-controls">
-      <div class="dpad-container">
-        <div id="btn-left" class="dpad-btn"></div>
-        <div id="btn-right" class="dpad-btn"></div>
+    <!-- Game Boy Style Controls -->
+    <div id="gameboy-controls">
+      <!-- D-Pad -->
+      <div class="dpad-wrapper">
+        <div class="dpad">
+          <div id="btn-left" class="dpad-btn dpad-left">
+            <span class="dpad-arrow">◀</span>
+          </div>
+          <div class="dpad-center"></div>
+          <div id="btn-right" class="dpad-btn dpad-right">
+            <span class="dpad-arrow">▶</span>
+          </div>
+        </div>
+        <div class="control-label">← MOVER →</div>
       </div>
 
-      <div class="action-container">
-        <div id="btn-shoot" class="action-btn"></div>
-        <div class="label">FIRE</div>
+      <!-- Action Buttons -->
+      <div class="action-wrapper">
+        <div class="action-buttons">
+          <div id="btn-shoot" class="action-btn">
+            <span class="btn-letter">A</span>
+          </div>
+        </div>
+        <div class="control-label">DISPARAR</div>
       </div>
     </div>
   </div>
@@ -126,104 +140,147 @@ const GAME_DATA = {
     image-rendering: pixelated;
   }
 
-  /* Touch Controls */
-  #touch-controls {
-    height: 140px;
-    background-color: rgba(0, 0, 0, 0.8);
-    border-top: 4px solid #555;
+  /* Game Boy Style Controls */
+  #gameboy-controls {
+    height: 130px;
+    background: linear-gradient(to bottom, #2d2d3a 0%, #1f1f28 100%);
+    border-top: 3px solid #444;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 30px;
+    padding: 10px 20px;
     box-sizing: border-box;
     flex-shrink: 0;
   }
 
-  .dpad-container {
+  .dpad-wrapper,
+  .action-wrapper {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .control-label {
+    font-size: 8px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* D-Pad */
+  .dpad {
+    display: flex;
+    align-items: center;
+    gap: 0;
   }
 
   .dpad-btn {
     width: 70px;
     height: 70px;
-    background: #333;
-    border-radius: 12px;
-    box-shadow: 0 6px 0 #000;
-    position: relative;
+    background: linear-gradient(145deg, #3a3a4a, #28282f);
+    border: 2px solid #222;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition: all 0.05s ease;
+    position: relative;
+  }
+
+  .dpad-left {
+    border-radius: 12px 0 0 12px;
+    box-shadow:
+      -3px 3px 0 #111,
+      inset 2px 2px 4px rgba(255, 255, 255, 0.1);
+  }
+
+  .dpad-right {
+    border-radius: 0 12px 12px 0;
+    box-shadow:
+      3px 3px 0 #111,
+      inset 2px 2px 4px rgba(255, 255, 255, 0.1);
+  }
+
+  .dpad-center {
+    width: 16px;
+    height: 70px;
+    background: linear-gradient(145deg, #3a3a4a, #28282f);
+    border-top: 2px solid #222;
+    border-bottom: 2px solid #222;
+  }
+
+  .dpad-arrow {
+    font-size: 20px;
+    color: #888;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
   }
 
   .dpad-btn:active,
   .dpad-btn.pressed {
-    transform: translateY(6px);
-    box-shadow: 0 0 0 #000;
+    background: linear-gradient(145deg, #28282f, #1a1a22);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
   }
 
-  .dpad-btn::after {
-    content: '';
-    width: 0;
-    height: 0;
-    border: 14px solid transparent;
-    display: block;
+  .dpad-btn:active .dpad-arrow,
+  .dpad-btn.pressed .dpad-arrow {
+    color: #4cd137;
+    text-shadow: 0 0 8px rgba(76, 209, 55, 0.6);
   }
 
-  #btn-left::after {
-    border-right-color: #ddd;
-    transform: translateX(-25%);
-  }
-
-  #btn-right::after {
-    border-left-color: #ddd;
-    transform: translateX(25%);
-  }
-
-  .action-container {
+  /* Action Buttons */
+  .action-buttons {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    gap: 10px;
   }
 
   .action-btn {
-    width: 80px;
-    height: 80px;
-    background: #e74c3c;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+    border: 3px solid #a93226;
     border-radius: 50%;
-    box-shadow: 0 6px 0 #c0392b;
+    box-shadow:
+      0 4px 0 #7b241c,
+      0 6px 10px rgba(0, 0, 0, 0.4),
+      inset 0 -2px 10px rgba(0, 0, 0, 0.2),
+      inset 0 2px 10px rgba(255, 255, 255, 0.2);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: all 0.05s ease;
   }
 
-  .action-btn::before {
-    content: '';
-    width: 40%;
-    height: 40%;
-    background: transparent;
-    border-radius: 50%;
-    border: 4px solid rgba(0, 0, 0, 0.1);
+  .btn-letter {
+    font-size: 20px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow:
+      0 2px 2px rgba(0, 0, 0, 0.3),
+      0 0 10px rgba(255, 255, 255, 0.2);
+    pointer-events: none;
   }
 
   .action-btn:active,
   .action-btn.pressed {
-    transform: translateY(6px);
-    box-shadow: 0 0 0 #c0392b;
+    transform: translateY(4px);
+    box-shadow:
+      0 0 0 #7b241c,
+      0 2px 5px rgba(0, 0, 0, 0.4),
+      inset 0 2px 10px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(145deg, #c0392b, #a93226);
   }
 
-  .label {
+  .action-btn:active .btn-letter,
+  .action-btn.pressed .btn-letter {
     color: #fff;
-    font-size: 10px;
-    margin-top: 8px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    text-shadow:
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(255, 255, 255, 0.4);
   }
 
   /* Modals */
@@ -232,7 +289,7 @@ const GAME_DATA = {
     top: 0;
     left: 0;
     width: 100%;
-    height: calc(100% - 140px);
+    height: calc(100% - 130px);
     background: rgba(0, 0, 0, 0.9);
     display: flex;
     flex-direction: column;
@@ -241,6 +298,12 @@ const GAME_DATA = {
     z-index: 20;
     color: white;
     text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .modal {
+      height: calc(100% - 110px);
+    }
   }
 
   .modal.hidden {
@@ -322,13 +385,29 @@ const GAME_DATA = {
     }
   }
 
+  /* Responsive - Ajustes para desktop */
   @media (min-width: 768px) {
-    #touch-controls {
-      display: none;
+    #gameboy-controls {
+      height: 110px;
+      padding: 8px 30px;
     }
 
-    .modal {
-      height: 100%;
+    .dpad-btn {
+      width: 65px;
+      height: 65px;
+    }
+
+    .dpad-center {
+      height: 65px;
+    }
+
+    .action-btn {
+      width: 70px;
+      height: 70px;
+    }
+
+    .control-label {
+      font-size: 9px;
     }
   }
 </style>
@@ -365,7 +444,16 @@ const GAME_DATA = {
     let particles: Particle[] = []
     let bubbles: Bubble[] = []
     let lasers: Laser[] = []
+
+    // Fixed timestep para física consistente en todos los dispositivos
+    const FIXED_DT = 1 / 60 // 60 updates por segundo
+    const MAX_FRAME_TIME = 0.25 // Máximo tiempo de frame para evitar espiral de muerte
     let lastFrameTime = 0
+    let accumulator = 0
+
+    // Pre-calcular valores para shake
+    let shakeX = 0
+    let shakeY = 0
 
     const TARGET_LEVELS = 3
     const BASE_GRAVITY = 600 // pixels per second squared
@@ -507,81 +595,85 @@ const GAME_DATA = {
       speed = 200 // pixels per second
       dx = 0
       lives = 3
-      color = COLORS.glasses
       legFrame = 0
       canShoot = true
       laserActive = false
       invulnerable = false
       invulnerableTimer = 0
+      visible = true
 
-      update(deltaTime: number) {
-        this.x += this.dx * deltaTime
+      update(dt: number) {
+        this.x += this.dx * dt
         if (this.x < 0) this.x = 0
         if (this.x + this.width > GAME_WIDTH) this.x = GAME_WIDTH - this.width
 
         if (this.dx !== 0) {
-          this.legFrame += 12 * deltaTime
+          this.legFrame += 12 * dt
         } else {
           this.legFrame = 0
         }
 
         if (this.invulnerable) {
-          this.invulnerableTimer -= deltaTime
+          this.invulnerableTimer -= dt
+          // Toggle visibility cada ~4 frames (aprox 66ms)
+          this.visible = (frames & 3) < 2
           if (this.invulnerableTimer <= 0) {
             this.invulnerable = false
+            this.visible = true
           }
         }
       }
 
       draw() {
-        if (this.invulnerable && Math.floor(frames / 4) % 2 === 0) return
+        if (!this.visible) return
 
+        const x = this.x | 0 // Faster than Math.floor
+        const y = this.y | 0
         const legHeight = 14
-        const leftLegX = Math.floor(this.x + 8)
-        const rightLegX = Math.floor(this.x + this.width - 8)
+        const leftLegX = x + 8
+        const rightLegX = x + this.width - 8
         const walkOffset = Math.sin(this.legFrame) * 5
 
         ctx!.strokeStyle = '#000'
         ctx!.lineWidth = 4
 
         ctx!.beginPath()
-        ctx!.moveTo(leftLegX, this.y + 10)
-        ctx!.lineTo(leftLegX - walkOffset, this.y + 10 + legHeight)
+        ctx!.moveTo(leftLegX, y + 10)
+        ctx!.lineTo(leftLegX - walkOffset, y + 10 + legHeight)
         ctx!.stroke()
 
         ctx!.beginPath()
-        ctx!.moveTo(rightLegX, this.y + 10)
-        ctx!.lineTo(rightLegX + walkOffset, this.y + 10 + legHeight)
+        ctx!.moveTo(rightLegX, y + 10)
+        ctx!.lineTo(rightLegX + walkOffset, y + 10 + legHeight)
         ctx!.stroke()
 
-        ctx!.fillStyle = this.color
-        ctx!.fillRect(this.x, this.y, this.width, this.height)
+        ctx!.fillStyle = COLORS.glasses
+        ctx!.fillRect(x, y, this.width, this.height)
 
         ctx!.fillStyle = '#222'
-        ctx!.fillRect(this.x + 4, this.y + 2, 16, 14)
-        ctx!.fillRect(this.x + 24, this.y + 2, 16, 14)
+        ctx!.fillRect(x + 4, y + 2, 16, 14)
+        ctx!.fillRect(x + 24, y + 2, 16, 14)
 
         ctx!.fillStyle = '#eee'
-        ctx!.fillRect(this.x + 6, this.y + 4, 4, 4)
-        ctx!.fillRect(this.x + 12, this.y + 10, 2, 2)
-        ctx!.fillRect(this.x + 26, this.y + 4, 4, 4)
-        ctx!.fillRect(this.x + 32, this.y + 10, 2, 2)
+        ctx!.fillRect(x + 6, y + 4, 4, 4)
+        ctx!.fillRect(x + 12, y + 10, 2, 2)
+        ctx!.fillRect(x + 26, y + 4, 4, 4)
+        ctx!.fillRect(x + 32, y + 10, 2, 2)
 
-        const bridgeX = this.x + 20
+        // Indicador de disparo
+        const bridgeX = x + 20
         if (this.canShoot && !this.laserActive) {
-          ctx!.fillStyle = COLORS.ready
-          if (Math.floor(frames / 15) % 2 === 0) ctx!.fillStyle = '#ccffcc'
+          ctx!.fillStyle = (frames & 14) < 7 ? COLORS.ready : '#ccffcc'
         } else {
           ctx!.fillStyle = COLORS.charging
         }
-        ctx!.fillRect(bridgeX, this.y + 6, 4, 6)
+        ctx!.fillRect(bridgeX, y + 6, 4, 6)
       }
 
       shoot() {
         if (this.canShoot && !this.laserActive) {
           sfx.shoot()
-          const centerX = this.x + this.width / 2
-          lasers.push(new Laser(centerX, this.y))
+          lasers.push(new Laser(this.x + this.width / 2, this.y))
           this.canShoot = false
           this.laserActive = true
         }
@@ -591,29 +683,27 @@ const GAME_DATA = {
     class Laser {
       x: number
       y: number
-      width = 6
       height = 0
-      maxHeight = GAME_HEIGHT
       growSpeed = 1800 // pixels per second
       lifeTime = 1 // seconds
       active = true
       fullyExtended = false
 
       constructor(x: number, startY: number) {
-        this.x = x
-        this.y = startY
+        this.x = x | 0
+        this.y = startY | 0
       }
 
-      update(deltaTime: number) {
+      update(dt: number) {
         if (!this.fullyExtended) {
-          this.height += this.growSpeed * deltaTime
+          this.height += this.growSpeed * dt
           if (this.y - this.height <= 0) {
             this.height = this.y
             this.fullyExtended = true
           }
         }
 
-        this.lifeTime -= deltaTime
+        this.lifeTime -= dt
         if (this.lifeTime <= 0) {
           this.active = false
           player.laserActive = false
@@ -622,17 +712,17 @@ const GAME_DATA = {
       }
 
       draw() {
-        if (Math.floor(frames / 2) % 2 === 0) {
-          ctx!.fillStyle = COLORS.laser
-        } else {
-          ctx!.fillStyle = '#ff99aa'
-        }
+        const drawY = (this.y - this.height) | 0
+        const h = this.height | 0
 
-        const drawY = this.y - this.height
-        ctx!.fillRect(this.x - 2, drawY, 4, this.height)
+        // Alternar color para efecto de parpadeo
+        ctx!.fillStyle = frames & 1 ? COLORS.laser : '#ff99aa'
+        ctx!.fillRect(this.x - 2, drawY, 4, h)
+
+        // Glow lateral
         ctx!.fillStyle = 'rgba(255, 0, 100, 0.5)'
-        ctx!.fillRect(this.x - 4, drawY, 2, this.height)
-        ctx!.fillRect(this.x + 2, drawY, 2, this.height)
+        ctx!.fillRect(this.x - 4, drawY, 2, h)
+        ctx!.fillRect(this.x + 2, drawY, 2, h)
       }
     }
 
@@ -644,6 +734,7 @@ const GAME_DATA = {
       dy: number
       color: string
       markedForDeletion = false
+      bounceForce: number
 
       constructor(x: number, y: number, radius: number, dx: number, dy: number, color: string) {
         this.x = x
@@ -652,47 +743,52 @@ const GAME_DATA = {
         this.dx = dx * 50 // pixels per second
         this.dy = dy * 60 // pixels per second
         this.color = color
+        // Pre-calcular fuerza de rebote basada en tamaño
+        this.bounceForce = radius < 15 ? -360 : radius > 30 ? -570 : -450
       }
 
-      update(deltaTime: number) {
-        this.dy += BASE_GRAVITY * deltaTime
-        this.x += this.dx * deltaTime
-        this.y += this.dy * deltaTime
+      update(dt: number) {
+        this.dy += BASE_GRAVITY * dt
+        this.x += this.dx * dt
+        this.y += this.dy * dt
 
+        // Colisión con paredes
         if (this.x - this.radius < 0) {
           this.x = this.radius
-          this.dx *= -1
-        }
-        if (this.x + this.radius > GAME_WIDTH) {
+          this.dx = -this.dx
+        } else if (this.x + this.radius > GAME_WIDTH) {
           this.x = GAME_WIDTH - this.radius
-          this.dx *= -1
+          this.dx = -this.dx
         }
 
+        // Colisión con suelo
         if (this.y + this.radius > GAME_HEIGHT) {
           this.y = GAME_HEIGHT - this.radius
-          let bounceForce = -450 // pixels per second
-          if (this.radius < 15) bounceForce = -360
-          if (this.radius > 30) bounceForce = -570
-          this.dy = bounceForce
+          this.dy = this.bounceForce
         }
       }
 
       draw() {
-        const r = Math.floor(this.radius)
-        const x = Math.floor(this.x)
-        const y = Math.floor(this.y)
-        const offset = Math.floor(r * 0.4)
+        const r = this.radius | 0
+        const x = this.x | 0
+        const y = this.y | 0
+        const offset = (r * 0.4) | 0
+        const doubleR = r << 1
 
         ctx!.fillStyle = this.color
-        ctx!.fillRect(x - r + offset, y - r, (r - offset) * 2, r * 2)
-        ctx!.fillRect(x - r, y - r + offset, r * 2, (r - offset) * 2)
-        ctx!.fillRect(x - r + 2, y - r + 2, r * 2 - 4, r * 2 - 4)
+        ctx!.fillRect(x - r + offset, y - r, (r - offset) << 1, doubleR)
+        ctx!.fillRect(x - r, y - r + offset, doubleR, (r - offset) << 1)
+        ctx!.fillRect(x - r + 2, y - r + 2, doubleR - 4, doubleR - 4)
+
+        // Brillo
         ctx!.fillStyle = '#fff'
-        const shineSize = Math.max(2, r / 3)
-        ctx!.fillRect(x - r / 2, y - r / 2, shineSize, shineSize)
+        const shineSize = r > 6 ? (r / 3) | 0 : 2
+        ctx!.fillRect(x - (r >> 1), y - (r >> 1), shineSize, shineSize)
+
+        // Borde
         ctx!.strokeStyle = 'rgba(0,0,0,0.3)'
         ctx!.lineWidth = 2
-        ctx!.strokeRect(x - r + offset, y - r, (r - offset) * 2, r * 2)
+        ctx!.strokeRect(x - r + offset, y - r, (r - offset) << 1, doubleR)
       }
     }
 
@@ -709,23 +805,24 @@ const GAME_DATA = {
         this.x = x
         this.y = y
         this.size = Math.random() * 6 + 2
-        this.dx = (Math.random() - 0.5) * 480 // pixels per second
+        this.dx = (Math.random() - 0.5) * 480
         this.dy = (Math.random() - 0.5) * 480
         this.color = color
-        this.life = 0.33 // seconds
+        this.life = 0.33
       }
 
-      update(deltaTime: number) {
-        this.x += this.dx * deltaTime
-        this.y += this.dy * deltaTime
-        this.life -= deltaTime
-        this.size -= 3 * deltaTime
-        if (this.size < 0) this.size = 0
+      update(dt: number) {
+        this.x += this.dx * dt
+        this.y += this.dy * dt
+        this.life -= dt
+        this.size -= 3 * dt
       }
 
       draw() {
-        ctx!.fillStyle = this.color
-        ctx!.fillRect(this.x, this.y, this.size, this.size)
+        if (this.size > 0) {
+          ctx!.fillStyle = this.color
+          ctx!.fillRect(this.x | 0, this.y | 0, this.size | 0, this.size | 0)
+        }
       }
     }
 
@@ -761,29 +858,48 @@ const GAME_DATA = {
       bubbles.push(new Bubble(x, y - 5, newRadius, 2.5, -4, color))
     }
 
-    function update(deltaTime: number) {
+    function fixedUpdate() {
       if (gameState !== 'PLAYING') return
 
-      if (shakeDuration > 0) shakeDuration -= deltaTime
-      if (hitFlash > 0) hitFlash -= deltaTime
+      // Decrementar timers con timestep fijo
+      if (shakeDuration > 0) {
+        shakeDuration -= FIXED_DT
+        shakeX = (Math.random() - 0.5) * 12
+        shakeY = (Math.random() - 0.5) * 12
+      } else {
+        shakeX = 0
+        shakeY = 0
+      }
+      if (hitFlash > 0) hitFlash -= FIXED_DT
 
-      player.update(deltaTime)
+      player.update(FIXED_DT)
 
+      // Update lasers
       for (let i = lasers.length - 1; i >= 0; i--) {
-        lasers[i].update(deltaTime)
+        lasers[i].update(FIXED_DT)
         if (!lasers[i].active) lasers.splice(i, 1)
       }
 
+      // Update particles
       for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update(deltaTime)
+        particles[i].update(FIXED_DT)
         if (particles[i].life <= 0) particles.splice(i, 1)
       }
 
+      // Update bubbles y colisiones
+      let hasBubblesToRemove = false
+      const playerCenterX = player.x + player.width / 2
+      const playerCenterY = player.y + player.height / 2
+      const playerHalfW = player.width / 2
+      const playerHalfH = player.height / 2
+
       for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i]
-        b.update(deltaTime)
+        b.update(FIXED_DT)
 
-        for (const laser of lasers) {
+        // Colisión con lasers
+        for (let j = 0; j < lasers.length; j++) {
+          const laser = lasers[j]
           if (laser.active) {
             const laserLeft = laser.x - 4
             const laserRight = laser.x + 4
@@ -796,35 +912,43 @@ const GAME_DATA = {
               b.y - b.radius < laser.y
             ) {
               b.markedForDeletion = true
+              hasBubblesToRemove = true
               sfx.pop()
 
-              for (let k = 0; k < 6; k++) {
+              // Crear partículas (limitadas)
+              const particleCount = Math.min(6, 20 - particles.length)
+              for (let k = 0; k < particleCount; k++) {
                 particles.push(new Particle(b.x, b.y, b.color))
               }
 
               spawnBubbles(b.x, b.y, b.radius, b.color)
+              break
             }
           }
         }
 
+        // Colisión con jugador
         if (!player.invulnerable && !b.markedForDeletion) {
-          const distX = Math.abs(b.x - (player.x + player.width / 2))
-          const distY = Math.abs(b.y - (player.y + player.height / 2))
+          const distX = Math.abs(b.x - playerCenterX)
+          const distY = Math.abs(b.y - playerCenterY)
 
-          if (distX < player.width / 2 + b.radius - 6 && distY < player.height / 2 + b.radius - 6) {
+          if (distX < playerHalfW + b.radius - 6 && distY < playerHalfH + b.radius - 6) {
             handleDeath(b)
+            hasBubblesToRemove = true
           }
         }
       }
 
-      bubbles = bubbles.filter((b) => !b.markedForDeletion)
+      // Solo filtrar si hay burbujas para eliminar
+      if (hasBubblesToRemove) {
+        bubbles = bubbles.filter((b) => !b.markedForDeletion)
+      }
 
       // Check level completion
       if (bubbles.length === 0 && !levelTransitioning) {
         levelTransitioning = true
 
         if (currentLevel >= TARGET_LEVELS) {
-          // WIN!
           gameState = 'WIN'
           sfx.win()
           winScreen.classList.remove('hidden')
@@ -833,7 +957,6 @@ const GAME_DATA = {
             window.dispatchEvent(new CustomEvent('game-completed'))
           }, 1500)
         } else {
-          // Next level
           currentLevel++
           setTimeout(() => {
             initLevel(currentLevel)
@@ -884,18 +1007,17 @@ const GAME_DATA = {
     }
 
     function draw() {
+      // Fondo
       ctx!.fillStyle = '#1a1a2e'
       ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
 
-      ctx!.save()
-
+      // Aplicar shake si está activo
       if (shakeDuration > 0) {
-        const dx = (Math.random() - 0.5) * 12
-        const dy = (Math.random() - 0.5) * 12
-        ctx!.translate(dx, dy)
+        ctx!.save()
+        ctx!.translate(shakeX, shakeY)
       }
 
-      // Buildings
+      // Buildings (fondo estático)
       ctx!.fillStyle = '#111'
       ctx!.fillRect(20, GAME_HEIGHT - 120, 40, 120)
       ctx!.fillRect(65, GAME_HEIGHT - 180, 50, 180)
@@ -917,13 +1039,24 @@ const GAME_DATA = {
       ctx!.fillStyle = '#333'
       for (let i = 0; i < GAME_WIDTH; i += 20) ctx!.fillRect(i, GAME_HEIGHT - 10, 2, 10)
 
+      // Dibujar entidades
       player.draw()
-      lasers.forEach((l) => l.draw())
-      bubbles.forEach((b) => b.draw())
-      particles.forEach((p) => p.draw())
 
-      ctx!.restore()
+      for (let i = 0; i < lasers.length; i++) {
+        lasers[i].draw()
+      }
+      for (let i = 0; i < bubbles.length; i++) {
+        bubbles[i].draw()
+      }
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].draw()
+      }
 
+      if (shakeDuration > 0) {
+        ctx!.restore()
+      }
+
+      // Hit flash overlay
       if (hitFlash > 0) {
         ctx!.fillStyle = `rgba(255, 0, 0, ${hitFlash / 0.33})`
         ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
@@ -931,33 +1064,91 @@ const GAME_DATA = {
     }
 
     function loop(timestamp: number) {
-      const deltaTime = Math.min((timestamp - lastFrameTime) / 1000, 0.1)
+      // Calcular tiempo transcurrido
+      if (lastFrameTime === 0) {
+        lastFrameTime = timestamp
+      }
+
+      let frameTime = (timestamp - lastFrameTime) / 1000
       lastFrameTime = timestamp
 
-      frames++
+      // Limitar frameTime para evitar espiral de muerte
+      if (frameTime > MAX_FRAME_TIME) {
+        frameTime = MAX_FRAME_TIME
+      }
+
+      // Procesar input una vez por frame
       handleInput()
-      update(deltaTime)
+
+      // Acumular tiempo y ejecutar updates con timestep fijo
+      accumulator += frameTime
+
+      while (accumulator >= FIXED_DT) {
+        fixedUpdate()
+        accumulator -= FIXED_DT
+        frames++
+      }
+
+      // Render una vez por frame (a la velocidad del monitor)
       draw()
+
       requestAnimationFrame(loop)
     }
 
     // Input
     const keys: Record<string, boolean> = {}
-    window.addEventListener('keydown', (e) => {
-      keys[e.code] = true
-      if (e.code === 'Space') {
-        if (gameState === 'PLAYING') player.shoot()
-        initAudio()
-      }
-    })
-    window.addEventListener('keyup', (e) => (keys[e.code] = false))
-
     const btnLeft = document.getElementById('btn-left')
     const btnRight = document.getElementById('btn-right')
     const btnShoot = document.getElementById('btn-shoot')
 
     let touchLeft = false
     let touchRight = false
+
+    // Update visual button state based on keyboard
+    function updateButtonVisuals() {
+      const leftPressed = keys['ArrowLeft'] || keys['KeyA']
+      const rightPressed = keys['ArrowRight'] || keys['KeyD']
+      const shootPressed = keys['Space']
+
+      if (btnLeft) {
+        if (leftPressed) {
+          btnLeft.classList.add('pressed')
+        } else if (!touchLeft) {
+          btnLeft.classList.remove('pressed')
+        }
+      }
+
+      if (btnRight) {
+        if (rightPressed) {
+          btnRight.classList.add('pressed')
+        } else if (!touchRight) {
+          btnRight.classList.remove('pressed')
+        }
+      }
+
+      if (btnShoot) {
+        if (shootPressed) {
+          btnShoot.classList.add('pressed')
+        } else {
+          btnShoot.classList.remove('pressed')
+        }
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true
+      updateButtonVisuals()
+      if (e.code === 'Space') {
+        e.preventDefault()
+        if (gameState === 'PLAYING') player.shoot()
+        initAudio()
+      }
+    })
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.code] = false
+      updateButtonVisuals()
+    })
 
     function addButtonLogic(
       elem: HTMLElement | null,
@@ -1002,10 +1193,15 @@ const GAME_DATA = {
       () => {}
     )
 
-    // Click/tap on canvas to shoot
-    canvas.addEventListener('click', () => {
+    // Allow clicking on canvas area to shoot as well
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault()
       initAudio()
-      if (gameState === 'PLAYING') player.shoot()
+      if (gameState === 'PLAYING') {
+        player.shoot()
+        btnShoot?.classList.add('pressed')
+        setTimeout(() => btnShoot?.classList.remove('pressed'), 100)
+      }
     })
 
     function handleInput() {
@@ -1023,9 +1219,11 @@ const GAME_DATA = {
       gameState = 'PLAYING'
       currentLevel = 1
       player = new Player()
+      particles = []
       livesDisplay.innerHTML = '❤❤❤'
       levelTransitioning = false
-      lastFrameTime = performance.now()
+      lastFrameTime = 0
+      accumulator = 0
       initLevel(currentLevel)
     }
 
@@ -1034,10 +1232,12 @@ const GAME_DATA = {
       sfx.start()
       currentLevel = 1
       player = new Player()
+      particles = []
       livesDisplay.innerHTML = '❤❤❤'
       levelTransitioning = false
       gameState = 'PLAYING'
-      lastFrameTime = performance.now()
+      lastFrameTime = 0
+      accumulator = 0
       initLevel(currentLevel)
     }
 
