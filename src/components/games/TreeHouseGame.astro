@@ -1,0 +1,2049 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="treehouse-game-container" slot="game">
+    <!-- UI Layer -->
+    <div id="ui-layer">
+      <div class="ui-box">
+        <div class="ui-row">
+          <span class="ui-label">COINS</span>
+          <span id="coins-count" class="ui-value">000</span>
+        </div>
+        <div class="ui-row">
+          <span class="ui-label">WORLD</span>
+          <span class="ui-value">1-1</span>
+        </div>
+      </div>
+      <div class="ui-box">
+        <div class="ui-row lives-row">
+          <span id="lives-icons">♥♥♥</span>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="treeCanvas"></canvas>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal active">
+      <div class="title-box">
+        <h1>TREE<br/>HOUSE<br/>ADVENTURE</h1>
+      </div>
+
+      <div class="instructions">
+        <p class="subtitle">🌳 ¡LLEGA A LA CASA DEL ÁRBOL! 🏠</p>
+        <div class="instruction-list">
+          <p>► Salta sobre los enemigos</p>
+          <p>► Recoge setas para crecer</p>
+          <p>► Golpea bloques [?] desde abajo</p>
+        </div>
+      </div>
+
+      <button id="start-btn" class="menu-btn">► START</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="modal hidden">
+      <h1 class="danger">GAME OVER</h1>
+      <p class="score-text">Has perdido todas las vidas</p>
+      <button id="restart-btn" class="menu-btn">► RETRY</button>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="modal hidden">
+      <h1 class="win">★ VICTORY! ★</h1>
+      <p class="score-text">¡Has llegado a la casa del árbol!</p>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls">
+      <div class="dpad-container">
+        <div class="dpad">
+          <div class="dpad-center"></div>
+          <div id="btn-left" class="dpad-btn dpad-left">◄</div>
+          <div id="btn-right" class="dpad-btn dpad-right">►</div>
+        </div>
+      </div>
+      <div class="action-btns">
+        <div class="action-row">
+          <div id="btn-run" class="action-btn btn-b">B</div>
+          <div id="btn-jump" class="action-btn btn-a">A</div>
+        </div>
+        <div class="action-labels">
+          <span>RUN</span>
+          <span>JUMP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #treehouse-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #5c94fc;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  /* UI Layer - NES style */
+  #ui-layer {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .ui-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ui-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .ui-label {
+    font-size: 8px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .ui-value {
+    font-size: 8px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  #coins-count {
+    color: #fcbcb0;
+  }
+
+  .lives-row {
+    font-size: 10px;
+    color: #fc5454;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  /* Canvas */
+  #treeCanvas {
+    display: block;
+    width: 100%;
+    flex: 1;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* Mobile Controls - NES Controller Style */
+  #mobile-controls {
+    height: 150px;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-top: 4px solid #444;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .dpad-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .dpad {
+    position: relative;
+    width: 100px;
+    height: 100px;
+  }
+
+  .dpad-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: #333;
+    border-radius: 4px;
+  }
+
+  .dpad-btn {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #2a2a2a 100%);
+    border: 2px solid #222;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    color: #888;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 3px 0 #111;
+  }
+
+  .dpad-left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .dpad-right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .dpad-btn:active,
+  .dpad-btn.pressed {
+    background: linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%);
+    box-shadow: 0 1px 0 #111;
+    transform: translateY(calc(-50% + 2px));
+  }
+
+  .dpad-btn:active,
+  .dpad-btn.pressed {
+    color: #4cd137;
+  }
+
+  .action-btns {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 16px;
+  }
+
+  .action-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    border: 3px solid;
+    transition: transform 0.05s;
+  }
+
+  .btn-a {
+    background: linear-gradient(180deg, #c92a2a 0%, #8b1a1a 100%);
+    border-color: #5c0f0f;
+    color: #ffcccc;
+    box-shadow: 0 4px 0 #4a0a0a;
+  }
+
+  .btn-b {
+    background: linear-gradient(180deg, #c92a2a 0%, #8b1a1a 100%);
+    border-color: #5c0f0f;
+    color: #ffcccc;
+    box-shadow: 0 4px 0 #4a0a0a;
+  }
+
+  .action-btn:active,
+  .action-btn.pressed {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #4a0a0a;
+  }
+
+  .action-labels {
+    display: flex;
+    gap: 30px;
+    font-size: 7px;
+    color: #666;
+  }
+
+  /* Modals */
+  .modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .modal.hidden {
+    display: none !important;
+  }
+  .modal.active {
+    display: flex;
+  }
+
+  .title-box {
+    border: 4px solid #fff;
+    padding: 20px 30px;
+    background: #c84c0c;
+    margin-bottom: 30px;
+  }
+
+  .modal h1 {
+    color: #fcbcb0;
+    text-shadow: 4px 4px 0 #000;
+    font-size: 24px;
+    line-height: 1.4;
+  }
+
+  .modal h1.danger {
+    color: #fc5454;
+  }
+
+  .modal h1.win {
+    color: #fcd848;
+    animation: flash 0.5s infinite;
+  }
+
+  @keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .score-text {
+    font-size: 10px;
+    margin: 15px 0;
+    color: #fff;
+  }
+
+  .instructions {
+    margin: 20px 10px;
+    color: #fff;
+  }
+
+  .subtitle {
+    color: #fcd848;
+    font-size: 10px;
+    margin-bottom: 15px;
+  }
+
+  .instruction-list {
+    text-align: left;
+    font-size: 8px;
+    line-height: 2.2;
+    color: #fcbcb0;
+  }
+
+  .menu-btn {
+    margin-top: 25px;
+    padding: 12px 24px;
+    font-family: 'Press Start 2P', monospace;
+    background: #000;
+    color: #fff;
+    border: 4px solid #fff;
+    cursor: pointer;
+    font-size: 12px;
+    animation: blink 1s step-end infinite;
+  }
+
+  .menu-btn:hover {
+    background: #fff;
+    color: #000;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0.5; }
+  }
+
+  @media (min-width: 768px) {
+    #mobile-controls {
+      height: 130px;
+    }
+  }
+</style>
+
+<script>
+  ;(function () {
+    const canvas = document.getElementById('treeCanvas') as HTMLCanvasElement | null
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Disable anti-aliasing for crisp pixels
+    ctx.imageSmoothingEnabled = false
+
+    // Game dimensions (9:16 aspect ratio)
+    const GAME_WIDTH = 256
+    const GAME_HEIGHT = 456
+
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+
+    // NES Color Palette
+    const COLORS = {
+      sky: '#5c94fc',
+      skyLight: '#a4e4fc',
+      ground: '#c84c0c',
+      groundDark: '#9c3c00',
+      groundLight: '#e4a084',
+      grass: '#80d010',
+      grassDark: '#00a800',
+      brick: '#dc7c00',
+      brickDark: '#9c5400',
+      brickLight: '#fcbc00',
+      question: '#fcbc00',
+      questionDark: '#c87c00',
+      questionLight: '#fcfc00',
+      white: '#fcfcfc',
+      black: '#000000',
+      red: '#fc5454',
+      redDark: '#c80000',
+      blue: '#0078fc',
+      blueDark: '#0000bc',
+      green: '#00a800',
+      greenLight: '#b8f818',
+      brown: '#8c4800',
+      brownLight: '#d89068',
+      pink: '#fcbcb0',
+      purple: '#9878f8',
+      orange: '#fc9838',
+      yellow: '#fcd848',
+      coin: '#fc9838',
+      coinLight: '#fcfc00',
+    }
+
+    // DOM Elements
+    const coinsDisplay = document.getElementById('coins-count') as HTMLElement
+    const livesDisplay = document.getElementById('lives-icons') as HTMLElement
+    const startScreen = document.getElementById('start-screen') as HTMLElement
+    const gameOverScreen = document.getElementById('game-over-screen') as HTMLElement
+    const winScreen = document.getElementById('win-screen') as HTMLElement
+    const startBtn = document.getElementById('start-btn') as HTMLElement
+    const restartBtn = document.getElementById('restart-btn') as HTMLElement
+
+    // Game constants
+    const GRAVITY = 1200
+    const JUMP_FORCE = -380
+    const JUMP_HOLD_FORCE = -25
+    const PLAYER_SPEED = 100
+    const RUN_MULTIPLIER = 1.6
+    const TILE_SIZE = 16
+    const LEVEL_LENGTH = 120
+
+    // Game state
+    type GameState = 'MENU' | 'PLAYING' | 'GAMEOVER' | 'WIN'
+    let gameState: GameState = 'MENU'
+    let lives = 3
+    let coins = 0
+    let cameraX = 0
+    let globalTime = 0
+
+    // Fixed timestep
+    const FIXED_DT = 1 / 60
+    const MAX_FRAME_TIME = 0.25
+    let lastFrameTime = 0
+    let accumulator = 0
+
+    // Audio
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
+
+    // Background music
+    const bgMusic = new Audio('https://videos.bigibai.com/music/platforms.mp3')
+    bgMusic.loop = true
+    bgMusic.volume = 0.3
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext()
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    function startMusic() {
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    }
+
+    function stopMusic() {
+      bgMusic.pause()
+      bgMusic.currentTime = 0
+    }
+
+    const sfx = {
+      jump: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.08)
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.15)
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.15)
+      },
+      stomp: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(500, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      },
+      coin: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(988, audioCtx.currentTime)
+        osc.frequency.setValueAtTime(1319, audioCtx.currentTime + 0.08)
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.2)
+      },
+      powerup: () => {
+        if (!audioCtx) return
+        const notes = [262, 330, 392, 523, 659, 784]
+        notes.forEach((freq, i) => {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12)
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + 0.12)
+          }, i * 60)
+        })
+      },
+      bump: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime)
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.08)
+      },
+      hurt: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.4)
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.4)
+      },
+      death: () => {
+        if (!audioCtx) return
+        const notes = [494, 466, 440, 415, 392, 370, 349, 330]
+        notes.forEach((freq, i) => {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15)
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + 0.15)
+          }, i * 80)
+        })
+      },
+      win: () => {
+        if (!audioCtx) return
+        const notes = [392, 392, 392, 311, 349, 392, 349, 392, 523]
+        const durations = [0.15, 0.15, 0.15, 0.4, 0.15, 0.15, 0.15, 0.15, 0.6]
+        let time = 0
+        notes.forEach((freq, i) => {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + durations[i])
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + durations[i])
+          }, time * 1000)
+          time += durations[i]
+        })
+      },
+      flagpole: () => {
+        if (!audioCtx) return
+        for (let i = 0; i < 12; i++) {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = 200 + i * 80
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08)
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + 0.08)
+          }, i * 50)
+        }
+      }
+    }
+
+    // Level data
+    interface Platform {
+      x: number
+      y: number
+      width: number
+      height: number
+      type: 'ground' | 'brick' | 'question' | 'empty'
+      hit: boolean
+      hasMushroom: boolean
+      bounceTime: number
+    }
+
+    interface Enemy {
+      x: number
+      y: number
+      width: number
+      height: number
+      vx: number
+      vy: number
+      alive: boolean
+      squished: boolean
+      squishedTime: number
+      type: 'goomba' | 'koopa'
+      animFrame: number
+    }
+
+    interface Collectible {
+      x: number
+      y: number
+      width: number
+      height: number
+      type: 'coin' | 'mushroom'
+      collected: boolean
+      vy: number
+      vx: number
+      active: boolean
+      animFrame: number
+      rising: boolean
+      riseY: number
+    }
+
+    interface Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      life: number
+      type: 'brick' | 'score'
+      score?: number
+    }
+
+    interface Bush {
+      x: number
+      size: number
+    }
+
+    interface Cloud {
+      x: number
+      y: number
+      size: number
+    }
+
+    interface Hill {
+      x: number
+      size: number
+    }
+
+    let platforms: Platform[] = []
+    let enemies: Enemy[] = []
+    let collectibles: Collectible[] = []
+    let particles: Particle[] = []
+    let bushes: Bush[] = []
+    let clouds: Cloud[] = []
+    let hills: Hill[] = []
+
+    // Player
+    let player = {
+      x: 40,
+      y: 300,
+      width: 12,
+      height: 16,
+      vx: 0,
+      vy: 0,
+      onGround: false,
+      jumping: false,
+      jumpHeld: false,
+      jumpTime: 0,
+      facing: 1,
+      big: false,
+      invulnerable: 0,
+      animFrame: 0,
+      animTimer: 0,
+      dying: false,
+      deathTimer: 0,
+      growing: false,
+      growTimer: 0
+    }
+
+    // Goal
+    let goalX = 0
+    let flagY = 0
+    let flagDescending = false
+    let reachedGoal = false
+
+    // Pixel drawing helpers
+    function drawPixel(x: number, y: number, color: string) {
+      ctx!.fillStyle = color
+      ctx!.fillRect(Math.floor(x), Math.floor(y), 1, 1)
+    }
+
+    function drawRect(x: number, y: number, w: number, h: number, color: string) {
+      ctx!.fillStyle = color
+      ctx!.fillRect(Math.floor(x), Math.floor(y), w, h)
+    }
+
+    function generateLevel() {
+      platforms = []
+      enemies = []
+      collectibles = []
+      particles = []
+      bushes = []
+      clouds = []
+      hills = []
+
+      // Generate background elements
+      for (let i = 0; i < 30; i++) {
+        clouds.push({
+          x: i * 180 + Math.random() * 80,
+          y: 30 + Math.random() * 60,
+          size: 1 + Math.floor(Math.random() * 3)
+        })
+      }
+
+      for (let i = 0; i < 40; i++) {
+        hills.push({
+          x: i * 120 + Math.random() * 60,
+          size: 1 + Math.floor(Math.random() * 2)
+        })
+      }
+
+      for (let i = 0; i < 50; i++) {
+        bushes.push({
+          x: i * 90 + Math.random() * 40,
+          size: 1 + Math.floor(Math.random() * 3)
+        })
+      }
+
+      // Ground with gaps
+      let x = 0
+      while (x < LEVEL_LENGTH * TILE_SIZE) {
+        // Random gap
+        if (x > 150 && Math.random() < 0.06 && x < (LEVEL_LENGTH - 12) * TILE_SIZE) {
+          const gapWidth = TILE_SIZE * (2 + Math.floor(Math.random() * 2))
+          x += gapWidth
+          continue
+        }
+
+        platforms.push({
+          x: x,
+          y: GAME_HEIGHT - TILE_SIZE * 2,
+          width: TILE_SIZE,
+          height: TILE_SIZE * 2,
+          type: 'ground',
+          hit: false,
+          hasMushroom: false,
+          bounceTime: 0
+        })
+        x += TILE_SIZE
+      }
+
+      // Floating platforms - question blocks and bricks
+      const platformGroups = [
+        { x: 200, y: GAME_HEIGHT - 80, blocks: ['question', 'brick', 'question'] },
+        { x: 400, y: GAME_HEIGHT - 96, blocks: ['brick', 'brick', 'brick', 'brick'] },
+        { x: 550, y: GAME_HEIGHT - 64, blocks: ['question'] },
+        { x: 700, y: GAME_HEIGHT - 112, blocks: ['brick', 'question', 'brick'] },
+        { x: 900, y: GAME_HEIGHT - 80, blocks: ['question', 'brick', 'brick', 'question'] },
+        { x: 1100, y: GAME_HEIGHT - 96, blocks: ['brick', 'brick'] },
+        { x: 1250, y: GAME_HEIGHT - 64, blocks: ['question'] },
+        { x: 1400, y: GAME_HEIGHT - 112, blocks: ['brick', 'question', 'brick', 'question', 'brick'] },
+        { x: 1600, y: GAME_HEIGHT - 80, blocks: ['question'] },
+      ]
+
+      platformGroups.forEach(group => {
+        group.blocks.forEach((type, i) => {
+          const hasMushroom = type === 'question' && Math.random() < 0.4
+          platforms.push({
+            x: group.x + i * TILE_SIZE,
+            y: group.y,
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            type: type as 'brick' | 'question',
+            hit: false,
+            hasMushroom,
+            bounceTime: 0
+          })
+
+          // Add coin collectible above non-mushroom question blocks
+          if (type === 'question' && !hasMushroom) {
+            collectibles.push({
+              x: group.x + i * TILE_SIZE + 4,
+              y: group.y - TILE_SIZE,
+              width: 8,
+              height: 14,
+              type: 'coin',
+              collected: false,
+              vy: 0,
+              vx: 0,
+              active: false,
+              animFrame: 0,
+              rising: false,
+              riseY: 0
+            })
+          }
+
+          // Add mushroom collectible
+          if (hasMushroom) {
+            collectibles.push({
+              x: group.x + i * TILE_SIZE,
+              y: group.y - TILE_SIZE,
+              width: 14,
+              height: 14,
+              type: 'mushroom',
+              collected: false,
+              vy: 0,
+              vx: 40,
+              active: false,
+              animFrame: 0,
+              rising: false,
+              riseY: 0
+            })
+          }
+        })
+      })
+
+      // Add floating coins
+      const coinPositions = [
+        { x: 300, y: GAME_HEIGHT - 130 },
+        { x: 316, y: GAME_HEIGHT - 130 },
+        { x: 332, y: GAME_HEIGHT - 130 },
+        { x: 600, y: GAME_HEIGHT - 100 },
+        { x: 616, y: GAME_HEIGHT - 100 },
+        { x: 1000, y: GAME_HEIGHT - 130 },
+        { x: 1016, y: GAME_HEIGHT - 130 },
+        { x: 1032, y: GAME_HEIGHT - 130 },
+        { x: 1300, y: GAME_HEIGHT - 100 },
+      ]
+
+      coinPositions.forEach(pos => {
+        collectibles.push({
+          x: pos.x,
+          y: pos.y,
+          width: 8,
+          height: 14,
+          type: 'coin',
+          collected: false,
+          vy: 0,
+          vx: 0,
+          active: true,
+          animFrame: Math.random() * 4,
+          rising: false,
+          riseY: 0
+        })
+      })
+
+      // Enemies
+      const enemyPositions = [
+        { x: 250, type: 'goomba' },
+        { x: 450, type: 'goomba' },
+        { x: 600, type: 'koopa' },
+        { x: 800, type: 'goomba' },
+        { x: 850, type: 'goomba' },
+        { x: 1000, type: 'koopa' },
+        { x: 1200, type: 'goomba' },
+        { x: 1350, type: 'goomba' },
+        { x: 1400, type: 'goomba' },
+        { x: 1550, type: 'koopa' },
+      ]
+
+      enemyPositions.forEach(pos => {
+        enemies.push({
+          x: pos.x,
+          y: GAME_HEIGHT - TILE_SIZE * 2 - 14,
+          width: 14,
+          height: 14,
+          vx: -25,
+          vy: 0,
+          alive: true,
+          squished: false,
+          squishedTime: 0,
+          type: pos.type as 'goomba' | 'koopa',
+          animFrame: 0
+        })
+      })
+
+      // Goal tree
+      goalX = (LEVEL_LENGTH - 8) * TILE_SIZE
+      flagY = 0
+    }
+
+    function initGame() {
+      player = {
+        x: 40,
+        y: GAME_HEIGHT - TILE_SIZE * 2 - 20,
+        width: 12,
+        height: 16,
+        vx: 0,
+        vy: 0,
+        onGround: false,
+        jumping: false,
+        jumpHeld: false,
+        jumpTime: 0,
+        facing: 1,
+        big: false,
+        invulnerable: 0,
+        animFrame: 0,
+        animTimer: 0,
+        dying: false,
+        deathTimer: 0,
+        growing: false,
+        growTimer: 0
+      }
+
+      cameraX = 0
+      lives = 3
+      coins = 0
+      reachedGoal = false
+      flagDescending = false
+      flagY = 0
+      globalTime = 0
+      
+      updateUI()
+      generateLevel()
+    }
+
+    function updateUI() {
+      coinsDisplay.textContent = String(coins).padStart(3, '0')
+      livesDisplay.textContent = '♥'.repeat(Math.max(0, lives))
+    }
+
+    // Input
+    const keys: Record<string, boolean> = {}
+    let touchLeft = false
+    let touchRight = false
+    let touchJump = false
+    let touchRun = false
+
+    function getInput() {
+      return {
+        left: keys['ArrowLeft'] || keys['KeyA'] || touchLeft,
+        right: keys['ArrowRight'] || keys['KeyD'] || touchRight,
+        jump: keys['ArrowUp'] || keys['KeyW'] || keys['Space'] || touchJump,
+        run: keys['ShiftLeft'] || keys['ShiftRight'] || touchRun
+      }
+    }
+
+    // Button elements
+    const btnLeft = document.getElementById('btn-left')
+    const btnRight = document.getElementById('btn-right')
+    const btnJump = document.getElementById('btn-jump')
+    const btnRun = document.getElementById('btn-run')
+
+    function addTouchControl(elem: HTMLElement | null, onDown: () => void, onUp: () => void) {
+      if (!elem) return
+      const handleStart = (e: Event) => {
+        e.preventDefault()
+        elem.classList.add('pressed')
+        onDown()
+      }
+      const handleEnd = (e: Event) => {
+        e.preventDefault()
+        elem.classList.remove('pressed')
+        onUp()
+      }
+      elem.addEventListener('touchstart', handleStart, { passive: false })
+      elem.addEventListener('mousedown', handleStart)
+      elem.addEventListener('touchend', handleEnd)
+      elem.addEventListener('touchcancel', handleEnd)
+      elem.addEventListener('mouseup', handleEnd)
+      elem.addEventListener('mouseleave', handleEnd)
+    }
+
+    addTouchControl(btnLeft, () => { touchLeft = true }, () => { touchLeft = false })
+    addTouchControl(btnRight, () => { touchRight = true }, () => { touchRight = false })
+    addTouchControl(btnJump, () => { touchJump = true }, () => { touchJump = false })
+    addTouchControl(btnRun, () => { touchRun = true }, () => { touchRun = false })
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true
+      if (e.code === 'Space') e.preventDefault()
+    })
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.code] = false
+    })
+
+    function checkCollision(a: { x: number, y: number, width: number, height: number },
+                           b: { x: number, y: number, width: number, height: number }): boolean {
+      return a.x < b.x + b.width &&
+             a.x + a.width > b.x &&
+             a.y < b.y + b.height &&
+             a.y + a.height > b.y
+    }
+
+    function addScoreParticle(x: number, y: number, score: number) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: 0,
+        vy: -60,
+        life: 1,
+        type: 'score',
+        score: score
+      })
+    }
+
+    function fixedUpdate() {
+      if (gameState !== 'PLAYING') return
+
+      globalTime += FIXED_DT
+
+      const input = getInput()
+
+      // Handle growing animation
+      if (player.growing) {
+        player.growTimer -= FIXED_DT
+        if (player.growTimer <= 0) {
+          player.growing = false
+        }
+        return
+      }
+
+      // Handle death animation
+      if (player.dying) {
+        player.deathTimer += FIXED_DT
+        player.vy += GRAVITY * FIXED_DT * 0.6
+        player.y += player.vy * FIXED_DT
+
+        if (player.deathTimer > 2.5) {
+          lives--
+          updateUI()
+          
+          if (lives <= 0) {
+            gameState = 'GAMEOVER'
+            stopMusic()
+            sfx.death()
+            gameOverScreen.classList.remove('hidden')
+          } else {
+            player.dying = false
+            player.deathTimer = 0
+            player.x = Math.max(40, cameraX + 30)
+            player.y = GAME_HEIGHT - TILE_SIZE * 2 - 20
+            player.vx = 0
+            player.vy = 0
+            player.invulnerable = 2
+            player.big = false
+            player.height = 16
+          }
+        }
+        return
+      }
+
+      // Goal reached
+      if (reachedGoal) {
+        if (flagDescending) {
+          flagY += 150 * FIXED_DT
+          player.y += 100 * FIXED_DT
+          if (flagY >= 120) {
+            gameState = 'WIN'
+            stopMusic()
+            sfx.win()
+            winScreen.classList.remove('hidden')
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('game-completed'))
+            }, 2000)
+          }
+        }
+        return
+      }
+
+      // Invulnerability
+      if (player.invulnerable > 0) {
+        player.invulnerable -= FIXED_DT
+      }
+
+      // Horizontal movement
+      const speed = input.run ? PLAYER_SPEED * RUN_MULTIPLIER : PLAYER_SPEED
+      
+      if (input.left) {
+        player.vx = -speed
+        player.facing = -1
+      } else if (input.right) {
+        player.vx = speed
+        player.facing = 1
+      } else {
+        player.vx *= 0.8
+        if (Math.abs(player.vx) < 5) player.vx = 0
+      }
+
+      // Jump
+      if (input.jump && player.onGround && !player.jumping) {
+        player.vy = JUMP_FORCE
+        player.jumping = true
+        player.jumpHeld = true
+        player.jumpTime = 0
+        player.onGround = false
+        sfx.jump()
+      }
+
+      // Variable jump height
+      if (player.jumping && input.jump && player.jumpHeld && player.jumpTime < 0.2) {
+        player.vy += JUMP_HOLD_FORCE
+        player.jumpTime += FIXED_DT
+      }
+
+      if (!input.jump) {
+        player.jumpHeld = false
+      }
+
+      // Gravity
+      player.vy += GRAVITY * FIXED_DT
+
+      // Cap fall speed
+      if (player.vy > 500) player.vy = 500
+
+      // Apply velocity
+      player.x += player.vx * FIXED_DT
+      player.y += player.vy * FIXED_DT
+
+      // Player height based on power-up
+      player.height = player.big ? 28 : 16
+      player.width = player.big ? 14 : 12
+
+      // Platform collisions
+      player.onGround = false
+
+      for (const plat of platforms) {
+        // Update bounce animation
+        if (plat.bounceTime > 0) {
+          plat.bounceTime -= FIXED_DT
+        }
+
+        if (!checkCollision(player, plat)) continue
+
+        const overlapLeft = (player.x + player.width) - plat.x
+        const overlapRight = (plat.x + plat.width) - player.x
+        const overlapTop = (player.y + player.height) - plat.y
+        const overlapBottom = (plat.y + plat.height) - player.y
+
+        const minOverlapX = Math.min(overlapLeft, overlapRight)
+        const minOverlapY = Math.min(overlapTop, overlapBottom)
+
+        if (minOverlapY < minOverlapX) {
+          if (overlapTop < overlapBottom) {
+            player.y = plat.y - player.height
+            player.vy = 0
+            player.onGround = true
+            player.jumping = false
+          } else if (plat.type !== 'ground') {
+            player.y = plat.y + plat.height
+            player.vy = Math.abs(player.vy) * 0.2
+
+            // Hit block from below
+            if (!plat.hit) {
+              plat.bounceTime = 0.15
+              sfx.bump()
+
+              if (plat.type === 'question') {
+                plat.hit = true
+                plat.type = 'empty'
+
+                // Activate collectible
+                for (const c of collectibles) {
+                  if (!c.active && !c.collected &&
+                      Math.abs(c.x - plat.x) < TILE_SIZE &&
+                      Math.abs(c.y - (plat.y - TILE_SIZE)) < TILE_SIZE) {
+                    c.active = true
+                    c.rising = true
+                    c.riseY = 0
+                    if (c.type === 'coin') {
+                      sfx.coin()
+                      coins++
+                      updateUI()
+                      addScoreParticle(c.x, c.y, 200)
+                    }
+                  }
+                }
+              } else if (plat.type === 'brick' && player.big) {
+                // Break brick when big
+                plat.type = 'empty'
+                plat.hit = true
+                // Add brick particles
+                for (let i = 0; i < 4; i++) {
+                  particles.push({
+                    x: plat.x + 8,
+                    y: plat.y + 8,
+                    vx: (i < 2 ? -1 : 1) * (50 + Math.random() * 50),
+                    vy: -150 - Math.random() * 100,
+                    life: 1,
+                    type: 'brick'
+                  })
+                }
+              }
+            }
+          }
+        } else {
+          if (overlapLeft < overlapRight) {
+            player.x = plat.x - player.width
+          } else {
+            player.x = plat.x + plat.width
+          }
+          player.vx = 0
+        }
+      }
+
+      // Enemies
+      for (const enemy of enemies) {
+        if (!enemy.alive) continue
+
+        if (enemy.squished) {
+          enemy.squishedTime -= FIXED_DT
+          if (enemy.squishedTime <= 0) {
+            enemy.alive = false
+          }
+          continue
+        }
+
+        // Move enemy
+        enemy.x += enemy.vx * FIXED_DT
+        enemy.animFrame += FIXED_DT * 6
+
+        // Simple platform collision for enemies
+        enemy.vy += GRAVITY * FIXED_DT * 0.5
+        enemy.y += enemy.vy * FIXED_DT
+
+        for (const plat of platforms) {
+          if (plat.type === 'ground' && checkCollision(enemy, plat)) {
+            enemy.y = plat.y - enemy.height
+            enemy.vy = 0
+          }
+        }
+
+        // Check collision with player
+        if (checkCollision(player, enemy) && player.invulnerable <= 0) {
+          // Check if stomping
+          if (player.vy > 0 && player.y + player.height - 6 < enemy.y + enemy.height / 2) {
+            // Stomp!
+            enemy.squished = true
+            enemy.squishedTime = 0.3
+            enemy.height = 6
+            player.vy = -200
+            sfx.stomp()
+            coins += 10
+            updateUI()
+            addScoreParticle(enemy.x, enemy.y, 100)
+          } else {
+            // Hit by enemy
+            if (player.big) {
+              player.big = false
+              player.height = 16
+              player.invulnerable = 2
+              sfx.hurt()
+            } else {
+              player.dying = true
+              player.vy = -300
+              player.vx = 0
+              sfx.hurt()
+            }
+          }
+        }
+      }
+
+      // Collectibles
+      for (const c of collectibles) {
+        if (c.collected) continue
+
+        c.animFrame += FIXED_DT * 8
+
+        if (c.rising) {
+          c.riseY += 80 * FIXED_DT
+          c.y -= 80 * FIXED_DT
+          if (c.riseY >= TILE_SIZE) {
+            c.rising = false
+            if (c.type === 'coin') {
+              c.collected = true
+            }
+          }
+          continue
+        }
+
+        if (c.type === 'mushroom' && c.active && !c.rising) {
+          c.x += c.vx * FIXED_DT
+          c.vy += GRAVITY * FIXED_DT * 0.4
+          c.y += c.vy * FIXED_DT
+          
+          // Ground collision
+          for (const plat of platforms) {
+            if (plat.type === 'ground' && checkCollision(c, plat)) {
+              c.y = plat.y - c.height
+              c.vy = 0
+            }
+          }
+        }
+
+        if (!c.active) continue
+
+        if (checkCollision(player, c)) {
+          c.collected = true
+          if (c.type === 'coin') {
+            coins += 5
+            sfx.coin()
+            addScoreParticle(c.x, c.y, 200)
+          } else if (c.type === 'mushroom') {
+            if (!player.big) {
+              player.big = true
+              player.height = 28
+              player.growing = true
+              player.growTimer = 0.8
+            }
+            sfx.powerup()
+            addScoreParticle(c.x, c.y, 1000)
+          }
+          updateUI()
+        }
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]
+        p.x += p.vx * FIXED_DT
+        p.y += p.vy * FIXED_DT
+        if (p.type === 'brick') {
+          p.vy += GRAVITY * FIXED_DT * 0.8
+        }
+        p.life -= FIXED_DT
+        if (p.life <= 0) particles.splice(i, 1)
+      }
+
+      // Player animation
+      if (Math.abs(player.vx) > 10) {
+        player.animTimer += FIXED_DT * (input.run ? 16 : 10)
+        player.animFrame = Math.floor(player.animTimer) % 3
+      } else {
+        player.animFrame = 0
+        player.animTimer = 0
+      }
+
+      // Fall death
+      if (player.y > GAME_HEIGHT + 30) {
+        player.dying = true
+        player.deathTimer = 1.5
+        sfx.death()
+      }
+
+      // Keep player in bounds (left)
+      if (player.x < cameraX) {
+        player.x = cameraX
+        player.vx = 0
+      }
+
+      // Camera follow
+      const targetCam = player.x - GAME_WIDTH * 0.4
+      cameraX = Math.max(0, targetCam)
+
+      // Check goal
+      if (player.x > goalX - 20 && !reachedGoal) {
+        reachedGoal = true
+        flagDescending = true
+        player.vx = 0
+        player.vy = 0
+        sfx.flagpole()
+      }
+    }
+
+    function draw() {
+      // Sky
+      drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.sky)
+
+      // Clouds (background, slow parallax)
+      for (const cloud of clouds) {
+        const cx = ((cloud.x - cameraX * 0.2) % (GAME_WIDTH * 3 + 200)) - 100
+        if (cx > -100 && cx < GAME_WIDTH + 100) {
+          drawCloud(cx, cloud.y, cloud.size)
+        }
+      }
+
+      // Hills (midground, medium parallax)
+      for (const hill of hills) {
+        const hx = ((hill.x - cameraX * 0.4) % (GAME_WIDTH * 2 + 150)) - 50
+        if (hx > -80 && hx < GAME_WIDTH + 80) {
+          drawHill(hx, GAME_HEIGHT - TILE_SIZE * 2, hill.size)
+        }
+      }
+
+      // Bushes (foreground, fast parallax)
+      for (const bush of bushes) {
+        const bx = ((bush.x - cameraX * 0.7) % (GAME_WIDTH * 1.5 + 100)) - 50
+        if (bx > -50 && bx < GAME_WIDTH + 50) {
+          drawBush(bx, GAME_HEIGHT - TILE_SIZE * 2 - 8, bush.size)
+        }
+      }
+
+      ctx!.save()
+      ctx!.translate(-Math.floor(cameraX), 0)
+
+      // Platforms
+      for (const plat of platforms) {
+        if (plat.x + plat.width < cameraX - 20 || plat.x > cameraX + GAME_WIDTH + 20) continue
+        drawPlatform(plat)
+      }
+
+      // Goal flagpole and treehouse
+      drawGoal(goalX, GAME_HEIGHT - TILE_SIZE * 2)
+
+      // Collectibles
+      for (const c of collectibles) {
+        if (c.collected) continue
+        if (!c.active) continue
+        drawCollectible(c)
+      }
+
+      // Enemies
+      for (const enemy of enemies) {
+        if (!enemy.alive && !enemy.squished) continue
+        if (enemy.x + enemy.width < cameraX - 20 || enemy.x > cameraX + GAME_WIDTH + 20) continue
+        drawEnemy(enemy)
+      }
+
+      // Player
+      if (!player.dying || Math.floor(player.deathTimer * 10) % 2 === 0) {
+        drawPlayer()
+      }
+
+      // Particles
+      for (const p of particles) {
+        if (p.type === 'brick') {
+          drawBrickParticle(p.x, p.y)
+        } else if (p.type === 'score' && p.score) {
+          ctx!.fillStyle = COLORS.white
+          ctx!.font = '6px "Press Start 2P"'
+          ctx!.fillText(String(p.score), p.x, p.y)
+        }
+      }
+
+      ctx!.restore()
+    }
+
+    function drawCloud(x: number, y: number, size: number) {
+      const w = 16 * size
+      const h = 12
+      // Main body
+      for (let i = 0; i < size + 1; i++) {
+        drawRect(x + i * 8, y + 4, 16, h - 4, COLORS.white)
+      }
+      // Top bumps
+      drawRect(x + 4, y, 8, 6, COLORS.white)
+      if (size > 1) drawRect(x + 16, y - 2, 8, 6, COLORS.white)
+      if (size > 2) drawRect(x + 28, y + 2, 8, 6, COLORS.white)
+    }
+
+    function drawHill(x: number, y: number, size: number) {
+      const w = 32 * size
+      const h = 16 * size
+      // Draw hill as pixel stacked
+      for (let row = 0; row < h; row++) {
+        const rowWidth = w - (row * w / h)
+        const startX = x + (w - rowWidth) / 2
+        drawRect(startX, y - row, rowWidth, 1, COLORS.greenLight)
+      }
+      // Darker spots
+      for (let i = 0; i < size; i++) {
+        drawRect(x + 8 + i * 16, y - 6, 4, 4, COLORS.grass)
+      }
+    }
+
+    function drawBush(x: number, y: number, size: number) {
+      const w = 16 * size
+      // Bush body
+      for (let i = 0; i < size; i++) {
+        drawRect(x + i * 16 + 4, y, 12, 8, COLORS.greenLight)
+        drawRect(x + i * 16, y + 2, 16, 6, COLORS.greenLight)
+      }
+      // Dark spots for depth
+      for (let i = 0; i < size; i++) {
+        drawRect(x + i * 16 + 2, y + 4, 2, 2, COLORS.grass)
+        drawRect(x + i * 16 + 10, y + 2, 2, 2, COLORS.grass)
+      }
+    }
+
+    function drawPlatform(plat: Platform) {
+      let x = Math.floor(plat.x)
+      let y = Math.floor(plat.y)
+      const w = plat.width
+      const h = plat.height
+
+      // Bounce offset
+      if (plat.bounceTime > 0) {
+        y -= Math.sin(plat.bounceTime * Math.PI / 0.15) * 4
+      }
+
+      if (plat.type === 'ground') {
+        // Grass top (2 pixels)
+        drawRect(x, y, w, 2, COLORS.grass)
+        // Grass detail
+        drawRect(x + 2, y + 2, 2, 2, COLORS.grass)
+        drawRect(x + 10, y + 2, 2, 2, COLORS.grass)
+        
+        // Dirt body
+        drawRect(x, y + 2, w, h - 2, COLORS.ground)
+        
+        // Dirt texture
+        drawRect(x + 4, y + 6, 2, 2, COLORS.groundDark)
+        drawRect(x + 10, y + 10, 2, 2, COLORS.groundDark)
+        drawRect(x + 2, y + 14, 2, 2, COLORS.groundDark)
+        drawRect(x + 12, y + 18, 2, 2, COLORS.groundDark)
+        
+        // Highlight
+        drawRect(x + 6, y + 8, 2, 2, COLORS.groundLight)
+        drawRect(x + 8, y + 16, 2, 2, COLORS.groundLight)
+      } else if (plat.type === 'brick') {
+        // Brick block - NES style
+        drawRect(x, y, w, h, COLORS.brick)
+        // Dark lines
+        drawRect(x, y, w, 1, COLORS.brickDark)
+        drawRect(x, y, 1, h, COLORS.brickDark)
+        drawRect(x + w/2 - 1, y, 2, h, COLORS.brickDark)
+        drawRect(x, y + h/2 - 1, w, 2, COLORS.brickDark)
+        // Highlight
+        drawRect(x + 2, y + 2, 4, 4, COLORS.brickLight)
+        drawRect(x + 10, y + 10, 4, 4, COLORS.brickLight)
+      } else if (plat.type === 'question') {
+        // Question block with animated shine
+        const shinePhase = Math.floor(globalTime * 4) % 8
+        
+        // Base block
+        drawRect(x, y, w, h, COLORS.question)
+        
+        // Border
+        drawRect(x, y, w, 2, COLORS.questionDark)
+        drawRect(x, y, 2, h, COLORS.questionDark)
+        drawRect(x + w - 2, y, 2, h, COLORS.questionDark)
+        drawRect(x, y + h - 2, w, 2, COLORS.questionDark)
+        
+        // Inner border (light)
+        drawRect(x + 2, y + 2, w - 4, 1, COLORS.questionLight)
+        drawRect(x + 2, y + 2, 1, h - 4, COLORS.questionLight)
+        
+        // Question mark
+        drawRect(x + 5, y + 3, 6, 2, COLORS.questionDark)
+        drawRect(x + 9, y + 5, 2, 2, COLORS.questionDark)
+        drawRect(x + 7, y + 7, 2, 2, COLORS.questionDark)
+        drawRect(x + 7, y + 11, 2, 2, COLORS.questionDark)
+        
+        // Animated shine effect
+        if (shinePhase < 4) {
+          const shineX = x + 2 + shinePhase * 3
+          const shineY = y + 2
+          if (shineX < x + w - 4) {
+            drawRect(shineX, shineY, 2, 2, COLORS.white)
+          }
+        }
+      } else if (plat.type === 'empty') {
+        // Empty block (hit question block)
+        drawRect(x, y, w, h, COLORS.brownLight)
+        drawRect(x, y, w, 2, COLORS.brown)
+        drawRect(x, y, 2, h, COLORS.brown)
+        drawRect(x + w - 2, y, 2, h, COLORS.brown)
+        drawRect(x, y + h - 2, w, 2, COLORS.brown)
+      }
+    }
+
+    function drawGoal(x: number, y: number) {
+      // Flag pole
+      drawRect(x + 6, y - 140, 4, 144, COLORS.greenLight)
+      drawRect(x + 6, y - 140, 2, 144, COLORS.green)
+      
+      // Pole top ball
+      drawRect(x + 4, y - 144, 8, 4, COLORS.greenLight)
+      drawRect(x + 5, y - 145, 6, 6, COLORS.greenLight)
+      
+      // Flag
+      const flagOffset = Math.min(Math.floor(flagY), 100)
+      drawRect(x + 10, y - 140 + flagOffset, 20, 14, COLORS.green)
+      drawRect(x + 12, y - 138 + flagOffset, 16, 10, COLORS.greenLight)
+      // Flag pattern (tree symbol)
+      drawRect(x + 18, y - 136 + flagOffset, 4, 2, COLORS.green)
+      drawRect(x + 16, y - 134 + flagOffset, 8, 2, COLORS.green)
+      drawRect(x + 18, y - 132 + flagOffset, 4, 4, COLORS.brown)
+      
+      // Treehouse platform
+      drawRect(x + 40, y - 80, 50, 8, COLORS.brown)
+      drawRect(x + 38, y - 82, 54, 4, COLORS.brownLight)
+      
+      // Treehouse
+      drawRect(x + 45, y - 130, 40, 50, COLORS.brownLight)
+      drawRect(x + 45, y - 130, 2, 50, COLORS.brown)
+      drawRect(x + 83, y - 130, 2, 50, COLORS.brown)
+      
+      // Roof
+      for (let i = 0; i < 15; i++) {
+        const roofY = y - 130 - 15 + i
+        drawRect(x + 42 + i, roofY, 46 - i * 2, 2, COLORS.red)
+      }
+      drawRect(x + 43, y - 144, 44, 2, COLORS.redDark)
+      
+      // Window
+      drawRect(x + 55, y - 120, 20, 16, COLORS.skyLight)
+      drawRect(x + 55, y - 120, 2, 16, COLORS.brown)
+      drawRect(x + 73, y - 120, 2, 16, COLORS.brown)
+      drawRect(x + 55, y - 120, 20, 2, COLORS.brown)
+      drawRect(x + 55, y - 106, 20, 2, COLORS.brown)
+      drawRect(x + 64, y - 118, 2, 12, COLORS.brown)
+      drawRect(x + 57, y - 112, 14, 2, COLORS.brown)
+      
+      // Door
+      drawRect(x + 60, y - 95, 12, 15, COLORS.brown)
+      drawRect(x + 62, y - 93, 8, 11, COLORS.brownLight)
+      drawRect(x + 68, y - 88, 2, 2, COLORS.yellow)
+      
+      // Tree trunk (supports)
+      drawRect(x + 55, y - 80, 8, 80, COLORS.brown)
+      drawRect(x + 55, y - 80, 2, 80, COLORS.brownLight)
+      drawRect(x + 75, y - 80, 8, 80, COLORS.brown)
+      drawRect(x + 75, y - 80, 2, 80, COLORS.brownLight)
+      
+      // Ladder
+      for (let i = 0; i < 8; i++) {
+        drawRect(x + 87, y - 78 + i * 10, 8, 2, COLORS.brownLight)
+      }
+      drawRect(x + 87, y - 80, 2, 80, COLORS.brown)
+      drawRect(x + 93, y - 80, 2, 80, COLORS.brown)
+      
+      // Leaves/foliage around treehouse
+      for (let i = 0; i < 5; i++) {
+        drawRect(x + 35 + i * 12, y - 145 - (i % 2) * 8, 14, 12, COLORS.green)
+        drawRect(x + 37 + i * 12, y - 147 - (i % 2) * 8, 10, 16, COLORS.greenLight)
+      }
+    }
+
+    function drawCollectible(c: Collectible) {
+      const x = Math.floor(c.x)
+      const y = Math.floor(c.y)
+
+      if (c.type === 'coin') {
+        // Spinning coin animation (4 frames)
+        const frame = Math.floor(c.animFrame) % 4
+        const widths = [8, 6, 2, 6]
+        const offsets = [0, 1, 3, 1]
+        const w = widths[frame]
+        const ox = offsets[frame]
+        
+        // Coin body
+        drawRect(x + ox, y, w, 14, COLORS.coin)
+        drawRect(x + ox + 1, y + 1, w - 2, 12, COLORS.coinLight)
+        
+        // Coin shine
+        if (frame === 0) {
+          drawRect(x + 2, y + 2, 2, 2, COLORS.white)
+        }
+      } else if (c.type === 'mushroom') {
+        // Mushroom power-up (NES style)
+        // Cap
+        drawRect(x + 1, y, 12, 8, COLORS.red)
+        drawRect(x, y + 2, 14, 6, COLORS.red)
+        
+        // White spots
+        drawRect(x + 2, y + 2, 4, 4, COLORS.white)
+        drawRect(x + 8, y + 2, 4, 4, COLORS.white)
+        drawRect(x + 5, y + 1, 4, 2, COLORS.white)
+        
+        // Stem
+        drawRect(x + 3, y + 8, 8, 6, COLORS.brownLight)
+        drawRect(x + 4, y + 9, 6, 4, COLORS.white)
+        
+        // Eyes
+        drawRect(x + 4, y + 10, 2, 2, COLORS.black)
+        drawRect(x + 8, y + 10, 2, 2, COLORS.black)
+      }
+    }
+
+    function drawEnemy(enemy: Enemy) {
+      const x = Math.floor(enemy.x)
+      const y = Math.floor(enemy.y)
+      const frame = Math.floor(enemy.animFrame) % 2
+
+      if (enemy.squished) {
+        // Squished enemy
+        drawRect(x, y + 8, 14, 6, COLORS.brown)
+        drawRect(x + 2, y + 9, 10, 4, COLORS.brownLight)
+        return
+      }
+
+      if (enemy.type === 'goomba') {
+        // Goomba-like enemy (mushroom creature)
+        // Body
+        drawRect(x + 2, y, 10, 10, COLORS.brown)
+        drawRect(x, y + 2, 14, 8, COLORS.brown)
+        
+        // Face
+        drawRect(x + 2, y + 2, 10, 6, COLORS.brownLight)
+        
+        // Eyes (angry)
+        drawRect(x + 3, y + 3, 3, 3, COLORS.white)
+        drawRect(x + 8, y + 3, 3, 3, COLORS.white)
+        drawRect(x + 4, y + 4, 2, 2, COLORS.black)
+        drawRect(x + 9, y + 4, 2, 2, COLORS.black)
+        
+        // Eyebrows
+        drawRect(x + 2, y + 2, 4, 1, COLORS.black)
+        drawRect(x + 8, y + 2, 4, 1, COLORS.black)
+        
+        // Feet animation
+        if (frame === 0) {
+          drawRect(x, y + 10, 4, 4, COLORS.black)
+          drawRect(x + 10, y + 10, 4, 4, COLORS.black)
+        } else {
+          drawRect(x + 2, y + 10, 4, 4, COLORS.black)
+          drawRect(x + 8, y + 10, 4, 4, COLORS.black)
+        }
+      } else {
+        // Koopa-like enemy (turtle)
+        // Shell
+        drawRect(x + 1, y + 2, 12, 10, COLORS.green)
+        drawRect(x + 2, y + 1, 10, 12, COLORS.green)
+        drawRect(x + 3, y + 3, 8, 8, COLORS.greenLight)
+        
+        // Shell pattern
+        drawRect(x + 5, y + 4, 4, 6, COLORS.grass)
+        
+        // Head
+        drawRect(x + 10, y, 4, 6, COLORS.greenLight)
+        drawRect(x + 12, y + 1, 2, 2, COLORS.black) // Eye
+        
+        // Feet animation
+        if (frame === 0) {
+          drawRect(x, y + 11, 4, 3, COLORS.orange)
+          drawRect(x + 10, y + 11, 4, 3, COLORS.orange)
+        } else {
+          drawRect(x + 2, y + 11, 4, 3, COLORS.orange)
+          drawRect(x + 8, y + 11, 4, 3, COLORS.orange)
+        }
+      }
+    }
+
+    function drawPlayer() {
+      // Flashing when invulnerable
+      if (player.invulnerable > 0 && Math.floor(player.invulnerable * 8) % 2 === 0) {
+        return
+      }
+
+      // Growing animation
+      if (player.growing) {
+        const phase = Math.floor(player.growTimer * 10) % 2
+        if (phase === 0) {
+          drawSmallPlayer()
+        } else {
+          drawBigPlayer()
+        }
+        return
+      }
+
+      if (player.big) {
+        drawBigPlayer()
+      } else {
+        drawSmallPlayer()
+      }
+    }
+
+    function drawSmallPlayer() {
+      let x = Math.floor(player.x)
+      let y = Math.floor(player.y)
+      const facing = player.facing
+
+      ctx!.save()
+      if (facing < 0) {
+        ctx!.translate(x + player.width, 0)
+        ctx!.scale(-1, 1)
+        x = 0
+      }
+
+      if (player.dying) {
+        // Death pose
+        // Head
+        drawRect(x + 2, y, 8, 8, COLORS.brownLight)
+        // Cap
+        drawRect(x + 1, y, 10, 3, COLORS.red)
+        drawRect(x + 2, y - 1, 8, 2, COLORS.red)
+        // Eyes (X_X)
+        drawRect(x + 3, y + 4, 2, 2, COLORS.black)
+        drawRect(x + 7, y + 4, 2, 2, COLORS.black)
+        // Body
+        drawRect(x + 3, y + 8, 6, 4, COLORS.red)
+        // Arms up
+        drawRect(x, y + 6, 3, 4, COLORS.brownLight)
+        drawRect(x + 9, y + 6, 3, 4, COLORS.brownLight)
+        ctx!.restore()
+        return
+      }
+
+      // Running/standing animation
+      const frame = player.onGround ? player.animFrame : 1
+
+      // Head
+      drawRect(x + 2, y, 8, 8, COLORS.brownLight)
+      
+      // Cap
+      drawRect(x + 1, y, 10, 3, COLORS.red)
+      drawRect(x + 2, y - 1, 8, 2, COLORS.red)
+      drawRect(x + 8, y + 1, 3, 2, COLORS.red) // Cap brim
+      
+      // Hair
+      drawRect(x + 2, y + 3, 2, 2, COLORS.brown)
+      
+      // Eyes
+      drawRect(x + 6, y + 3, 2, 3, COLORS.black)
+      
+      // Nose
+      drawRect(x + 8, y + 4, 3, 2, COLORS.brownLight)
+      
+      // Body
+      drawRect(x + 3, y + 8, 6, 4, COLORS.red)
+      
+      // Overall
+      drawRect(x + 4, y + 9, 4, 3, COLORS.blue)
+      
+      // Buttons
+      drawRect(x + 5, y + 10, 1, 1, COLORS.yellow)
+      
+      if (!player.onGround) {
+        // Jumping pose
+        drawRect(x, y + 7, 3, 3, COLORS.brownLight) // Arm up
+        drawRect(x + 9, y + 10, 3, 2, COLORS.brownLight) // Arm down
+        drawRect(x + 2, y + 12, 4, 4, COLORS.brown) // One leg
+        drawRect(x + 6, y + 14, 4, 2, COLORS.brown) // Other leg stretched
+      } else if (frame === 1) {
+        // Walk frame 1
+        drawRect(x + 9, y + 9, 3, 2, COLORS.brownLight) // Arm
+        drawRect(x + 2, y + 12, 4, 4, COLORS.brown)
+        drawRect(x + 8, y + 12, 4, 4, COLORS.brown)
+      } else if (frame === 2) {
+        // Walk frame 2
+        drawRect(x + 9, y + 10, 3, 2, COLORS.brownLight)
+        drawRect(x + 1, y + 12, 4, 4, COLORS.brown)
+        drawRect(x + 7, y + 13, 4, 3, COLORS.brown)
+      } else {
+        // Standing
+        drawRect(x + 9, y + 9, 3, 3, COLORS.brownLight) // Arm
+        drawRect(x + 2, y + 12, 4, 4, COLORS.brown)
+        drawRect(x + 6, y + 12, 4, 4, COLORS.brown)
+      }
+
+      ctx!.restore()
+    }
+
+    function drawBigPlayer() {
+      let x = Math.floor(player.x)
+      let y = Math.floor(player.y)
+      const facing = player.facing
+
+      ctx!.save()
+      if (facing < 0) {
+        ctx!.translate(x + player.width, 0)
+        ctx!.scale(-1, 1)
+        x = 0
+      }
+
+      const frame = player.onGround ? player.animFrame : 1
+
+      // Big version (taller)
+      // Cap
+      drawRect(x + 2, y, 10, 4, COLORS.red)
+      drawRect(x + 3, y - 2, 8, 3, COLORS.red)
+      drawRect(x + 10, y + 2, 4, 3, COLORS.red) // Brim
+      
+      // Head
+      drawRect(x + 3, y + 4, 10, 10, COLORS.brownLight)
+      
+      // Hair
+      drawRect(x + 3, y + 6, 3, 3, COLORS.brown)
+      
+      // Eye
+      drawRect(x + 8, y + 7, 3, 4, COLORS.black)
+      
+      // Nose
+      drawRect(x + 11, y + 8, 3, 3, COLORS.brownLight)
+      
+      // Mustache (for big version)
+      drawRect(x + 6, y + 11, 6, 2, COLORS.brown)
+      
+      // Body
+      drawRect(x + 4, y + 14, 8, 6, COLORS.red)
+      
+      // Overall straps
+      drawRect(x + 5, y + 14, 2, 6, COLORS.blue)
+      drawRect(x + 9, y + 14, 2, 6, COLORS.blue)
+      
+      // Overall body
+      drawRect(x + 4, y + 18, 8, 4, COLORS.blue)
+      
+      // Buttons
+      drawRect(x + 6, y + 19, 1, 1, COLORS.yellow)
+      drawRect(x + 9, y + 19, 1, 1, COLORS.yellow)
+      
+      if (!player.onGround) {
+        // Jumping
+        drawRect(x, y + 12, 4, 4, COLORS.brownLight) // Arm up
+        drawRect(x + 12, y + 16, 4, 3, COLORS.brownLight) // Arm
+        drawRect(x + 3, y + 22, 5, 6, COLORS.brown)
+        drawRect(x + 8, y + 24, 5, 4, COLORS.brown)
+      } else if (frame === 1) {
+        drawRect(x + 12, y + 15, 4, 4, COLORS.brownLight)
+        drawRect(x + 3, y + 22, 5, 6, COLORS.brown)
+        drawRect(x + 9, y + 22, 5, 6, COLORS.brown)
+      } else if (frame === 2) {
+        drawRect(x + 12, y + 16, 4, 4, COLORS.brownLight)
+        drawRect(x + 2, y + 22, 5, 6, COLORS.brown)
+        drawRect(x + 8, y + 23, 5, 5, COLORS.brown)
+      } else {
+        drawRect(x + 12, y + 15, 4, 5, COLORS.brownLight)
+        drawRect(x + 3, y + 22, 5, 6, COLORS.brown)
+        drawRect(x + 8, y + 22, 5, 6, COLORS.brown)
+      }
+
+      ctx!.restore()
+    }
+
+    function drawBrickParticle(x: number, y: number) {
+      drawRect(x, y, 6, 6, COLORS.brick)
+      drawRect(x + 1, y + 1, 2, 2, COLORS.brickLight)
+    }
+
+    function gameLoop(timestamp: number) {
+      if (lastFrameTime === 0) lastFrameTime = timestamp
+
+      let frameTime = (timestamp - lastFrameTime) / 1000
+      lastFrameTime = timestamp
+
+      if (frameTime > MAX_FRAME_TIME) frameTime = MAX_FRAME_TIME
+
+      accumulator += frameTime
+
+      while (accumulator >= FIXED_DT) {
+        fixedUpdate()
+        accumulator -= FIXED_DT
+      }
+
+      draw()
+      requestAnimationFrame(gameLoop)
+    }
+
+    function startGame() {
+      initAudio()
+      startMusic()
+      startScreen.classList.add('hidden')
+      gameState = 'PLAYING'
+      lastFrameTime = 0
+      accumulator = 0
+      initGame()
+    }
+
+    function restartGame() {
+      gameOverScreen.classList.add('hidden')
+      initAudio()
+      startMusic()
+      gameState = 'PLAYING'
+      lastFrameTime = 0
+      accumulator = 0
+      initGame()
+    }
+
+    startBtn?.addEventListener('click', startGame)
+    restartBtn?.addEventListener('click', restartGame)
+
+    // Initial draw
+    initGame()
+    draw()
+    requestAnimationFrame(gameLoop)
+  })()
+</script>
