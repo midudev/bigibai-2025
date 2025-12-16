@@ -1,0 +1,1333 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 1,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="gta-game-container" slot="game">
+    <!-- UI Layer -->
+    <div id="ui-layer">
+      <div class="left-ui">
+        <div class="wanted-level">
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+        </div>
+        <div class="health-bar">
+          <div id="health-fill"></div>
+        </div>
+        <div class="nitro-bar">
+          <div id="nitro-fill"></div>
+        </div>
+      </div>
+      <div class="timer">
+        <span id="time-display">30</span>s
+      </div>
+    </div>
+
+    <canvas id="gtaCanvas"></canvas>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal active">
+      <h1>PIXEL<br />CHASE</h1>
+
+      <div class="instructions">
+        <p class="subtitle">🚗 HUYE DE LA POLICÍA 🚓</p>
+        <p>Sobrevive 30 segundos</p>
+        <p>¡Cuidado con el tráfico!</p>
+        <br />
+        <p class="controls-hint">WASD / Flechas / Táctil</p>
+        <p class="controls-hint">🔥 ESPACIO = NITRO (acelera x2)</p>
+      </div>
+
+      <button id="start-btn" class="menu-btn blink">¡ACELERA!</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="modal hidden">
+      <h1 class="danger">¡WASTED!</h1>
+      <p>Tu coche ha sido destruido</p>
+      <p>Aguantaste <span id="survived-time">0</span> segundos</p>
+      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="modal hidden">
+      <h1 class="win">¡ESCAPASTE!</h1>
+      <p>Has perdido a la policía</p>
+    </div>
+
+    <!-- Game Boy Style Controls -->
+    <div id="gameboy-controls">
+      <div class="dpad-wrapper">
+        <div class="dpad-grid">
+          <div class="dpad-empty"></div>
+          <div id="btn-up" class="dpad-btn dpad-up">
+            <span class="dpad-arrow">▲</span>
+          </div>
+          <div class="dpad-empty"></div>
+          <div id="btn-left" class="dpad-btn dpad-left">
+            <span class="dpad-arrow">◀</span>
+          </div>
+          <div class="dpad-center"></div>
+          <div id="btn-right" class="dpad-btn dpad-right">
+            <span class="dpad-arrow">▶</span>
+          </div>
+          <div class="dpad-empty"></div>
+          <div id="btn-down" class="dpad-btn dpad-down">
+            <span class="dpad-arrow">▼</span>
+          </div>
+          <div class="dpad-empty"></div>
+        </div>
+      </div>
+
+      <div class="action-wrapper">
+        <div id="btn-boost" class="action-btn">
+          <span class="btn-letter">🔥</span>
+        </div>
+        <div class="control-label">NITRO</div>
+      </div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #gta-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  /* UI Layer */
+  #ui-layer {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .left-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .wanted-level {
+    display: flex;
+    gap: 4px;
+  }
+
+  .star {
+    font-size: 18px;
+    color: #333;
+    text-shadow: 1px 1px 0 #000;
+    transition: color 0.2s;
+  }
+
+  .star.active {
+    color: #f1c40f;
+    text-shadow:
+      0 0 10px #f1c40f,
+      1px 1px 0 #000;
+    animation: pulse 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.2); }
+  }
+
+  .health-bar {
+    width: 100px;
+    height: 12px;
+    background: #333;
+    border: 2px solid #000;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  #health-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+    transition: width 0.2s, background 0.3s;
+  }
+
+  #health-fill.warning {
+    background: linear-gradient(180deg, #f39c12 0%, #d68910 100%);
+  }
+
+  #health-fill.danger {
+    background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+  }
+
+  .nitro-bar {
+    width: 100px;
+    height: 10px;
+    background: #333;
+    border: 2px solid #000;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  #nitro-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #e67e22 0%, #d35400 100%);
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
+  }
+
+  #nitro-fill.charging {
+    background: linear-gradient(180deg, #555 0%, #444 100%);
+    box-shadow: none;
+  }
+
+  #nitro-fill.active {
+    background: linear-gradient(180deg, #ff6b00 0%, #ff4500 100%);
+    box-shadow: 0 0 12px rgba(255, 107, 0, 0.8);
+    animation: nitroGlow 0.2s ease-in-out infinite alternate;
+  }
+
+  @keyframes nitroGlow {
+    from { box-shadow: 0 0 8px rgba(255, 107, 0, 0.6); }
+    to { box-shadow: 0 0 16px rgba(255, 107, 0, 1); }
+  }
+
+  .timer {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #2ecc71;
+    text-shadow: 2px 2px 0 #000;
+    border: 2px solid #2ecc71;
+  }
+
+  .timer.warning {
+    color: #f39c12;
+    border-color: #f39c12;
+  }
+
+  .timer.danger {
+    color: #e74c3c;
+    border-color: #e74c3c;
+    animation: pulse 0.3s ease-in-out infinite alternate;
+  }
+
+  /* Canvas */
+  #gtaCanvas {
+    display: block;
+    width: 100%;
+    flex: 1;
+    image-rendering: pixelated;
+  }
+
+  /* Game Boy Style Controls */
+  #gameboy-controls {
+    height: 150px;
+    background: linear-gradient(to bottom, #2d2d3a 0%, #1f1f28 100%);
+    border-top: 3px solid #444;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 25px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .dpad-wrapper,
+  .action-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .control-label {
+    font-size: 8px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* D-Pad Grid */
+  .dpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 2px;
+  }
+
+  .dpad-empty { background: transparent; }
+
+  .dpad-center {
+    background: linear-gradient(145deg, #2a2a35, #1f1f28);
+    border-radius: 4px;
+  }
+
+  .dpad-btn {
+    background: linear-gradient(145deg, #3a3a4a, #28282f);
+    border: 2px solid #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.05s ease;
+    border-radius: 6px;
+    box-shadow: 0 3px 0 #111, inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+  }
+
+  .dpad-arrow {
+    font-size: 14px;
+    color: #888;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+  }
+
+  .dpad-btn:active,
+  .dpad-btn.pressed {
+    background: linear-gradient(145deg, #28282f, #1a1a22);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    transform: translateY(2px);
+  }
+
+  .dpad-btn:active .dpad-arrow,
+  .dpad-btn.pressed .dpad-arrow {
+    color: #4cd137;
+    text-shadow: 0 0 8px rgba(76, 209, 55, 0.6);
+  }
+
+  /* Action Button */
+  .action-btn {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(145deg, #e67e22, #d35400);
+    border: 3px solid #a04000;
+    border-radius: 50%;
+    box-shadow: 0 4px 0 #7b2d00, 0 6px 10px rgba(0, 0, 0, 0.4),
+      inset 0 -2px 10px rgba(0, 0, 0, 0.2), inset 0 2px 10px rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.05s ease;
+  }
+
+  .btn-letter {
+    font-size: 24px;
+    pointer-events: none;
+  }
+
+  .action-btn:active,
+  .action-btn.pressed {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #7b2d00, 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 2px 10px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(145deg, #d35400, #a04000);
+  }
+
+  .action-btn.cooldown {
+    opacity: 0.5;
+    background: linear-gradient(145deg, #555, #444);
+    border-color: #333;
+  }
+
+  /* Modals */
+  .modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    text-align: center;
+  }
+
+  .modal.hidden { display: none !important; }
+  .modal.active { display: flex; }
+
+  .modal h1 {
+    color: #f39c12;
+    text-shadow: 4px 4px #000, 0 0 20px rgba(243, 156, 18, 0.5);
+    font-size: 36px;
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+
+  .modal h1.danger {
+    color: #e74c3c;
+    text-shadow: 4px 4px #000, 0 0 20px rgba(231, 76, 60, 0.5);
+  }
+
+  .modal h1.win {
+    color: #2ecc71;
+    text-shadow: 4px 4px #000, 0 0 20px rgba(46, 204, 113, 0.5);
+  }
+
+  .modal p {
+    font-size: 10px;
+    margin: 5px 0;
+    color: #ccc;
+  }
+
+  .instructions {
+    margin: 20px;
+    line-height: 2;
+    color: #ddd;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #444;
+  }
+
+  .subtitle {
+    color: #f39c12;
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .controls-hint {
+    color: #888;
+    font-size: 9px !important;
+    margin-top: 10px !important;
+  }
+
+  .menu-btn {
+    margin-top: 20px;
+    padding: 15px 30px;
+    font-family: 'Press Start 2P', cursive;
+    background: linear-gradient(180deg, #f39c12 0%, #d68910 100%);
+    color: #000;
+    border: 4px solid #000;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 14px;
+    box-shadow: 0 4px 0 #7d5000, 0 6px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.1s;
+  }
+
+  .menu-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #7d5000, 0 2px 5px rgba(0, 0, 0, 0.5);
+  }
+
+  .blink { animation: blinker 1s linear infinite; }
+
+  @keyframes blinker { 50% { opacity: 0.5; } }
+
+  @media (min-width: 768px) {
+    #gameboy-controls { height: 130px; }
+    .dpad-grid {
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(3, 48px);
+    }
+    .action-btn { width: 75px; height: 75px; }
+  }
+</style>
+
+<script>
+  ;(function () {
+    const canvas = document.getElementById('gtaCanvas') as HTMLCanvasElement | null
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Resolución lógica 9:16
+    const GAME_WIDTH = 360
+    const GAME_HEIGHT = 640
+
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+
+    // DOM Elements
+    const timeDisplay = document.getElementById('time-display') as HTMLElement
+    const timerEl = timeDisplay?.parentElement as HTMLElement
+    const healthFill = document.getElementById('health-fill') as HTMLElement
+    const startScreen = document.getElementById('start-screen') as HTMLElement
+    const gameOverScreen = document.getElementById('game-over-screen') as HTMLElement
+    const winScreen = document.getElementById('win-screen') as HTMLElement
+    const survivedTimeEl = document.getElementById('survived-time') as HTMLElement
+    const startBtn = document.getElementById('start-btn') as HTMLElement
+    const restartBtn = document.getElementById('restart-btn') as HTMLElement
+    const stars = document.querySelectorAll('.star')
+    const boostBtn = document.getElementById('btn-boost') as HTMLElement
+    const nitroFill = document.getElementById('nitro-fill') as HTMLElement
+
+    // Game state
+    let gameState: 'MENU' | 'PLAYING' | 'GAMEOVER' | 'WIN' = 'MENU'
+    const SURVIVE_TIME = 30
+    let timeRemaining = SURVIVE_TIME
+    let frames = 0
+    let health = 100
+    let invulnerableTime = 0
+
+    // Fixed timestep
+    const FIXED_DT = 1 / 60
+    const MAX_FRAME_TIME = 0.25
+    let lastFrameTime = 0
+    let accumulator = 0
+
+    // World scroll
+    let worldY = 0
+    const SCROLL_SPEED = 150 // Base scroll speed
+
+    // Road configuration
+    const ROAD_WIDTH = 100
+    const LANE_WIDTH = ROAD_WIDTH / 2
+    const ROAD_X = GAME_WIDTH / 2 - ROAD_WIDTH / 2
+
+    // Audio
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext()
+      if (audioCtx.state === 'suspended') audioCtx.resume()
+    }
+
+    const sfx = {
+      engine: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.value = 80 + Math.random() * 20
+        gain.gain.setValueAtTime(0.02, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      },
+      siren: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime)
+        osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.2)
+        osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.4)
+        gain.gain.setValueAtTime(0.03, audioCtx.currentTime)
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.4)
+      },
+      crash: () => {
+        if (!audioCtx) return
+        const bufferSize = audioCtx.sampleRate * 0.15
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate)
+        const data = buffer.getChannelData(0)
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize)
+        }
+        const noise = audioCtx.createBufferSource()
+        noise.buffer = buffer
+        const gain = audioCtx.createGain()
+        gain.gain.value = 0.2
+        noise.connect(gain)
+        gain.connect(audioCtx.destination)
+        noise.start()
+      },
+      splat: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      },
+      boost: () => {
+        if (!audioCtx) return
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.3)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.3)
+      },
+      win: () => {
+        if (!audioCtx) return
+        ;[523, 659, 784, 1047].forEach((freq, i) => {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3)
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + 0.3)
+          }, i * 150)
+        })
+      },
+    }
+
+    // Interfaces
+    interface Entity {
+      x: number
+      y: number
+      width: number
+      height: number
+    }
+
+    interface Car extends Entity {
+      speed: number
+      color: string
+      lane: number
+    }
+
+    interface PoliceCar extends Entity {
+      speed: number
+      targetX: number
+    }
+
+    interface Pedestrian extends Entity {
+      speed: number
+      direction: number
+      color: string
+      dead: boolean
+    }
+
+    interface Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      life: number
+      color: string
+    }
+
+    // Game objects
+    let player: { x: number; y: number; width: number; height: number; speed: number; rotation: number }
+    let police: PoliceCar[] = []
+    let trafficCars: Car[] = []
+    let pedestrians: Pedestrian[] = []
+    let particles: Particle[] = []
+
+    // Boost
+    let boostActive = false
+    let boostCooldown = 0
+    const BOOST_DURATION = 0.5
+    const BOOST_COOLDOWN = 5
+    let boostTimer = 0
+
+    // Colors
+    const GRASS_COLOR = '#2d5a27'
+    const ROAD_COLOR = '#333'
+    const SIDEWALK_COLOR = '#666'
+    const MARKING_COLOR = '#f1c40f'
+    const CAR_COLORS = ['#3498db', '#9b59b6', '#1abc9c', '#e67e22', '#34495e']
+    const PEDESTRIAN_COLORS = ['#f39c12', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6']
+
+    function initGame() {
+      // Player starts on the road
+      player = {
+        x: GAME_WIDTH / 2,
+        y: GAME_HEIGHT - 120,
+        width: 20,
+        height: 32,
+        speed: 180,
+        rotation: 0,
+      }
+
+      police = []
+      trafficCars = []
+      pedestrians = []
+      particles = []
+      worldY = 0
+      health = 100
+      invulnerableTime = 0
+      boostActive = false
+      boostCooldown = 0
+      boostTimer = 0
+      timeRemaining = SURVIVE_TIME
+
+      // Initial police
+      spawnPolice()
+
+      // Initial traffic
+      for (let i = 0; i < 3; i++) {
+        spawnTrafficCar(-200 - i * 200)
+      }
+
+      // Initial pedestrians
+      for (let i = 0; i < 5; i++) {
+        spawnPedestrian(-100 - i * 150)
+      }
+
+      updateWantedLevel(1)
+      updateTimer()
+      updateHealthBar()
+    }
+
+    function spawnPolice() {
+      police.push({
+        x: GAME_WIDTH / 2,
+        y: -80,
+        width: 20,
+        height: 32,
+        speed: 100,
+        targetX: player.x,
+      })
+    }
+
+    function spawnTrafficCar(y: number) {
+      const lane = Math.random() > 0.5 ? 0 : 1
+      const laneX = ROAD_X + LANE_WIDTH / 2 + lane * LANE_WIDTH
+      const speed = 50 + Math.random() * 80
+      const color = CAR_COLORS[(Math.random() * CAR_COLORS.length) | 0]
+
+      trafficCars.push({
+        x: laneX,
+        y: y,
+        width: 18,
+        height: 28,
+        speed: speed,
+        color: color,
+        lane: lane,
+      })
+    }
+
+    function spawnPedestrian(y: number) {
+      const side = Math.random() > 0.5 ? 1 : -1
+      const x = side > 0 ? ROAD_X + ROAD_WIDTH + 20 + Math.random() * 30 : ROAD_X - 20 - Math.random() * 30
+      const color = PEDESTRIAN_COLORS[(Math.random() * PEDESTRIAN_COLORS.length) | 0]
+
+      pedestrians.push({
+        x: x,
+        y: y,
+        width: 8,
+        height: 12,
+        speed: 20 + Math.random() * 30,
+        direction: Math.random() > 0.5 ? 1 : -1,
+        color: color,
+        dead: false,
+      })
+    }
+
+    function createParticles(x: number, y: number, color: string, count: number) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 200,
+          vy: (Math.random() - 0.5) * 200,
+          life: 0.5,
+          color: color,
+        })
+      }
+    }
+
+    function updateWantedLevel(level: number) {
+      stars.forEach((star, i) => {
+        star.classList.toggle('active', i < level)
+      })
+    }
+
+    function updateTimer() {
+      const seconds = Math.ceil(timeRemaining)
+      timeDisplay.textContent = String(seconds)
+
+      timerEl?.classList.remove('warning', 'danger')
+      if (seconds <= 10) timerEl?.classList.add('danger')
+      else if (seconds <= 20) timerEl?.classList.add('warning')
+    }
+
+    function updateHealthBar() {
+      healthFill.style.width = `${health}%`
+      healthFill.classList.remove('warning', 'danger')
+      if (health <= 30) healthFill.classList.add('danger')
+      else if (health <= 60) healthFill.classList.add('warning')
+    }
+
+    function takeDamage(amount: number) {
+      if (invulnerableTime > 0) return
+
+      health -= amount
+      invulnerableTime = 0.5
+      sfx.crash()
+      createParticles(player.x, player.y, '#ff0', 10)
+      updateHealthBar()
+
+      if (health <= 0) {
+        health = 0
+        gameOver()
+      }
+    }
+
+    function fixedUpdate() {
+      if (gameState !== 'PLAYING') return
+
+      // Timer
+      timeRemaining -= FIXED_DT
+      if (frames % 60 === 0) updateTimer()
+
+      // Invulnerability
+      if (invulnerableTime > 0) invulnerableTime -= FIXED_DT
+
+      // Check win
+      if (timeRemaining <= 0) {
+        gameState = 'WIN'
+        sfx.win()
+        winScreen.classList.remove('hidden')
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('game-completed'))
+        }, 1500)
+        return
+      }
+
+      // Boost cooldown
+      if (boostCooldown > 0) {
+        boostCooldown -= FIXED_DT
+        if (boostCooldown <= 0) boostBtn?.classList.remove('cooldown')
+      }
+
+      if (boostActive) {
+        boostTimer -= FIXED_DT
+        if (boostTimer <= 0) boostActive = false
+      }
+
+      // Scroll world
+      const currentScrollSpeed = boostActive ? SCROLL_SPEED * 2 : SCROLL_SPEED
+      worldY += currentScrollSpeed * FIXED_DT
+
+      // Spawn more police over time
+      const targetPolice = Math.min(1 + Math.floor((SURVIVE_TIME - timeRemaining) / 15), 3)
+      if (police.length < targetPolice && frames % 180 === 0) {
+        spawnPolice()
+        updateWantedLevel(Math.min(police.length + 1, 3))
+      }
+
+      // Spawn traffic
+      if (frames % 90 === 0) {
+        spawnTrafficCar(-100)
+      }
+
+      // Spawn pedestrians
+      if (frames % 60 === 0) {
+        spawnPedestrian(-50)
+      }
+
+      // Update player
+      updatePlayer()
+
+      // Update police
+      updatePolice()
+
+      // Update traffic
+      updateTraffic()
+
+      // Update pedestrians
+      updatePedestrians()
+
+      // Update particles
+      updateParticles()
+
+      // Engine sound
+      if (frames % 15 === 0) sfx.engine()
+
+      // Siren sound
+      if (frames % 120 === 0 && police.length > 0) sfx.siren()
+    }
+
+    function updatePlayer() {
+      const input = getInput()
+      const moveSpeed = boostActive ? player.speed * 1.5 : player.speed
+
+      // Update rotation based on input
+      const targetRotation = (input.left ? -0.25 : 0) + (input.right ? 0.25 : 0)
+      player.rotation += (targetRotation - player.rotation) * 0.15
+
+      if (input.left) player.x -= moveSpeed * FIXED_DT
+      if (input.right) player.x += moveSpeed * FIXED_DT
+      if (input.up) player.y -= moveSpeed * 0.7 * FIXED_DT
+      if (input.down) player.y += moveSpeed * 0.7 * FIXED_DT
+
+      // Clamp to screen
+      player.x = Math.max(player.width / 2, Math.min(GAME_WIDTH - player.width / 2, player.x))
+      player.y = Math.max(player.height / 2 + 50, Math.min(GAME_HEIGHT - player.height / 2 - 20, player.y))
+
+      // Update nitro bar
+      updateNitroBar()
+    }
+
+    function updateNitroBar() {
+      if (!nitroFill) return
+
+      nitroFill.classList.remove('active', 'charging')
+
+      if (boostActive) {
+        nitroFill.classList.add('active')
+        nitroFill.style.width = `${(boostTimer / BOOST_DURATION) * 100}%`
+      } else if (boostCooldown > 0) {
+        nitroFill.classList.add('charging')
+        nitroFill.style.width = `${((BOOST_COOLDOWN - boostCooldown) / BOOST_COOLDOWN) * 100}%`
+      } else {
+        nitroFill.style.width = '100%'
+      }
+    }
+
+    function updatePolice() {
+      for (let i = police.length - 1; i >= 0; i--) {
+        const cop = police[i]
+
+        // Move towards player X
+        cop.targetX = player.x
+        const dx = cop.targetX - cop.x
+        cop.x += Math.sign(dx) * Math.min(Math.abs(dx), 120 * FIXED_DT)
+
+        // Move down (chase player)
+        cop.y += (cop.speed + SCROLL_SPEED * 0.5) * FIXED_DT
+
+        // Increase speed over time
+        cop.speed = Math.min(cop.speed + 5 * FIXED_DT, 200)
+
+        // Remove if off screen
+        if (cop.y > GAME_HEIGHT + 100) {
+          police.splice(i, 1)
+          continue
+        }
+
+        // Collision with player
+        if (checkCollision(player, cop)) {
+          takeDamage(20)
+          // Push police back
+          cop.y -= 50
+          cop.speed = 50
+        }
+      }
+    }
+
+    function updateTraffic() {
+      for (let i = trafficCars.length - 1; i >= 0; i--) {
+        const car = trafficCars[i]
+
+        // Move with world scroll
+        car.y += (SCROLL_SPEED - car.speed) * FIXED_DT
+
+        // Remove if off screen
+        if (car.y > GAME_HEIGHT + 100) {
+          trafficCars.splice(i, 1)
+          continue
+        }
+
+        // Collision with player
+        if (checkCollision(player, car)) {
+          takeDamage(15)
+          createParticles(car.x, car.y, car.color, 8)
+          trafficCars.splice(i, 1)
+        }
+      }
+    }
+
+    function updatePedestrians() {
+      for (let i = pedestrians.length - 1; i >= 0; i--) {
+        const ped = pedestrians[i]
+
+        if (ped.dead) {
+          ped.y += SCROLL_SPEED * FIXED_DT
+          if (ped.y > GAME_HEIGHT + 50) {
+            pedestrians.splice(i, 1)
+          }
+          continue
+        }
+
+        // Move with world and sideways
+        ped.y += SCROLL_SPEED * FIXED_DT
+        ped.x += ped.speed * ped.direction * FIXED_DT
+
+        // Change direction at edges
+        if (ped.x < 10 || ped.x > GAME_WIDTH - 10) {
+          ped.direction *= -1
+        }
+
+        // Remove if off screen
+        if (ped.y > GAME_HEIGHT + 50) {
+          pedestrians.splice(i, 1)
+          continue
+        }
+
+        // Collision with player (run over!)
+        if (checkCollision(player, ped)) {
+          ped.dead = true
+          sfx.splat()
+          createParticles(ped.x, ped.y, '#c0392b', 6)
+        }
+      }
+    }
+
+    function updateParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]
+        p.x += p.vx * FIXED_DT
+        p.y += p.vy * FIXED_DT + SCROLL_SPEED * FIXED_DT
+        p.life -= FIXED_DT
+        if (p.life <= 0) particles.splice(i, 1)
+      }
+    }
+
+    function checkCollision(a: Entity, b: Entity): boolean {
+      return (
+        a.x - a.width / 2 < b.x + b.width / 2 &&
+        a.x + a.width / 2 > b.x - b.width / 2 &&
+        a.y - a.height / 2 < b.y + b.height / 2 &&
+        a.y + a.height / 2 > b.y - b.height / 2
+      )
+    }
+
+    function gameOver() {
+      gameState = 'GAMEOVER'
+      sfx.crash()
+      survivedTimeEl.textContent = String(SURVIVE_TIME - Math.ceil(timeRemaining))
+      gameOverScreen.classList.remove('hidden')
+    }
+
+    function draw() {
+      // Background (grass)
+      ctx!.fillStyle = GRASS_COLOR
+      ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+      // Sidewalks
+      ctx!.fillStyle = SIDEWALK_COLOR
+      ctx!.fillRect(ROAD_X - 25, 0, 25, GAME_HEIGHT)
+      ctx!.fillRect(ROAD_X + ROAD_WIDTH, 0, 25, GAME_HEIGHT)
+
+      // Road
+      ctx!.fillStyle = ROAD_COLOR
+      ctx!.fillRect(ROAD_X, 0, ROAD_WIDTH, GAME_HEIGHT)
+
+      // Road markings (dashed center line)
+      ctx!.fillStyle = MARKING_COLOR
+      const markingOffset = (worldY % 40) | 0
+      for (let y = -40 + markingOffset; y < GAME_HEIGHT + 40; y += 40) {
+        ctx!.fillRect(ROAD_X + ROAD_WIDTH / 2 - 2, y, 4, 20)
+      }
+
+      // Side lines
+      ctx!.fillStyle = '#fff'
+      ctx!.fillRect(ROAD_X + 2, 0, 3, GAME_HEIGHT)
+      ctx!.fillRect(ROAD_X + ROAD_WIDTH - 5, 0, 3, GAME_HEIGHT)
+
+      // Draw pedestrians
+      for (const ped of pedestrians) {
+        drawPedestrian(ped)
+      }
+
+      // Draw traffic cars
+      for (const car of trafficCars) {
+        drawCar(car.x, car.y, car.width, car.height, car.color, false)
+      }
+
+      // Draw police
+      for (const cop of police) {
+        drawCar(cop.x, cop.y, cop.width, cop.height, '#1a5276', true)
+      }
+
+      // Draw player
+      const playerFlash = invulnerableTime > 0 && (frames & 3) < 2
+      if (!playerFlash) {
+        drawPlayerCar(player.x, player.y, player.width, player.height, '#e74c3c', player.rotation)
+
+        // Boost flame
+        if (boostActive) {
+          ctx!.fillStyle = `rgba(255, 100, 0, ${0.5 + Math.random() * 0.3})`
+          ctx!.beginPath()
+          ctx!.arc(player.x, player.y + player.height / 2 + 8, 6 + Math.random() * 4, 0, Math.PI * 2)
+          ctx!.fill()
+        }
+      }
+
+      // Draw particles
+      for (const p of particles) {
+        const alpha = p.life / 0.5
+        ctx!.fillStyle = p.color
+        ctx!.globalAlpha = alpha
+        ctx!.fillRect((p.x - 3) | 0, (p.y - 3) | 0, 6, 6)
+      }
+      ctx!.globalAlpha = 1
+    }
+
+    function drawCar(x: number, y: number, w: number, h: number, color: string, isPolice: boolean) {
+      const px = (x - w / 2) | 0
+      const py = (y - h / 2) | 0
+
+      // Shadow
+      ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx!.fillRect(px + 2, py + 2, w, h)
+
+      // Body
+      ctx!.fillStyle = color
+      ctx!.fillRect(px, py, w, h)
+
+      // Windows
+      ctx!.fillStyle = '#2c3e50'
+      ctx!.fillRect(px + 3, py + 5, w - 6, 8)
+
+      // Details
+      if (isPolice) {
+        // Police lights
+        ctx!.fillStyle = frames % 20 < 10 ? '#e74c3c' : '#3498db'
+        ctx!.fillRect(px + 2, py + 2, 5, 4)
+        ctx!.fillRect(px + w - 7, py + 2, 5, 4)
+      }
+
+      // Tail lights
+      ctx!.fillStyle = '#c0392b'
+      ctx!.fillRect(px + 2, py + h - 5, 4, 3)
+      ctx!.fillRect(px + w - 6, py + h - 5, 4, 3)
+
+      // Wheels
+      ctx!.fillStyle = '#111'
+      ctx!.fillRect(px - 2, py + 4, 3, 6)
+      ctx!.fillRect(px + w - 1, py + 4, 3, 6)
+      ctx!.fillRect(px - 2, py + h - 10, 3, 6)
+      ctx!.fillRect(px + w - 1, py + h - 10, 3, 6)
+    }
+
+    function drawPlayerCar(x: number, y: number, w: number, h: number, color: string, rotation: number) {
+      ctx!.save()
+      ctx!.translate(x, y)
+      ctx!.rotate(rotation)
+
+      const px = (-w / 2) | 0
+      const py = (-h / 2) | 0
+
+      // Shadow
+      ctx!.fillStyle = 'rgba(0,0,0,0.3)'
+      ctx!.fillRect(px + 2, py + 2, w, h)
+
+      // Body
+      ctx!.fillStyle = color
+      ctx!.fillRect(px, py, w, h)
+
+      // Windows
+      ctx!.fillStyle = '#2c3e50'
+      ctx!.fillRect(px + 3, py + 5, w - 6, 8)
+
+      // Tail lights
+      ctx!.fillStyle = '#ff6600'
+      ctx!.fillRect(px + 2, py + h - 5, 4, 3)
+      ctx!.fillRect(px + w - 6, py + h - 5, 4, 3)
+
+      // Wheels
+      ctx!.fillStyle = '#111'
+      ctx!.fillRect(px - 2, py + 4, 3, 6)
+      ctx!.fillRect(px + w - 1, py + 4, 3, 6)
+      ctx!.fillRect(px - 2, py + h - 10, 3, 6)
+      ctx!.fillRect(px + w - 1, py + h - 10, 3, 6)
+
+      ctx!.restore()
+    }
+
+    function drawPedestrian(ped: Pedestrian) {
+      const px = (ped.x - ped.width / 2) | 0
+      const py = (ped.y - ped.height / 2) | 0
+
+      if (ped.dead) {
+        // Dead pedestrian (splat)
+        ctx!.fillStyle = '#8b0000'
+        ctx!.fillRect(px - 2, py, ped.width + 4, ped.height)
+        return
+      }
+
+      // Body
+      ctx!.fillStyle = ped.color
+      ctx!.fillRect(px, py + 4, ped.width, ped.height - 4)
+
+      // Head
+      ctx!.fillStyle = '#f5d0a9'
+      ctx!.fillRect(px + 1, py, ped.width - 2, 5)
+
+      // Walking animation
+      const legOffset = Math.sin(frames * 0.3 + ped.x) * 2
+      ctx!.fillStyle = '#222'
+      ctx!.fillRect(px + 1, py + ped.height - 3, 2, 3 + legOffset)
+      ctx!.fillRect(px + ped.width - 3, py + ped.height - 3, 2, 3 - legOffset)
+    }
+
+    // Input handling
+    const keys: Record<string, boolean> = {}
+    let touchUp = false, touchDown = false, touchLeft = false, touchRight = false
+
+    function getInput() {
+      return {
+        up: keys['ArrowUp'] || keys['KeyW'] || touchUp,
+        down: keys['ArrowDown'] || keys['KeyS'] || touchDown,
+        left: keys['ArrowLeft'] || keys['KeyA'] || touchLeft,
+        right: keys['ArrowRight'] || keys['KeyD'] || touchRight,
+      }
+    }
+
+    function activateBoost() {
+      if (boostCooldown <= 0 && !boostActive && gameState === 'PLAYING') {
+        boostActive = true
+        boostTimer = BOOST_DURATION
+        boostCooldown = BOOST_COOLDOWN
+        boostBtn?.classList.add('cooldown')
+        sfx.boost()
+      }
+    }
+
+    // Button visual feedback
+    const btnUp = document.getElementById('btn-up')
+    const btnDown = document.getElementById('btn-down')
+    const btnLeft = document.getElementById('btn-left')
+    const btnRight = document.getElementById('btn-right')
+
+    function updateButtonVisuals() {
+      btnUp?.classList.toggle('pressed', keys['ArrowUp'] || keys['KeyW'])
+      btnDown?.classList.toggle('pressed', keys['ArrowDown'] || keys['KeyS'])
+      btnLeft?.classList.toggle('pressed', keys['ArrowLeft'] || keys['KeyA'])
+      btnRight?.classList.toggle('pressed', keys['ArrowRight'] || keys['KeyD'])
+    }
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true
+      updateButtonVisuals()
+      if (e.code === 'Space') {
+        e.preventDefault()
+        activateBoost()
+      }
+    })
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.code] = false
+      updateButtonVisuals()
+    })
+
+    // Touch controls
+    function addTouchControl(elem: HTMLElement | null, setTrue: () => void, setFalse: () => void) {
+      if (!elem) return
+      const start = (e: Event) => {
+        e.preventDefault()
+        elem.classList.add('pressed')
+        setTrue()
+      }
+      const end = (e: Event) => {
+        e.preventDefault()
+        elem.classList.remove('pressed')
+        setFalse()
+      }
+      elem.addEventListener('touchstart', start, { passive: false })
+      elem.addEventListener('mousedown', start)
+      elem.addEventListener('touchend', end)
+      elem.addEventListener('mouseup', end)
+      elem.addEventListener('mouseleave', end)
+    }
+
+    addTouchControl(btnUp, () => (touchUp = true), () => (touchUp = false))
+    addTouchControl(btnDown, () => (touchDown = true), () => (touchDown = false))
+    addTouchControl(btnLeft, () => (touchLeft = true), () => (touchLeft = false))
+    addTouchControl(btnRight, () => (touchRight = true), () => (touchRight = false))
+    addTouchControl(boostBtn, activateBoost, () => {})
+
+    // Game loop
+    function loop(timestamp: number) {
+      if (lastFrameTime === 0) lastFrameTime = timestamp
+
+      let frameTime = (timestamp - lastFrameTime) / 1000
+      lastFrameTime = timestamp
+
+      if (frameTime > MAX_FRAME_TIME) frameTime = MAX_FRAME_TIME
+
+      accumulator += frameTime
+
+      while (accumulator >= FIXED_DT) {
+        fixedUpdate()
+        accumulator -= FIXED_DT
+        frames++
+      }
+
+      draw()
+      requestAnimationFrame(loop)
+    }
+
+    function startGame() {
+      initAudio()
+      startScreen.classList.add('hidden')
+      gameState = 'PLAYING'
+      lastFrameTime = 0
+      accumulator = 0
+      frames = 0
+      initGame()
+    }
+
+    function restartGame() {
+      gameOverScreen.classList.add('hidden')
+      gameState = 'PLAYING'
+      lastFrameTime = 0
+      accumulator = 0
+      frames = 0
+      initGame()
+    }
+
+    startBtn?.addEventListener('click', startGame)
+    restartBtn?.addEventListener('click', restartGame)
+
+    // Initial draw
+    initGame()
+    requestAnimationFrame(loop)
+  })()
+</script>
