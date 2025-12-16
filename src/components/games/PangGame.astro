@@ -1,0 +1,1046 @@
+---
+import GameLayout from '@/components/games/GameLayout.astro'
+
+export interface Props {
+  day: number
+  gameData?: {
+    targetScore?: number
+    prize?: string
+    videoUrl?: string
+  }
+}
+
+const { day, gameData } = Astro.props
+
+const GAME_DATA = {
+  day: day,
+  targetScore: gameData?.targetScore || 1,
+  prize: gameData?.prize || 'Premio del día',
+  videoUrl: gameData?.videoUrl,
+}
+---
+
+<GameLayout prize={GAME_DATA.prize} videoUrl={GAME_DATA.videoUrl}>
+  <div id="pang-game-container" slot="game">
+    <!-- UI Layer -->
+    <div id="ui-layer">
+      <span id="lives-display">❤❤❤</span>
+      <span>NIVEL: <span id="level-display">1</span>/3</span>
+    </div>
+
+    <canvas id="pangCanvas"></canvas>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal active">
+      <h1>GAFAS<br />PANG</h1>
+
+      <div class="instructions">
+        <p class="controls-title">CONTROLES</p>
+        <p>MOVER: A/D o Flechas</p>
+        <p>DISPARAR: Espacio o Click</p>
+        <br />
+        <p class="hint">¡Revienta las burbujas!</p>
+        <p class="hint">Completa 3 niveles para ganar</p>
+      </div>
+
+      <button id="start-btn" class="menu-btn blink">EMPEZAR</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="modal hidden">
+      <h1 class="danger">GAME OVER</h1>
+      <p>Llegaste al nivel <span id="final-level">1</span></p>
+      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="modal hidden">
+      <h1 class="win">¡GANASTE!</h1>
+      <p>¡Has completado los 3 niveles!</p>
+    </div>
+
+    <!-- Touch Controls -->
+    <div id="touch-controls">
+      <div class="dpad-container">
+        <div id="btn-left" class="dpad-btn"></div>
+        <div id="btn-right" class="dpad-btn"></div>
+      </div>
+
+      <div class="action-container">
+        <div id="btn-shoot" class="action-btn"></div>
+        <div class="label">FIRE</div>
+      </div>
+    </div>
+  </div>
+</GameLayout>
+
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('/fonts/press-start.woff2') format('woff2');
+  }
+
+  #pang-game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  /* UI Layer */
+  #ui-layer {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    z-index: 5;
+    text-shadow: 2px 2px 0 #000;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  #lives-display {
+    color: #e74c3c;
+    letter-spacing: 2px;
+  }
+
+  /* Canvas */
+  #pangCanvas {
+    display: block;
+    width: 100%;
+    flex: 1;
+    image-rendering: pixelated;
+  }
+
+  /* Touch Controls */
+  #touch-controls {
+    height: 140px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-top: 4px solid #555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .dpad-container {
+    display: flex;
+    gap: 20px;
+  }
+
+  .dpad-btn {
+    width: 70px;
+    height: 70px;
+    background: #333;
+    border-radius: 12px;
+    box-shadow: 0 6px 0 #000;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .dpad-btn:active,
+  .dpad-btn.pressed {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #000;
+  }
+
+  .dpad-btn::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border: 14px solid transparent;
+    display: block;
+  }
+
+  #btn-left::after {
+    border-right-color: #ddd;
+    transform: translateX(-25%);
+  }
+
+  #btn-right::after {
+    border-left-color: #ddd;
+    transform: translateX(25%);
+  }
+
+  .action-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-btn {
+    width: 80px;
+    height: 80px;
+    background: #e74c3c;
+    border-radius: 50%;
+    box-shadow: 0 6px 0 #c0392b;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .action-btn::before {
+    content: '';
+    width: 40%;
+    height: 40%;
+    background: transparent;
+    border-radius: 50%;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .action-btn:active,
+  .action-btn.pressed {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #c0392b;
+  }
+
+  .label {
+    color: #fff;
+    font-size: 10px;
+    margin-top: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Modals */
+  .modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 140px);
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    text-align: center;
+  }
+
+  .modal.hidden {
+    display: none !important;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal h1 {
+    color: #ffff00;
+    text-shadow: 5px 5px #c0392b;
+    font-size: 32px;
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+
+  .modal h1.danger {
+    color: #e74c3c;
+    text-shadow: 3px 3px #000;
+  }
+
+  .modal h1.win {
+    color: #2ecc71;
+    text-shadow: 3px 3px #000;
+  }
+
+  .modal p {
+    font-size: 10px;
+    margin: 5px 0;
+  }
+
+  .instructions {
+    font-size: 12px;
+    margin: 20px;
+    line-height: 2;
+    color: #ddd;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #555;
+  }
+
+  .controls-title {
+    color: #4cd137;
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .hint {
+    color: #f1c40f;
+    font-size: 10px !important;
+  }
+
+  .menu-btn {
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-family: 'Press Start 2P', cursive;
+    background: #e74c3c;
+    color: white;
+    border: 4px solid #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+
+  .menu-btn:active {
+    transform: scale(0.95);
+  }
+
+  .blink {
+    animation: blinker 1s linear infinite;
+  }
+
+  @keyframes blinker {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (min-width: 768px) {
+    #touch-controls {
+      display: none;
+    }
+
+    .modal {
+      height: 100%;
+    }
+  }
+</style>
+
+<script>
+  ;(function () {
+    const canvas = document.getElementById('pangCanvas') as HTMLCanvasElement | null
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Resolución lógica del juego
+    const GAME_WIDTH = 360
+    const GAME_HEIGHT = 540
+
+    canvas.width = GAME_WIDTH
+    canvas.height = GAME_HEIGHT
+
+    const livesDisplay = document.getElementById('lives-display') as HTMLElement
+    const levelDisplay = document.getElementById('level-display') as HTMLElement
+    const finalLevelDisplay = document.getElementById('final-level') as HTMLElement
+    const startScreen = document.getElementById('start-screen') as HTMLElement
+    const gameOverScreen = document.getElementById('game-over-screen') as HTMLElement
+    const winScreen = document.getElementById('win-screen') as HTMLElement
+    const startBtn = document.getElementById('start-btn') as HTMLElement
+    const restartBtn = document.getElementById('restart-btn') as HTMLElement
+
+    let gameState: 'MENU' | 'PLAYING' | 'GAMEOVER' | 'WIN' = 'MENU'
+    let levelTransitioning = false
+    let frames = 0
+    let currentLevel = 1
+    let shakeDuration = 0
+    let hitFlash = 0
+    let particles: Particle[] = []
+    let bubbles: Bubble[] = []
+    let lasers: Laser[] = []
+    let lastFrameTime = 0
+
+    const TARGET_LEVELS = 3
+    const BASE_GRAVITY = 600 // pixels per second squared
+    const COLORS = {
+      glasses: '#000000',
+      laser: '#ff0055',
+      laserCore: '#ffffff',
+      ready: '#00ff00',
+      charging: '#550000',
+    }
+
+    // Audio
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    let audioCtx: AudioContext | null = null
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext()
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+      }
+    }
+
+    const sfx = {
+      start: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const now = audioCtx.currentTime
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(440, now)
+        osc.frequency.setValueAtTime(554, now + 0.1)
+        osc.frequency.setValueAtTime(659, now + 0.2)
+        osc.frequency.setValueAtTime(880, now + 0.3)
+        gain.gain.setValueAtTime(0.1, now)
+        gain.gain.linearRampToValueAtTime(0, now + 0.6)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(now + 0.6)
+      },
+      shoot: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      },
+      pop: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime)
+        osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.05)
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.05)
+      },
+      hit: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const now = audioCtx.currentTime
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(150, now)
+        osc.frequency.exponentialRampToValueAtTime(10, now + 0.4)
+        gain.gain.setValueAtTime(0.3, now)
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(now + 0.5)
+      },
+      gameover: () => {
+        if (!audioCtx) return
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        const now = audioCtx.currentTime
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(300, now)
+        osc.frequency.linearRampToValueAtTime(100, now + 1.5)
+        const lfo = audioCtx.createOscillator()
+        lfo.frequency.value = 5
+        const lfoGain = audioCtx.createGain()
+        lfoGain.gain.value = 10
+        lfo.connect(lfoGain)
+        lfoGain.connect(osc.frequency)
+        lfo.start()
+        gain.gain.setValueAtTime(0.2, now)
+        gain.gain.linearRampToValueAtTime(0, now + 1.5)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(now + 1.5)
+        lfo.stop(now + 1.5)
+      },
+      win: () => {
+        if (!audioCtx) return
+        ;[440, 554, 659, 880].forEach((freq, i) => {
+          setTimeout(() => {
+            if (!audioCtx) return
+            const osc = audioCtx.createOscillator()
+            const gain = audioCtx.createGain()
+            osc.type = 'square'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2)
+            osc.connect(gain)
+            gain.connect(audioCtx.destination)
+            osc.start()
+            osc.stop(audioCtx.currentTime + 0.2)
+          }, i * 100)
+        })
+      },
+    }
+
+    class Player {
+      width = 44
+      height = 18
+      x = GAME_WIDTH / 2 - 22
+      y = GAME_HEIGHT - 40
+      speed = 200 // pixels per second
+      dx = 0
+      lives = 3
+      color = COLORS.glasses
+      legFrame = 0
+      canShoot = true
+      laserActive = false
+      invulnerable = false
+      invulnerableTimer = 0
+
+      update(deltaTime: number) {
+        this.x += this.dx * deltaTime
+        if (this.x < 0) this.x = 0
+        if (this.x + this.width > GAME_WIDTH) this.x = GAME_WIDTH - this.width
+
+        if (this.dx !== 0) {
+          this.legFrame += 12 * deltaTime
+        } else {
+          this.legFrame = 0
+        }
+
+        if (this.invulnerable) {
+          this.invulnerableTimer -= deltaTime
+          if (this.invulnerableTimer <= 0) {
+            this.invulnerable = false
+          }
+        }
+      }
+
+      draw() {
+        if (this.invulnerable && Math.floor(frames / 4) % 2 === 0) return
+
+        const legHeight = 14
+        const leftLegX = Math.floor(this.x + 8)
+        const rightLegX = Math.floor(this.x + this.width - 8)
+        const walkOffset = Math.sin(this.legFrame) * 5
+
+        ctx!.strokeStyle = '#000'
+        ctx!.lineWidth = 4
+
+        ctx!.beginPath()
+        ctx!.moveTo(leftLegX, this.y + 10)
+        ctx!.lineTo(leftLegX - walkOffset, this.y + 10 + legHeight)
+        ctx!.stroke()
+
+        ctx!.beginPath()
+        ctx!.moveTo(rightLegX, this.y + 10)
+        ctx!.lineTo(rightLegX + walkOffset, this.y + 10 + legHeight)
+        ctx!.stroke()
+
+        ctx!.fillStyle = this.color
+        ctx!.fillRect(this.x, this.y, this.width, this.height)
+
+        ctx!.fillStyle = '#222'
+        ctx!.fillRect(this.x + 4, this.y + 2, 16, 14)
+        ctx!.fillRect(this.x + 24, this.y + 2, 16, 14)
+
+        ctx!.fillStyle = '#eee'
+        ctx!.fillRect(this.x + 6, this.y + 4, 4, 4)
+        ctx!.fillRect(this.x + 12, this.y + 10, 2, 2)
+        ctx!.fillRect(this.x + 26, this.y + 4, 4, 4)
+        ctx!.fillRect(this.x + 32, this.y + 10, 2, 2)
+
+        const bridgeX = this.x + 20
+        if (this.canShoot && !this.laserActive) {
+          ctx!.fillStyle = COLORS.ready
+          if (Math.floor(frames / 15) % 2 === 0) ctx!.fillStyle = '#ccffcc'
+        } else {
+          ctx!.fillStyle = COLORS.charging
+        }
+        ctx!.fillRect(bridgeX, this.y + 6, 4, 6)
+      }
+
+      shoot() {
+        if (this.canShoot && !this.laserActive) {
+          sfx.shoot()
+          const centerX = this.x + this.width / 2
+          lasers.push(new Laser(centerX, this.y))
+          this.canShoot = false
+          this.laserActive = true
+        }
+      }
+    }
+
+    class Laser {
+      x: number
+      y: number
+      width = 6
+      height = 0
+      maxHeight = GAME_HEIGHT
+      growSpeed = 1800 // pixels per second
+      lifeTime = 1 // seconds
+      active = true
+      fullyExtended = false
+
+      constructor(x: number, startY: number) {
+        this.x = x
+        this.y = startY
+      }
+
+      update(deltaTime: number) {
+        if (!this.fullyExtended) {
+          this.height += this.growSpeed * deltaTime
+          if (this.y - this.height <= 0) {
+            this.height = this.y
+            this.fullyExtended = true
+          }
+        }
+
+        this.lifeTime -= deltaTime
+        if (this.lifeTime <= 0) {
+          this.active = false
+          player.laserActive = false
+          player.canShoot = true
+        }
+      }
+
+      draw() {
+        if (Math.floor(frames / 2) % 2 === 0) {
+          ctx!.fillStyle = COLORS.laser
+        } else {
+          ctx!.fillStyle = '#ff99aa'
+        }
+
+        const drawY = this.y - this.height
+        ctx!.fillRect(this.x - 2, drawY, 4, this.height)
+        ctx!.fillStyle = 'rgba(255, 0, 100, 0.5)'
+        ctx!.fillRect(this.x - 4, drawY, 2, this.height)
+        ctx!.fillRect(this.x + 2, drawY, 2, this.height)
+      }
+    }
+
+    class Bubble {
+      x: number
+      y: number
+      radius: number
+      dx: number
+      dy: number
+      color: string
+      markedForDeletion = false
+
+      constructor(x: number, y: number, radius: number, dx: number, dy: number, color: string) {
+        this.x = x
+        this.y = y
+        this.radius = radius
+        this.dx = dx * 50 // pixels per second
+        this.dy = dy * 60 // pixels per second
+        this.color = color
+      }
+
+      update(deltaTime: number) {
+        this.dy += BASE_GRAVITY * deltaTime
+        this.x += this.dx * deltaTime
+        this.y += this.dy * deltaTime
+
+        if (this.x - this.radius < 0) {
+          this.x = this.radius
+          this.dx *= -1
+        }
+        if (this.x + this.radius > GAME_WIDTH) {
+          this.x = GAME_WIDTH - this.radius
+          this.dx *= -1
+        }
+
+        if (this.y + this.radius > GAME_HEIGHT) {
+          this.y = GAME_HEIGHT - this.radius
+          let bounceForce = -450 // pixels per second
+          if (this.radius < 15) bounceForce = -360
+          if (this.radius > 30) bounceForce = -570
+          this.dy = bounceForce
+        }
+      }
+
+      draw() {
+        const r = Math.floor(this.radius)
+        const x = Math.floor(this.x)
+        const y = Math.floor(this.y)
+        const offset = Math.floor(r * 0.4)
+
+        ctx!.fillStyle = this.color
+        ctx!.fillRect(x - r + offset, y - r, (r - offset) * 2, r * 2)
+        ctx!.fillRect(x - r, y - r + offset, r * 2, (r - offset) * 2)
+        ctx!.fillRect(x - r + 2, y - r + 2, r * 2 - 4, r * 2 - 4)
+        ctx!.fillStyle = '#fff'
+        const shineSize = Math.max(2, r / 3)
+        ctx!.fillRect(x - r / 2, y - r / 2, shineSize, shineSize)
+        ctx!.strokeStyle = 'rgba(0,0,0,0.3)'
+        ctx!.lineWidth = 2
+        ctx!.strokeRect(x - r + offset, y - r, (r - offset) * 2, r * 2)
+      }
+    }
+
+    class Particle {
+      x: number
+      y: number
+      size: number
+      dx: number
+      dy: number
+      color: string
+      life: number
+
+      constructor(x: number, y: number, color: string) {
+        this.x = x
+        this.y = y
+        this.size = Math.random() * 6 + 2
+        this.dx = (Math.random() - 0.5) * 480 // pixels per second
+        this.dy = (Math.random() - 0.5) * 480
+        this.color = color
+        this.life = 0.33 // seconds
+      }
+
+      update(deltaTime: number) {
+        this.x += this.dx * deltaTime
+        this.y += this.dy * deltaTime
+        this.life -= deltaTime
+        this.size -= 3 * deltaTime
+        if (this.size < 0) this.size = 0
+      }
+
+      draw() {
+        ctx!.fillStyle = this.color
+        ctx!.fillRect(this.x, this.y, this.size, this.size)
+      }
+    }
+
+    let player = new Player()
+
+    function initLevel(level: number) {
+      bubbles = []
+      lasers = []
+
+      const bubbleColors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6']
+
+      if (level === 1) {
+        bubbles.push(new Bubble(GAME_WIDTH / 2, 100, 32, 1.5, 0, bubbleColors[0]))
+        bubbles.push(new Bubble(50, 150, 20, -1.5, 0, bubbleColors[1]))
+      } else if (level === 2) {
+        bubbles.push(new Bubble(GAME_WIDTH / 2, 80, 36, 1.8, 0, bubbleColors[2]))
+        bubbles.push(new Bubble(80, 120, 24, -1.5, 0, bubbleColors[0]))
+        bubbles.push(new Bubble(GAME_WIDTH - 80, 120, 24, 1.5, 0, bubbleColors[1]))
+      } else if (level === 3) {
+        bubbles.push(new Bubble(GAME_WIDTH / 2, 60, 40, 2, 0, bubbleColors[3]))
+        bubbles.push(new Bubble(60, 100, 28, -2, 0, bubbleColors[4]))
+        bubbles.push(new Bubble(GAME_WIDTH - 60, 100, 28, 1.8, 0, bubbleColors[0]))
+        bubbles.push(new Bubble(GAME_WIDTH / 2, 150, 20, -1.5, 0, bubbleColors[1]))
+      }
+
+      levelDisplay.innerText = String(level)
+    }
+
+    function spawnBubbles(x: number, y: number, radius: number, color: string) {
+      const newRadius = radius / 2
+      if (newRadius < 8) return
+      bubbles.push(new Bubble(x, y - 5, newRadius, -2.5, -4, color))
+      bubbles.push(new Bubble(x, y - 5, newRadius, 2.5, -4, color))
+    }
+
+    function update(deltaTime: number) {
+      if (gameState !== 'PLAYING') return
+
+      if (shakeDuration > 0) shakeDuration -= deltaTime
+      if (hitFlash > 0) hitFlash -= deltaTime
+
+      player.update(deltaTime)
+
+      for (let i = lasers.length - 1; i >= 0; i--) {
+        lasers[i].update(deltaTime)
+        if (!lasers[i].active) lasers.splice(i, 1)
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(deltaTime)
+        if (particles[i].life <= 0) particles.splice(i, 1)
+      }
+
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i]
+        b.update(deltaTime)
+
+        for (const laser of lasers) {
+          if (laser.active) {
+            const laserLeft = laser.x - 4
+            const laserRight = laser.x + 4
+            const laserTop = laser.y - laser.height
+
+            if (
+              b.x + b.radius > laserLeft &&
+              b.x - b.radius < laserRight &&
+              b.y + b.radius > laserTop &&
+              b.y - b.radius < laser.y
+            ) {
+              b.markedForDeletion = true
+              sfx.pop()
+
+              for (let k = 0; k < 6; k++) {
+                particles.push(new Particle(b.x, b.y, b.color))
+              }
+
+              spawnBubbles(b.x, b.y, b.radius, b.color)
+            }
+          }
+        }
+
+        if (!player.invulnerable && !b.markedForDeletion) {
+          const distX = Math.abs(b.x - (player.x + player.width / 2))
+          const distY = Math.abs(b.y - (player.y + player.height / 2))
+
+          if (distX < player.width / 2 + b.radius - 6 && distY < player.height / 2 + b.radius - 6) {
+            handleDeath(b)
+          }
+        }
+      }
+
+      bubbles = bubbles.filter((b) => !b.markedForDeletion)
+
+      // Check level completion
+      if (bubbles.length === 0 && !levelTransitioning) {
+        levelTransitioning = true
+
+        if (currentLevel >= TARGET_LEVELS) {
+          // WIN!
+          gameState = 'WIN'
+          sfx.win()
+          winScreen.classList.remove('hidden')
+
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('game-completed'))
+          }, 1500)
+        } else {
+          // Next level
+          currentLevel++
+          setTimeout(() => {
+            initLevel(currentLevel)
+            levelTransitioning = false
+          }, 1000)
+        }
+      }
+    }
+
+    function handleDeath(offendingBubble: Bubble | null) {
+      if (player.invulnerable) return
+
+      sfx.hit()
+      player.lives--
+
+      livesDisplay.innerHTML = '❤'.repeat(Math.max(0, player.lives))
+
+      shakeDuration = 0.33
+      hitFlash = 0.17
+
+      for (let i = 0; i < 20; i++) {
+        particles.push(new Particle(player.x + 20, player.y, '#fff'))
+      }
+
+      if (offendingBubble) {
+        offendingBubble.markedForDeletion = true
+        for (let k = 0; k < 8; k++) {
+          particles.push(new Particle(offendingBubble.x, offendingBubble.y, offendingBubble.color))
+        }
+        spawnBubbles(offendingBubble.x, offendingBubble.y, offendingBubble.radius, offendingBubble.color)
+      }
+
+      if (player.lives > 0) {
+        player.invulnerable = true
+        player.invulnerableTimer = 3 // seconds
+        player.x = GAME_WIDTH / 2 - player.width / 2
+      } else {
+        gameState = 'GAMEOVER'
+        sfx.gameover()
+        finalLevelDisplay.innerText = String(currentLevel)
+        gameOverScreen.classList.remove('hidden')
+      }
+    }
+
+    function draw() {
+      ctx!.fillStyle = '#1a1a2e'
+      ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+      ctx!.save()
+
+      if (shakeDuration > 0) {
+        const dx = (Math.random() - 0.5) * 12
+        const dy = (Math.random() - 0.5) * 12
+        ctx!.translate(dx, dy)
+      }
+
+      // Buildings
+      ctx!.fillStyle = '#111'
+      ctx!.fillRect(20, GAME_HEIGHT - 120, 40, 120)
+      ctx!.fillRect(65, GAME_HEIGHT - 180, 50, 180)
+      ctx!.fillRect(120, GAME_HEIGHT - 80, 60, 80)
+      ctx!.fillRect(190, GAME_HEIGHT - 140, 45, 140)
+      ctx!.fillRect(250, GAME_HEIGHT - 100, 50, 100)
+      ctx!.fillRect(305, GAME_HEIGHT - 160, 55, 160)
+
+      // Windows
+      ctx!.fillStyle = '#333'
+      ctx!.fillRect(75, GAME_HEIGHT - 160, 4, 4)
+      ctx!.fillRect(85, GAME_HEIGHT - 160, 4, 4)
+      ctx!.fillRect(75, GAME_HEIGHT - 140, 4, 4)
+      ctx!.fillRect(85, GAME_HEIGHT - 140, 4, 4)
+
+      // Floor
+      ctx!.fillStyle = '#555'
+      ctx!.fillRect(0, GAME_HEIGHT - 10, GAME_WIDTH, 10)
+      ctx!.fillStyle = '#333'
+      for (let i = 0; i < GAME_WIDTH; i += 20) ctx!.fillRect(i, GAME_HEIGHT - 10, 2, 10)
+
+      player.draw()
+      lasers.forEach((l) => l.draw())
+      bubbles.forEach((b) => b.draw())
+      particles.forEach((p) => p.draw())
+
+      ctx!.restore()
+
+      if (hitFlash > 0) {
+        ctx!.fillStyle = `rgba(255, 0, 0, ${hitFlash / 0.33})`
+        ctx!.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+      }
+    }
+
+    function loop(timestamp: number) {
+      const deltaTime = Math.min((timestamp - lastFrameTime) / 1000, 0.1)
+      lastFrameTime = timestamp
+
+      frames++
+      handleInput()
+      update(deltaTime)
+      draw()
+      requestAnimationFrame(loop)
+    }
+
+    // Input
+    const keys: Record<string, boolean> = {}
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true
+      if (e.code === 'Space') {
+        if (gameState === 'PLAYING') player.shoot()
+        initAudio()
+      }
+    })
+    window.addEventListener('keyup', (e) => (keys[e.code] = false))
+
+    const btnLeft = document.getElementById('btn-left')
+    const btnRight = document.getElementById('btn-right')
+    const btnShoot = document.getElementById('btn-shoot')
+
+    let touchLeft = false
+    let touchRight = false
+
+    function addButtonLogic(
+      elem: HTMLElement | null,
+      actionDown: () => void,
+      actionUp: () => void
+    ) {
+      if (!elem) return
+      const start = (e: Event) => {
+        e.preventDefault()
+        elem.classList.add('pressed')
+        actionDown()
+      }
+      const end = (e: Event) => {
+        e.preventDefault()
+        elem.classList.remove('pressed')
+        actionUp()
+      }
+
+      elem.addEventListener('mousedown', start)
+      elem.addEventListener('touchstart', start)
+      elem.addEventListener('mouseup', end)
+      elem.addEventListener('touchend', end)
+      elem.addEventListener('mouseleave', end)
+    }
+
+    addButtonLogic(
+      btnLeft,
+      () => (touchLeft = true),
+      () => (touchLeft = false)
+    )
+    addButtonLogic(
+      btnRight,
+      () => (touchRight = true),
+      () => (touchRight = false)
+    )
+    addButtonLogic(
+      btnShoot,
+      () => {
+        initAudio()
+        if (gameState === 'PLAYING') player.shoot()
+      },
+      () => {}
+    )
+
+    // Click/tap on canvas to shoot
+    canvas.addEventListener('click', () => {
+      initAudio()
+      if (gameState === 'PLAYING') player.shoot()
+    })
+
+    function handleInput() {
+      if (gameState !== 'PLAYING') return
+
+      player.dx = 0
+      if (keys['ArrowLeft'] || keys['KeyA'] || touchLeft) player.dx = -player.speed
+      if (keys['ArrowRight'] || keys['KeyD'] || touchRight) player.dx = player.speed
+    }
+
+    function startGame() {
+      initAudio()
+      sfx.start()
+      startScreen.classList.add('hidden')
+      gameState = 'PLAYING'
+      currentLevel = 1
+      player = new Player()
+      livesDisplay.innerHTML = '❤❤❤'
+      levelTransitioning = false
+      lastFrameTime = performance.now()
+      initLevel(currentLevel)
+    }
+
+    function restartGame() {
+      gameOverScreen.classList.add('hidden')
+      sfx.start()
+      currentLevel = 1
+      player = new Player()
+      livesDisplay.innerHTML = '❤❤❤'
+      levelTransitioning = false
+      gameState = 'PLAYING'
+      lastFrameTime = performance.now()
+      initLevel(currentLevel)
+    }
+
+    startBtn?.addEventListener('click', startGame)
+    restartBtn?.addEventListener('click', restartGame)
+
+    // Start the loop
+    requestAnimationFrame(loop)
+  })()
+</script>
+
