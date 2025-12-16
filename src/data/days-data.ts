@@ -22,6 +22,8 @@ export type GameType =
   | 'soccer'
   | 'lift'
   | 'pang'
+  | 'gta'
+  | 'candy'
 
 // Configuración de cada día
 interface DayConfig {
@@ -86,8 +88,8 @@ const GAME_CONFIG: Record<number, GameType> = {
   15: 'windows',
   16: 'lift',
   17: 'pang',
-  18: 'racer',
-  19: 'racer',
+  18: 'gta',
+  19: 'candy',
   20: 'racer',
   21: 'pong',
   22: 'racer',
