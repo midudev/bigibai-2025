@@ -1480,6 +1480,98 @@ const GAME_DATA = {
     )
     addTouchControl(boostBtn, activateBoost, () => {})
 
+    // Touchmove controls on canvas for simpler gameplay
+    let touchMoveStartX: number | null = null
+    let touchMoveStartY: number | null = null
+    let touchMoveActive = false
+    const TOUCH_THRESHOLD = 10 // Minimum pixels to detect direction
+
+    function handleTouchStart(e: TouchEvent) {
+      // Don't activate if touching the gameboy controls area
+      const touch = e.touches[0]
+      const rect = canvas.getBoundingClientRect()
+      const touchY = touch.clientY - rect.top
+      const canvasRatio = GAME_HEIGHT / rect.height
+      const gameY = touchY * canvasRatio
+
+      // Only activate touchmove if touching above the controls area
+      if (gameY < GAME_HEIGHT - 140) {
+        touchMoveStartX = touch.clientX
+        touchMoveStartY = touch.clientY
+        touchMoveActive = true
+      }
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      if (!touchMoveActive || touchMoveStartX === null || touchMoveStartY === null) return
+      e.preventDefault()
+
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - touchMoveStartX
+      const deltaY = touch.clientY - touchMoveStartY
+
+      // Reset direction states for touch move
+      touchLeft = false
+      touchRight = false
+      touchUp = false
+      touchDown = false
+
+      // Detect horizontal movement
+      if (Math.abs(deltaX) > TOUCH_THRESHOLD) {
+        if (deltaX < 0) {
+          touchLeft = true
+          btnLeft?.classList.add('pressed')
+          btnRight?.classList.remove('pressed')
+        } else {
+          touchRight = true
+          btnRight?.classList.add('pressed')
+          btnLeft?.classList.remove('pressed')
+        }
+      } else {
+        btnLeft?.classList.remove('pressed')
+        btnRight?.classList.remove('pressed')
+      }
+
+      // Detect vertical movement
+      if (Math.abs(deltaY) > TOUCH_THRESHOLD) {
+        if (deltaY < 0) {
+          touchUp = true
+          btnUp?.classList.add('pressed')
+          btnDown?.classList.remove('pressed')
+        } else {
+          touchDown = true
+          btnDown?.classList.add('pressed')
+          btnUp?.classList.remove('pressed')
+        }
+      } else {
+        btnUp?.classList.remove('pressed')
+        btnDown?.classList.remove('pressed')
+      }
+
+      // Update start position for continuous movement (relative drag)
+      touchMoveStartX = touch.clientX
+      touchMoveStartY = touch.clientY
+    }
+
+    function handleTouchEnd() {
+      touchMoveActive = false
+      touchMoveStartX = null
+      touchMoveStartY = null
+      touchLeft = false
+      touchRight = false
+      touchUp = false
+      touchDown = false
+      btnUp?.classList.remove('pressed')
+      btnDown?.classList.remove('pressed')
+      btnLeft?.classList.remove('pressed')
+      btnRight?.classList.remove('pressed')
+    }
+
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: true })
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
+    canvas.addEventListener('touchend', handleTouchEnd)
+    canvas.addEventListener('touchcancel', handleTouchEnd)
+
     // Game loop
     function loop(timestamp: number) {
       if (lastFrameTime === 0) lastFrameTime = timestamp
