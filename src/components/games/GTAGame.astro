@@ -899,13 +899,14 @@ const GAME_DATA = {
       else if (health <= 60) healthFill.classList.add('warning')
     }
 
-    function takeDamage(amount: number) {
+    function takeDamage(amount: number, isPoliceCollision = false) {
       if (invulnerableTime > 0) return
 
       health -= amount
-      invulnerableTime = 0.5
+      // More invulnerability time when hit by police (1.5s vs 0.5s)
+      invulnerableTime = isPoliceCollision ? 1.5 : 0.5
       sfx.crash()
-      createParticles(player.x, player.y, '#ff0', 10)
+      createParticles(player.x, player.y, '#ff0', isPoliceCollision ? 15 : 10)
       updateHealthBar()
 
       if (health <= 0) {
@@ -1075,10 +1076,12 @@ const GAME_DATA = {
 
         // Collision with player
         if (checkCollision(player, cop)) {
-          takeDamage(20)
-          // Push police back up
-          cop.y -= 60
-          cop.speed = 60
+          takeDamage(20, true) // true = police collision, more invulnerability
+          // Push police back hard
+          cop.y -= 150
+          cop.speed = 40
+          // Also push horizontally away from player
+          cop.x += (cop.x > player.x ? 40 : -40)
         }
       }
     }
