@@ -990,7 +990,13 @@ const GAME_DATA = {
       if (frames % 120 === 0 && police.length > 0) sfx.siren()
     }
 
+    // Forward declaration for touch direction update
+    let updateTouchDirection: () => void = () => {}
+
     function updatePlayer() {
+      // Update touch direction based on current player position
+      updateTouchDirection()
+
       const input = getInput()
       const moveSpeed = boostActive ? player.speed * 1.5 : player.speed
 
@@ -1480,44 +1486,39 @@ const GAME_DATA = {
     )
     addTouchControl(boostBtn, activateBoost, () => {})
 
-    // Touchmove controls on canvas for simpler gameplay
-    let touchMoveStartX: number | null = null
-    let touchMoveStartY: number | null = null
-    let touchMoveActive = false
-    const TOUCH_THRESHOLD = 10 // Minimum pixels to detect direction
+    // Direct touch controls - car follows finger position
+    let touchTargetX: number | null = null
+    let touchTargetY: number | null = null
+    const TOUCH_DEADZONE = 15 // Pixels threshold to start moving
 
-    function handleTouchStart(e: TouchEvent) {
-      // Don't activate if touching the gameboy controls area
-      const touch = e.touches[0]
-      const rect = canvas.getBoundingClientRect()
-      const touchY = touch.clientY - rect.top
-      const canvasRatio = GAME_HEIGHT / rect.height
-      const gameY = touchY * canvasRatio
-
-      // Only activate touchmove if touching above the controls area
-      if (gameY < GAME_HEIGHT - 140) {
-        touchMoveStartX = touch.clientX
-        touchMoveStartY = touch.clientY
-        touchMoveActive = true
+    function getTouchGamePosition(touch: Touch) {
+      const rect = canvas!.getBoundingClientRect()
+      const scaleX = GAME_WIDTH / rect.width
+      const scaleY = GAME_HEIGHT / rect.height
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
       }
     }
 
-    function handleTouchMove(e: TouchEvent) {
-      if (!touchMoveActive || touchMoveStartX === null || touchMoveStartY === null) return
-      e.preventDefault()
+    updateTouchDirection = () => {
+      if (touchTargetX === null || touchTargetY === null) {
+        touchLeft = touchRight = touchUp = touchDown = false
+        btnUp?.classList.remove('pressed')
+        btnDown?.classList.remove('pressed')
+        btnLeft?.classList.remove('pressed')
+        btnRight?.classList.remove('pressed')
+        return
+      }
 
-      const touch = e.touches[0]
-      const deltaX = touch.clientX - touchMoveStartX
-      const deltaY = touch.clientY - touchMoveStartY
+      const deltaX = touchTargetX - player.x
+      const deltaY = touchTargetY - player.y
 
-      // Reset direction states for touch move
-      touchLeft = false
-      touchRight = false
-      touchUp = false
-      touchDown = false
+      // Reset all
+      touchLeft = touchRight = touchUp = touchDown = false
 
-      // Detect horizontal movement
-      if (Math.abs(deltaX) > TOUCH_THRESHOLD) {
+      // Horizontal movement
+      if (Math.abs(deltaX) > TOUCH_DEADZONE) {
         if (deltaX < 0) {
           touchLeft = true
           btnLeft?.classList.add('pressed')
@@ -1532,8 +1533,8 @@ const GAME_DATA = {
         btnRight?.classList.remove('pressed')
       }
 
-      // Detect vertical movement
-      if (Math.abs(deltaY) > TOUCH_THRESHOLD) {
+      // Vertical movement
+      if (Math.abs(deltaY) > TOUCH_DEADZONE) {
         if (deltaY < 0) {
           touchUp = true
           btnUp?.classList.add('pressed')
@@ -1547,20 +1548,38 @@ const GAME_DATA = {
         btnUp?.classList.remove('pressed')
         btnDown?.classList.remove('pressed')
       }
+    }
 
-      // Update start position for continuous movement (relative drag)
-      touchMoveStartX = touch.clientX
-      touchMoveStartY = touch.clientY
+    function handleTouchStart(e: TouchEvent) {
+      const touch = e.touches[0]
+      const pos = getTouchGamePosition(touch)
+
+      // Only activate if touching above the controls area
+      if (pos.y < GAME_HEIGHT - 140) {
+        touchTargetX = pos.x
+        touchTargetY = pos.y
+        updateTouchDirection()
+      }
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      if (touchTargetX === null) return
+      e.preventDefault()
+
+      const touch = e.touches[0]
+      const pos = getTouchGamePosition(touch)
+
+      // Update target if still in valid area
+      if (pos.y < GAME_HEIGHT - 140) {
+        touchTargetX = pos.x
+        touchTargetY = pos.y
+      }
     }
 
     function handleTouchEnd() {
-      touchMoveActive = false
-      touchMoveStartX = null
-      touchMoveStartY = null
-      touchLeft = false
-      touchRight = false
-      touchUp = false
-      touchDown = false
+      touchTargetX = null
+      touchTargetY = null
+      touchLeft = touchRight = touchUp = touchDown = false
       btnUp?.classList.remove('pressed')
       btnDown?.classList.remove('pressed')
       btnLeft?.classList.remove('pressed')
