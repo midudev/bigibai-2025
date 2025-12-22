@@ -119,6 +119,8 @@ const GAME_DATA = {
       background 0.1s;
     pointer-events: none;
     z-index: 10;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .touch-area.active {
@@ -385,8 +387,8 @@ const GAME_DATA = {
     // Input tracking for alternating keys
     let lastKeyTime = 0
     let keyCombo = 0
-    const KEY_TIMEOUT = 500 // ms before combo resets (more permissive)
-    const MIN_PRESS_INTERVAL = 30 // ms to ignore duplicate fast taps
+    const KEY_TIMEOUT = 700 // ms before combo resets (much more permissive)
+    const MIN_PRESS_INTERVAL = 15 // reduced even more to allow very fast tapping
 
     // Runner colors (pixel art style)
     const RUNNER_COLORS = [
@@ -524,7 +526,7 @@ const GAME_DATA = {
       winnerDetermined = false
       for (let i = 0; i < LANE_COUNT; i++) {
         const isPlayer = i === 1 // Player is in lane 2
-        const baseSpeed = isPlayer ? 12 : 9 + Math.random() * 2.5 // AI are faster now
+        const baseSpeed = isPlayer ? 16 : 8 + Math.random() * 2 // AI is slower now
         const runner: Runner = {
           lane: i,
           distance: 0,
@@ -570,8 +572,8 @@ const GAME_DATA = {
           keyCombo = 1
         }
 
-        // Increase speed based on combo (more permissive boost)
-        const speedBoost = 0.4 + Math.min(keyCombo * 0.1, 1.0)
+        // Increase speed based on combo (MUCH more generous boost)
+        const speedBoost = 0.8 + Math.min(keyCombo * 0.15, 2.0)
         playerRunner.speed = Math.min(playerRunner.speed + speedBoost, playerRunner.maxSpeed)
 
         playerRunner.lastKeyPressed = key
@@ -580,9 +582,9 @@ const GAME_DATA = {
 
         sfx.step()
       } else {
-        // Same key pressed - penalty (more permissive: reset combo but less speed penalty)
-        keyCombo = 0
-        playerRunner.speed = Math.max(playerRunner.speed - 0.5, 0)
+        // Same key pressed - penalty (very light penalty to not frustrate)
+        keyCombo = Math.max(0, keyCombo - 2)
+        playerRunner.speed = Math.max(playerRunner.speed - 0.2, 0)
         lastKeyTime = now
       }
     }
@@ -667,28 +669,28 @@ const GAME_DATA = {
       // Update all runners
       for (const runner of runners) {
         if (runner.isPlayer) {
-          // Player speed naturally decreases (slightly faster decay)
-          runner.speed = Math.max(runner.speed - dt * 3.5, 0)
+          // Player speed naturally decreases (much slower decay)
+          runner.speed = Math.max(runner.speed - dt * 2.5, 0)
         } else {
-          // AI runners with turbo system
+          // AI runners with turbo system (nerfed turbo)
           runner.auraFrame += dt * 10
 
           // Turbo cooldown
           if (!runner.hasTurbo) {
             runner.turboCooldown -= dt
             if (runner.turboCooldown <= 0) {
-              // Activate turbo! More likely when behind or in last stretch
+              // Nerfed turbo chance and power
               const behindPlayer = playerRunner && runner.distance < playerRunner.distance
-              const inLastStretch = runner.distance > RACE_DISTANCE * 0.6
-              const turboChance = behindPlayer ? 0.7 : inLastStretch ? 0.5 : 0.3
+              const inLastStretch = runner.distance > RACE_DISTANCE * 0.7
+              const turboChance = behindPlayer ? 0.3 : inLastStretch ? 0.2 : 0.1
 
               if (Math.random() < turboChance) {
                 runner.hasTurbo = true
-                runner.turboTimer = 1.5 + Math.random() * 1 // Turbo lasts 1.5-2.5s
-                runner.maxSpeed = runner.baseMaxSpeed * 1.4 // 40% speed boost
+                runner.turboTimer = 1.0 + Math.random() * 0.5 // shorter turbo
+                runner.maxSpeed = runner.baseMaxSpeed * 1.2 // only 20% boost
                 sfxTurbo()
               }
-              runner.turboCooldown = 3 + Math.random() * 4 // Reset cooldown 3-7s
+              runner.turboCooldown = 4 + Math.random() * 6 // longer cooldown
             }
           } else {
             // Turbo active
