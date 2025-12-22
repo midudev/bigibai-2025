@@ -375,6 +375,7 @@ const GAME_DATA = {
       hasTurbo: boolean
       turboTimer: number
       turboCooldown: number
+      turboCharge: number // for player to activate turbo
       auraFrame: number
     }
 
@@ -543,7 +544,8 @@ const GAME_DATA = {
           // Turbo system
           hasTurbo: false,
           turboTimer: 0,
-          turboCooldown: Math.random() * 3 + 2, // Random initial cooldown 2-5s
+          turboCooldown: isPlayer ? 0 : Math.random() * 3 + 2, // Random initial cooldown 2-5s
+          turboCharge: 0,
           auraFrame: 0,
         }
         runners.push(runner)
@@ -671,6 +673,32 @@ const GAME_DATA = {
         if (runner.isPlayer) {
           // Player speed naturally decreases (much slower decay)
           runner.speed = Math.max(runner.speed - dt * 2.5, 0)
+
+          // Player Turbo Logic (Super Saiyan)
+          if (!runner.hasTurbo) {
+            // Charge turbo if speed is above 70% of max
+            if (runner.speed > runner.maxSpeed * 0.7) {
+              runner.turboCharge += dt * 0.6 // Takes about 1.6s of high speed to charge
+              if (runner.turboCharge >= 1) {
+                runner.hasTurbo = true
+                runner.turboTimer = 3.0 // Player turbo lasts longer
+                runner.turboCharge = 0
+                runner.maxSpeed = runner.baseMaxSpeed * 1.5 // 50% boost
+                sfxTurbo()
+              }
+            } else {
+              // Slowly lose charge if speed drops
+              runner.turboCharge = Math.max(0, runner.turboCharge - dt * 0.3)
+            }
+          } else {
+            // Turbo active
+            runner.auraFrame += dt * 15
+            runner.turboTimer -= dt
+            if (runner.turboTimer <= 0) {
+              runner.hasTurbo = false
+              runner.maxSpeed = runner.baseMaxSpeed
+            }
+          }
         } else {
           // AI runners with turbo system (nerfed turbo)
           runner.auraFrame += dt * 10
@@ -858,7 +886,7 @@ const GAME_DATA = {
         const legPhase = Math.floor(runner.animFrame * 2) % 4
 
         // Draw Super Saiyan aura if turbo is active
-        if (runner.hasTurbo && !runner.isPlayer) {
+        if (runner.hasTurbo) {
           const auraWave = Math.sin(runner.auraFrame) * 3
           const auraWave2 = Math.cos(runner.auraFrame * 1.3) * 2
 
@@ -869,7 +897,7 @@ const GAME_DATA = {
           // Draw multiple aura layers for flame effect
           for (let layer = 3; layer >= 0; layer--) {
             const layerOffset = layer * 4
-            const flameHeight = 20 + layer * 8 + auraWave * 2
+            const flameHeight = (runner.isPlayer ? 30 : 20) + layer * 8 + auraWave * 2
 
             // Create gradient for aura
             const auraGradient = ctx!.createLinearGradient(
@@ -878,10 +906,19 @@ const GAME_DATA = {
               laneX,
               runnerY + 25
             )
-            auraGradient.addColorStop(0, 'rgba(255, 255, 100, 0)')
-            auraGradient.addColorStop(0.3, `rgba(255, 220, 50, ${0.6 - layer * 0.15})`)
-            auraGradient.addColorStop(0.7, `rgba(255, 180, 0, ${0.4 - layer * 0.1})`)
-            auraGradient.addColorStop(1, 'rgba(255, 100, 0, 0)')
+            
+            // Player aura is blue/cyan if super saiyan blue, or yellow if classic. 
+            // Let's go with gold/yellow for everyone for consistency, 
+            // or maybe blue for player to stand out.
+            const color1 = runner.isPlayer ? 'rgba(0, 200, 255, 0)' : 'rgba(255, 255, 100, 0)'
+            const color2 = runner.isPlayer ? `rgba(100, 255, 255, ${0.6 - layer * 0.15})` : `rgba(255, 220, 50, ${0.6 - layer * 0.15})`
+            const color3 = runner.isPlayer ? `rgba(0, 150, 255, ${0.4 - layer * 0.1})` : `rgba(255, 180, 0, ${0.4 - layer * 0.1})`
+            const color4 = runner.isPlayer ? 'rgba(0, 100, 255, 0)' : 'rgba(255, 100, 0, 0)'
+
+            auraGradient.addColorStop(0, color1)
+            auraGradient.addColorStop(0.3, color2)
+            auraGradient.addColorStop(0.7, color3)
+            auraGradient.addColorStop(1, color4)
 
             ctx!.fillStyle = auraGradient
 
@@ -919,12 +956,17 @@ const GAME_DATA = {
 
           // Draw energy particles
           ctx!.globalAlpha = 0.8
-          for (let i = 0; i < 6; i++) {
-            const particleY = runnerY - 20 - ((runner.auraFrame * 30 + i * 40) % 60) + bobAmount
+          for (let i = 0; i < (runner.isPlayer ? 10 : 6); i++) {
+            const particleY = runnerY - 20 - ((runner.auraFrame * (runner.isPlayer ? 40 : 30) + i * 40) % 60) + bobAmount
             const particleX = laneX + Math.sin(runner.auraFrame * 2 + i * 1.5) * (8 + i * 2)
             const particleSize = 2 + Math.sin(runner.auraFrame * 3 + i) * 1
 
-            ctx!.fillStyle = i % 2 === 0 ? '#ffff00' : '#ffaa00'
+            if (runner.isPlayer) {
+              ctx!.fillStyle = i % 2 === 0 ? '#00ffff' : '#00aaff'
+            } else {
+              ctx!.fillStyle = i % 2 === 0 ? '#ffff00' : '#ffaa00'
+            }
+            
             ctx!.fillRect(
               Math.floor(particleX - particleSize / 2),
               Math.floor(particleY),
@@ -947,7 +989,7 @@ const GAME_DATA = {
         const runnerHeight = 24
 
         // Body (golden tint if turbo)
-        ctx!.fillStyle = runner.hasTurbo ? '#ffd700' : colors.body
+        ctx!.fillStyle = runner.hasTurbo ? (runner.isPlayer ? '#00eaff' : '#ffd700') : colors.body
         ctx!.fillRect(laneX - 6, runnerY - 10 + bobAmount, 12, 14)
 
         // Head
@@ -955,7 +997,7 @@ const GAME_DATA = {
         ctx!.fillRect(laneX - 4, runnerY - 18 + bobAmount, 8, 10)
 
         // Hair (golden if turbo - Super Saiyan style!)
-        ctx!.fillStyle = runner.hasTurbo ? '#ffd700' : '#2d2d2d'
+        ctx!.fillStyle = runner.hasTurbo ? (runner.isPlayer ? '#00ffff' : '#ffd700') : '#2d2d2d'
         ctx!.fillRect(laneX - 4, runnerY - 18 + bobAmount, 8, 4)
         // Spiky hair when turbo
         if (runner.hasTurbo) {
@@ -1009,10 +1051,10 @@ const GAME_DATA = {
         }
 
         // Lane number / name (with turbo indicator)
-        ctx!.fillStyle = runner.isPlayer ? '#4ade80' : runner.hasTurbo ? '#ffd700' : '#fff'
+        ctx!.fillStyle = runner.hasTurbo ? (runner.isPlayer ? '#00ffff' : '#ffd700') : runner.isPlayer ? '#4ade80' : '#fff'
         ctx!.font = '6px "Press Start 2P"'
         ctx!.textAlign = 'center'
-        const displayName = runner.hasTurbo ? `⚡${runner.name}` : runner.name
+        const displayName = runner.hasTurbo ? `🔥${runner.name}` : runner.name
         ctx!.fillText(displayName, laneX, runnerY - 24 + bobAmount - (runner.hasTurbo ? 6 : 0))
       }
 
@@ -1091,6 +1133,28 @@ const GAME_DATA = {
         ctx!.font = '6px "Press Start 2P"'
         ctx!.textAlign = 'center'
         ctx!.fillText('VELOCIDAD', GAME_WIDTH / 2, barY - 6)
+
+        // Turbo charge bar (under speed bar)
+        if (!playerRunner.hasTurbo) {
+          const tBarWidth = 40
+          const tBarHeight = 3
+          const tBarX = GAME_WIDTH / 2 - tBarWidth / 2
+          const tBarY = barY + barHeight + 4
+
+          ctx!.fillStyle = 'rgba(0,0,0,0.5)'
+          ctx!.fillRect(tBarX, tBarY, tBarWidth, tBarHeight)
+
+          if (playerRunner.turboCharge > 0) {
+            ctx!.fillStyle = '#00ffff'
+            ctx!.fillRect(tBarX, tBarY, tBarWidth * playerRunner.turboCharge, tBarHeight)
+          }
+        } else {
+          // Turbo active text
+          ctx!.fillStyle = '#00ffff'
+          ctx!.font = '6px "Press Start 2P"'
+          ctx!.textAlign = 'center'
+          ctx!.fillText('¡MODO DIOS ACTIVADO!', GAME_WIDTH / 2, barY + barHeight + 10)
+        }
       }
 
       // Position indicator
