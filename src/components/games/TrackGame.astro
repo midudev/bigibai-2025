@@ -108,15 +108,17 @@ const GAME_DATA = {
     position: absolute;
     bottom: 0;
     width: 50%;
-    height: 30%;
+    height: 100%;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+    padding-bottom: 10%;
     opacity: 0;
     transition:
       opacity 0.1s,
       background 0.1s;
     pointer-events: none;
+    z-index: 10;
   }
 
   .touch-area.active {
@@ -383,7 +385,8 @@ const GAME_DATA = {
     // Input tracking for alternating keys
     let lastKeyTime = 0
     let keyCombo = 0
-    const KEY_TIMEOUT = 250 // ms before combo resets (slightly harder)
+    const KEY_TIMEOUT = 500 // ms before combo resets (more permissive)
+    const MIN_PRESS_INTERVAL = 30 // ms to ignore duplicate fast taps
 
     // Runner colors (pixel art style)
     const RUNNER_COLORS = [
@@ -553,6 +556,11 @@ const GAME_DATA = {
 
       const now = Date.now()
 
+      // Ignore if pressed too quickly on the same side (debounce for touch screens)
+      if (playerRunner.lastKeyPressed === key && now - lastKeyTime < MIN_PRESS_INTERVAL) {
+        return
+      }
+
       // Check if alternating correctly
       if (playerRunner.lastKeyPressed !== key) {
         // Correct alternation!
@@ -562,8 +570,8 @@ const GAME_DATA = {
           keyCombo = 1
         }
 
-        // Increase speed based on combo (slightly reduced for more difficulty)
-        const speedBoost = 0.4 + Math.min(keyCombo * 0.08, 0.8)
+        // Increase speed based on combo (more permissive boost)
+        const speedBoost = 0.4 + Math.min(keyCombo * 0.1, 1.0)
         playerRunner.speed = Math.min(playerRunner.speed + speedBoost, playerRunner.maxSpeed)
 
         playerRunner.lastKeyPressed = key
@@ -572,9 +580,10 @@ const GAME_DATA = {
 
         sfx.step()
       } else {
-        // Same key pressed - penalty (bigger penalty)
+        // Same key pressed - penalty (more permissive: reset combo but less speed penalty)
         keyCombo = 0
-        playerRunner.speed = Math.max(playerRunner.speed - 1, 0)
+        playerRunner.speed = Math.max(playerRunner.speed - 0.5, 0)
+        lastKeyTime = now
       }
     }
 
@@ -603,48 +612,31 @@ const GAME_DATA = {
       }
     }
 
-    function handleTouchStart(e: TouchEvent, side: 'left' | 'right') {
+    function handlePointerDown(e: PointerEvent, side: 'left' | 'right') {
       e.preventDefault()
       handleKeyPress(side)
-      if (side === 'left') {
-        touchLeft.classList.add('pressed')
-      } else {
-        touchRight.classList.add('pressed')
-      }
+      const el = side === 'left' ? touchLeft : touchRight
+      el.classList.add('pressed')
     }
 
-    function handleTouchEnd(e: TouchEvent, side: 'left' | 'right') {
-      e.preventDefault()
-      if (side === 'left') {
-        touchLeft.classList.remove('pressed')
-      } else {
-        touchRight.classList.remove('pressed')
-      }
+    function handlePointerUp(side: 'left' | 'right') {
+      const el = side === 'left' ? touchLeft : touchRight
+      el.classList.remove('pressed')
     }
 
     // Event listeners
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
 
-    touchLeft.addEventListener('touchstart', (e) => handleTouchStart(e, 'left'), { passive: false })
-    touchLeft.addEventListener('touchend', (e) => handleTouchEnd(e, 'left'), { passive: false })
-    touchLeft.addEventListener('mousedown', () => {
-      handleKeyPress('left')
-      touchLeft.classList.add('pressed')
-    })
-    touchLeft.addEventListener('mouseup', () => touchLeft.classList.remove('pressed'))
-    touchLeft.addEventListener('mouseleave', () => touchLeft.classList.remove('pressed'))
+    touchLeft.addEventListener('pointerdown', (e) => handlePointerDown(e, 'left'))
+    touchLeft.addEventListener('pointerup', () => handlePointerUp('left'))
+    touchLeft.addEventListener('pointerleave', () => handlePointerUp('left'))
+    touchLeft.addEventListener('pointercancel', () => handlePointerUp('left'))
 
-    touchRight.addEventListener('touchstart', (e) => handleTouchStart(e, 'right'), {
-      passive: false,
-    })
-    touchRight.addEventListener('touchend', (e) => handleTouchEnd(e, 'right'), { passive: false })
-    touchRight.addEventListener('mousedown', () => {
-      handleKeyPress('right')
-      touchRight.classList.add('pressed')
-    })
-    touchRight.addEventListener('mouseup', () => touchRight.classList.remove('pressed'))
-    touchRight.addEventListener('mouseleave', () => touchRight.classList.remove('pressed'))
+    touchRight.addEventListener('pointerdown', (e) => handlePointerDown(e, 'right'))
+    touchRight.addEventListener('pointerup', () => handlePointerUp('right'))
+    touchRight.addEventListener('pointerleave', () => handlePointerUp('right'))
+    touchRight.addEventListener('pointercancel', () => handlePointerUp('right'))
 
     // Turbo sound effect
     const sfxTurbo = () => {
