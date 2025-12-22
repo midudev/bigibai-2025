@@ -6,6 +6,7 @@ import Snowballs from '@/components/Snowballs.astro'
 import { ClientRouter } from 'astro:transitions'
 import AchievementNotification from '@/components/AchievementNotification.astro'
 import Tooltip from '@/components/ui/Tooltip.astro'
+import WinnersModal from '@/components/WinnersModal.astro'
 
 const defaultTitle = 'Big Ibai: Calendario de Adviento con chocolates y premios'
 const defaultDescription =
@@ -106,6 +107,7 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
     </div>
     <AchievementNotification />
     <Tooltip />
+    <WinnersModal />
   </body>
 </html>
 

@@ -1,0 +1,111 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Header from '@/sections/Header.astro'
+import Footer from '@/sections/Footer.astro'
+import { cells } from '@/data/days-data'
+import { winners } from '@/data/winners'
+
+const winnersVisible = Astro.url.searchParams.get('winners') === 'true'
+
+if (!winnersVisible) {
+  return Astro.redirect('/')
+}
+
+const obfuscateEmail = (email: string) => {
+  const [name, domain] = email.split('@')
+  if (!name || !domain) return email
+
+  const obfuscatedName =
+    name.length > 2 ? name[0] + '*'.repeat(name.length - 2) + name[name.length - 1] : name[0] + '*'
+
+  const domainParts = domain.split('.')
+  const domainName = domainParts[0]
+  const domainExt = domainParts.slice(1).join('.')
+
+  const obfuscatedDomain =
+    domainName.length > 1 ? domainName[0] + '*'.repeat(domainName.length - 1) : '*'
+
+  return `${obfuscatedName}@${obfuscatedDomain}.${domainExt}`
+}
+
+const winnersData = cells.map((cell) => {
+  const winner = winners.find((w) => w.day === cell.day)
+  return {
+    ...cell,
+    winnerEmail: winner ? obfuscateEmail(winner.email) : 'Próximamente',
+  }
+})
+---
+
+<Layout title="Ganadores - Big Ibai 2025">
+  <Header />
+  <main class="py-20 px-4 max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h1
+        class="text-5xl md:text-7xl font-bold text-brand uppercase mb-4 text-shadow-title"
+        style="font-family: 'Heavy', sans-serif;"
+      >
+        Ganadores
+      </h1>
+      <p class="text-xl text-white/80 max-w-2xl mx-auto text-balance mb-4">
+        Aquí puedes consultar los ganadores de cada uno de los 24 días del calendario de adviento de
+        Big Ibai.
+      </p>
+      <p class="text-sm text-white/50 max-w-xl mx-auto text-balance italic">
+        * Todos los ganadores serán comunicados por correo electrónico para coordinar la entrega de
+        los premios.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {
+        winnersData.map((data) => (
+          <div class="bg-black/40 border border-white/10 rounded-2xl p-8 flex flex-col items-start text-left backdrop-blur-sm hover:border-brand/50 transition-all duration-500 group relative overflow-hidden min-h-[280px]">
+            {/* Imagen de fondo decorativa */}
+            <img
+              src={`/chocolatinas/${data.day}.webp`}
+              alt=""
+              role="presentation"
+              class="absolute -top-16 -left-16 w-72 h-72 object-contain opacity-20 group-hover:opacity-40 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-700 pointer-events-none z-0"
+              onerror="this.src='/chocolatinas/1.webp'"
+            />
+
+            {/* Día arriba a la derecha */}
+            <div class="absolute top-6 right-6 bg-brand text-black font-bold w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-lg z-20 group-hover:scale-110 transition-transform">
+              {data.day}
+            </div>
+
+            {/* Contenido Principal */}
+            <div class="relative z-10 w-full mt-auto">
+              <h3
+                class="text-3xl md:text-4xl text-white mb-4 uppercase text-balance leading-tight"
+                style="font-family: 'Heavy', sans-serif; text-shadow: 0 4px 10px rgba(0,0,0,0.5);"
+              >
+                {data.gameData?.prize || 'Premio Sorpresa'}
+              </h3>
+
+              <div class="pt-4 border-t border-white/10 w-full">
+                <p class="text-white/40 text-xs uppercase tracking-[0.2em] mb-1 font-bold">
+                  Ganador/a
+                </p>
+                <p class="text-brand font-mono text-lg break-all">
+                  {data.winnerEmail}
+                </p>
+              </div>
+            </div>
+
+            {/* Brillo sutil al hacer hover */}
+            <div class="absolute inset-0 bg-linear-to-tr from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          </div>
+        ))
+      }
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  main {
+    min-height: 100vh;
+  }
+</style>
