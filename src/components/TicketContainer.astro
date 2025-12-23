@@ -1,6 +1,4 @@
 ---
-import ArrowUp from '@/icons/arrow-up.svg'
-
 interface Props {
   totalCoupons: number
 }
@@ -70,28 +68,20 @@ const { totalCoupons } = Astro.props
         totalCoupons > 0 ? (
           <div class="space-y-2 text-center">
             <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70">
-              Ya tienes <span class="text-brand" id="ticket-coupon-count">{totalCoupons}</span>{' '}
+              Has conseguido <span class="text-brand" id="ticket-coupon-count">{totalCoupons}</span>{' '}
               <span id="ticket-coupon-text">{totalCoupons === 1 ? 'participación' : 'participaciones'}</span>
             </p>
             <p class="text-white/60 text-xs md:text-sm px-2">
-              Ingresa un código arriba para seguir sumando participaciones en el sorteo
-            </p>
-            <p class="flex items-center justify-center gap-2 text-xs text-brand/80 mx-auto">
-              <ArrowUp aria-hidden="true" class="h-2.5 w-2.5 animate-bounce" />
-              <span>Introduce un nuevo código</span>
+              El plazo para validar cupones ha finalizado. ¡Mucha suerte en los sorteos!
             </p>
           </div>
         ) : (
           <div class="space-y-2 text-center">
             <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70 font-sans">
-              Aún no tienes participaciones
+              No has tenido participaciones
             </p>
             <p class="text-white/60 text-xs md:text-sm px-2">
-              Ingresa un código de cupón arriba para comenzar a participar en el sorteo
-            </p>
-            <p class="flex items-center justify-center gap-2 text-xs text-brand/80 mx-auto">
-              <ArrowUp aria-hidden="true" class="h-2.5 w-2.5 animate-bounce" />
-              <span>Introduce tu primer cupón</span>
+              El plazo para validar cupones ha finalizado. ¡Gracias por visitarnos!
             </p>
           </div>
         )
