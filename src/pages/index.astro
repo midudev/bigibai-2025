@@ -3,6 +3,7 @@ import Layout from '@/layouts/Layout.astro'
 import Header from '@/sections/Header.astro'
 import Hero from '@/sections/Hero.astro'
 import Footer from '@/sections/Footer.astro'
+import DeadlineModal from '@/components/DeadlineModal.astro'
 import Chocolates from '@/sections/Chocolates.astro'
 import Map from '@/components/Map.astro'
 import { supabaseAdmin } from '@/supabase-admin'
@@ -61,5 +62,6 @@ if (user) {
     </section>
 
     <Footer />
+    <DeadlineModal />
   </div>
 </Layout>
