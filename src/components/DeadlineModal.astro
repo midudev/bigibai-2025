@@ -60,7 +60,8 @@ import Button from './Button.astro'
       </div>
 
       <p class="text-xl text-white/90 text-balance mb-8">
-        Ha terminado el plazo para participar. Mañana día <strong>24 de diciembre</strong> a mediodía anunciaremos los ganadores aquí mismo en la web.
+        Ha terminado el plazo para participar. Mañana día <strong>24 de diciembre</strong> a mediodía
+        anunciaremos los ganadores aquí mismo en la web.
       </p>
 
       <Button id="btn-close-deadline" variant="brand" size="lg" class="w-full">
@@ -165,7 +166,7 @@ import Button from './Button.astro'
     const modal = document.getElementById('deadline-modal')
     const closeBtn = document.getElementById('close-deadline-modal')
     const closeBtnAction = document.getElementById('btn-close-deadline')
-    
+
     // Solo mostrar si no se ha cerrado antes en esta sesión
     const hasBeenClosed = sessionStorage.getItem('deadline-modal-closed')
 
