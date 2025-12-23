@@ -15,11 +15,7 @@ interface Props {
 const { isLoggedIn, participationCount, userAchievements } = Astro.props
 ---
 
-<main
-  id="main-content"
-  class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20"
-  tabindex="-1"
->
+<main id="main-content" class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20" tabindex="-1">
   <!-- Bento Grid -->
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
     <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
@@ -43,7 +39,8 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
                     El plazo ha finalizado
                   </h2>
                   <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
-                    El periodo para validar códigos del calendario de adviento y participar en los sorteos ha terminado.
+                    El periodo para validar códigos del calendario de adviento y participar en los
+                    sorteos ha terminado.
                   </p>
                 </div>
 
@@ -100,10 +97,8 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
             Consigue tu calendario en los mejores supermercados
           </p>
 
-          <Button variant="secondary" size="lg" class="w-full" href='#tiendas'>
-            <p class="flex items-center justify-center gap-2">
-              ¿Dónde lo compro?
-            </p>
+          <Button variant="secondary" size="lg" class="w-full" href="#tiendas">
+            <p class="flex items-center justify-center gap-2">¿Dónde lo compro?</p>
           </Button>
         </div>
       </div>
