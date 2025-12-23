@@ -874,7 +874,12 @@ const GAME_DATA = {
       // Draw buildings (background)
       for (const b of buildings) {
         ctx!.fillStyle = b.color
-        ctx!.fillRect(Math.floor(b.x), Math.floor(GROUND_Y - b.height), Math.ceil(b.width), Math.ceil(b.height + 50))
+        ctx!.fillRect(
+          Math.floor(b.x),
+          Math.floor(GROUND_Y - b.height),
+          Math.ceil(b.width),
+          Math.ceil(b.height + 50)
+        )
 
         // Windows
         for (const w of b.windows) {
