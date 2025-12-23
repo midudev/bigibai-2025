@@ -40,16 +40,15 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
               <>
                 <div class="space-y-4 flex justify-center items-center flex-col">
                   <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance">
-                    Inicia sesión para empezar
+                    El plazo ha finalizado
                   </h2>
                   <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
-                    Entra y valida tu código del calendario de adviento para participar en los
-                    sorteos
+                    El periodo para validar códigos del calendario de adviento y participar en los sorteos ha terminado.
                   </p>
                 </div>
 
                 <Button href="/registro" variant="brand" size="lg" class="mt-4 mx-auto">
-                  ¡Inicia sesión ahora!
+                  Ver mis participaciones
                 </Button>
               </>
             ) : (
@@ -57,20 +56,18 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
                 <div class="space-y-2 flex justify-center items-center flex-col">
                   <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-6xl text-balance leading-none!">
                     {participationCount === 0
-                      ? '¡Aún no tienes participaciones!'
+                      ? 'No has participado'
                       : participationCount === 1
-                        ? '¡Tienes 1 participación!'
-                        : `¡Tienes ${participationCount} participaciones!`}
+                        ? '¡Has tenido 1 participación!'
+                        : `¡Has tenido ${participationCount} participaciones!`}
                   </h2>
                   <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
-                    {participationCount === 0
-                      ? 'Valida tu primer código del calendario para empezar a participar en los sorteos'
-                      : 'Sigue validando códigos del calendario para aumentar tus oportunidades de ganar'}
+                    El plazo para validar cupones ha finalizado. ¡Gracias por participar!
                   </p>
                 </div>
 
                 <Button href="/dashboard" variant="brand" size="xl" class="mx-auto">
-                  {participationCount === 0 ? '¡Validar mi primer código!' : 'Validar más códigos'}
+                  Ir a mi dashboard
                 </Button>
               </>
             )
