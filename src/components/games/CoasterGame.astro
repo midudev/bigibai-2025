@@ -14,7 +14,7 @@ const { day, gameData } = Astro.props
 
 const GAME_DATA = {
   day: day,
-  targetScore: gameData?.targetScore || 1500,
+  targetScore: gameData?.targetScore || 200,
   prize: gameData?.prize || 'Premio del día',
   videoUrl: gameData?.videoUrl,
 }
@@ -25,8 +25,14 @@ const GAME_DATA = {
     <!-- UI Layer -->
     <div id="ui-layer">
       <div class="ui-left">
-        <span class="score-label">PUNTOS</span>
-        <span id="score-display">0</span>
+        <div class="score-container">
+          <span class="score-label">PUNTOS</span>
+          <span id="score-display">0</span>
+        </div>
+        <div class="lives-container">
+          <span class="score-label">VIDAS</span>
+          <div id="lives-display">❤️❤️❤️</div>
+        </div>
       </div>
       <div class="ui-right">
         <span class="score-label">META</span>
@@ -120,7 +126,19 @@ const GAME_DATA = {
   .ui-right {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .score-container,
+  .lives-container {
+    display: flex;
+    flex-direction: column;
     gap: 2px;
+  }
+
+  #lives-display {
+    font-size: 14px;
+    letter-spacing: 2px;
   }
 
   .score-label {
@@ -318,7 +336,7 @@ const GAME_DATA = {
     ctx.imageSmoothingEnabled = false
 
     // Configuración
-    const TARGET_SCORE = parseInt(container.dataset.targetScore || '1500', 10)
+    const TARGET_SCORE = parseInt(container.dataset.targetScore || '200', 10)
 
     // Resolución lógica del juego
     const GAME_WIDTH = 360
@@ -335,6 +353,7 @@ const GAME_DATA = {
 
     // UI Elements
     const scoreDisplay = document.getElementById('score-display') as HTMLElement
+    const livesDisplay = document.getElementById('lives-display') as HTMLElement
     const startScreen = document.getElementById('start-screen') as HTMLElement
     const gameOverScreen = document.getElementById('game-over-screen') as HTMLElement
     const winScreen = document.getElementById('win-screen') as HTMLElement
@@ -348,6 +367,9 @@ const GAME_DATA = {
     type GameState = 'MENU' | 'PLAYING' | 'GAMEOVER' | 'WIN'
     let gameState: GameState = 'MENU'
     let score = 0
+    let lives = 3
+    let invulnerableTime = 0
+    const INVULNERABILITY_DURATION = 2
     let lastTime = 0
     let gameTime = 0
 
@@ -380,6 +402,7 @@ const GAME_DATA = {
       height: number
       type: 'ticket' | 'popcorn' | 'cotton'
       collected: boolean
+      offset: number
     }
 
     let collectibles: Collectible[] = []
@@ -391,6 +414,7 @@ const GAME_DATA = {
       width: number
       height: number
       type: 'balloon' | 'bird' | 'barrier'
+      offset: number
     }
 
     let obstacles: Obstacle[] = []
@@ -442,7 +466,7 @@ const GAME_DATA = {
     let audioCtx: AudioContext | null = null
 
     // Background music
-    const bgMusic = new Audio('https://videos.bigibai.com/music/coaster.mp3')
+    const bgMusic = new Audio('https://videos.bigibai.com/music/circus.mp3')
     bgMusic.loop = true
     bgMusic.volume = 0.3
 
@@ -538,8 +562,11 @@ const GAME_DATA = {
     // Initialize game objects
     function initGame() {
       score = 0
+      lives = 3
+      invulnerableTime = 0
       gameTime = 0
       scoreDisplay.textContent = '0'
+      livesDisplay.textContent = '❤️❤️❤️'
 
       player = {
         x: 80,
@@ -625,6 +652,7 @@ const GAME_DATA = {
         height: 24,
         type,
         collected: false,
+        offset: Math.random() * Math.PI * 2,
       })
     }
 
@@ -649,6 +677,7 @@ const GAME_DATA = {
         width: type === 'barrier' ? 20 : 28,
         height: height,
         type,
+        offset: Math.random() * Math.PI * 2,
       })
     }
 
@@ -681,6 +710,10 @@ const GAME_DATA = {
       if (gameState !== 'PLAYING') return
 
       gameTime += dt
+
+      if (invulnerableTime > 0) {
+        invulnerableTime -= dt
+      }
 
       // Update player physics
       player.vy += GRAVITY * dt
@@ -753,19 +786,23 @@ const GAME_DATA = {
         const o = obstacles[i]
         o.x -= SCROLL_SPEED * dt
 
-        // Bird bobbing
-        if (o.type === 'bird') {
-          o.y += Math.sin(gameTime * 5 + o.x) * 0.5
-        }
-
         // Check collision
-        if (checkCollision(player, o)) {
-          gameState = 'GAMEOVER'
-          stopMusic()
-          sfx.crash()
-          finalScoreEl.textContent = String(score)
-          gameOverScreen.classList.remove('hidden')
-          createParticles(player.x, player.y, '#ff0000', 15)
+        if (invulnerableTime <= 0 && checkCollision(player, o)) {
+          lives--
+          livesDisplay.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives)
+
+          if (lives <= 0) {
+            gameState = 'GAMEOVER'
+            stopMusic()
+            sfx.crash()
+            finalScoreEl.textContent = String(score)
+            gameOverScreen.classList.remove('hidden')
+            createParticles(player.x, player.y, '#ff0000', 15)
+          } else {
+            sfx.crash()
+            invulnerableTime = INVULNERABILITY_DURATION
+            createParticles(player.x, player.y, '#ff0000', 10)
+          }
           return
         }
 
@@ -819,8 +856,6 @@ const GAME_DATA = {
     }
 
     function draw() {
-      ctx!.imageSmoothingEnabled = false
-
       // Sky gradient (night theme park)
       const gradient = ctx!.createLinearGradient(0, 0, 0, GAME_HEIGHT)
       gradient.addColorStop(0, '#0a0515')
@@ -839,17 +874,17 @@ const GAME_DATA = {
       // Draw buildings (background)
       for (const b of buildings) {
         ctx!.fillStyle = b.color
-        ctx!.fillRect(Math.floor(b.x), GROUND_Y - b.height, Math.ceil(b.width), b.height + 50)
+        ctx!.fillRect(Math.floor(b.x), Math.floor(GROUND_Y - b.height), Math.ceil(b.width), Math.ceil(b.height + 50))
 
         // Windows
         for (const w of b.windows) {
           ctx!.fillStyle = w.lit ? '#ffeb3b' : '#111'
-          ctx!.fillRect(Math.floor(b.x + w.x), GROUND_Y - b.height + w.y, 6, 8)
+          ctx!.fillRect(Math.floor(b.x + w.x), Math.floor(GROUND_Y - b.height + w.y), 6, 8)
         }
       }
 
       // Draw Ferris wheel in background
-      drawFerrisWheel(GAME_WIDTH - 80, GROUND_Y - 100)
+      drawFerrisWheel(Math.floor(GAME_WIDTH - 80), Math.floor(GROUND_Y - 100))
 
       // Draw ground
       ctx!.fillStyle = '#1a0a2e'
@@ -901,8 +936,8 @@ const GAME_DATA = {
       // Spokes and cabins
       for (let i = 0; i < spokes; i++) {
         const angle = (i / spokes) * Math.PI * 2 + gameTime * 0.5
-        const x = cx + Math.cos(angle) * radius
-        const y = cy + Math.sin(angle) * radius
+        const x = Math.floor(cx + Math.cos(angle) * radius)
+        const y = Math.floor(cy + Math.sin(angle) * radius)
 
         // Spoke
         ctx!.strokeStyle = '#ff6b9d55'
@@ -933,9 +968,9 @@ const GAME_DATA = {
 
       // Rail supports
       ctx!.fillStyle = '#654321'
-      const offset = (gameTime * SCROLL_SPEED) % 40
+      const offset = Math.floor((gameTime * SCROLL_SPEED) % 40)
       for (let x = -offset; x < GAME_WIDTH + 40; x += 40) {
-        ctx!.fillRect(x, GROUND_Y - 8, 4, 30)
+        ctx!.fillRect(Math.floor(x), GROUND_Y - 8, 4, 30)
       }
 
       // Rail top highlight
@@ -944,8 +979,12 @@ const GAME_DATA = {
     }
 
     function drawPlayer() {
-      const px = player.x
-      const py = player.y
+      if (invulnerableTime > 0 && Math.floor(gameTime * 15) % 2 === 0) {
+        return
+      }
+
+      const px = Math.floor(player.x)
+      const py = Math.floor(player.y)
 
       // Squash and stretch based on velocity
       const stretch = 1 + Math.abs(player.vy) * 0.0005
@@ -998,10 +1037,10 @@ const GAME_DATA = {
     }
 
     function drawCollectible(c: Collectible) {
-      const bob = Math.sin(gameTime * 4 + c.x) * 3
+      const bob = Math.sin(gameTime * 3 + c.offset) * 8
 
       ctx!.save()
-      ctx!.translate(c.x, c.y + bob)
+      ctx!.translate(Math.floor(c.x), Math.floor(c.y + bob))
 
       switch (c.type) {
         case 'ticket':
@@ -1047,8 +1086,9 @@ const GAME_DATA = {
     }
 
     function drawObstacle(o: Obstacle) {
+      const bob = o.type === 'bird' ? Math.sin(gameTime * 5 + o.offset) * 10 : 0
       ctx!.save()
-      ctx!.translate(o.x, o.y)
+      ctx!.translate(Math.floor(o.x), Math.floor(o.y + bob))
 
       switch (o.type) {
         case 'balloon':
