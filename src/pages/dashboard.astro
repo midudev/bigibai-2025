@@ -1,25 +1,35 @@
 ---
 import Layout from '@/layouts/Layout.astro'
-import CouponInput from '@/components/CouponInput.astro'
 import Header from '@/sections/Header.astro'
+import AchievementsBox from '@/components/AchievementsBox.astro'
 
 import { supabaseAdmin } from '@/supabase-admin'
 import TicketContainer from '@/components/TicketContainer.astro'
 import GamesContainer from '@/components/GamesContainer.astro'
 import Footer from '@/sections/Footer.astro'
 
-if (!Astro.locals.user) {
+const user = Astro.locals.user
+
+if (!user) {
   return Astro.redirect('/registro')
 }
 
-// Obtener el número de cupones validados por el usuario
-const { data: userCoupons, error: couponsError } = await supabaseAdmin
-  .from('coupons')
-  .select('used_at')
-  .eq('used_by', Astro.locals.user.id)
-  .eq('is_used', true)
+// Obtener el número de cupones validados por el usuario y sus logros en paralelo
+const [userCouponsResult, achievementsResult] = await Promise.all([
+  supabaseAdmin
+    .from('coupons')
+    .select('used_at')
+    .eq('used_by', user.id)
+    .eq('is_used', true),
+  supabaseAdmin
+    .from('user_achievements')
+    .select('achievements')
+    .eq('user_id', user.id)
+    .maybeSingle(),
+])
 
-const totalCoupons = userCoupons?.length || 0
+const totalCoupons = userCouponsResult.data?.length || 0
+const userAchievements = achievementsResult.data?.achievements ?? {}
 ---
 
 <Layout>
@@ -28,21 +38,28 @@ const totalCoupons = userCoupons?.length || 0
 
     <main id="main-content" class="flex flex-1 flex-col items-center justify-center px-4 pb-12" tabindex="-1">
       <div id="coupon-section" class="space-y-6">
-        <div class="text-center">
-          <h2 class="text-shadow-title text-3xl text-balance">
-            Introduce tu código de cupón para participar
+        <div class="text-center max-w-xl mx-auto">
+          <h2 class="text-shadow-title text-3xl text-balance font-bold text-white mb-4">
+            El plazo de validación ha finalizado
           </h2>
+          <p class="text-xl text-white/90 text-pretty">
+            Ya no es posible validar más códigos del calendario de adviento. Debajo puedes ver tus participaciones y logros conseguidos. ¡Mucha suerte!
+          </p>
         </div>
-
-        <CouponInput />
       </div>
 
       <section
-        class="mt-4 w-full sm:w-[80%] max-w-xl px-4 font-sans space-y-4"
+        class="mt-4 w-full sm:w-[80%] max-w-xl px-4 font-sans space-y-6"
         aria-labelledby="participation-status"
       >
-        <GamesContainer totalCoupons={totalCoupons} />
-        <TicketContainer totalCoupons={totalCoupons} />
+        <div class="space-y-4">
+          <GamesContainer totalCoupons={totalCoupons} />
+          <TicketContainer totalCoupons={totalCoupons} />
+        </div>
+
+        <div class="pt-4">
+          <AchievementsBox isLoggedIn={true} userAchievements={userAchievements} />
+        </div>
       </section>
     </main>
 
