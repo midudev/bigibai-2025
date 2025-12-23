@@ -1,0 +1,196 @@
+---
+import Button from './Button.astro'
+---
+
+<div
+  id="deadline-modal"
+  class="fixed inset-0 z-9999 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+>
+  <div
+    class="bg-[#1a1a1a] border-2 border-brand rounded-3xl p-8 max-w-lg w-full text-center relative shadow-[0_0_50px_rgba(248,177,52,0.3)] animate-fade-in-scale"
+  >
+    <button
+      id="close-deadline-modal"
+      class="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+      aria-label="Cerrar"
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+
+    <div class="mb-6">
+      <div class="logo-wrapper relative z-10 w-full max-w-[200px] mx-auto mb-8">
+        <img class="logo-main" src="/logo-a.svg" alt="bigibai logo" />
+        <img
+          class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
+          src="/logo-a.svg"
+          alt="bigibai logo"
+        />
+      </div>
+
+      <h2
+        class="text-4xl font-bold text-brand uppercase mb-4 text-shadow-title leading-tight"
+        style="font-family: 'Heavy', sans-serif;"
+      >
+        ¡Plazo Finalizado!
+      </h2>
+
+      <div class="relative flex justify-center gap-4 my-8 h-32 items-center">
+        <img
+          src="/chocolate_a.webp"
+          class="w-24 h-auto floating-a drop-shadow-2xl"
+          alt="Chocolatina Big Ibai"
+        />
+
+        <img
+          src="/chocolate_b.webp"
+          class="w-24 h-auto floating-c drop-shadow-2xl"
+          alt="Chocolatina Big Ibai"
+        />
+      </div>
+
+      <p class="text-xl text-white/90 text-balance mb-8">
+        Ha terminado el plazo para participar. Mañana día <strong>24 de diciembre</strong> a mediodía anunciaremos los ganadores aquí mismo en la web.
+      </p>
+
+      <Button id="btn-close-deadline" variant="brand" size="lg" class="w-full">
+        ¡Entendido!
+      </Button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-fade-in-scale {
+    animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .logo-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .logo-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/gold-texture.webp');
+    background-size: cover;
+    background-position: center;
+    mask-image: url('/logo-a.svg');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .logo-main {
+    display: block;
+    width: 100%;
+    height: auto;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .pulse {
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.75;
+      transform: scale(1.02);
+    }
+  }
+
+  .floating-a {
+    animation: float-a 4s ease-in-out infinite;
+  }
+  .floating-c {
+    animation: float-c 4.5s ease-in-out infinite;
+  }
+
+  @keyframes float-a {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-10deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(-5deg);
+    }
+  }
+  @keyframes float-c {
+    0%,
+    100% {
+      transform: translateY(0) rotate(10deg);
+    }
+    50% {
+      transform: translateY(-12px) rotate(15deg);
+    }
+  }
+</style>
+
+<script>
+  function setupDeadlineModal() {
+    const modal = document.getElementById('deadline-modal')
+    const closeBtn = document.getElementById('close-deadline-modal')
+    const closeBtnAction = document.getElementById('btn-close-deadline')
+    
+    // Solo mostrar si no se ha cerrado antes en esta sesión
+    const hasBeenClosed = sessionStorage.getItem('deadline-modal-closed')
+
+    if (!hasBeenClosed && modal) {
+      modal.classList.remove('hidden')
+      modal.classList.add('flex')
+      document.body.style.overflow = 'hidden'
+    }
+
+    const closeModal = () => {
+      modal?.classList.add('hidden')
+      modal?.classList.remove('flex')
+      document.body.style.overflow = ''
+      sessionStorage.setItem('deadline-modal-closed', 'true')
+    }
+
+    closeBtn?.addEventListener('click', closeModal)
+    closeBtnAction?.addEventListener('click', closeModal)
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal()
+      }
+    })
+  }
+
+  document.addEventListener('astro:page-load', setupDeadlineModal)
+</script>
