@@ -20,55 +20,44 @@ const { isLoggedIn, participationCount, userAchievements } = Astro.props
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
     <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
 
-    <BentoCard class="group col-span-3 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-4">
-      <img
-        src="/hero.webp"
-        alt="Imagen que explica que en la casilla de atrás hay código para canjear y participar"
-        class="h-auto w-[300px] md:w-[150px] lg:w-[250px] object-contain mx-auto group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6"
-        loading="eager"
-      />
-      <div class="relative z-10 flex flex-1 flex-col items-start justify-center gap-2">
-        <div
-          class="relative flex h-full flex-col justify-center gap-6 p-8 md:flex-col md:items-center md:py-0"
-        >
-          {
-            !isLoggedIn ? (
-              <>
-                <div class="space-y-4 flex justify-center items-center flex-col">
-                  <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance">
-                    El plazo ha finalizado
-                  </h2>
-                  <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
-                    El periodo para validar códigos del calendario de adviento y participar en los
-                    sorteos ha terminado.
-                  </p>
-                </div>
+    <BentoCard class="group col-span-3 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-0">
+      <div
+        class="relative flex items-center justify-center md:justify-start md:w-1/3 min-h-[300px] md:min-h-0"
+      >
+        <img
+          src="/bigibai.webp"
+          alt="Ibai celebrando"
+          class="absolute h-auto w-[450px] md:w-[350px] lg:w-[480px] max-w-none object-contain md:-left-16 md:-top-8 group-hover:scale-105 transition-transform duration-300 group-hover:rotate-3 drop-shadow-2xl z-0 pointer-events-none"
+          loading="eager"
+          style="filter: hue-rotate(336deg) brightness(1.2)"
+        />
+      </div>
+      <div
+        class="relative z-10 flex flex-1 flex-col items-center md:items-start justify-center p-8 md:pr-12"
+      >
+        <div class="flex flex-col justify-center gap-6">
+          <div class="space-y-4 flex justify-center items-center flex-col">
+            <h2
+              class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance text-center"
+            >
+              ¡Ya tenemos los ganadores!
+            </h2>
+            <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
+              Consulta la lista completa de afortunados que han ganado premios en nuestro Calendario
+              de Adviento.
+            </p>
+          </div>
 
-                <Button href="/registro" variant="brand" size="lg" class="mt-4 mx-auto">
-                  Ver mis participaciones
+          <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+            <Button href="/ganadores" variant="brand" size="lg"> Ver lista de ganadores </Button>
+            {
+              isLoggedIn && (
+                <Button href="/dashboard" variant="secondary" size="lg">
+                  Mis participaciones
                 </Button>
-              </>
-            ) : (
-              <>
-                <div class="space-y-2 flex justify-center items-center flex-col">
-                  <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-6xl text-balance leading-none!">
-                    {participationCount === 0
-                      ? 'No has participado'
-                      : participationCount === 1
-                        ? '¡Has tenido 1 participación!'
-                        : `¡Has tenido ${participationCount} participaciones!`}
-                  </h2>
-                  <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
-                    El plazo para validar cupones ha finalizado. ¡Gracias por participar!
-                  </p>
-                </div>
-
-                <Button href="/dashboard" variant="brand" size="xl" class="mx-auto">
-                  Ir a mi dashboard
-                </Button>
-              </>
-            )
-          }
+              )
+            }
+          </div>
         </div>
       </div>
     </BentoCard>
