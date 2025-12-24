@@ -179,10 +179,8 @@ import Button from './Button.astro'
     const closeBtn = document.getElementById('close-winners-modal')
     const isWinnersPage = window.location.pathname.includes('/ganadores')
 
-    // Solo mostrar si no se ha cerrado antes en esta sesión y no estamos en la página de ganadores
-    const hasBeenClosed = sessionStorage.getItem('winners-modal-closed')
-
-    if (!hasBeenClosed && !isWinnersPage) {
+    // Mostrar siempre si no estamos en la página de ganadores
+    if (!isWinnersPage) {
       modal?.classList.remove('hidden')
       modal?.classList.add('flex')
 
@@ -194,7 +192,6 @@ import Button from './Button.astro'
       modal?.classList.add('hidden')
       modal?.classList.remove('flex')
       document.body.style.overflow = ''
-      sessionStorage.setItem('winners-modal-closed', 'true')
     })
 
     // También cerrar si se hace click fuera del contenido

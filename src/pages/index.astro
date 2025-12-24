@@ -17,11 +17,7 @@ let userAchievements = {}
 
 if (user) {
   const [userCouponsResult, achievementsResult] = await Promise.all([
-    supabaseAdmin
-      .from('coupons')
-      .select('used_at')
-      .eq('used_by', user.id)
-      .eq('is_used', true),
+    supabaseAdmin.from('coupons').select('used_at').eq('used_by', user.id).eq('is_used', true),
     supabaseAdmin
       .from('user_achievements')
       .select('achievements')
