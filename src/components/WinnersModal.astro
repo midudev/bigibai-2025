@@ -179,6 +179,19 @@ import Button from './Button.astro'
     const closeBtn = document.getElementById('close-winners-modal')
     const isWinnersPage = window.location.pathname.includes('/ganadores')
 
+    const closeModal = () => {
+      modal?.classList.add('hidden')
+      modal?.classList.remove('flex')
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', handleEsc)
+    }
+
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal()
+      }
+    }
+
     // Mostrar siempre si no estamos en la página de ganadores
     if (!isWinnersPage) {
       modal?.classList.remove('hidden')
@@ -186,18 +199,17 @@ import Button from './Button.astro'
 
       // Evitar scroll cuando el modal está abierto
       document.body.style.overflow = 'hidden'
+
+      // Escuchar tecla ESC
+      window.addEventListener('keydown', handleEsc)
     }
 
-    closeBtn?.addEventListener('click', () => {
-      modal?.classList.add('hidden')
-      modal?.classList.remove('flex')
-      document.body.style.overflow = ''
-    })
+    closeBtn?.addEventListener('click', closeModal)
 
     // También cerrar si se hace click fuera del contenido
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
-        closeBtn?.click()
+        closeModal()
       }
     })
   }
