@@ -5,34 +5,11 @@ import Footer from '@/sections/Footer.astro'
 import { cells } from '@/data/days-data'
 import { winners } from '@/data/winners'
 
-const winnersVisible = Astro.url.searchParams.get('winners') === 'true'
-
-if (!winnersVisible) {
-  return Astro.redirect('/')
-}
-
-const obfuscateEmail = (email: string) => {
-  const [name, domain] = email.split('@')
-  if (!name || !domain) return email
-
-  const obfuscatedName =
-    name.length > 2 ? name[0] + '*'.repeat(name.length - 2) + name[name.length - 1] : name[0] + '*'
-
-  const domainParts = domain.split('.')
-  const domainName = domainParts[0]
-  const domainExt = domainParts.slice(1).join('.')
-
-  const obfuscatedDomain =
-    domainName.length > 1 ? domainName[0] + '*'.repeat(domainName.length - 1) : '*'
-
-  return `${obfuscatedName}@${obfuscatedDomain}.${domainExt}`
-}
-
 const winnersData = cells.map((cell) => {
   const winner = winners.find((w) => w.day === cell.day)
   return {
     ...cell,
-    winnerEmail: winner ? obfuscateEmail(winner.email) : 'Próximamente',
+    winnerEmail: winner ? winner.email : 'Próximamente',
   }
 })
 ---
