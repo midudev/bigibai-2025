@@ -81,22 +81,20 @@ const winnersData = cells.map((cell) => {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <path d="M12 16v-4"></path>
-                      <path d="M12 8h.01"></path>
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
                     </svg>
                   </span>
                 </div>
-                {
-                  data.winnerInitials && (
-                    <p
-                      class="text-white font-bold text-2xl mb-1"
-                      style="font-family: 'Heavy', sans-serif;"
-                    >
-                      {data.winnerInitials}
-                    </p>
-                  )
-                }
+                {data.winnerInitials && (
+                  <p
+                    class="font-bold text-2xl mb-1 text-brand"
+                    style="font-family: 'Heavy', sans-serif;"
+                  >
+                    {data.winnerInitials}
+                  </p>
+                )}
                 <p class="text-brand font-mono text-sm break-all opacity-80">{data.winnerEmail}</p>
               </div>
             </div>
