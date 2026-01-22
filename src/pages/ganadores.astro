@@ -10,7 +10,7 @@ const winnersData = cells.map((cell) => {
   return {
     ...cell,
     winnerEmail: winner ? winner.email : 'Próximamente',
-    winnerInitials: winner ? winner.initials : null,
+    winnerName: winner ? winner.name : null,
   }
 })
 ---
@@ -68,7 +68,7 @@ const winnersData = cells.map((cell) => {
                     Ganador/a
                   </p>
                   <span
-                    data-tip="Por motivos de privacidad solo se muestran las iniciales y el correo ofuscado. Todos los ganadores serán contactados por correo electrónico para gestionar el premio."
+                    data-tip="Todos los ganadores serán contactados por correo electrónico para gestionar el premio."
                     class="cursor-help text-white/20 hover:text-brand transition-colors"
                   >
                     <svg
@@ -87,12 +87,12 @@ const winnersData = cells.map((cell) => {
                     </svg>
                   </span>
                 </div>
-                {data.winnerInitials && (
+                {data.winnerName && (
                   <p
                     class="font-bold text-2xl mb-1 text-brand"
                     style="font-family: 'Heavy', sans-serif;"
                   >
-                    {data.winnerInitials}
+                    {data.winnerName}
                   </p>
                 )}
                 <p class="text-brand font-mono text-sm break-all opacity-80">{data.winnerEmail}</p>
