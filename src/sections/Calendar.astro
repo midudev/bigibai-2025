@@ -4,19 +4,20 @@ import { cells } from '@/data/days-data'
 
 // Función para verificar si un día está activo
 function isDayActive(day: number): boolean {
-  const now = new Date()
+  // const now = new Date()
 
-  // Convertir a hora CET (UTC+1)
-  const cetTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
+  // // Convertir a hora CET (UTC+1)
+  // const cetTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
 
-  const month = cetTime.getMonth() // 0 = enero, 11 = diciembre
-  const currentDay = cetTime.getDate()
+  // const month = cetTime.getMonth() // 0 = enero, 11 = diciembre
+  // const currentDay = cetTime.getDate()
 
-  // Si no es diciembre, ningún día está activo
-  if (month !== 11) return false // 11 = diciembre
+  // // Si no es diciembre, ningún día está activo
+  // if (month !== 11) return false // 11 = diciembre
 
-  // Activar el día si estamos en diciembre y es ese día o posterior
-  return day <= currentDay
+  // // Activar el día si estamos en diciembre y es ese día o posterior
+  // return day <= currentDay
+  return true
 }
 ---
 
