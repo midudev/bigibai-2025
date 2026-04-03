@@ -45,11 +45,11 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
         <a href="#readme-index" title="Más...">Web Oficial de BigIbai 2025</a>
     </summary>
 
-- 📎 <a href="#readme-top" title="Ir a la Descripción">Descripción</a>
-- 🗂️ <a href="#readme-index" title="Ir al Índice"><strong>Índice</strong></a> <span><strong>< Usted está aquí ></strong></span>
-- 🚀 <a href="#readme-stack" title="Ir al Stack Tecnologico">Tech Stack</a>
-- ☝️🖥️ <a href="#readme-contribute" title="Ir a Contribuir">¿Cómo Contribuir?</a>
-- 🧑🖥️ <a href="#readme-clone" title="Ir a Clonar Repositorio">Desarrollo Local</a>
+    - 📎 <a href="#readme-top" title="Ir a la Descripción">Descripción</a>
+    - 🗂️ <a href="#readme-index" title="Ir al Índice"><strong>Índice</strong></a> <span><strong>< Tú estás aquí ></strong></span>
+    - 🚀 <a href="#readme-stack" title="Ir al Stack Tecnologico">Tech Stack</a>
+    - ☝️🖥️ <a href="#readme-contribute" title="Ir a Contribuir">¿Cómo Contribuir?</a>
+    - 🧑🖥️ <a href="#readme-clone" title="Ir a Clonar Repositorio">Desarrollo Local</a>
 
 </details>
 
@@ -84,9 +84,9 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 > [!IMPORTANT]
 > ¡Toda ayuda es bienvenida! Si quieres formar parte de la construcción, adelante.
 
-1.  Haga un [Fork][how-to-fork-tutorial] de este repositorio.
+1.  Haz un [Fork][how-to-fork-tutorial] de este repositorio.
 
-2.  Cree una rama para su feature:
+2.  Crea una rama para tu feature:
 
     ```bash
     git checkout -b {rama}/{nombre-de-implementación}
@@ -95,7 +95,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     git switch -c {rama}/{nombre-de-implementación}
     ```
 
-    **Le aconsejamos seguir el siguiente patrón al nombrar una rama para su feature:**
+    **Te aconsejamos seguir el siguiente patrón al nombrar una rama para tu feature:**
 
     | {rama}    | Utilidad                |
     | --------- | ----------------------- |
@@ -107,7 +107,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     | test/     | testing                 |
     | style/    | cambíos de estilo       |
 
-3.  Ánexe sus cambios a su Fork:
+3.  Añade tus cambios a tu Fork:
 
     ```bash
     # Añadir todos los archivos.
@@ -117,13 +117,13 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     git add src/components/A.astro, public/b.svg, c.ts
     ```
 
-4.  Confirme los cambios con un mensaje:
+4.  Confirma los cambios con un mensaje:
 
     ```bash
     git commit -m "{rama}: {describa su cambio brevemente}"
     ```
 
-5.  Realice Push a su rama:
+5.  Haz push a tu rama:
 
     ```bash
     git push origin {rama}/{nombre-de-implementación}
@@ -132,7 +132,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
     > [!WARNING]
     > Este comando debe recibir el nombre de su rama y su implementación exactamente como lo definío en el paso dos.
 
-6.  Abra un Pull Request & explique claramente qué hizo...
+6.  Abre un Pull Request & explica claramente qué hiciste...
 
 <p align="right">
     (<a href="#readme-top">regresar</a>)
@@ -146,7 +146,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 ## 🧑🖥️ Desarrollo Local:
 
 > [!IMPORTANT]
-> Deberá requerir tener instalado [pnpm][pnpm-url]
+> Deberás tener instalado [pnpm][pnpm-url]
 
 <details>
     <summary>Script automatizado...</summary>
@@ -176,17 +176,17 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 
 <br>
 
-1. Clone el repositorio:
+1. Clona el repositorio:
 
    ```bash
    git clone https://github.com/midudev/bigibai-2025.git
    ```
 
-2. Entre en el repositorio:
+2. Entra en el repositorio:
 
-   ```bash
+    ```bash
     cd bigibai-2025
-   ```
+    ```
 
 3. Instale las dependencias:
 
@@ -205,15 +205,15 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
    ```
 
 > [!NOTE]
-> Recuerde establecer correctamente las credenciales correspondientes en el archivo **.env** si requiere un buen funcionamiento del _backend_, de lo contrario solamente renderizará el _frontend_.
+> Recuerda establecer correctamente las credenciales correspondientes en el archivo **.env** si requieres un buen funcionamiento del _backend_; de lo contrario solo se renderizará el _frontend_.
 
-5. Inicie el servidor en modo desarrollo:
+5. Inicia el servidor en modo desarrollo:
 
    ```bash
    pnpm run dev
    ```
 
-6. Abra el navegador en la siguiente URL:
+6. Abre el navegador en la siguiente URL:
 
    ==> [http://localhost:4321](http://localhost:4321)
 
