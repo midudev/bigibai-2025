@@ -2,17 +2,17 @@
 title: Bases Legales - Calendario de Adviento Big Ibai 2025
 ---
 
-Las presentes bases constituyen un extracto informativo del sorteo denominado "Calendario de Adviento Big Ibai 2025". Las bases legales completas, con el detalle íntegro de los premios y condiciones de participación, fueron protocolizadas ante el Notario D. Luis Sampietro Villacampa, del Ilustre Colegio de Cataluña, en Barcelona, con fecha 28 de octubre de 2025, bajo número de protocolo 2.081.Los premios se estructuran en distintas categorías (por ejemplo, "Planes increíbles", "Grandes aventuras", "Tu mejor versión", entre otras), cuyo contenido se revelará progresivamente durante el desarrollo de la promoción.
+Las presentes bases constituyen un extracto informativo del sorteo denominado "Calendario de Adviento Big Ibai 2025". Las bases legales completas, con el detalle íntegro de los premios y condiciones de participación, fueron protocolizadas ante el Notario D. Luis Sampietro Villacampa, del Ilustre Colegio de Cataluña, en Barcelona, con fecha 28 de octubre de 2025, bajo número de protocolo 2.081. Los premios se estructuran en distintas categorías (por ejemplo, "Planes increíbles", "Grandes aventuras", "Tu mejor versión", entre otras), cuyo contenido se revelará progresivamente durante el desarrollo de la promoción.
 
 ## BASES LEGALES DE LA PROMOCIÓN: CALENDARIO DE ADVIENTO BIG IBAI 2025
 
 ## ORGANIZADOR DE LA PROMOCIÓN
 
-La entidad mercantil Salad Brands, S.L. (en adelante, "SALAD BRANDS"), con domicilio social en Carrer Sagués, 27, 08021, Barcelona, y provista de CIF B70835202, organiza la promoción denominado "Calendario de Adviento Big Ibai 2025" (en adelante, "promoción"), dirigido a aquellos clientes que hayan adquirido previamente el Calendario de Adviento Big Ibai 2025 en alguno de los puntos de venta autorizados. Los participantes deberán ser mayores de 18 años y residentes en España.
+La entidad mercantil Salad Brands, S.L. (en adelante, "SALAD BRANDS"), con domicilio social en Carrer Sagués, 27, 08021, Barcelona, y provista de CIF B70835202, organiza la promoción denominada "Calendario de Adviento Big Ibai 2025" (en adelante, "promoción"), dirigido a aquellos clientes que hayan adquirido previamente el Calendario de Adviento Big Ibai 2025 en alguno de los puntos de venta autorizados. Los participantes deberán ser mayores de 18 años y residentes en España.
 
-SALAD BRANDS se reserva el derecho de modificar unilateralmente las fechas de inicio y finalización del promoción, así como suspenderlo o cancelarlo en caso de que razones técnicas u otras circunstancias fuera de su control impidan su normal desarrollo.
+SALAD BRANDS se reserva el derecho de modificar unilateralmente las fechas de inicio y finalización de la promoción, así como suspenderlo o cancelarlo en caso de que razones técnicas u otras circunstancias fuera de su control impidan su normal desarrollo.
 
-Para cualquier consulta relacionada con el promoción, los participantes pueden contactar al correo electrónico sorteo <sorteo@bigibai.com>
+Para cualquier consulta relacionada con la promoción, los participantes pueden contactar a través del correo electrónico <sorteo@bigibai.com>
 
 ## DURACIÓN DE LA PROMOCIÓN
 
@@ -156,13 +156,13 @@ El período de reclamación de los premios finaliza transcurridos treinta (30) d
 
 ## ACEPTACIÓN DE LAS BASES LEGALES
 
-La participación en la presente Promoción el usuario/participante implica obligatoriamente la aceptación íntegra de las presentes Bases Legales y de las correspondientes condiciones particulares que se detallaran en el link <www.bigibai.com/bases-legales/>, así como la aceptación del criterio interpretativo de SALAD BRANDS en cuanto a la resolución de cualquier cuestión derivada de esta Promoción. SALAD BRANDS se reserva el derecho a varios estas Bases Legales si así lo exigieran las circunstancias y dirimir cuantas dudas pudieran surgir en lo no previsto en las mismas.
+La participación en la presente Promoción el usuario/participante implica obligatoriamente la aceptación íntegra de las presentes Bases Legales y de las correspondientes condiciones particulares que se detallaran en el link <www.bigibai.com/bases-legales/>, así como la aceptación del criterio interpretativo de SALAD BRANDS en cuanto a la resolución de cualquier cuestión derivada de esta Promoción. SALAD BRANDS se reserva el derecho a modificar estas Bases Legales si así lo exigieran las circunstancias y dirimir cuantas dudas pudieran surgir en lo no previsto en las mismas.
 
 SALAD BRANDS se reserva también el derecho de anular, prorrogar, ampliar, recortar o modificar la Promoción si las circunstancias lo obligan, sin tener que justificar la decisión y sin que se le pueda reclamar ningún tipo de responsabilidad como consecuencia de ello, siempre que no perjudique los derechos adquiridos por los participantes.
 
 ## LEY APLICABLE Y JURISDICCIÓN
 
-Las presentes Bases Legales se regirán e interpretarán de acuerdo con su propio contenido y por las leyes de España. En caso de divergencia entre los participantes en la Promoción y la interpretación de las presentes Bases Legales por SALAD BRANDS, serán competentes para conocer los litigios que puedan plantearse los Juzgados y Tribunales de la Ciudad de Barcelona (ESPAÑA), renunciando expresamente los participantes de esta Promoción a sus propio fuero en caso de que lo tuvieren.
+Las presentes Bases Legales se regirán e interpretarán de acuerdo con su propio contenido y por las leyes de España. En caso de divergencia entre los participantes en la Promoción y la interpretación de las presentes Bases Legales por SALAD BRANDS, serán competentes para conocer los litigios que puedan plantearse los Juzgados y Tribunales de la Ciudad de Barcelona (ESPAÑA), renunciando expresamente los participantes de esta Promoción a su propio fuero en caso de que lo tuvieren.
 
 ---
 

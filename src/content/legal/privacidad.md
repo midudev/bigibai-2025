@@ -1,5 +1,5 @@
 ---
-title: bigibai - Términos y Condiciones
+title: bigibai - Política de Privacidad
 ---
 
 ## Política de Privacidad
