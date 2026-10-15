@@ -31,7 +31,7 @@ Dirección de correo electrónico de contacto: [**dataprotection@bigibai.com**](
 
 3.1.- El acceso a este Sitio Web es libre y gratuito, salvo en lo relativo al coste de conexión de la red de telecomunicaciones suministrada por el operador contratado por cada USUARIO.
 
-3.2.- El USUARIO asume la responsabilidad del uso del Sitio Web. Por tanto, el USUARIO se obliga a utilizar los contenidos de forma diligente, SALAD BRANDS y lícita y, en particular, se compromete a no emplearlos para, entre otros usos:
+3.2.- El USUARIO asume la responsabilidad del uso del Sitio Web. Por tanto, el USUARIO se obliga a utilizar los contenidos de forma diligente, correcta y lícita y, en particular, se compromete a no emplearlos para, entre otros usos:
 
 - Utilizar identidades falsas, o suplantar la identidad de otros usuarios en la utilización del Sitio Web o de sus servicios.
 - Introducir en la red virus informáticos o realizar actuaciones susceptibles de alterar, dañar, interrumpir o generar errores o daños en los documentos electrónicos, datos o sistemas físicos y lógicos de SALAD BRANDS o de terceras personas, así como obstaculizar el acceso de otros usuarios al Sitio Web y a sus servicios mediante el consumo masivo de los recursos informáticos a través de los cuales SALAD BRANDS presta sus servicios.
@@ -110,7 +110,7 @@ El usuario comunicará a SALAD BRANDS cualquier uso no autorizado de sus credenc
 
 SALAD BRANDS puede estar presente, actualmente o en el futuro, en redes sociales de Internet, donde considere oportuno establecer presencia.
 
-Estos espacios se considerarán oficiales, no asumiendo responsabilidad por el uso o contenidos dispuestos en cualesquiera otras cuentas o espacios abiertos en las redes sociales por parte de terceros. SALAD BRANDS tampoco asumirá responsabilidad del uso o contenidos dispuestos a través de cuentas o espacios abiertos por parte de sus cargos públicos, creado de manera particular en el ámbito privado o a través de partido político u otro colectivo al que pertenecieren.
+Estos espacios se considerarán oficiales, no asumiendo responsabilidad por el uso o contenidos dispuestos en cualesquiera otras cuentas o espacios abiertos en las redes sociales por parte de terceros.
 
 SALAD BRANDS, como administrador de sus instancias propias en dichas redes, podrá decidir la no publicación y/o el borrado de cualquier contenido publicado en las mismas.
 
@@ -118,7 +118,7 @@ En cualquier caso, el Usuario es el único responsable de los contenidos que, en
 
 Además, informamos que el sitio Web integra, en su caso, plugins o complementos de redes sociales, respecto a los cuales deberá tener en cuenta lo siguiente:
 
-Si está registrado como usuario en la red social (Facebook, Twitter) y al visitar este sitio Web del tiene la sesión abierta en cualquiera de estas redes sociales, al hacer “click” en sus plugins, la red social recibirá la información que le indica y de que ha visitado el Sitio. Además, proporcionará información sobre su perfil de usuario de esa red social (nombre, email, foto, etc.).
+Si está registrado como usuario en la red social y al visitar este sitio Web tiene la sesión abierta en cualquiera de estas redes sociales, al hacer “click” en sus plugins, la red social recibirá la información que le indica y de que ha visitado el Sitio Web. Además, proporcionará información sobre su perfil de usuario de esa red social (nombre, email, foto, etc.).
 Si no está registrado en la red social, o no tienen la sesión abierta mientras visita el sitio Web puede ser que la red social reciba y almacene al menos su dirección IP.
 Si no desea que una red social recopile los datos personales, ni que los comparta con nosotros ni con terceros, consulte la política de privacidad de la red social correspondiente y cierre sesión en la misma antes de visitar este sitio Web. También podrá eliminar las cookies existentes que haya instalado la red social en su ordenador usando las funciones de su navegador.
 
