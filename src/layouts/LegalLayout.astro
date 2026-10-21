@@ -1,0 +1,16 @@
+---
+import PageLayout from './PageLayout.astro'
+import BackToHome from '@/components/BackToHome.astro'
+interface Props {
+  title: string
+}
+const { title } = Astro.props
+---
+
+<PageLayout title={`${title} | Big Ibai`} width="reading">
+  <BackToHome />
+  <slot name="notice" />
+  <article class="legal-prose">
+    <slot />
+  </article>
+</PageLayout>

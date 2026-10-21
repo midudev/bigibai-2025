@@ -1,0 +1,25 @@
+---
+import Surface from '@/components/ui/Surface.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+interface Props {
+  day: number
+}
+const { day } = Astro.props
+---
+
+<Surface padded class="game-placeholder">
+  <SectionHeading
+    as="h2"
+    size="section"
+    align="center"
+    eyebrow={`Casilla ${day}`}
+    title="Estamos preparando este reto."
+    description="Vuelve más tarde para descubrir las novedades de la fábrica."
+  />
+</Surface>
+<style>
+  .game-placeholder {
+    max-width: 700px;
+    margin-inline: auto;
+  }
+</style>

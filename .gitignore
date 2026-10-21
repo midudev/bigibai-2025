@@ -27,3 +27,20 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 .vercel
+
+# cloudflare
+.wrangler/
+.dev.vars*
+
+# local resources
+/recursos/
+
+# database backups
+/backup-*.dump
+
+# csv (p. ej. los cupones en claro). Los que ya están en git siguen versionados
+*.csv
+
+# herramientas locales
+.playwright-mcp/
+.claude/settings.local.json

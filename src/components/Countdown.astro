@@ -1,58 +1,70 @@
 ---
-const { day, title } = Astro.props
+interface Props {
+  day: number
+  title?: string
+  // Instante de desbloqueo y hora del servidor (real o simulada) en ISO
+  unlockAt: string
+  serverNow: string
+  isSimulatedDate?: boolean
+}
+
+const { day, title, unlockAt, serverNow, isSimulatedDate = false } = Astro.props
 ---
 
-<h2
-  class="md:text-6xl text-4xl font-normal text-center fade-in-up tracking-wide"
-  style="animation-delay: 0.4s;"
-  role="contentinfo"
-  aria-label={title}
->
-  Faltan <span
-    id="countdown"
-    class="block md:text-7xl text-5xl"
-    aria-live="polite"
-    aria-atomic="true"></span> para abrir la casilla <span class="md:text-7xl text-5xl">{day}</span>
-</h2>
-
-<script define:vars={{ day }}>
-  const countdownElement = document.getElementById('countdown')
-  const targetDay = Number.parseInt(day, 10)
-
-  const getTargetDate = () => {
-    const now = new Date()
-    // Obtener la fecha actual en CET
-    const cetTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
-    const currentYear = cetTime.getFullYear()
-    const currentMonth = cetTime.getMonth()
-
-    // Crear fecha objetivo en diciembre del año actual
-    let targetYear = currentYear
-
-    // Si ya pasó diciembre de este año, usar el siguiente
-    if (currentMonth > 11) {
-      targetYear = currentYear + 1
-    }
-    // Si estamos en diciembre pero ya pasó el día objetivo, usar el siguiente año
-    else if (currentMonth === 11 && cetTime.getDate() > targetDay) {
-      targetYear = currentYear + 1
-    }
-
-    // Crear la fecha objetivo a las 00:00:00 CET del día específico de diciembre
-    // CET es UTC+1, así que restamos 1 hora
-    const target = new Date(Date.UTC(targetYear, 11, targetDay, 0, 0, 0, 0) - 1 * 60 * 60 * 1000)
-
-    return target
+<div class="countdown-panel" role="timer" aria-label={`Cuenta atrás para la casilla ${day}`}>
+  <p>La puerta se abre en</p>
+  <span id="countdown">Calculando…</span>
+  <p>El {day} de diciembre, a las 00:00 h (hora peninsular).</p>
+</div>
+<style>
+  .countdown-panel {
+    width: 100%;
+    padding: 24px 18px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
+    background: var(--surface-inset);
+    text-align: center;
   }
+  .countdown-panel p {
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+  #countdown {
+    display: block;
+    margin-block: 12px;
+    font-family: var(--font-display);
+    font-size: clamp(26px, 4vw, 44px);
+    color: var(--brand-accent);
+    line-height: 1.3;
+  }
+</style>
 
-  const targetDate = getTargetDate()
+<script define:vars={{ unlockAt, serverNow, isSimulatedDate }}>
+  const countdownElement = document.getElementById('countdown')
+  const targetTime = new Date(unlockAt).getTime()
+
+  // Contamos desde la hora del servidor para no depender del reloj del dispositivo
+  const clockOffset = new Date(serverNow).getTime() - Date.now()
+
+  let interval
 
   const updateCountdown = () => {
-    const now = new Date()
-    const diffMs = targetDate.getTime() - now.getTime()
+    // Con el ClientRouter el intervalo sobrevive a la navegación: paramos si ya no estamos aquí
+    if (!countdownElement?.isConnected) {
+      clearInterval(interval)
+      return
+    }
+
+    const diffMs = targetTime - (Date.now() + clockOffset)
 
     if (diffMs <= 0) {
       countdownElement.textContent = '00d 00h 00m 00s'
+      clearInterval(interval)
+
+      // La casilla ya se ha desbloqueado: recargamos para que el servidor la sirva.
+      // Con fecha simulada el servidor no avanza, así que recargar volvería a la cuenta atrás
+      if (!isSimulatedDate) location.reload()
       return
     }
 
@@ -69,6 +81,6 @@ const { day, title } = Astro.props
       .padStart(2, '0')}s`
   }
 
+  interval = setInterval(updateCountdown, 1000)
   updateCountdown()
-  setInterval(updateCountdown, 1000)
 </script>

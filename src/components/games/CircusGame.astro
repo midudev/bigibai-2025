@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -30,17 +31,29 @@ const GAME_DATA = {
 
     <div id="ui-layer">
       <div id="start-screen">
-        <h1 style="font-family: 'Press Start 2P', cursive;">EL CAÑÓN<br />DEL PAYASO</h1>
+        <h1 style="font-family: 'Press Start 2P', cursive;">
+          EL CAÑÓN
+          <br />
+          DEL PAYASO
+        </h1>
         <p>¡Toca para disparar!</p>
         <p class="text-balance">No te caigas al vacío.</p>
-        <button class="btn" id="start-btn">JUGAR</button>
+        <Button variant="brand" size="sm" class="btn" id="start-btn">
+          JUGAR
+        </Button>
       </div>
 
       <div id="game-over-screen" class="hidden">
         <h1 style="font-family: 'Press Start 2P', cursive;">GAME OVER</h1>
-        <p>Puntuación: <span id="final-score">0</span></p>
-        <p>Récord: <span id="best-score">0</span></p>
-        <button class="btn" id="restart-btn">REINTENTAR</button>
+        <p>
+          Puntuación: <span id="final-score">0</span>
+        </p>
+        <p>
+          Récord: <span id="best-score">0</span>
+        </p>
+        <Button variant="brand" size="sm" class="btn" id="restart-btn">
+          REINTENTAR
+        </Button>
       </div>
 
       <div id="success-screen" class="hidden">

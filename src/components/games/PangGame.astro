@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -25,14 +26,20 @@ const GAME_DATA = {
     <!-- UI Layer -->
     <div id="ui-layer">
       <span id="lives-display">❤❤❤</span>
-      <span>NIVEL: <span id="level-display">1</span>/3</span>
+      <span>
+        NIVEL: <span id="level-display">1</span>/3
+      </span>
     </div>
 
     <canvas id="pangCanvas"></canvas>
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <h1>GAFAS<br />PANG</h1>
+      <h1>
+        GAFAS
+        <br />
+        PANG
+      </h1>
 
       <div class="instructions">
         <p class="controls-title">CONTROLES</p>
@@ -43,14 +50,20 @@ const GAME_DATA = {
         <p class="hint">Completa 3 niveles para ganar</p>
       </div>
 
-      <button id="start-btn" class="menu-btn blink">EMPEZAR</button>
+      <Button variant="brand" size="sm" id="start-btn" class="menu-btn blink">
+        EMPEZAR
+      </Button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="modal hidden">
       <h1 class="danger">GAME OVER</h1>
-      <p>Llegaste al nivel <span id="final-level">1</span></p>
-      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+      <p>
+        Llegaste al nivel <span id="final-level">1</span>
+      </p>
+      <Button variant="brand" size="sm" id="restart-btn" class="menu-btn">
+        REINTENTAR
+      </Button>
     </div>
 
     <!-- Win Screen -->

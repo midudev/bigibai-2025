@@ -1,0 +1,38 @@
+/* Identidad compartida de Big Ibai. Cambia estos valores para adaptar toda la web. */
+:root {
+  --brand-accent: #f8b132;
+  --brand-hover: #ffc65c;
+  --brand-ink: #10204a;
+  --brand-edge: #ad701c;
+  --site-bg: #081c50;
+  --surface: #0b1d3e;
+  --surface-raised: #13294e;
+  --surface-inset: #071832;
+  --text-heading: #f0f4fc;
+  --text-copy: #cbd6f2;
+  --text-muted: #a9bad6;
+  --border-subtle: #90a9d133;
+  --border-strong: #90a9d166;
+  --status-info: #a8caff;
+  --status-success: #91e4bc;
+  --status-warning: #e9c689;
+  --status-error: #ffb3bc;
+  --radius-panel: 16px;
+  --radius-control: 10px;
+  --font-body: 'Century', sans-serif;
+  --font-display: 'Heavy', sans-serif;
+  --content-max: 1200px;
+  --content-wide: 1280px;
+  --content-reading: 760px;
+  --page-gutter: clamp(20px, 3.2vw, 40px);
+  --section-space: clamp(48px, 6vw, 80px);
+  --title-size: clamp(32px, 4.2vw, 54px);
+  --map-land: #142847;
+  --map-water: #091d38;
+  --map-building: #233b59;
+  --map-park: #163347;
+  --map-residential: #192e4b;
+  --map-road: #344d6b;
+  --map-road-edge: #253c59;
+  --map-boundary: #536782;
+}

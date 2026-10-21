@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -44,7 +45,13 @@ const GAME_DATA = {
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <h1>ROLLER<br />COASTER<br />RUSH</h1>
+      <h1>
+        ROLLER
+        <br />
+        COASTER
+        <br />
+        RUSH
+      </h1>
 
       <div class="instructions">
         <p class="controls-title">CÓMO JUGAR</p>
@@ -56,21 +63,29 @@ const GAME_DATA = {
         <p class="hint">🎠 Doble salto disponible</p>
       </div>
 
-      <button id="start-btn" class="menu-btn blink">¡VAMOS!</button>
+      <Button variant="brand" size="sm" id="start-btn" class="menu-btn blink">
+        ¡VAMOS!
+      </Button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="modal hidden">
       <h1 class="danger">💥 CRASH!</h1>
       <p>Te has chocado con un obstáculo</p>
-      <p>Puntuación: <span id="final-score">0</span></p>
-      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+      <p>
+        Puntuación: <span id="final-score">0</span>
+      </p>
+      <Button variant="brand" size="sm" id="restart-btn" class="menu-btn">
+        REINTENTAR
+      </Button>
     </div>
 
     <!-- Win Screen -->
     <div id="win-screen" class="modal hidden">
       <h1 class="win">¡VICTORIA!</h1>
-      <p>Has conseguido <span id="win-score">0</span> puntos</p>
+      <p>
+        Has conseguido <span id="win-score">0</span> puntos
+      </p>
     </div>
 
     <!-- Jump Button -->

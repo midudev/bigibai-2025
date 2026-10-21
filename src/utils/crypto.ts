@@ -1,4 +1,5 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from 'crypto'
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, scryptSync } from 'crypto'
+import { COUPON_HMAC_SECRET, ENCRYPTION_SECRET, SALT_KEY } from 'astro:env/server'
 import EncryptRuntimeError from '@/errors/EncryptRuntimeError'
 import DecryptRuntimeError from '@/errors/DecryptRuntimeError'
 
@@ -6,17 +7,23 @@ const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 16 // Tamaño del vector de inicialización
 const KEY_LENGTH = 32 // AES-256 requiere clave de 32 bytes
 
+// scrypt es costoso en CPU (los Workers tienen límite de CPU por petición):
+// derivamos la clave una sola vez por isolate
+let cachedKey: Buffer | null = null
+
 /**
  * Obtiene la clave de cifrado desde las variables de entorno
  * La clave debe ser una cadena de al menos 32 caracteres
  */
 function getEncryptionKey(): Buffer {
-  const secret = import.meta.env.ENCRYPTION_SECRET
+  if (cachedKey) return cachedKey
 
-  if (!secret) {
+  const secret = ENCRYPTION_SECRET
+
+  if (!secret || !SALT_KEY) {
     throw new EncryptRuntimeError(
       'UNDEFINED_ECRYPTION_SECRET',
-      'ENCRYPTION_SECRET no está definida en las variables de entorno'
+      'ENCRYPTION_SECRET o SALT_KEY no están definidas en las variables de entorno'
     )
   }
 
@@ -28,8 +35,9 @@ function getEncryptionKey(): Buffer {
   }
 
   // Derivamos una clave de 32 bytes usando scrypt
-  const salt = Buffer.from(import.meta.env.SALT_KEY) // Salt fijo para consistencia
-  return scryptSync(secret, salt, KEY_LENGTH)
+  const salt = Buffer.from(SALT_KEY) // Salt fijo para consistencia
+  cachedKey = scryptSync(secret, salt, KEY_LENGTH)
+  return cachedKey
 }
 
 /**
@@ -79,12 +87,28 @@ export function decrypt(encryptedData: string): string {
 }
 
 /**
- * Genera un hash SHA-256 de un texto
- * Este hash es determinista (mismo input = mismo output)
- * Útil para detectar duplicados sin exponer el texto original
- * @param text - Texto a hashear (ej: email)
- * @returns Hash SHA-256 en formato hexadecimal
+ * Genera el HMAC-SHA256 de un cupón con COUPON_HMAC_SECRET
+ * Es determinista (se puede buscar por índice), pero el secreto no está en la base de datos:
+ * si se filtra la tabla, sin él no se pueden sacar los cupones por fuerza bruta
+ * @param coupon - Cupón normalizado (XXXX-XXXX-XXXX)
+ * @returns HMAC-SHA256 en formato hexadecimal
  */
-export function hash(text: string): string {
-  return createHash('sha256').update(text).digest('hex')
+export function hashCoupon(coupon: string): string {
+  const secret = COUPON_HMAC_SECRET
+
+  if (!secret) {
+    throw new EncryptRuntimeError(
+      'UNDEFINED_COUPON_HMAC_SECRET',
+      'COUPON_HMAC_SECRET no está definida en las variables de entorno'
+    )
+  }
+
+  if (secret.length < 32) {
+    throw new EncryptRuntimeError(
+      'COUPON_HMAC_SECRET_LENGTH',
+      'COUPON_HMAC_SECRET debe tener al menos 32 caracteres'
+    )
+  }
+
+  return createHmac('sha256', secret).update(coupon).digest('hex')
 }

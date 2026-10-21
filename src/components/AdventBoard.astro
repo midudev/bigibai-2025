@@ -1,0 +1,474 @@
+---
+import { CAMPAIGN } from '@/data/campaign'
+import { getCampaignDay, isDayUnlocked, isExperienceEnabled } from '@/utils/campaign'
+
+const { now } = Astro.locals
+const experienceEnabled = isExperienceEnabled(now)
+const currentDay = getCampaignDay(now)
+
+// Como en el calendario de verdad, los números van salteados sobre la ilustración
+const layout = [
+  [7, 19, 2, 13, 22, 10],
+  [15, 4, 24, 8, 17, 1],
+  [11, 21, 6, 18, 3, 14],
+  [23, 9, 16, 5, 20, 12],
+]
+
+// Medidas en % de la portada (1100 × 1444). Las puertas son más altas que anchas, como las reales,
+// y dejan arriba el hueco para el logo
+const COVER_RATIO = 1444 / 1100
+const MARGIN_X = 3.5
+const GAP_X = 1.6
+const DOOR_W = (100 - MARGIN_X * 2 - GAP_X * 5) / 6
+const DOOR_H = DOOR_W / 0.64 / COVER_RATIO
+const GAP_Y = 2.2 / COVER_RATIO
+const TOP = 100 - MARGIN_X / COVER_RATIO - (DOOR_H * 4 + GAP_Y * 3)
+
+const doors = layout
+  .flatMap((row, r) =>
+    row.map((day, c) => {
+      const left = MARGIN_X + c * (DOOR_W + GAP_X)
+      const top = TOP + r * (DOOR_H + GAP_Y)
+      // Cada puerta lleva su trozo de ilustración para que, cerrada, encaje con la portada
+      return {
+        day,
+        style: `--left: ${left}%; --top: ${top}%; --art-x: ${(left / (100 - DOOR_W)) * 100}%; --art-y: ${(top / (100 - DOOR_H)) * 100}%`,
+      }
+    })
+  )
+  .sort((a, b) => a.day - b.day)
+---
+
+<div class="calendar-stage">
+  <div class="calendar-model">
+    <span class="calendar-wall calendar-wall--left" aria-hidden="true"></span>
+    <span class="calendar-wall calendar-wall--right" aria-hidden="true">
+      <img src="/2026/logo.svg" alt="" width="120" height="40" loading="lazy" />
+      <span>La fábrica de regalos</span>
+    </span>
+    <span class="calendar-wall calendar-wall--top" aria-hidden="true"></span>
+    <span class="calendar-wall calendar-wall--bottom" aria-hidden="true"></span>
+    <div class="calendar-front">
+      <img
+        class="calendar-logo"
+        src="/2026/logo-fabrica.svg"
+        width="742"
+        height="263"
+        alt=""
+        loading="lazy"
+      />
+      <ol
+        class="calendar-doors"
+        style={`--door-w: ${DOOR_W}%; --door-h: ${DOOR_H}%; --art-w: ${10000 / DOOR_W}%; --art-h: ${10000 / DOOR_H}%`}
+      >
+        {doors.map(({ day, style }) => {
+          const active = experienceEnabled && isDayUnlocked(day, now)
+          const isToday = active && day === currentDay
+          const Tag = active ? 'a' : 'button'
+
+          return (
+            <li class:list={{ 'is-open': active, 'is-today': isToday }} {style}>
+              <Tag
+                href={active ? `/casilla-${day}-diciembre` : undefined}
+                type={active ? undefined : 'button'}
+                disabled={!active || undefined}
+                class="advent-door"
+                aria-label={
+                  active
+                    ? `Abrir la casilla del ${day} de diciembre`
+                    : `Casilla ${day}, ${experienceEnabled ? `disponible el ${day} de diciembre de ${CAMPAIGN.year}` : 'experiencia finalizada'}`
+                }
+              >
+                <span class="door-hole" aria-hidden="true">
+                  {active && (
+                    <img
+                      src={`/2026/chocolates/${day}.webp`}
+                      alt=""
+                      width="120"
+                      height="190"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </span>
+                <span class="door-leaf" aria-hidden="true">
+                  <span class="leaf-front">
+                    <span class="leaf-number">{day}</span>
+                    <span class="leaf-knob" />
+                  </span>
+                  <span class="leaf-back" />
+                </span>
+              </Tag>
+              {isToday && (
+                <span class="door-today" aria-hidden="true">
+                  Hoy
+                </span>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  </div>
+  <span class="calendar-floor" aria-hidden="true"></span>
+</div>
+
+<style>
+  /*
+   * La caja del calendario en 3D, igual que en el hero. Las puertas están troqueladas sobre la
+   * portada: cada una tiene su propia perspectiva para abrirse sobre la bisagra izquierda y deja
+   * ver el hueco con la chocolatina.
+   */
+  .calendar-stage {
+    --box-depth: 52px;
+    --half-depth: calc(var(--box-depth) / 2);
+    --art: url('/2026/fabrica.webp');
+    position: relative;
+    width: min(100%, 620px);
+    aspect-ratio: 1100 / 1444;
+    margin-inline: auto;
+    perspective: 2600px;
+  }
+  .calendar-model {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform: rotateX(5deg) rotateY(-13deg) rotateZ(-1.5deg);
+  }
+  .calendar-wall {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #87a8bf6b;
+    background: linear-gradient(90deg, #10234e, #22477b 45%, #102552);
+  }
+  .calendar-wall--left,
+  .calendar-wall--right {
+    top: 0;
+    width: var(--box-depth);
+    height: 100%;
+  }
+  .calendar-wall--left {
+    left: 0;
+    transform: translateX(-50%) rotateY(-90deg);
+  }
+  .calendar-wall--right {
+    left: 100%;
+    gap: 36px;
+    writing-mode: vertical-rl;
+    transform: translateX(-50%) rotateY(90deg);
+    color: #f5cd82;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.03em;
+  }
+  .calendar-wall--right img {
+    position: absolute;
+    top: 22%;
+    width: 100px;
+    height: 28px;
+    max-width: none;
+    object-fit: contain;
+    transform: rotate(90deg);
+  }
+  .calendar-wall--right > span {
+    margin-top: 120px;
+  }
+  .calendar-wall--top,
+  .calendar-wall--bottom {
+    left: 0;
+    width: 100%;
+    height: var(--box-depth);
+    background: linear-gradient(#18345e, #2c5585 48%, #102550);
+  }
+  .calendar-wall--top {
+    top: 0;
+    transform: translateY(-50%) rotateX(90deg);
+  }
+  .calendar-wall--bottom {
+    top: 100%;
+    transform: translateY(-50%) rotateX(-90deg);
+  }
+  .calendar-front {
+    position: absolute;
+    inset: 0;
+    border: 1px solid #8bbbd6;
+    border-radius: 7px;
+    background: var(--art) center / 100% 100%;
+    box-shadow:
+      0 0 0 2px #10284f,
+      0 40px 70px #00082599;
+    transform: translateZ(var(--half-depth));
+  }
+  .calendar-front::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(115deg, #ffffff1f, transparent 35%);
+    box-shadow:
+      inset 1px 1px 2px #dff6ff75,
+      inset -2px -2px 5px #000b;
+    pointer-events: none;
+  }
+  .calendar-logo {
+    position: absolute;
+    top: 3.2%;
+    left: 50%;
+    z-index: 1;
+    width: 66%;
+    height: auto;
+    translate: -50% 0;
+    rotate: -2deg;
+    filter: drop-shadow(0 3px 0 #10204a) drop-shadow(0 8px 14px #000c);
+  }
+  .calendar-floor {
+    position: absolute;
+    bottom: -40px;
+    left: 8%;
+    width: 84%;
+    height: 40px;
+    border-radius: 50%;
+    background: #000a29;
+    filter: blur(20px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* Puertas */
+  .calendar-doors {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .calendar-doors > li {
+    position: absolute;
+    left: var(--left);
+    top: var(--top);
+    width: var(--door-w);
+    height: var(--door-h);
+    container-type: inline-size;
+  }
+  .advent-door {
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: 3px;
+    perspective: 420px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .advent-door:disabled {
+    cursor: default;
+  }
+  .advent-door:focus-visible {
+    outline: 3px solid var(--brand-accent);
+    outline-offset: 3px;
+  }
+  .door-hole {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 3px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #ffe7ad, #d99a3a 55%, #7a430d);
+    box-shadow:
+      inset 0 8px 10px #4a2503d9,
+      inset 6px 0 8px #00000059,
+      inset 0 -2px 3px #ffffff40;
+  }
+  .door-hole img {
+    width: 78%;
+    height: 84%;
+    max-width: none;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 4px #4a2500b3);
+  }
+  .door-leaf {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transform: rotateY(var(--door-angle, 0deg));
+    transition: transform 0.8s cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+  .leaf-front,
+  .leaf-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    backface-visibility: hidden;
+  }
+  /* Troquel: cortado arriba, a la derecha y abajo; el lado de la bisagra es un pliegue */
+  .leaf-front {
+    border: 1.5px dashed #ffffffb3;
+    border-left: 1.5px solid #ffffff59;
+    background: var(--art) var(--art-x) var(--art-y) / var(--art-w) var(--art-h) border-box;
+    box-shadow:
+      inset 0 0 0 1px #0a1a3d4d,
+      inset 0 1px 0 #ffffff40;
+  }
+  .leaf-back {
+    background: linear-gradient(90deg, #d5bf94, #f2e6c9);
+    box-shadow: inset 0 0 0 1px #00000026;
+    transform: rotateY(180deg);
+  }
+  .leaf-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 48cqw;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--brand-accent);
+    color: var(--brand-ink);
+    font-family: var(--font-display);
+    font-size: 27cqw;
+    line-height: 1;
+    box-shadow:
+      0 2px 0 var(--brand-edge),
+      0 4px 8px #00000080;
+    translate: -50% -50%;
+  }
+  .leaf-knob {
+    position: absolute;
+    top: 50%;
+    right: 7cqw;
+    width: 8cqw;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff0c9, #f8b132 45%, #9a5c0c);
+    box-shadow: 0 1px 2px #000000b3;
+    translate: 0 -50%;
+  }
+
+  /* Días pasados: puerta abierta del todo. Hoy: entreabierta y con luz saliendo del hueco */
+  .is-open {
+    --door-angle: -108deg;
+  }
+  .is-today {
+    --door-angle: -34deg;
+  }
+  .is-today .door-hole::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 60% 50%, #fff6dc, transparent 65%);
+    animation: today-glow 2.4s ease-in-out infinite;
+  }
+  .is-today .advent-door {
+    filter: drop-shadow(0 0 12px #f8b132);
+  }
+  .is-today .advent-door::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border: 2px solid var(--brand-accent);
+    border-radius: 6px;
+    animation: today-ring 1.8s ease-out infinite;
+  }
+  .door-today {
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    z-index: 1;
+    padding: 3px 8px 2px;
+    border-radius: 6px;
+    background: var(--brand-accent);
+    color: var(--brand-ink);
+    font-family: var(--font-display);
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    box-shadow: 0 2px 0 var(--brand-edge);
+    translate: -50% 0;
+    rotate: -4deg;
+    pointer-events: none;
+  }
+  @media (hover: hover) {
+    .is-today .advent-door:hover {
+      --door-angle: -108deg;
+    }
+    .is-open .advent-door:hover .door-hole img {
+      scale: 1.12;
+    }
+  }
+  .door-hole img {
+    transition: scale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    /* Una puerta cerrada solo se mueve un poco: todavía no toca abrirla */
+    .calendar-doors > li:not(.is-open):hover .door-leaf {
+      animation: door-rattle 0.5s ease-in-out;
+    }
+  }
+  @keyframes door-rattle {
+    30% {
+      transform: rotateY(-9deg);
+    }
+    60% {
+      transform: rotateY(-2deg);
+    }
+    80% {
+      transform: rotateY(-5deg);
+    }
+  }
+  @keyframes today-ring {
+    from {
+      opacity: 1;
+      scale: 0.96;
+    }
+    to {
+      opacity: 0;
+      scale: 1.12;
+    }
+  }
+  @keyframes today-glow {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .door-leaf {
+      transition: none;
+    }
+    .is-today .door-hole::after,
+    .is-today .advent-door::before {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .calendar-stage {
+      --box-depth: 34px;
+      width: min(calc(100% - 24px), 440px);
+    }
+    .calendar-model {
+      transform: rotateX(4deg) rotateY(-9deg) rotateZ(-1deg);
+    }
+    .calendar-wall--right {
+      gap: 24px;
+      font-size: 10px;
+    }
+    .calendar-wall--right img {
+      width: 70px;
+    }
+    .calendar-wall--right > span {
+      margin-top: 90px;
+    }
+    .leaf-front {
+      border-width: 1px;
+    }
+    .door-today {
+      bottom: calc(100% + 4px);
+      padding: 2px 6px 1px;
+      font-size: 10px;
+    }
+  }
+</style>

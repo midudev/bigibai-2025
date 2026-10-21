@@ -1,72 +1,84 @@
 ---
 import { ACHIEVEMENTS } from '@/data/achievements'
-import BentoCard from '@/components/ui/BentoCard.astro'
+import Surface from '@/components/ui/Surface.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
 import Button from '@/components/Button.astro'
-
+import { CAMPAIGN } from '@/data/campaign'
 interface Props {
+  embedded?: boolean
   isLoggedIn: boolean
   userAchievements: Record<string, { created_at: string }>
 }
-
-const { isLoggedIn, userAchievements } = Astro.props
-
+const { isLoggedIn, userAchievements, embedded = false } = Astro.props
 const allAchievements = Object.values(ACHIEVEMENTS)
+const unlockedCount = allAchievements.filter(({ id }) => !!userAchievements[id]).length
 ---
 
-<BentoCard class="group col-span-3 md:col-span-1 py-8 px-4" style="animation-delay: 0.3s;">
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between flex-col">
-      <h2 class="text-shadow-title text-3xl font-heavy font-bold text-white md:text-5xl">
-        Mis Logros
-      </h2>
-    </div>
-
-    <div class="relative flex flex-col items-center justify-center">
-      {
-        !isLoggedIn && (
-          <div class="absolute z-10 flex flex-col items-center gap-4 h-full w-full justify-center px-4">
-            <p class="text-lg text-white/80 text-balance text-center leading-tight">
-              Inicia sesión para desbloquear y guardar tus logros
-            </p>
-            <Button href="/registro" variant="brand" size="lg">
-              Iniciar sesión
-            </Button>
-          </div>
-        )
-      }
-
-      <div class={`grid grid-cols-3 gap-2 ${!isLoggedIn ? 'blur-xs' : ''}`}>
-        {
-          allAchievements.map((achievement) => {
-            const isUnlocked = !!userAchievements[achievement.id]
-            return (
-              <div
-                class:list={[
-                  'flex flex-col items-center gap-3 p-2 transition-all duration-300',
-                  isUnlocked
-                    ? 'scale-100'
-                    : 'opacity-60 grayscale hover:opacity-80 hover:grayscale-0',
-                ]}
-                data-tip={isUnlocked ? achievement.descriptionDone : achievement.descriptionDo}
-              >
-                <div class="relative group/icon">
-                  <img
-                    src={achievement.image}
-                    alt={achievement.title}
-                    class="w-16 h-16 object-contain drop-shadow-lg"
-                    loading="lazy"
-                  />
-                </div>
-                <div class="text-center relative">
-                  <p class="text-[10px] lg:text-xs font-bold text-white leading-tight mb-1">
-                    {achievement.title}
-                  </p>
-                </div>
-              </div>
-            )
-          })
-        }
-      </div>
-    </div>
+<Surface padded={!embedded} variant={embedded ? 'plain' : 'default'} class="achievements-box">
+  <SectionHeading
+    as="h2"
+    size="small"
+    title="Tus logros"
+    description={
+      isLoggedIn
+        ? `${unlockedCount} de ${allAchievements.length} desbloqueados. Cada reto guarda una nueva historia.`
+        : 'Inicia sesión para desbloquear y guardar tus logros.'
+    }
+  />
+  <div class="achievements-grid">
+    {allAchievements.map((achievement) => {
+      const unlocked = !!userAchievements[achievement.id]
+      return (
+        <div
+          class:list={['achievement-item', { 'is-locked': !unlocked }]}
+          data-tip={unlocked ? achievement.descriptionDone : achievement.descriptionDo}
+        >
+          <img src={achievement.image} alt="" width="56" height="56" loading="lazy" />
+          <p>{achievement.title}</p>
+        </div>
+      )
+    })}
   </div>
-</BentoCard>
+  {!isLoggedIn && CAMPAIGN.signInEnabled && (
+    <Button href="/registro" variant="outline" class="w-full" size="sm">
+      Iniciar sesión
+    </Button>
+  )}
+</Surface>
+<style>
+  .achievements-box :global(.ui-description) {
+    font-size: 11px;
+    margin-top: 10px;
+  }
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 23px 10px;
+    margin-block: 28px;
+  }
+  .achievement-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+  .achievement-item img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+  .achievement-item p {
+    color: var(--text-copy);
+    font-size: 10px;
+    line-height: 1.6;
+    text-wrap: balance;
+  }
+  .is-locked img {
+    filter: grayscale(1);
+    opacity: 0.45;
+  }
+  .is-locked p {
+    color: var(--text-muted);
+  }
+</style>

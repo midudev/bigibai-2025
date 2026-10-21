@@ -1,24 +1,17 @@
 ---
-import Layout from '@/layouts/Layout.astro'
-
-import Footer from '@/sections/Footer.astro'
-import BackToHome from '@/components/BackToHome.astro'
-import BasesLegalesContent from '@/content/legal/bases-legales.md'
+import LegalLayout from '@/layouts/LegalLayout.astro'
+import Notice from '@/components/ui/Notice.astro'
+import BasesLegalesContent, { frontmatter } from '@/content/legal/bases-legales.md'
+import { CAMPAIGN } from '@/data/campaign'
+const isPreviousEdition = frontmatter.edition !== CAMPAIGN.year
 ---
 
-<Layout>
-  <section
-    class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0"
-  >
-    <main
-      class="relative z-10 md-container"
-      role="contentinfo"
-      aria-label="Bases Legales de la Promoción"
-      aria-live="assertive"
-    >
-      <BackToHome />
-      <BasesLegalesContent />
-    </main>
-  </section>
-  <Footer />
-</Layout>
+<LegalLayout title="Bases legales">
+  {isPreviousEdition && (
+    <Notice slot="notice" variant="warning" class="mb-8">
+      Estas son las bases legales de la edición {frontmatter.edition}. Las bases de {CAMPAIGN.name}{' '}
+      se publicarán aquí antes de que se abra el registro de calendarios.
+    </Notice>
+  )}
+  <BasesLegalesContent />
+</LegalLayout>

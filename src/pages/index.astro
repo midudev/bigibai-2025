@@ -1,12 +1,8 @@
 ---
 import Layout from '@/layouts/Layout.astro'
-import Header from '@/sections/Header.astro'
 import Hero from '@/sections/Hero.astro'
-import Footer from '@/sections/Footer.astro'
-import Chocolates from '@/sections/Chocolates.astro'
-import Map from '@/components/Map.astro'
 import { supabaseAdmin } from '@/supabase-admin'
-import Clicker from '@/components/Clicker.astro'
+import Arcade from '@/sections/home/Arcade.astro'
 
 // Verificar si el usuario está logueado
 const user = Astro.locals.user
@@ -30,32 +26,14 @@ if (user) {
 }
 ---
 
-<Layout>
-  <div class="flex min-h-screen flex-col">
-    <Header participationCount={totalCoupons} />
-    <div class="flex flex-1">
-      <Hero
-        isLoggedIn={!!user}
-        participationCount={totalCoupons}
-        userAchievements={userAchievements}
-      />
-    </div>
+<Layout
+  participationCount={totalCoupons}
+  title="Big Ibai 2026 y la fábrica de regalos | Calendario de Adviento"
+  description="Descubre Big Ibai 2026 y la fábrica de regalos: el nuevo calendario de Adviento de Ibai, 24 chocolatinas, juegos y nuevos diseños. ¡La ilusión se fabrica a lo grande!"
+>
+  <main id="main-content" tabindex="-1">
+    <Hero isLoggedIn={!!user} participationCount={totalCoupons} />
 
-    <!-- Sección con juego de clicker -->
-    <section id="clicker" class="mx-auto w-full max-w-7xl px-4 py-4 pb-24">
-      <div class="mb-8 text-center">
-        <h2 class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-          Juego de clicker
-        </h2>
-        <p class="text-shadow-title text-white mb-4">
-          Si has llegado hasta aquí, te has ganado una recompensa
-        </p>
-      </div>
-      <div class="flex justify-center">
-        <Clicker />
-      </div>
-    </section>
-
-    <Footer />
-  </div>
+    <Arcade isLoggedIn={!!user} {userAchievements} />
+  </main>
 </Layout>

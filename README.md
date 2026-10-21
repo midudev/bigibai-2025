@@ -271,3 +271,35 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 [how-to-fork-tutorial]: https://youtu.be/watch?v=niPExbK8lSw&t=2135s
 
 <!-- Another Links -->
+
+## Diseño compartido de la edición 2026
+
+La identidad visual se define en `src/styles/tokens.css`: colores, superficies, tipografía, radios, anchuras y espaciado. Para adaptar la web, cambia primero estos valores; evita añadir copias de los colores dentro de cada página.
+
+- `Layout.astro` incorpora la cabecera, el pie, el fondo, los metadatos y las notificaciones. Las páginas no deben volver a incluir `Header` o `Footer`.
+- `PageLayout.astro` añade el contenedor principal y el espaciado de las páginas interiores. `LegalLayout.astro` aplica la composición de lectura a los documentos legales.
+- `src/components/ui/` contiene `Container`, `Surface`, `SectionHeading`, `Button` (en `components/`), `Field`, `CodeInput`, `Notice`, `Badge`, `BrandLogo`, `Modal`, `StatCard`, `WinnerCard` y `CalendarDoor`.
+- `src/styles/components.css` define los estilos de esas piezas. `ui/styles.ts` comparte las clases de los botones con los controles que administración genera en el navegador; `ui/feedback.ts` hace lo mismo con los avisos de formulario.
+- `Surface` admite estados `info`, `warning`, `success` y `error`; `Badge` y `Notice` usan la misma paleta de estados para los resultados de los formularios y de administración.
+- `AccountOverview` y `AdminOverview` reciben datos mediante propiedades. Las páginas conservan la autenticación y las consultas; los componentes organizan la presentación.
+- `src/sections/home/` separa la portada, los pasos de participación, los llaveros, el localizador de tiendas, el estado de campaña y el arcade. `Hero.astro` compone esos bloques; los diseños de los llaveros viven en `src/data/keychains.ts`.
+- `GameLayout` comparte el marco, la ficha de resultado y el vídeo de los juegos, incluido el anagrama. `CalendarDoor` se utiliza en la home y en la cuenta. El dibujo de cada juego conserva sus elementos propios.
+
+Una página interior puede usar esta estructura:
+
+```astro
+---
+import PageLayout from '@/layouts/PageLayout.astro'
+import Surface from '@/components/ui/Surface.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import Button from '@/components/Button.astro'
+---
+
+<PageLayout title="Mi página | Big Ibai">
+  <SectionHeading as="h1" size="page" title="Título de la página" />
+  <Surface padded class="mt-8">
+    <p>Contenido de la página.</p>
+    <Button href="/dashboard" variant="brand">Mis participaciones</Button>
+  </Surface>
+</PageLayout>
+```

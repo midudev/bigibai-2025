@@ -1,3 +1,5 @@
+import type { GameType } from '@/data/days-data'
+
 export interface Achievement {
   id: string
   title: string
@@ -70,4 +72,12 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     descriptionDone: '¡Has llegado al nivel 5 en Choco Boxer!',
     image: '/pixel-glove-elite.png',
   },
+}
+
+// Juegos de las casillas que conceden cada logro (con grantGameAchievement en src/actions)
+export const GAME_ACHIEVEMENTS: Record<string, GameType[]> = {
+  'two-unlocked': ['camper'],
+  'five-unlocked': ['safari', 'hamster'],
+  'all-unlocked': ['soccer'],
+  'a-todo-gas': ['racer'],
 }

@@ -1,29 +1,32 @@
 ---
 import '@/global.css'
 
-import GradientOverlay from '@/components/GradientOverlay.astro'
-import Snowballs from '@/components/Snowballs.astro'
+import Header from '@/sections/Header.astro'
+import Footer from '@/sections/Footer.astro'
+import { CAMPAIGN } from '@/data/campaign'
 import { ClientRouter } from 'astro:transitions'
 import AchievementNotification from '@/components/AchievementNotification.astro'
 import Tooltip from '@/components/ui/Tooltip.astro'
 import WinnersModal from '@/components/WinnersModal.astro'
+import { formatCampaignDateTime, getCampaignPhase } from '@/utils/campaign'
 
-const defaultTitle = 'Big Ibai: Calendario de Adviento con chocolates y premios'
+const defaultTitle = `${CAMPAIGN.name} y la fábrica de regalos`
 const defaultDescription =
-  'Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día.'
+  'Descubre el calendario de Adviento de Big Ibai y la fábrica de regalos. 24 días de ilusión, chocolates y juegos.'
 
 export interface Props {
   title?: string
   description?: string
+  participationCount?: number
 }
 
-let { title, description } = Astro.props
+let { title, description, participationCount } = Astro.props
 
 title ??= defaultTitle
 description ??= defaultDescription
 
-const previousPage = Astro.request.headers.get('referer')
-const isInternalNavigation = previousPage?.includes(Astro.url.origin)
+const { now = new Date(), isSimulatedDate = false } = Astro.locals
+const showWinnersModal = getCampaignPhase(now) === 'winners'
 ---
 
 <!doctype html>
@@ -61,112 +64,84 @@ const isInternalNavigation = previousPage?.includes(Astro.url.origin)
 
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content="https://www.bigibai.com/og.jpg" />
+    <meta property="og:image" content={'https://www.bigibai.com/2026/og.jpg'} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="@IbaiLlanos" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content="https://www.bigibai.com/og.jpg" />
+    <meta name="twitter:image" content={'https://www.bigibai.com/2026/og.jpg'} />
     <meta name="twitter:image:alt" content={title} />
-    <meta name="theme-color" content="#4c2d7e" />
+    <meta name="theme-color" content="#081c50" />
 
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Big Ibai",
-        "url": "https://www.bigibai.com",
-        "description": "Participa en el calendario de adviento de Big Ibai y gana chocolates y premios increíbles cada día.",
-        "author": {
-          "@type": "Person",
-          "name": "Ibai Llanos",
-          "url": "https://twitter.com/IbaiLlanos"
-        }
-      }
-    </script>
-
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Big Ibai',
+        url: 'https://www.bigibai.com',
+        description,
+        author: { '@type': 'Person', name: 'Ibai Llanos', url: 'https://twitter.com/IbaiLlanos' },
+      })}
+    />
     <link rel="icon" type="image/png" sizes="16x16" href="/cropped-favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/cropped-favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/cropped-favicon-192x192.png" />
-    <link rel="apple-touch-icon" href="/cropped-favicon-180x180.png" />
+    <link rel="icon" type="image/svg+xml" href="/2026/ibai.svg" />
+    <link rel="apple-touch-icon" href="/2026/apple-touch-icon.png" />
     <meta name="msapplication-TileImage" content="/cropped-favicon-270x270.png" />
     <ClientRouter />
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
-    <div class="overflow-hidden">
-      <div id="mask" class={isInternalNavigation ? 'unlocked' : ''}>
-        <div id="background">
-          <GradientOverlay />
-          <Snowballs />
-          <div class="relative z-2">
-            <slot />
-          </div>
-        </div>
+    <a class="skip-link" href="#main-content">
+      Saltar al contenido principal
+    </a>
+    <div class="site-shell">
+      <Header participationCount={participationCount} />
+      <div class="site-content">
+        <slot />
       </div>
+      <Footer />
     </div>
     <AchievementNotification />
     <Tooltip />
-    <WinnersModal />
+    {showWinnersModal && <WinnersModal />}
+    {isSimulatedDate && (
+      <div
+        class="fixed bottom-3 left-1/2 z-10000 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-full bg-amber-400 px-4 py-2 text-center text-xs font-bold text-black shadow-lg"
+        role="status"
+      >
+        Fecha simulada: {formatCampaignDateTime(now)} ·{' '}
+        <a href="?fecha=off" class="underline" data-astro-reload>
+          Volver a la fecha real
+        </a>
+      </div>
+    )}
   </body>
 </html>
 
 <style>
-  body {
-    background: #000;
+  .site-shell {
+    position: relative;
+    isolation: isolate;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
-
-  html,
-  body {
-    scroll-behavior: smooth;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  #background {
-    background-image: url('/fondo.webp');
-    background-size: cover;
-    background-position: top;
-    background-repeat: no-repeat;
-  }
-
-  @keyframes lock-reveal {
-    100% {
-      mask-size: 2000vh;
-    }
-  }
-
-  #mask {
-    mask-image: url('/lock.svg');
-    mask-position: center center;
-    mask-repeat: no-repeat;
-    mask-size: 50px;
-    overflow-y: scroll;
+  .site-shell::before {
+    content: '';
     position: fixed;
     inset: 0;
-    &.animated {
-      animation: lock-reveal 3s forwards ease-in-out;
-    }
-    &.unlocked {
-      position: relative;
-      mask-size: 2000vh;
-    }
+    z-index: -1;
+    pointer-events: none;
+    background: var(--site-bg) url('/2026/fondo.webp') center / cover no-repeat;
+    opacity: 0.65;
   }
-
-  @prefers-reduced-motion {
-    #mask {
-      animation: none !important;
-    }
-
-    html,
-    body {
-      scroll-behavior: auto;
-    }
+  .site-content {
+    flex: 1;
+    min-width: 0;
   }
 </style>
-
-<script>
-  const maskEl = document.querySelector('#mask')
-  maskEl?.classList.add('animated')
-</script>

@@ -1,24 +1,8 @@
 ---
-import Layout from '@/layouts/Layout.astro'
-
-import Footer from '@/sections/Footer.astro'
-import BackToHome from '@/components/BackToHome.astro'
+import LegalLayout from '@/layouts/LegalLayout.astro'
 import CookiePolicy from '@/content/legal/politica-de-cookies.md'
 ---
 
-<Layout>
-  <section
-    class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0"
-  >
-    <main
-      class="relative z-10 md-container"
-      role="contentinfo"
-      aria-label="Política de Cookies"
-      aria-live="assertive"
-    >
-      <BackToHome />
-      <CookiePolicy />
-    </main>
-  </section>
-  <Footer />
-</Layout>
+<LegalLayout title="Política de cookies">
+  <CookiePolicy />
+</LegalLayout>

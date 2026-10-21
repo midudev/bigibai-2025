@@ -2,8 +2,11 @@ import type { APIRoute } from 'astro'
 import type { Provider } from '@supabase/supabase-js'
 
 import { createClient } from '@/supabase'
+import { CAMPAIGN } from '@/data/campaign'
 
 export const POST: APIRoute = async ({ request, url, redirect, cookies }) => {
+  if (!CAMPAIGN.signInEnabled) return redirect('/registro')
+
   const formData = await request.formData()
   const provider = formData.get('provider')?.toString()
   const redirectPath = formData.get('redirect')?.toString() || '/dashboard'

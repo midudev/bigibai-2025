@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -42,21 +43,31 @@ const GAME_DATA = {
 
     <!-- PANTALLA INICIO -->
     <div id="start-screen" class="modal active">
-      <h1>PIXEL<br />LIFTER</h1>
+      <h1>
+        PIXEL
+        <br />
+        LIFTER
+      </h1>
       <p>¡Dale click rápido a la pantalla para levantar el peso antes de que se agote el tiempo!</p>
-      <button class="btn" id="btn-start">¡EMPEZAR!</button>
+      <Button variant="brand" size="sm" class="btn" id="btn-start">
+        ¡EMPEZAR!
+      </Button>
     </div>
 
     <!-- PANTALLA NIVEL COMPLETADO (MEJORAS) -->
     <div id="upgrade-screen" class="modal">
       <h1>¡PESO SUBIDO!</h1>
       <p>Elige tu recompensa:</p>
-      <button class="btn btn-strength" id="btn-strength">
-        + FUERZA<br /><span style="font-size:8px">(Sube más rápido)</span>
-      </button>
-      <button class="btn btn-stamina" id="btn-stamina">
-        + RESISTENCIA<br /><span style="font-size:8px">(Más tiempo)</span>
-      </button>
+      <Button variant="brand" size="sm" class="btn btn-strength" id="btn-strength">
+        + FUERZA
+        <br />
+        <span style="font-size:8px">(Sube más rápido)</span>
+      </Button>
+      <Button variant="brand" size="sm" class="btn btn-stamina" id="btn-stamina">
+        + RESISTENCIA
+        <br />
+        <span style="font-size:8px">(Más tiempo)</span>
+      </Button>
     </div>
 
     <!-- PANTALLA GAME OVER -->
@@ -64,7 +75,9 @@ const GAME_DATA = {
       <h1 class="danger">¡FALLO!</h1>
       <p>El peso te ha vencido.</p>
       <p id="final-stats"></p>
-      <button class="btn" id="btn-retry">REINTENTAR</button>
+      <Button variant="brand" size="sm" class="btn" id="btn-retry">
+        REINTENTAR
+      </Button>
     </div>
   </div>
 </GameLayout>

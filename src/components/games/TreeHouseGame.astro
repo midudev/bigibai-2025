@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -28,7 +29,9 @@ const GAME_DATA = {
         <div class="ui-box">
           <div class="ui-row">
             <span class="ui-label">COINS</span>
-            <span id="coins-count" class="ui-value">000</span>
+            <span id="coins-count" class="ui-value">
+              000
+            </span>
           </div>
           <div class="ui-row">
             <span class="ui-label">WORLD</span>
@@ -47,7 +50,13 @@ const GAME_DATA = {
       <!-- Start Screen -->
       <div id="start-screen" class="modal active">
         <div class="title-box">
-          <h1 style="font-family: 'Press Start 2P', monospace;">TREE<br />HOUSE<br />ADVENTURE</h1>
+          <h1 style="font-family: 'Press Start 2P', monospace;">
+            TREE
+            <br />
+            HOUSE
+            <br />
+            ADVENTURE
+          </h1>
         </div>
 
         <div class="instructions">
@@ -59,19 +68,27 @@ const GAME_DATA = {
           </div>
         </div>
 
-        <button id="start-btn" class="menu-btn">► START</button>
+        <Button variant="brand" size="sm" id="start-btn" class="menu-btn">
+          ► START
+        </Button>
       </div>
 
       <!-- Game Over Screen -->
       <div id="game-over-screen" class="modal hidden">
-        <h1 class="danger" style="font-family: 'Press Start 2P', monospace;">GAME OVER</h1>
+        <h1 class="danger" style="font-family: 'Press Start 2P', monospace;">
+          GAME OVER
+        </h1>
         <p class="score-text">Has perdido todas las vidas</p>
-        <button id="restart-btn" class="menu-btn">► RETRY</button>
+        <Button variant="brand" size="sm" id="restart-btn" class="menu-btn">
+          ► RETRY
+        </Button>
       </div>
 
       <!-- Win Screen -->
       <div id="win-screen" class="modal hidden">
-        <h1 class="win" style="font-family: 'Press Start 2P', monospace;">★ ¡VICTORIA! ★</h1>
+        <h1 class="win" style="font-family: 'Press Start 2P', monospace;">
+          ★ ¡VICTORIA! ★
+        </h1>
         <p class="score-text">¡Has llegado a la casa del árbol!</p>
       </div>
     </div>
@@ -80,19 +97,51 @@ const GAME_DATA = {
     <div id="mobile-controls">
       <div class="dpad-container">
         <div class="dpad-cross">
-          <button id="btn-left" class="dpad-btn dpad-left" type="button" aria-label="Left">
+          <Button
+            variant="secondary"
+            size="sm"
+            id="btn-left"
+            class="dpad-btn dpad-left"
+            type="button"
+            aria-label="Left"
+          >
             <span class="dpad-arrow">◀</span>
-          </button>
+          </Button>
           <div class="dpad-center-piece"></div>
-          <button id="btn-right" class="dpad-btn dpad-right" type="button" aria-label="Right">
+          <Button
+            variant="secondary"
+            size="sm"
+            id="btn-right"
+            class="dpad-btn dpad-right"
+            type="button"
+            aria-label="Right"
+          >
             <span class="dpad-arrow">▶</span>
-          </button>
+          </Button>
         </div>
       </div>
       <div class="action-btns">
         <div class="action-row">
-          <button id="btn-run" class="action-btn btn-b" type="button" aria-label="Run">B</button>
-          <button id="btn-jump" class="action-btn btn-a" type="button" aria-label="Jump">A</button>
+          <Button
+            variant="brand"
+            size="sm"
+            id="btn-run"
+            class="action-btn btn-b"
+            type="button"
+            aria-label="Run"
+          >
+            B
+          </Button>
+          <Button
+            variant="brand"
+            size="sm"
+            id="btn-jump"
+            class="action-btn btn-a"
+            type="button"
+            aria-label="Jump"
+          >
+            A
+          </Button>
         </div>
         <div class="action-labels">
           <span>RUN</span>

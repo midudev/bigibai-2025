@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "bigibai",
+  // Cuenta dueña de la zona bigibai.com
+  "account_id": "8817a7505a3fb59b2a44ab4b00edede0",
+  // `main` y el binding `ASSETS` los añade @astrojs/cloudflare
+  "compatibility_date": "2026-10-12",
+  // src/utils/crypto.ts usa el módulo `crypto` de Node
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  // Rate limiting (src/services/ratelimit.ts). El periodo solo puede ser de 10 o 60 segundos
+  // y cada namespace_id tiene que ser único en la cuenta de Cloudflare
+  "ratelimits": [
+    // Enlace mágico: Supabase tampoco deja pedir otro al mismo email antes de un minuto
+    { "name": "MAGIC_LINK_EMAIL_LIMITER", "namespace_id": "2026001", "simple": { "limit": 1, "period": 60 } },
+    { "name": "MAGIC_LINK_IP_LIMITER", "namespace_id": "2026002", "simple": { "limit": 5, "period": 60 } },
+    { "name": "COUPON_IP_LIMITER", "namespace_id": "2026003", "simple": { "limit": 10, "period": 60 } },
+    { "name": "COUPON_USER_LIMITER", "namespace_id": "2026004", "simple": { "limit": 5, "period": 60 } }
+  ]
+}

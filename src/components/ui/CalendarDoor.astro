@@ -1,0 +1,124 @@
+---
+import { CAMPAIGN } from '@/data/campaign'
+interface Props {
+  day: number
+  active: boolean
+  experienceEnabled?: boolean
+  caption?: string
+}
+const { day, active, experienceEnabled = true, caption } = Astro.props
+const Tag = active ? 'a' : 'button'
+---
+
+<Tag
+  href={active ? `/casilla-${day}-diciembre` : undefined}
+  type={active ? undefined : 'button'}
+  disabled={!active || undefined}
+  class:list={['advent-door', { 'is-open': active, 'is-special': day === CAMPAIGN.totalDays }]}
+  aria-label={
+    active
+      ? `Abrir la casilla del ${day} de diciembre`
+      : `Casilla ${day}, ${experienceEnabled ? `disponible el ${day} de diciembre de ${CAMPAIGN.year}` : 'experiencia finalizada'}`
+  }
+>
+  <span class="door-number">{String(day).padStart(2, '0')}</span>
+  <span class="door-caption">{caption || (active ? 'Descubrir' : 'Diciembre')}</span>
+  <svg
+    class="door-mark"
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    aria-hidden="true"
+  >
+    {active ? (
+      <path d="M5 12h14m-6-6 6 6-6 6" />
+    ) : (
+      <>
+        <rect x="6" y="10" width="12" height="11" rx="2" />
+        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      </>
+    )}
+  </svg>
+</Tag>
+<style>
+  .advent-door {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 110px;
+    aspect-ratio: 1.16;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
+    background: var(--surface-raised);
+    color: var(--text-copy);
+    text-align: center;
+  }
+  .advent-door:disabled {
+    cursor: default;
+  }
+  .door-number {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 3.5vw, 46px);
+    line-height: 1;
+  }
+  .door-caption {
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 9px;
+  }
+  .door-mark {
+    position: absolute;
+    top: 11px;
+    right: 10px;
+    color: var(--text-muted);
+  }
+  .is-open {
+    border-color: color-mix(in srgb, var(--brand-accent) 50%, transparent);
+    color: var(--brand-accent);
+    transition: background 0.15s;
+  }
+  .is-open:hover {
+    background: color-mix(in srgb, var(--brand-accent) 12%, var(--surface));
+  }
+  .is-open .door-mark,
+  .is-special {
+    color: var(--brand-accent);
+  }
+  .is-special {
+    border-color: color-mix(in srgb, var(--brand-accent) 45%, transparent);
+  }
+  @media (max-width: 760px) {
+    .advent-door {
+      min-height: 94px;
+      aspect-ratio: 0.85;
+      border-radius: 7px;
+    }
+    .door-number {
+      font-size: 30px;
+    }
+    .door-caption {
+      font-size: 7px;
+      margin-top: 9px;
+    }
+    .door-mark {
+      width: 11px;
+      height: 11px;
+      top: 7px;
+      right: 6px;
+    }
+  }
+  @media (max-width: 370px) {
+    .advent-door {
+      min-height: 85px;
+    }
+    .door-number {
+      font-size: 26px;
+    }
+  }
+</style>

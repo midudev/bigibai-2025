@@ -1,0 +1,32 @@
+---
+interface Props {
+  title?: string
+  description?: string
+  eyebrow?: string
+  as?: 'h1' | 'h2' | 'h3'
+  size?: 'page' | 'section' | 'small'
+  align?: 'left' | 'center'
+  id?: string
+  class?: string
+}
+const {
+  title,
+  description,
+  eyebrow,
+  as: Tag = 'h2',
+  size = 'section',
+  align = 'left',
+  id,
+  class: className,
+} = Astro.props
+---
+
+<div class:list={['ui-heading-group', `ui-heading-group--${align}`, className]}>
+  {eyebrow && <p class="ui-eyebrow">{eyebrow}</p>}
+  <Tag id={id} class:list={['ui-heading', `ui-heading--${size}`]}>
+    {title}
+    <slot name="title" />
+  </Tag>
+  {description && <p class="ui-description">{description}</p>}
+  <slot />
+</div>

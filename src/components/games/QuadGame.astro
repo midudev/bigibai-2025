@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -29,21 +30,43 @@ const GAME_DATA = {
 
     <!-- Botones Visuales -->
     <div class="controls-container">
-      <div id="visual-left" class="control-btn">⬅</div>
-      <div id="visual-right" class="control-btn">➡</div>
+      <div id="visual-left" class="control-btn">
+        ⬅
+      </div>
+      <div id="visual-right" class="control-btn">
+        ➡
+      </div>
     </div>
 
     <div id="start-screen" class="screen-overlay">
-      <h1>QUAD<br />DESERT<br />RUSH <span>DX</span></h1>
-      <p>ESQUIVA OBSTÁCULOS<br />SALTA COLINAS<br />USA EL TURBO</p>
+      <h1>
+        QUAD
+        <br />
+        DESERT
+        <br />
+        RUSH <span>DX</span>
+      </h1>
+      <p>
+        ESQUIVA OBSTÁCULOS
+        <br />
+        SALTA COLINAS
+        <br />
+        USA EL TURBO
+      </p>
       <p class="score-display">META: 1000m</p>
-      <button class="btn-game" id="btn-start">JUGAR</button>
+      <Button variant="brand" size="sm" class="btn-game" id="btn-start">
+        JUGAR
+      </Button>
     </div>
 
     <div id="game-over-screen" class="screen-overlay hidden">
       <h1 class="crash-title">¡CRASH!</h1>
-      <p class="score-display" id="final-score">Distancia: 0m</p>
-      <button class="btn-game" id="btn-restart">REINTENTAR</button>
+      <p class="score-display" id="final-score">
+        Distancia: 0m
+      </p>
+      <Button variant="brand" size="sm" class="btn-game" id="btn-restart">
+        REINTENTAR
+      </Button>
     </div>
 
     <div id="win-screen" class="screen-overlay hidden">

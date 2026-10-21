@@ -1,0 +1,56 @@
+---
+import Container from './Container.astro'
+import Surface from './Surface.astro'
+import SectionHeading from './SectionHeading.astro'
+import BrandLogo from './BrandLogo.astro'
+interface Props {
+  title: string
+  description: string
+  day?: number
+}
+const { title, description, day } = Astro.props
+---
+
+<Container as="main" id="main-content" tabindex="-1" width="reading" class="page-content">
+  <Surface padded class="case-gate">
+    <BrandLogo variant="icon" width={42} />
+    <SectionHeading
+      as="h1"
+      size="page"
+      align="center"
+      eyebrow={day ? `Casilla ${day} de diciembre` : undefined}
+      title={title}
+      description={description}
+    />
+    <slot />
+    <div class="gate-actions">
+      <slot name="actions" />
+    </div>
+  </Surface>
+</Container>
+<style>
+  .case-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 27px;
+    text-align: center;
+    padding-block: 40px;
+  }
+  .case-gate :global(.ui-heading) {
+    font-size: clamp(30px, 4vw, 44px);
+  }
+  .case-gate :global(.ui-description) {
+    font-size: 13px;
+    max-width: 50ch;
+  }
+  .gate-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+  }
+  .gate-actions:empty {
+    display: none;
+  }
+</style>

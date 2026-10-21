@@ -1,7 +1,8 @@
 ---
 import Button from '@/components/Button.astro'
-import AchievementNotification from '@/components/AchievementNotification.astro'
-import GameSuccessContent from '@/components/games/GameSuccessContent.astro'
+import GameLayout from '@/components/games/GameLayout.astro'
+import Field from '@/components/ui/Field.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
 
 export interface Props {
   day: number
@@ -16,132 +17,67 @@ export interface Props {
 
 const { day, gameData } = Astro.props
 
-const videoUrlBase = gameData?.videoUrl?.replace(/\.(mp4|webm)$/, '') || '/videos/mock'
-
 const GAME_DATA = {
   day: day,
   prize: gameData?.prize || 'Cirque du Soleil',
   anagram: gameData?.anagram || 'RQEIUC UD LLEOLIS',
   answer: gameData?.answer || 'CIRQUE DU SOLEIL',
   hint: gameData?.hint || 'Un espectáculo que desafía la gravedad y te deja sin aliento',
-  videoUrlMp4: videoUrlBase + '.mp4',
-  videoUrlWebm: videoUrlBase + '.webm',
 }
 ---
 
-<div class="screen-content game-layout">
-  <!-- Columna Izquierda: Juego -->
-  <div class="game-column">
-    <div id="game-active-content">
-      <div class="game-header">
-        <div class="timer-display">
-          <div class="text-center">
-            <span id="timer-seconds" class="text-5xl font-bold text-brand">0</span>
-            <span class="text-sm text-white/60 block mt-1">segundos</span>
-          </div>
+<GameLayout
+  prize={GAME_DATA.prize}
+  videoUrl={gameData?.videoUrl}
+  canvas={false}
+  videoMessage="Resuelve el anagrama para descubrir el vídeo."
+>
+  <div slot="game">
+    <div class="game-header">
+      <div class="timer-display">
+        <div class="text-center">
+          <span id="timer-seconds" class="text-5xl font-bold text-brand">
+            0
+          </span>
+          <span class="text-sm text-white/60 block mt-1">segundos</span>
         </div>
-      </div>
-
-      <div class="anagram-container">
-        <h2
-          class="text-2xl text-white mb-6 text-center font-bold uppercase"
-          style="font-family: 'Heavy', sans-serif;"
-        >
-          Resuelve el anagrama:
-        </h2>
-        <div class="anagram-letters" id="anagram-letters">
-          {
-            GAME_DATA.anagram.split('').map((letter, index) => (
-              <span class="anagram-letter" data-index={index} data-letter={letter}>
-                {letter}
-              </span>
-            ))
-          }
-        </div>
-      </div>
-
-      <div class="answer-input-container">
-        <input
-          type="text"
-          id="answer-input"
-          placeholder="Escribe tu respuesta..."
-          maxlength={GAME_DATA.answer.length}
-          autocomplete="off"
-          class="answer-input"
-        />
-        <div id="feedback" class="feedback hidden"></div>
-      </div>
-
-      <div class="game-actions">
-        <Button id="btn-submit" variant="brand" size="lg" class="w-full"> Enviar respuesta </Button>
       </div>
     </div>
 
-    <!-- Contenido de éxito (Oculto inicialmente) -->
-    <GameSuccessContent prize={GAME_DATA.prize} />
-  </div>
-
-  <!-- Columna Derecha: Video Placeholder / Resultado -->
-  <div class="video-column">
-    <div id="video-placeholder" class="video-placeholder h-full">
-      <div class="placeholder-content">
-        <span class="text-6xl mb-4">🎬</span>
-        <p class="text-white/60 text-center">Desbloquea el vídeo al resolver el anagrama</p>
+    <div class="anagram-container">
+      <SectionHeading as="h2" size="small" align="center" title="Resuelve el anagrama" />
+      <div class="anagram-letters" id="anagram-letters">
+        {GAME_DATA.anagram.split('').map((letter, index) => (
+          <span class="anagram-letter" data-index={index} data-letter={letter}>
+            {letter}
+          </span>
+        ))}
       </div>
-      <video
-        id="prize-video"
-        class="hidden w-full h-full object-cover rounded-lg"
-        playsinline
-        muted
-        loop
-      >
-        <source src={GAME_DATA.videoUrlWebm} type="video/webm" />
-        <source src={GAME_DATA.videoUrlMp4} type="video/mp4" />
-      </video>
+    </div>
+
+    <div class="answer-input-container">
+      <Field
+        label="Tu respuesta"
+        type="text"
+        id="answer-input"
+        placeholder="Escribe tu respuesta..."
+        maxlength={GAME_DATA.answer.length}
+        autocomplete="off"
+        class="answer-input"
+      />
+      <div id="feedback" class="ui-notice hidden" role="status"></div>
+    </div>
+
+    <div class="game-actions">
+      <Button id="btn-submit" variant="brand" size="lg" class="w-full">
+        {' '}
+        Enviar respuesta{' '}
+      </Button>
     </div>
   </div>
-</div>
-
-<!-- Notificación de Logro -->
-<AchievementNotification />
+</GameLayout>
 
 <style>
-  .game-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: center;
-    max-width: 1000px;
-  }
-
-  .game-column,
-  .video-column {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    border: 2px solid rgba(248, 177, 52, 0.3);
-  }
-
-  .video-placeholder {
-    aspect-ratio: 9/16;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-    position: relative;
-  }
-
-  .placeholder-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
   .game-header {
     margin-bottom: 1.5rem;
   }
@@ -170,8 +106,8 @@ const GAME_DATA = {
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    background: rgba(248, 177, 52, 0.2);
-    border: 2px solid rgba(248, 177, 52, 0.5);
+    background: color-mix(in srgb, var(--brand-accent) 20%, transparent);
+    border: 2px solid color-mix(in srgb, var(--brand-accent) 50%, transparent);
     border-radius: 0.5rem;
     color: var(--color-brand);
     font-size: 1.5rem;
@@ -182,7 +118,7 @@ const GAME_DATA = {
   }
 
   .anagram-letter:hover:not(.used) {
-    background: rgba(248, 177, 52, 0.3);
+    background: color-mix(in srgb, var(--brand-accent) 30%, transparent);
     border-color: var(--color-brand);
     transform: scale(1.1);
   }
@@ -195,73 +131,6 @@ const GAME_DATA = {
 
   .answer-input-container {
     margin: 1.5rem 0;
-  }
-
-  .answer-input {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(248, 177, 52, 0.4);
-    border-radius: 0.75rem;
-    color: white;
-    font-size: 1.25rem;
-    text-align: center;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  }
-
-  .answer-input:focus {
-    outline: none;
-    border-color: var(--color-brand);
-    background: rgba(0, 0, 0, 0.6);
-    box-shadow: 0 8px 32px rgba(248, 177, 52, 0.2);
-  }
-
-  .answer-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  .feedback {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    text-align: center;
-    font-weight: bold;
-  }
-
-  .feedback.correct {
-    background: rgba(92, 137, 72, 0.3);
-    color: #6ade6a;
-    border: 1px solid #6ade6a;
-  }
-
-  .feedback.incorrect {
-    background: rgba(220, 38, 38, 0.3);
-    color: #fca5a5;
-    border: 1px solid #fca5a5;
-    animation: shake 0.5s;
-  }
-
-  @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-    10%,
-    30%,
-    50%,
-    70%,
-    90% {
-      transform: translateX(-10px);
-    }
-    20%,
-    40%,
-    60%,
-    80% {
-      transform: translateX(10px);
-    }
   }
 
   .game-actions {
@@ -295,11 +164,6 @@ const GAME_DATA = {
     .answer-input {
       font-size: 1rem;
     }
-  }
-
-  .answer-input:focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
   }
 </style>
 
@@ -511,7 +375,7 @@ const GAME_DATA = {
       if (!feedback) return
 
       feedback.textContent = message
-      feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`
+      feedback.className = `ui-notice ui-notice--${isCorrect ? 'success' : 'error'}`
       feedback.classList.remove('hidden')
 
       if (!isCorrect) {

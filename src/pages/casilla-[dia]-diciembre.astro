@@ -1,10 +1,19 @@
 ---
 import Layout from '@/layouts/Layout.astro'
-import Footer from '@/sections/Footer.astro'
-import Header from '@/sections/Header.astro'
+import CaseGate from '@/components/ui/CaseGate.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import Notice from '@/components/ui/Notice.astro'
+import Badge from '@/components/ui/Badge.astro'
 import Countdown from '@/components/Countdown.astro'
 import Button from '@/components/Button.astro'
-import { cells } from '@/data/days-data'
+import { cells, getDayDescription } from '@/data/days-data'
+import { CAMPAIGN, NOTICES } from '@/data/campaign'
+import {
+  getCampaignPhase,
+  getDayUnlockDate,
+  isDayUnlocked,
+  isExperienceEnabled,
+} from '@/utils/campaign'
 import AnagramGame from '@/components/games/AnagramGame.astro'
 import TriviaGame from '@/components/games/TriviaGame.astro'
 import PuzzleGame from '@/components/games/PuzzleGame.astro'
@@ -46,26 +55,37 @@ const dayData = cells.find((cell) => cell.day === paramDayNumber)
 
 if (!dayData) return Astro.redirect('/404')
 
-const { description, gameType, gameData } = dayData
+const { gameType, gameData } = dayData
 
 // Verificar si el usuario está autenticado
 const user = Astro.locals.user
 const isAuthenticated = !!user
 
-// Verificar si el usuario es administrador
+// Fecha de referencia del servidor (real o simulada con ?fecha=YYYY-MM-DD)
+const { now, isSimulatedDate } = Astro.locals
+const description = getDayDescription(paramDayNumber, now)
+const phase = getCampaignPhase(now)
+const isRegistrationOpen = phase === 'registration'
+
+// Los admins ven todas las casillas, salvo cuando simulan una fecha para probar los desbloqueos
 const userIsAdmin = isAdmin(user?.id)
+const canPreview = userIsAdmin && !isSimulatedDate
 
-// Verificar si el día ya es accesible (usando hora CET)
-const today = new Date()
-const cetTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
-const currentMonth = cetTime.getMonth() // 0-11 (11 = diciembre)
-const currentDay = cetTime.getDate()
+// La casilla es accesible desde las 00:00 (hora peninsular) de su día y mientras la experiencia siga activa
+const experienceEnabled = isExperienceEnabled(now)
+const isDayAccessible = isDayUnlocked(paramDayNumber, now)
 
-// Solo es accesible si estamos en diciembre y el día actual es igual o mayor al día de la casilla
-const isDayAccessible = currentMonth === 11 && currentDay >= paramDayNumber
+const loginMessage = {
+  upcoming: `El registro de calendarios ${CAMPAIGN.name} todavía no está abierto. ¡Muy pronto podrás participar!`,
+  registration:
+    'Regístrate gratis y valida tu código del calendario de BigIbai para participar en el sorteo de este premio.',
+  closed: 'El plazo para participar y validar códigos ha finalizado. ¡Gracias por visitarnos!',
+  winners: 'El plazo para participar y validar códigos ha finalizado. ¡Gracias por visitarnos!',
+}[phase]
 
 // Verificar si el usuario ha validado algún cupón
 let hasValidatedCoupon = false
+let totalCoupons = 0
 if (user) {
   const { count } = await supabaseAdmin
     .from('coupons')
@@ -73,271 +93,217 @@ if (user) {
     .eq('used_by', user.id)
     .eq('is_used', true)
 
-  hasValidatedCoupon = (count ?? 0) > 0
+  totalCoupons = count ?? 0
+  hasValidatedCoupon = totalCoupons > 0
 }
 ---
 
-<Layout description={description}>
-  <div class="flex min-h-screen flex-col">
-    {
-      !isDayAccessible && !userIsAdmin ? (
-        // 1. Si no es accesible (y no es admin), muestra el countdown
-        <>
-          <Header />
-          <div class="flex flex-1">
-            <main class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4">
-              <Countdown day={paramDayNumber} />
-              <p
-                class="text-xl text-white/80 text-center text-balance mb-10 fade-in-up"
-                style="animation-delay: 0.2s;"
-                aria-live="off"
-              >
-                {description}
-              </p>
-            </main>
-          </div>
-          <Footer />
-        </>
-      ) : !isAuthenticated ? (
-        // 2. Si es accesible pero no está registrado, muestra mensaje de contenido exclusivo
-        <>
-          <Header />
-          <div class="flex flex-1">
-            <main class="max-w-4xl mx-auto flex items-center justify-center px-4 py-20 flex-col gap-4">
-              <div class="text-center mb-8">
-                <svg
-                  width="80"
-                  height="80"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="mx-auto mb-6 text-brand fade-in-up"
-                >
-                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <h2
-                  class="text-3xl md:text-4xl text-brand font-bold mb-4 uppercase fade-in-up"
-                  style="font-family: 'Heavy', sans-serif; text-shadow: var(--text-shadow-title); animation-delay: 0.1s;"
-                >
-                  Contenido Exclusivo
-                </h2>
-                <p
-                  class="text-xl text-white/80 text-center text-balance mb-6 fade-in-up"
-                  style="animation-delay: 0.2s;"
-                >
-                  Debes iniciar sesión para poder acceder a este contenido.
-                </p>
-                <p
-                  class="text-lg text-white/60 text-center text-balance mb-8 fade-in-up"
-                  style="animation-delay: 0.3s;"
-                >
-                  El plazo para participar y validar códigos ha finalizado. ¡Gracias por visitarnos!
-                </p>
-              </div>
-              <div
-                class="flex flex-col sm:flex-row gap-4 fade-in-up"
-                style="animation-delay: 0.4s;"
-              >
-                <Button
-                  href={`/registro?redirect=${encodeURIComponent(Astro.url.pathname)}`}
-                  variant="brand"
-                  size="lg"
-                >
-                  Iniciar Sesión / Registrarse
-                </Button>
-                <Button href="/" variant="secondary" size="lg">
-                  Volver al Inicio
-                </Button>
-              </div>
-            </main>
-          </div>
-          <Footer />
-        </>
-      ) : !hasValidatedCoupon && !userIsAdmin ? (
-        // 2.5. Si está registrado pero NO ha validado cupón, muestra popup
-        <>
-          <Header />
-          <div class="flex flex-1">
-            <main class="max-w-6xl mx-auto flex items-center justify-center px-4 py-20">
-              <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-                <div class="text-center md:text-left">
-                  <h2 class="text-3xl md:text-5xl text-brand font-bold mb-6 uppercase fade-in-up leading-tighter text-balance text-shadow-title">
-                    El plazo ha finalizado
-                  </h2>
-                  <p
-                    class="text-xl text-white/80 text-balance mb-8 fade-in-up leading-relaxed text-center text-shadow-title"
-                    style="animation-delay: 0.2s;"
-                  >
-                    Lo sentimos, el periodo para validar cupones y participar en los retos ha terminado. ¡Mucha suerte en los sorteos si ya has participado!
-                  </p>
-
-                  <div
-                    class="fade-in-up flex justify-center md:justify-center gap-x-2"
-                    style="animation-delay: 0.4s;"
-                  >
-                    <Button href="/" variant="brand" size="lg">
-                      Volver al inicio
-                    </Button>
-                  </div>
-                </div>
-
-                <div class="flex justify-center">
-                  <video
-                    class="w-full max-w-[300px] rounded-xl shadow-2xl fade-in-up"
-                    playsinline
-                    muted
-                    loop
-                    autoplay
-                    style="animation-delay: 0.5s;"
-                  >
-                    <source
-                      src="https://videos.bigibai.com/premios/tutorial.webm"
-                      type="video/webm"
-                    />
-                    <source
-                      src="https://videos.bigibai.com/premios/tutorial.mp4"
-                      type="video/mp4"
-                    />
-                  </video>
-                </div>
-              </div>
-            </main>
-          </div>
-          <Footer />
-        </>
-      ) : (
-        // 3. Si es accesible y está registrado (y tiene cupón o es admin), muestra el contenido completo
-        <div id="casilla-flow" class="flex-1 relative text-xs">
-          {/* Aviso de admin si está viendo una casilla que aún no es visible para todos */}
-          {userIsAdmin && !isDayAccessible && (
-            <div class="admin-notice">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-              <span class="text-xs text-balance inline-block text-center">
-                Vista previa de admin - Esta casilla no es visible para usuarios
-              </span>
-            </div>
-          )}
-
-          <canvas id="confetti-canvas" class="confetti-canvas w-full h-full" />
-
-          {/* Botón de cerrar - aparece 5s después del vídeo */}
-          <a id="close-btn" href="/" class="close-btn hidden" aria-label="Volver al inicio">
+<Layout
+  title={`Casilla ${paramDayNumber} de diciembre | ${CAMPAIGN.name}`}
+  description={description}
+  participationCount={totalCoupons}
+>
+  {!experienceEnabled && !canPreview ? (
+    <CaseGate
+      title="Gracias por jugar."
+      description={`Las casillas y los retos de ${CAMPAIGN.name} ya no están disponibles.`}
+    >
+      <Button slot="actions" href="/" size="lg">
+        Volver al inicio
+      </Button>
+    </CaseGate>
+  ) : !isDayAccessible && !canPreview ? (
+    <CaseGate
+      day={paramDayNumber}
+      title="Esta puerta aún guarda su sorpresa."
+      description={description}
+    >
+      <Countdown
+        day={paramDayNumber}
+        unlockAt={getDayUnlockDate(paramDayNumber).toISOString()}
+        serverNow={now.toISOString()}
+        isSimulatedDate={isSimulatedDate}
+      />
+      <Button slot="actions" href="/#calendario" variant="secondary">
+        Volver al calendario
+      </Button>
+    </CaseGate>
+  ) : !isAuthenticated ? (
+    <CaseGate
+      day={paramDayNumber}
+      title="Entra en la fábrica."
+      description="Inicia sesión para acceder a los retos y guardar tus logros."
+    >
+      <Notice>{loginMessage}</Notice>
+      <Fragment slot="actions">
+        <Button href={`/registro?redirect=${encodeURIComponent(Astro.url.pathname)}`} size="lg">
+          Iniciar sesión
+        </Button>
+        <Button href="/#calendario" variant="secondary">
+          Volver al calendario
+        </Button>
+      </Fragment>
+    </CaseGate>
+  ) : !hasValidatedCoupon && !userIsAdmin ? (
+    <CaseGate
+      day={paramDayNumber}
+      title={
+        isRegistrationOpen
+          ? 'Primero, registra tu calendario.'
+          : phase === 'upcoming'
+            ? 'El registro aún no está abierto.'
+            : 'El registro ha finalizado.'
+      }
+      description={
+        isRegistrationOpen
+          ? 'Para acceder a los retos, registra al menos un calendario. Encontrarás el código detrás de la caja de chocolate.'
+          : phase === 'upcoming'
+            ? `Muy pronto podrás registrar tu calendario ${CAMPAIGN.name} y desbloquear los retos.`
+            : 'Los retos son exclusivos para quienes registraron su calendario durante el plazo de participación.'
+      }
+    >
+      <Fragment slot="actions">
+        {isRegistrationOpen ? (
+          <>
+            <Button href="/dashboard" size="lg">
+              Registrar mi calendario
+            </Button>
+            <Button href={Astro.url.pathname} variant="secondary" data-astro-reload>
+              Ya lo he registrado
+            </Button>
+          </>
+        ) : (
+          <Button href="/" size="lg">
+            Volver al inicio
+          </Button>
+        )}
+      </Fragment>
+    </CaseGate>
+  ) : (
+    <main id="main-content" tabindex="-1" class="experience-shell">
+      <div id="casilla-flow" class="flex-1 relative text-xs">
+        <h1 class="sr-only">Casilla {paramDayNumber} de diciembre</h1>
+        {/* Aviso de admin si está viendo una casilla que aún no es visible para todos */}
+        {canPreview && (!isDayAccessible || !experienceEnabled) && (
+          <div class="admin-notice">
             <svg
-              width="28"
-              height="28"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="2.5"
+              stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              class="text-brand"
             >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+              <path d="m9 12 2 2 4-4" />
             </svg>
-          </a>
+            <span class="text-xs text-balance inline-block text-center">
+              Vista previa de admin - Esta casilla no es visible para usuarios
+            </span>
+          </div>
+        )}
 
-          {/* Pantalla 1: Animación de apertura con calendario */}
-          <div id="screen-opening" class="screen active">
-            <div class="opening-animation relative">
-              <div class="scene">
-                <div class="calendar-wrapper" id="calendarWrapper">
-                  <img src="/calendar.webp" alt="Calendario" class="bg-image" />
-                  <div class="grid-layer" id="gridLayer" />
-                </div>
+        <canvas id="confetti-canvas" class="confetti-canvas w-full h-full" />
+
+        <div class="experience-toolbar site-container">
+          <Badge tone="brand">Casilla {paramDayNumber} de diciembre</Badge>
+          <Button id="close-btn" href="/#calendario" variant="ghost" size="sm">
+            Volver al calendario
+          </Button>
+        </div>
+
+        {/* Pantalla 1: Animación de apertura con calendario */}
+        <div id="screen-opening" class="screen active">
+          <div class="opening-animation relative">
+            <div class="scene">
+              <div class="calendar-wrapper" id="calendarWrapper">
+                <img src="/2026/fabrica-small.webp" alt="Calendario" class="bg-image" />
+                <div class="grid-layer" id="gridLayer" />
               </div>
             </div>
-          </div>
-
-          {/* Pantalla 2: Adivina el premio */}
-          <div id="screen-guess" class="screen">
-            <div class="screen-content">
-              <div class="text-center mb-8">
-                <h1
-                  class="text-4xl md:text-5xl text-brand font-bold mb-4 uppercase"
-                  style="font-family: 'Heavy', sans-serif; text-shadow: var(--text-shadow-title);"
-                >
-                  ¡Desvela el premio
-                  <br />
-                  del día {paramDayNumber}!
-                </h1>
-                <p class="text-white/70 text-lg">
-                  Resuelve el reto para descubrir el sorteo de hoy
-                </p>
-              </div>
-
-              <div class="chocolate-reveal">
-                <img
-                  src={`/chocolatinas/${paramDayNumber}.webp`}
-                  alt="Chocolatina"
-                  class="chocolate-image floating-chocolate"
-                  onerror="this.src='/chocolatinas/1.webp'"
-                />
-              </div>
-
-              <div class="flex flex-col gap-4 mt-12 max-w-[320px] mx-auto">
-                <Button id="btn-start-game" variant="brand" size="lg" class="w-full">
-                  ¡Empezar el reto!
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Pantalla 3: Renderizar el componente de juego según el tipo */}
-          <div id="screen-game" class="screen">
-            {gameType === 'anagram' && <AnagramGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'trivia' && <TriviaGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'puzzle' && <PuzzleGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'memory' && <MemoryGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'racer' && <RacerGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'camper' && <CamperGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'snake' && <SnakeGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'circus' && <CircusGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'safari' && <SafariGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'hamster' && <HamsterGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'dron' && <DronGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'flight' && <FlightGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'arkanoid' && <ArkanoidGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'sea' && <SeaGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'noise' && <NoiseGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'walking' && <WalkingGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'windows' && <WindowsGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'quad' && <QuadGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'pong' && <PongGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'soccer' && <SoccerGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'lift' && <LiftGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'pang' && <PangGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'gta' && <GTAGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'candy' && <CandyGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'treehouse' && <TreeHouseGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'track' && <TrackGame day={paramDayNumber} gameData={gameData} />}
-            {gameType === 'coaster' && <CoasterGame day={paramDayNumber} gameData={gameData} />}
           </div>
         </div>
-      )
-    }
-  </div>
-</Layout>
 
+        {/* Pantalla 2: Adivina el premio */}
+        <div id="screen-guess" class="screen">
+          <div class="screen-content">
+            <SectionHeading
+              as="h1"
+              size="page"
+              align="center"
+              title={`Desvela el premio del día ${paramDayNumber}.`}
+              description="Resuelve el reto para descubrir el sorteo de hoy."
+            />
+
+            <div class="chocolate-reveal">
+              <img
+                src={`/chocolatinas/${paramDayNumber}.webp`}
+                alt="Chocolatina"
+                class="chocolate-image floating-chocolate"
+                onerror="this.src='/chocolatinas/1.webp'"
+              />
+            </div>
+
+            <div class="flex flex-col gap-4 mt-12 max-w-[320px] mx-auto">
+              <Button id="btn-start-game" variant="brand" size="lg" class="w-full">
+                ¡Empezar el reto!
+              </Button>
+              <Notice>{NOTICES.gamesAreOptional}</Notice>
+            </div>
+          </div>
+        </div>
+
+        {/* Pantalla 3: Renderizar el componente de juego según el tipo */}
+        <div id="screen-game" class="screen">
+          {gameType === 'anagram' && <AnagramGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'trivia' && <TriviaGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'puzzle' && <PuzzleGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'memory' && <MemoryGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'racer' && <RacerGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'camper' && <CamperGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'snake' && <SnakeGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'circus' && <CircusGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'safari' && <SafariGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'hamster' && <HamsterGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'dron' && <DronGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'flight' && <FlightGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'arkanoid' && <ArkanoidGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'sea' && <SeaGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'noise' && <NoiseGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'walking' && <WalkingGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'windows' && <WindowsGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'quad' && <QuadGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'pong' && <PongGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'soccer' && <SoccerGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'lift' && <LiftGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'pang' && <PangGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'gta' && <GTAGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'candy' && <CandyGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'treehouse' && <TreeHouseGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'track' && <TrackGame day={paramDayNumber} gameData={gameData} />}
+          {gameType === 'coaster' && <CoasterGame day={paramDayNumber} gameData={gameData} />}
+        </div>
+      </div>
+    </main>
+  )}
+</Layout>
 <style>
-  :root {
+  .experience-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-top: 24px;
+  }
+  .experience-shell {
+    padding-bottom: 32px;
+  }
+  .screen :global(.game-layout) {
+    width: min(var(--content-max), 100%);
+  }
+  #casilla-flow {
     /* Variables de ajuste */
     --pad-top: 3%;
     --pad-bottom: 5%;
@@ -347,7 +313,7 @@ if (user) {
 
     /* Variables de animación */
     --zoom-scale: 3.5;
-    --bg-image: url('/calendar.webp');
+    --bg-image: url('/2026/fabrica-small.webp');
   }
 
   /* Contenedor principal */
@@ -361,7 +327,7 @@ if (user) {
     content: '';
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: transparent;
     z-index: -1;
     pointer-events: none;
   }
@@ -378,14 +344,14 @@ if (user) {
     position: absolute;
     inset: 0;
     width: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 75vh;
+    min-height: 75dvh;
     display: none;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: opacity 0.5s ease;
-    padding: 2rem 0;
+    padding: 3rem var(--page-gutter);
   }
 
   .screen.opening {
@@ -419,7 +385,7 @@ if (user) {
   .scene {
     position: relative;
     width: 100%;
-    max-width: 500px;
+    max-width: 390px;
     height: auto;
     perspective: 1000px;
     z-index: 2;
@@ -497,9 +463,11 @@ if (user) {
     height: 100%;
     backface-visibility: hidden;
     border-radius: 2px;
-    background-image: var(--bg-image);
+    background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
+    border: 1px solid var(--border-strong);
+    font-family: var(--font-display);
     background-size: 400% 600%;
-    color: transparent;
+    color: var(--text-heading);
     text-shadow: none;
     display: flex;
     justify-content: center;
@@ -524,8 +492,7 @@ if (user) {
     height: 100%;
     backface-visibility: hidden;
     border-radius: 4px;
-    background-color: #eaeaea;
-    background-image: linear-gradient(to bottom right, #e6e6e6, #f2f2f2);
+    background: var(--surface-inset);
     border: 1px solid rgba(0, 0, 0, 0.05);
     transform: rotateY(180deg);
     display: flex;
@@ -761,6 +728,9 @@ if (user) {
       game: $('#screen-game') as HTMLDivElement,
     }
 
+    const flow = document.getElementById('casilla-flow')
+    if (!flow || flow.dataset.ready) return
+    flow.dataset.ready = 'true'
     const gridLayer = $('#gridLayer') as HTMLDivElement
     const wrapper = $('#calendarWrapper') as HTMLDivElement
     let isZoomed = false
@@ -866,6 +836,10 @@ if (user) {
         return
       }
 
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        transitionToScreen('guess')
+        return
+      }
       const SHAKE_DURATION = 1500
 
       setTimeout(() => {

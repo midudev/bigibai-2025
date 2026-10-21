@@ -1,0 +1,24 @@
+---
+import Layout from './Layout.astro'
+import Container from '@/components/ui/Container.astro'
+interface Props {
+  title?: string
+  description?: string
+  participationCount?: number
+  width?: 'default' | 'wide' | 'reading'
+  class?: string
+}
+const { width = 'default', class: className, ...rest } = Astro.props
+---
+
+<Layout {...rest}>
+  <Container
+    as="main"
+    id="main-content"
+    tabindex="-1"
+    width={width}
+    class:list={['page-content', className]}
+  >
+    <slot />
+  </Container>
+</Layout>

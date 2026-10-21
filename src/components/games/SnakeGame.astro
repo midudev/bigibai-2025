@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -34,7 +35,9 @@ const GAME_DATA = {
       <div class="score-container">
         <div class="lego-score-brick">
           <span class="score-label">PUNTOS</span>
-          <span id="scoreVal" class="score-val">000</span>
+          <span id="scoreVal" class="score-val">
+            000
+          </span>
           <!-- Barra de cuenta atrás visual -->
           <div class="point-timer-bg">
             <div id="pointTimerBar"></div>
@@ -45,15 +48,19 @@ const GAME_DATA = {
 
     <!-- Pantalla de Inicio -->
     <div id="start-screen">
-      <h1 class="title" style="font-family: 'Press Start 2P', cursive;">BRICK<br />SNAKE</h1>
+      <h1 class="title" style="font-family: 'Press Start 2P', cursive;">
+        BRICK
+        <br />
+        SNAKE
+      </h1>
       <p style="color:#FFF; font-size: 0.7rem; margin-bottom: 15px;">EDICIÓN SUPREMA</p>
-      <div
-        style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; border: 1px solid #555;"
-      >
+      <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; border: 1px solid #555;">
         <p style="color:#FBD821; font-size: 0.8rem; margin-bottom: 8px;">OBJETIVO:</p>
         <p style="color:#FFF; font-size: 1.2rem;">{GAME_DATA.targetScore} PUNTOS</p>
       </div>
-      <button id="btn-start" class="lego-btn">JUGAR</button>
+      <Button variant="brand" size="sm" id="btn-start" class="lego-btn">
+        JUGAR
+      </Button>
     </div>
 
     <!-- Pantalla Game Over -->
@@ -65,8 +72,12 @@ const GAME_DATA = {
         ¡AY!
       </h1>
       <p style="color: white; font-size: 0.8rem; margin-top:10px;">PUNTUACIÓN FINAL</p>
-      <p style="color: #FBD821; font-size: 1.5rem; margin-top:5px;" id="finalScore">0</p>
-      <button id="btn-retry" class="lego-btn blink">REINTENTAR</button>
+      <p style="color: #FBD821; font-size: 1.5rem; margin-top:5px;" id="finalScore">
+        0
+      </p>
+      <Button variant="brand" size="sm" id="btn-retry" class="lego-btn blink">
+        REINTENTAR
+      </Button>
     </div>
 
     <!-- Pantalla de Victoria -->
@@ -78,17 +89,38 @@ const GAME_DATA = {
         ¡ENHORABUENA!
       </h2>
       <p style="color: #FBD821; font-size: 0.9rem; margin-top:15px;" class="blink">
-        ¡DESVELANDO <br />EL SORTEO...!
+        ¡DESVELANDO <br />
+        EL SORTEO...!
       </p>
     </div>
 
     <!-- Controles táctiles para móviles -->
     <div id="mobile-controls">
-      <button id="btn-up" class="control-btn" aria-label="Arriba">▲</button>
+      <Button variant="secondary" size="sm" id="btn-up" class="control-btn" aria-label="Arriba">
+        ▲
+      </Button>
       <div class="control-row">
-        <button id="btn-left" class="control-btn" aria-label="Izquierda">◀</button>
-        <button id="btn-down" class="control-btn" aria-label="Abajo">▼</button>
-        <button id="btn-right" class="control-btn" aria-label="Derecha">▶</button>
+        <Button
+          variant="secondary"
+          size="sm"
+          id="btn-left"
+          class="control-btn"
+          aria-label="Izquierda"
+        >
+          ◀
+        </Button>
+        <Button variant="secondary" size="sm" id="btn-down" class="control-btn" aria-label="Abajo">
+          ▼
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          id="btn-right"
+          class="control-btn"
+          aria-label="Derecha"
+        >
+          ▶
+        </Button>
       </div>
     </div>
   </div>

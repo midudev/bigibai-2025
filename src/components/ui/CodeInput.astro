@@ -1,0 +1,70 @@
+---
+interface Props {
+  id?: string
+  label?: string
+}
+const { id = 'coupon', label = 'Código de tu calendario' } = Astro.props
+---
+
+<fieldset class="code-field">
+  <legend class="ui-field-label">{label}</legend>
+  <div class="code-groups">
+    {Array.from({ length: 3 }, (_, group) => (
+      <div class="code-group" data-group={group}>
+        {Array.from({ length: 4 }, (_, index) => (
+          <input
+            type="text"
+            maxlength="1"
+            data-index={group * 4 + index}
+            autocomplete="off"
+            spellcheck="false"
+            inputmode="text"
+            aria-label={`Carácter ${group * 4 + index + 1} de 12`}
+            aria-describedby={`${id}-hint`}
+            class="coupon-input"
+          />
+        ))}
+      </div>
+    ))}
+  </div>
+  <p id={`${id}-hint`}>Introduce los 12 caracteres. Los guiones se añaden automáticamente.</p>
+</fieldset>
+<style>
+  .code-field {
+    min-width: 0;
+  }
+  .code-groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(8px, 2vw, 20px);
+  }
+  .code-group {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(3px, 1vw, 7px);
+  }
+  .coupon-input {
+    width: 100%;
+    min-width: 0;
+    height: clamp(38px, 5vw, 54px);
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface-inset);
+    color: var(--text-heading);
+    font-family: var(--font-body);
+    font-size: clamp(14px, 2vw, 20px);
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .coupon-input:focus {
+    border-color: var(--brand-accent);
+  }
+  .code-field > p {
+    margin-top: 15px;
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.8;
+  }
+</style>

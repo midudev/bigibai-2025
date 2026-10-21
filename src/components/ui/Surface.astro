@@ -1,0 +1,30 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+interface Props extends HTMLAttributes<'div'> {
+  as?: 'div' | 'section' | 'article'
+  variant?: 'default' | 'raised' | 'subtle' | 'inset' | 'plain'
+  padded?: boolean
+  status?: 'info' | 'warning' | 'success' | 'error'
+}
+const {
+  as: Tag = 'div',
+  variant = 'default',
+  padded = false,
+  status,
+  class: className,
+  ...rest
+} = Astro.props
+---
+
+<Tag
+  class:list={[
+    'ui-surface',
+    `ui-surface--${variant}`,
+    { 'ui-surface--padded': padded, 'ui-surface--status': status },
+    status && `ui-status--${status}`,
+    className,
+  ]}
+  {...rest}
+>
+  <slot />
+</Tag>

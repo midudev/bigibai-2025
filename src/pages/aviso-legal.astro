@@ -1,26 +1,8 @@
 ---
-import Layout from '@/layouts/Layout.astro'
-
-import Footer from '@/sections/Footer.astro'
-import BackToHome from '@/components/BackToHome.astro'
+import LegalLayout from '@/layouts/LegalLayout.astro'
 import LegalNotice from '@/content/legal/aviso-legal.md'
 ---
 
-<Layout>
-  <section
-    class="relative before:content-[''] before:absolute before:inset-0 before:bg-black/20 before:z-0"
-  >
-    <main
-      id="main-content"
-      class="relative z-10 md-container"
-      role="contentinfo"
-      aria-label="Aviso Legal"
-      aria-live="assertive"
-      tabindex="-1"
-    >
-      <BackToHome />
-      <LegalNotice />
-    </main>
-  </section>
-  <Footer />
-</Layout>
+<LegalLayout title="Aviso legal">
+  <LegalNotice />
+</LegalLayout>

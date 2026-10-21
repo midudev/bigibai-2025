@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+interface Props extends HTMLAttributes<'div'> {
+  variant?: 'info' | 'warning' | 'success' | 'error'
+  title?: string
+}
+const { variant = 'info', title, class: className, ...rest } = Astro.props
+---
+
+<div class:list={['ui-notice', `ui-notice--${variant}`, className]} {...rest}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v6m0-10v1" />
+  </svg>
+  <div>
+    {title && <strong class="ui-notice-title">{title}</strong>}
+    <slot />
+  </div>
+</div>

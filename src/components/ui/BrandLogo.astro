@@ -1,0 +1,35 @@
+---
+interface Props {
+  variant?: 'wordmark' | 'factory' | 'icon'
+  class?: string
+  width?: number
+  priority?: boolean
+}
+const {
+  priority = false,
+  variant = 'wordmark',
+  class: className,
+  width = variant === 'factory' ? 180 : variant === 'icon' ? 40 : 126,
+} = Astro.props
+const assets = {
+  wordmark: { file: 'logo.svg', width: 770, height: 234, alt: 'Big Ibai' },
+  factory: {
+    file: 'logo-fabrica.svg',
+    width: 742,
+    height: 263,
+    alt: 'Big Ibai y la fábrica de regalos',
+  },
+  icon: { file: 'ibai.svg', width: 369, height: 489, alt: '' },
+}
+const asset = assets[variant]
+---
+
+<img
+  src={`/2026/${asset.file}`}
+  width={asset.width}
+  height={asset.height}
+  alt={asset.alt}
+  fetchpriority={priority ? 'high' : 'auto'}
+  class={className}
+  style={`width: ${width}px; max-width: 100%; height: auto;`}
+/>

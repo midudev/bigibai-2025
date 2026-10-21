@@ -1,0 +1,644 @@
+---
+import { isDayUnlocked, isExperienceEnabled } from '@/utils/campaign'
+
+const { now } = Astro.locals
+const experienceEnabled = isExperienceEnabled(now)
+const chocolates = Array.from({ length: 24 }, (_, index) => index + 1)
+const chocolateLayers = Array.from({ length: 9 }, (_, index) => index)
+---
+
+<chocolate-box class="chocolate-box" data-open="false">
+  <button
+    class="box-control"
+    type="button"
+    aria-label="Abrir la caja de chocolatinas Big Ibai"
+    aria-expanded="false"
+    aria-describedby="box-instruction"
+  >
+    <span class="box-scene" aria-hidden="true">
+      <span class="box-float">
+        <span class="box-model">
+          <span class="box-back"></span>
+          <span class="box-wall box-wall--left"></span>
+          <span class="box-wall box-wall--right">
+            <img src="/2026/logo.svg" alt="" width="120" height="40" />
+            <span>La fábrica de regalos</span>
+          </span>
+          <span class="box-wall box-wall--top"></span>
+          <span class="box-wall box-wall--bottom"></span>
+          <span class="box-tray">
+            {chocolates.map((day) => (
+              <span
+                class:list={[
+                  'chocolate-well',
+                  { 'is-locked': !experienceEnabled || !isDayUnlocked(day, now) },
+                ]}
+                style={`--delay: ${(day % 4) * 35 + Math.floor((day - 1) / 4) * 25}ms; --chocolate-shape: url('/2026/chocolates/${day}.webp')`}
+              >
+                <span class="well-day">{day}</span>
+                <span class="chocolate-piece">
+                  {chocolateLayers.map((layer) => (
+                    <span
+                      class:list={['chocolate-slice', { 'chocolate-slice--back': layer === 0 }]}
+                      style={`--slice: ${layer}`}
+                    ></span>
+                  ))}
+                  <img
+                    src={`/2026/chocolates/${day}.webp`}
+                    alt=""
+                    width="120"
+                    height="190"
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </span>
+              </span>
+            ))}
+          </span>
+          <span class="box-rim"></span>
+          <span class="box-lid">
+            <span class="lid-edge lid-edge--left"></span>
+            <span class="lid-edge lid-edge--right"></span>
+            <span class="lid-edge lid-edge--top"></span>
+            <span class="lid-edge lid-edge--bottom"></span>
+            <span class="lid-inside">
+              <img src="/2026/logo-fabrica.svg" alt="" width="200" height="130" />
+              <span>La ilusión está dentro.</span>
+              <span class="lid-star">✦</span>
+            </span>
+            <span class="lid-cover">
+              <img
+                src="/2026/fabrica.webp"
+                srcset="/2026/fabrica-small.webp 600w, /2026/fabrica.webp 1100w"
+                sizes="(max-width: 760px) 80vw, 420px"
+                width="1100"
+                height="1444"
+                alt=""
+                fetchpriority="high"
+                draggable="false"
+              />
+              <span class="lid-sheen"></span>
+            </span>
+          </span>
+        </span>
+      </span>
+    </span>
+  </button>
+  <span class="box-shadow" aria-hidden="true"></span>
+  <p class="box-instruction" id="box-instruction">
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      aria-hidden="true"
+    >
+      <path d="m5 3 14 9-7 1.5L9 20 5 3Z" stroke-linejoin="round" />
+      <path d="m14 16 3 5M17 3v4M20 7h3" stroke-linecap="round" />
+    </svg>
+    <span class="instruction-pointer">Pasa el ratón y descubre el interior</span>
+    <span class="instruction-touch">Toca la caja y descubre el interior</span>
+  </p>
+</chocolate-box>
+
+<script>
+  class ChocolateBox extends HTMLElement {
+    private controller?: AbortController
+
+    connectedCallback() {
+      this.controller?.abort()
+      this.controller = new AbortController()
+      const { signal } = this.controller
+      const button = this.querySelector('button')!
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+      let hovered = false
+      let pinned = false
+      let dismissed = false
+      let frame = 0
+
+      const update = () => {
+        const open = pinned || (hovered && !dismissed)
+        this.dataset.open = String(open)
+        button.setAttribute('aria-expanded', String(open))
+        button.setAttribute(
+          'aria-label',
+          `${open ? 'Cerrar' : 'Abrir'} la caja de chocolatinas Big Ibai`
+        )
+      }
+      const resetTilt = () => {
+        cancelAnimationFrame(frame)
+        this.style.setProperty('--tilt-x', '0deg')
+        this.style.setProperty('--tilt-y', '0deg')
+        this.style.setProperty('--shine-x', '50%')
+      }
+
+      button.addEventListener(
+        'pointerenter',
+        (event) => {
+          if (event.pointerType !== 'mouse') return
+          hovered = true
+          update()
+        },
+        { signal }
+      )
+      button.addEventListener(
+        'pointerleave',
+        () => {
+          hovered = false
+          dismissed = false
+          resetTilt()
+          update()
+        },
+        { signal }
+      )
+      button.addEventListener(
+        'pointermove',
+        (event) => {
+          if (event.pointerType !== 'mouse' || reducedMotion.matches) return
+          cancelAnimationFrame(frame)
+          frame = requestAnimationFrame(() => {
+            const bounds = button.getBoundingClientRect()
+            const x = Math.max(
+              -1,
+              Math.min(1, ((event.clientX - bounds.left) / bounds.width - 0.5) * 2)
+            )
+            const y = Math.max(
+              -1,
+              Math.min(1, ((event.clientY - bounds.top) / bounds.height - 0.5) * 2)
+            )
+            this.style.setProperty('--tilt-x', `${-y * 5}deg`)
+            this.style.setProperty('--tilt-y', `${x * 8}deg`)
+            this.style.setProperty('--shine-x', `${50 + x * 35}%`)
+          })
+        },
+        { signal }
+      )
+      button.addEventListener(
+        'click',
+        () => {
+          const wasOpen = this.dataset.open === 'true'
+          pinned = !wasOpen
+          dismissed = wasOpen
+          update()
+        },
+        { signal }
+      )
+      button.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key !== 'Escape') return
+          pinned = false
+          dismissed = true
+          update()
+        },
+        { signal }
+      )
+      reducedMotion.addEventListener('change', resetTilt, { signal })
+      signal.addEventListener('abort', () => cancelAnimationFrame(frame), { once: true })
+
+      const observer = new IntersectionObserver(([entry]) => {
+        this.toggleAttribute('data-resting', !entry.isIntersecting)
+      })
+      observer.observe(this)
+      signal.addEventListener('abort', () => observer.disconnect(), { once: true })
+    }
+
+    disconnectedCallback() {
+      this.controller?.abort()
+    }
+  }
+
+  if (!customElements.get('chocolate-box')) customElements.define('chocolate-box', ChocolateBox)
+</script>
+
+<style>
+  .chocolate-box {
+    --box-depth: clamp(42px, 4.8vw, 60px);
+    --lid-depth: 6px;
+    --half-depth: calc(var(--box-depth) / 2);
+    --box-radius: 7px;
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 28px 36px 58px 22px;
+  }
+  .box-control {
+    position: relative;
+    display: block;
+    width: min(100%, 395px);
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--box-radius);
+    background: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .box-control:focus-visible {
+    outline-offset: 16px;
+  }
+  .box-scene {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1100 / 1444;
+    perspective: 4000px;
+  }
+  .box-float,
+  .box-model {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transform-style: preserve-3d;
+  }
+  .box-float {
+    animation: box-float 6s ease-in-out infinite;
+  }
+  .box-model {
+    transform: rotateX(calc(7deg + var(--tilt-x, 0deg))) rotateY(calc(-18deg + var(--tilt-y, 0deg)))
+      rotateZ(-3deg);
+    transition: transform 450ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .box-back,
+  .box-tray,
+  .box-rim,
+  .box-lid,
+  .lid-cover,
+  .lid-inside {
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: var(--box-radius);
+    transform-style: preserve-3d;
+  }
+  .box-back {
+    background: #0b1b40;
+    transform: translateZ(calc(-1 * var(--half-depth)));
+    box-shadow: 0 30px 70px #00082580;
+  }
+  .box-wall {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #87a8bf6b;
+    background: linear-gradient(90deg, #10234e, #22477b 45%, #102552);
+    backface-visibility: visible;
+  }
+  .box-wall--left,
+  .box-wall--right {
+    top: 0;
+    width: var(--box-depth);
+    height: 100%;
+  }
+  .box-wall--left {
+    left: 0;
+    transform: translateX(-50%) rotateY(-90deg);
+  }
+  .box-wall--right {
+    left: 100%;
+    gap: 36px;
+    writing-mode: vertical-rl;
+    transform: translateX(-50%) rotateY(90deg);
+    color: #f5cd82;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+  .box-wall--right img {
+    position: absolute;
+    width: 90px;
+    height: 25px;
+    top: 23%;
+    max-width: none;
+    object-fit: contain;
+    transform: rotate(90deg);
+  }
+  .box-wall--right > span {
+    margin-top: 110px;
+  }
+  .box-wall--top,
+  .box-wall--bottom {
+    left: 0;
+    width: 100%;
+    height: var(--box-depth);
+    background: linear-gradient(#18345e, #2c5585 48%, #102550);
+  }
+  .box-wall--top {
+    top: 0;
+    transform: translateY(-50%) rotateX(90deg);
+  }
+  .box-wall--bottom {
+    top: 100%;
+    transform: translateY(-50%) rotateX(-90deg);
+  }
+  .box-tray {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+    gap: 2.2%;
+    padding: 5%;
+    background: linear-gradient(135deg, #c89a50, #f1d69a 26%, #b47b32 65%, #dbb66c);
+    transform: translateZ(calc(-1 * var(--half-depth) + 5px));
+    box-shadow:
+      inset 0 0 0 5px #07132b,
+      inset 0 0 20px #51310b;
+  }
+  .chocolate-well {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    border: 1px solid #f9e2a56b;
+    border-radius: 20% / 15%;
+    background: linear-gradient(135deg, #362413, #7e552c 56%, #b78c4b);
+    box-shadow:
+      inset 3px 4px 7px #160b05a6,
+      1px 1px 0 #f5d38a;
+    transform-style: preserve-3d;
+  }
+  .well-day {
+    position: absolute;
+    top: 4%;
+    left: 7%;
+    color: #f5d89a;
+    font-size: clamp(7px, 0.75vw, 10px);
+    line-height: 1;
+    text-shadow: 0 1px 1px #38200c;
+  }
+  .chocolate-piece {
+    position: absolute;
+    inset: 7% 10%;
+    display: flex;
+    justify-content: center;
+    transform: translateZ(6px) rotateX(-7deg) rotateY(8deg) rotate(-7deg);
+    transition: transform 700ms cubic-bezier(0.2, 0.7, 0.3, 1);
+    transition-delay: var(--delay);
+    transform-style: preserve-3d;
+  }
+  .chocolate-well:nth-child(3n) .chocolate-piece {
+    rotate: 12deg;
+  }
+  .chocolate-piece img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: translateZ(9px);
+    backface-visibility: hidden;
+  }
+  .chocolate-slice {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: linear-gradient(135deg, #a86a38, #703a1c 35%, #4a210f 80%);
+    mask: var(--chocolate-shape) center / contain no-repeat;
+    transform: translateZ(calc(var(--slice) * 1px));
+  }
+  .chocolate-slice--back {
+    background: #4b2613;
+  }
+  /* Hasta que se desbloquea su día, cada chocolatina es solo una silueta negra */
+  .is-locked .chocolate-piece img {
+    filter: brightness(0);
+  }
+  .is-locked .chocolate-slice {
+    background: #000;
+  }
+  .box-rim {
+    border: 5px solid #183460;
+    background: transparent;
+    box-shadow:
+      inset 0 0 0 1px #d4b372,
+      0 0 0 1px #7092b2;
+    transform: translateZ(var(--half-depth));
+    pointer-events: none;
+  }
+  .box-lid {
+    transform-origin: 0% 50%;
+    transform: translateZ(calc(var(--half-depth) + 2px));
+    transition: transform 1100ms cubic-bezier(0.22, 0.8, 0.2, 1);
+  }
+  .lid-cover {
+    overflow: hidden;
+    border: 1px solid #8bbbd6;
+    background: #102b4e;
+    backface-visibility: hidden;
+    transform: translateZ(var(--lid-depth));
+    box-shadow:
+      0 0 0 2px #10284f,
+      3px 0 0 3px #254677;
+  }
+  .lid-edge {
+    position: absolute;
+    display: block;
+    background: linear-gradient(90deg, #19345a, #d7b87c 35%, #f3dca5 65%, #19345a);
+  }
+  .lid-edge--left,
+  .lid-edge--right {
+    top: 0;
+    width: var(--lid-depth);
+    height: 100%;
+    transform: translateX(-50%) translateZ(calc(var(--lid-depth) / 2)) rotateY(90deg);
+  }
+  .lid-edge--left {
+    left: 0;
+  }
+  .lid-edge--right {
+    left: 100%;
+  }
+  .lid-edge--top,
+  .lid-edge--bottom {
+    left: 0;
+    width: 100%;
+    height: var(--lid-depth);
+    transform: translateY(-50%) translateZ(calc(var(--lid-depth) / 2)) rotateX(90deg);
+  }
+  .lid-edge--top {
+    top: 0;
+  }
+  .lid-edge--bottom {
+    top: 100%;
+  }
+  .lid-cover > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .lid-cover::after {
+    position: absolute;
+    content: '';
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 1px 1px 2px #dff6ff75,
+      inset -2px -2px 5px #000b;
+    pointer-events: none;
+  }
+  .lid-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 18%, #c3efff16 38%, transparent 58%);
+    background-size: 200% 100%;
+    background-position: var(--shine-x, 50%) 0;
+    transition: background-position 400ms;
+    pointer-events: none;
+  }
+  .lid-inside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    border: 7px solid #1e3c67;
+    background: radial-gradient(ellipse at 35% 30%, #eed4a0, #b98f53);
+    color: #21365b;
+    backface-visibility: hidden;
+    transform: rotateY(180deg);
+    box-shadow:
+      inset 0 0 0 1px #f7dfab,
+      inset 0 0 35px #6e411c33;
+  }
+  .lid-inside img {
+    width: 64%;
+    height: auto;
+  }
+  .lid-inside > span {
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .lid-inside .lid-star {
+    font-size: 30px;
+  }
+  [data-open='true'] .box-lid {
+    transform: translateZ(calc(var(--half-depth) + 2px)) rotateY(-112deg);
+  }
+  [data-open='true'] .box-model {
+    transform: translateX(12%) scale(0.9) rotateX(calc(2deg + var(--tilt-x, 0deg)))
+      rotateY(calc(-8deg + var(--tilt-y, 0deg))) rotateZ(-3deg);
+  }
+  [data-open='true'] .chocolate-piece {
+    transform: translateZ(16px) rotateX(-10deg) rotateY(12deg) rotate(-3deg);
+  }
+  .box-shadow {
+    position: absolute;
+    bottom: 35px;
+    left: 14%;
+    width: 72%;
+    height: 26px;
+    border-radius: 50%;
+    background: #000a29;
+    filter: blur(17px);
+    opacity: 0.6;
+    animation: shadow-float 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .box-instruction {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    color: var(--text-copy);
+    font-size: 11px;
+    pointer-events: none;
+  }
+  .box-instruction svg {
+    color: var(--brand-accent);
+  }
+  .instruction-touch {
+    display: none;
+  }
+  [data-resting] .box-float,
+  [data-resting] .box-shadow {
+    animation-play-state: paused;
+  }
+  @keyframes box-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+  @keyframes shadow-float {
+    0%,
+    100% {
+      transform: scaleX(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scaleX(0.88);
+      opacity: 0.4;
+    }
+  }
+  @media (min-width: 1500px) {
+    .box-control {
+      max-width: 420px;
+    }
+  }
+  @media (min-width: 761px) and (max-width: 1400px) {
+    [data-open='true'] .box-model {
+      transform: translateX(18%) scale(0.78) rotateX(calc(2deg + var(--tilt-x, 0deg)))
+        rotateY(calc(-8deg + var(--tilt-y, 0deg))) rotateZ(-3deg);
+    }
+  }
+  @media (max-width: 760px) {
+    .chocolate-box {
+      --box-depth: 44px;
+      padding: 25px 48px 55px 14px;
+    }
+    .box-control {
+      max-width: 330px;
+    }
+    .box-model {
+      transform: rotateX(calc(7deg + var(--tilt-x, 0deg)))
+        rotateY(calc(-17deg + var(--tilt-y, 0deg))) rotateZ(-3deg);
+    }
+    [data-open='true'] .box-model {
+      transform: translateX(24%) scale(0.78) rotateX(2deg) rotateY(-8deg) rotateZ(-3deg);
+    }
+    .box-instruction {
+      font-size: 10px;
+    }
+  }
+  @media (hover: none) {
+    .instruction-pointer {
+      display: none;
+    }
+    .instruction-touch {
+      display: inline;
+    }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    [data-open='true'] .chocolate-well:hover .chocolate-piece {
+      transform: translateZ(30px) rotateX(-18deg) rotateY(22deg) rotate(-6deg);
+      transition-delay: 0ms;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .box-float,
+    .box-shadow {
+      animation: none;
+    }
+    .box-model,
+    .box-lid,
+    .chocolate-piece,
+    .lid-sheen {
+      transition: none;
+    }
+  }
+</style>

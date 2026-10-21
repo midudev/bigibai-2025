@@ -1,3 +1,6 @@
+// Edición a la que pertenecen estos ganadores
+export const WINNERS_YEAR = 2025
+
 export interface Winner {
   day: number
   email: string

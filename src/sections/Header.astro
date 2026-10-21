@@ -1,474 +1,239 @@
 ---
 import Avatar from '@/components/Avatar.astro'
 import Button from '@/components/Button.astro'
+import BrandLogo from '@/components/ui/BrandLogo.astro'
+import { CAMPAIGN } from '@/data/campaign'
 import { supabaseAdmin } from '@/supabase-admin'
-import TicketIcon from '@/icons/ticket.svg'
+import { isAdmin } from '@/utils/admin'
 
 interface Props {
   participationCount?: number
 }
-
 let { participationCount } = Astro.props
-
 const user = Astro.locals.user
-
-const rawDisplayName =
-  user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? 'Usuario'
-
-const displayName =
-  typeof rawDisplayName === 'string' && rawDisplayName.trim().length > 0
-    ? rawDisplayName
-    : 'Usuario'
-
-const fallbackInitial = displayName.trim().charAt(0).toUpperCase()
-
-const avatarUrl =
-  user?.user_metadata?.avatar_url ??
-  user?.user_metadata?.picture ??
-  user?.user_metadata?.avatar ??
-  null
-
-// Obtener el número de participaciones del usuario
-if (typeof participationCount === 'undefined' && user) {
-  const { data: coupons } = await supabaseAdmin
+const home = Astro.url.pathname === '/'
+const registration = Astro.url.pathname === '/registro'
+const rawName =
+  user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? 'Mi cuenta'
+const displayName = typeof rawName === 'string' && rawName.trim() ? rawName : 'Mi cuenta'
+const avatar = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
+if (user && participationCount === undefined) {
+  const { count } = await supabaseAdmin
     .from('coupons')
-    .select('id')
+    .select('id', { count: 'exact', head: true })
     .eq('used_by', user.id)
     .eq('is_used', true)
-
-  participationCount = coupons?.length || 0
+  participationCount = count ?? 0
 }
-
-// Verificar la página actual
-const currentPath = Astro.url.pathname
-const isRegistroPage = currentPath === '/registro'
-const isHomePage = currentPath === '/'
+const links = [
+  { id: 'calendario', label: 'El calendario' },
+  { id: 'como-participar', label: 'Cómo participar' },
+  // { id: 'llaveros', label: 'Los llaveros' },
+  { id: 'tiendas', label: 'Dónde encontrarlo' },
+]
 ---
 
-<header class="overflow-x-clip pt-24 pb-5" aria-label="Big Ibai">
-  {
-    !isHomePage && (
-      <a
-        href="/"
-        class="home-btn absolute top-4 left-4 z-20 flex items-center justify-center size-10 rounded-full bg-black/50 backdrop-blur-lg transition-all duration-300 hover:bg-black/70 hover:scale-110 active:scale-95"
-        aria-label="Volver al inicio"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="text-brand"
-        >
-          <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-          <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        </svg>
-      </a>
-    )
-  }
-
-  <div class="absolute top-4 right-4 z-20">
-    <nav id="header-auth-section" class="flex items-center gap-3" aria-label="Acciones de usuario">
-      {
-        !user && !isRegistroPage && (
-          <a href="/registro">
-            <Button id="header-login-btn" variant="brand" size="sm">
-              Iniciar sesión
-            </Button>
-          </a>
-        )
-      }
-
-      {
-        user && (
-          <div class="flex items-center gap-3">
-            <a
-              id="participation-badge"
-              href="/dashboard"
-              aria-describedby="participation-tooltip"
-              class="group flex items-center gap-3 rounded-full bg-black/50 px-2 py-1 backdrop-blur-lg transition-all duration-300 hover:bg-black/70 active:scale-90"
-            >
-              <Avatar
-                src={avatarUrl ?? undefined}
-                alt={displayName}
-                size="sm"
-                fallback={fallbackInitial}
-                class="transition-transform duration-300 group-hover:scale-105"
-              />
-            </a>
-            <div id="participation-tooltip" role="tooltip">
-              {participationCount === 0
-                ? 'No tienes ninguna participación'
-                : participationCount === 1
-                  ? 'Tienes 1 participación'
-                  : `Tienes ${participationCount} participaciones`}
-              <div id="tooltip-arrow" />
-            </div>
-            <a href="/dashboard">
-              <Button variant="brand" size="sm">
-                <span class="hidden sm:inline">Mis cupones</span>
-                <div class="relative flex items-center justify-center px-2">
-                  <TicketIcon class="absolute size-6! opacity-20 transition-transform group-hover:scale-110" />
-                  <span
-                    id="header-participation-count"
-                    class="relative z-10 text-xs font-semibold transition-colors"
-                  >
-                    {participationCount}
-                  </span>
-                </div>
-              </Button>
-            </a>
-            <form action="/api/auth/signout" method="post" data-astro-reload>
-              <Button id="header-logout-btn" variant="secondary" size="sm" type="submit">
-                Cerrar sesión
-              </Button>
-            </form>
-          </div>
-        )
-      }
-    </nav>
-  </div>
-
-  <div class="logo-container relative mx-auto flex justify-center">
-    {
-      !isHomePage ? (
-        <a href="/" class="logo-link-wrapper group relative mx-auto max-w-xl w-full px-4 md:px-0">
-          {/* Flecha y texto que aparece al hacer hover */}
-          <div class="back-arrow-container">
-            <span class="back-text">Ir al inicio</span>
-            <svg
-              class="back-arrow scale-x-[-1]"
-              xml:space="preserve"
-              width="40"
-              height="40"
-              viewBox="0 0 369.698 369.698"
-            >
-              <path d="M361.771 147.464c-.612 0-.612 0 0 0 .611-2.448.611-4.284-.612-6.732-29.988-41.004-75.888-72.828-119.952-97.308-2.448-1.224-5.508 0-6.731 1.836-3.673-1.224-8.568.612-8.568 5.508-1.225 15.912-.612 33.048.612 49.572C123.703 84.428-34.805 158.48 6.811 282.104c0 0 0 .612.612.612-1.836 1.836-1.836 5.508 0 7.956 6.12 7.956 15.3 15.3 23.256 22.032 4.896 4.283 15.912 17.136 23.868 12.852h.612c25.704 3.672 50.796-1.836 76.5-5.508 1.836 0 3.06-1.224 3.672-2.448 2.448.612 4.896-1.224 4.896-3.672 1.224-47.124 43.452-69.156 85.68-70.992 2.448 0 4.284-2.448 4.896-4.284.612.612 1.836 1.225 2.448 1.225-.612 1.836.612 3.672 1.836 4.896-1.224 1.836-1.836 4.896.612 6.12 7.956 6.732 17.748 10.404 25.704 17.748 1.836 1.836 5.508 2.448 7.956 1.225 26.928-17.748 53.855-36.108 76.5-58.752 12.852-14.077 36.108-45.902 15.912-63.65zM130.435 307.808c-1.224-.611-2.448-.611-3.672-.611-23.868 3.672-47.124 9.792-71.604 7.344h-.612c-1.224-1.836-3.672-3.061-4.896-4.284-4.284-3.06-8.568-6.732-12.852-10.404l-12.852-11.016c24.48 1.224 48.96.612 72.828-3.061 2.448-.611 3.672-1.836 4.284-3.06 1.224-.612 1.836-1.836 1.836-3.06 7.344-59.364 69.156-83.232 123.012-82.62 0 .611 0 1.224-.612 1.836-.612 9.18-2.448 23.256.612 33.048-42.84-6.12-100.98 28.764-95.472 75.888zm97.92-124.236c-53.244-3.06-137.7 25.704-134.641 89.965-25.092 1.836-50.796 2.447-75.888 3.672C-6.041 162.764 128.599 95.444 227.131 113.192v.612c.612 6.12 9.181 6.12 9.792 0 1.836-19.584 3.061-40.392 1.836-59.976 37.332 29.376 77.725 54.468 108.324 91.8-36.72 25.704-71.604 54.468-105.264 84.457-.612-4.284-1.225-9.181-1.836-13.464-.612-5.509-1.225-11.628-1.836-17.137 0-2.447-1.225-4.283-3.061-5.508 1.226-3.672-1.223-9.792-6.731-10.404zm86.904 36.72c-11.628 9.792-24.479 18.359-37.332 27.54-4.283 3.06-9.18 6.12-13.464 9.18-1.224.612-15.3-8.568-21.42-12.24 37.944-28.151 74.052-58.14 111.384-86.904 3.672 26.928-18.972 45.289-39.168 62.424z" />
-            </svg>
-          </div>
-
-          <div class="logo-wrapper relative z-10 w-full">
-            <img class="logo-main w-full" src="/logo-a.svg" alt="bigibai logo" />
-            <img
-              class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
-              src="/logo-a.svg"
-              alt="bigibai logo"
-            />
-          </div>
-        </a>
-      ) : (
-        <div class="mx-auto max-w-5xl w-full px-4 md:px-0 flex flex-col items-center gap-2">
-          <h1 class="font-century text-brand text-2xl sm:text-3xl md:text-4xl uppercase tracking-wide">
-            El Calendario de Adviento De
-          </h1>
-          <div class="logo-wrapper relative z-10 w-full max-w-xl">
-            <img class="logo-main" src="/logo-a.svg" alt="bigibai logo" />
-            <img
-              class="pulse absolute top-0 left-0 -z-10 inline-block h-full w-full opacity-50 blur-sm select-none"
-              src="/logo-a.svg"
-              alt="bigibai logo"
-            />
-          </div>
+<header class="site-header site-container site-container--wide">
+  <a href="/" class="brand-link" aria-label="Big Ibai, inicio">
+    <BrandLogo />
+    <span class="brand-year">{CAMPAIGN.year}</span>
+  </a>
+  <nav class="site-nav" aria-label="Navegación principal">
+    {links.map(({ id, label }) => (
+      <a href={`${home ? '' : '/'}#${id}`}>{label}</a>
+    ))}
+  </nav>
+  <div class="header-account">
+    {user ? (
+      <details class="account-menu">
+        <summary>
+          <Avatar
+            src={avatar}
+            alt={displayName}
+            fallback={displayName.charAt(0).toUpperCase()}
+            size="sm"
+          />
+          <span>Mi cuenta</span>
+          <span id="header-participation-count" class="account-count">
+            {participationCount ?? 0}
+          </span>
+        </summary>
+        <div class="account-dropdown">
+          <p>{displayName}</p>
+          <a href="/dashboard">Mis participaciones</a>
+          {isAdmin(user.id) && <a href="/admin">Administración</a>}
+          <form action="/api/auth/signout" method="post" data-astro-reload>
+            <button id="header-logout-btn" type="submit">
+              Cerrar sesión
+            </button>
+          </form>
         </div>
-      )
-    }
+      </details>
+    ) : (CAMPAIGN.signInEnabled || registration) && (
+      <Button
+        id="header-login-btn"
+        href={registration ? '/' : '/registro'}
+        variant="outline"
+        size="sm"
+      >
+        {registration ? 'Volver al inicio' : 'Iniciar sesión'}
+      </Button>
+    )}
   </div>
 </header>
-
 <style>
-  @keyframes pulse {
-    0% {
-      opacity: 0.5;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.75;
-      transform: scale(1.02);
-    }
-    100% {
-      opacity: 0.5;
-      transform: scale(1);
-    }
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    padding-block: 27px;
+    border-bottom: 1px solid var(--border-subtle);
   }
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+  .brand-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
   }
-
-  @keyframes glow {
-    0%,
-    100% {
-      opacity: 0.3;
-      transform: scale(0.95);
-    }
-    50% {
-      opacity: 0.5;
-      transform: scale(1);
-    }
+  /* Pegatina con el año, a juego con el sello "Nueva edición" del hero */
+  .brand-year {
+    padding: 4px 7px 2px;
+    border-radius: 6px;
+    background: var(--brand-accent);
+    color: var(--brand-ink);
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.15;
+    box-shadow: 0 2px 0 var(--brand-edge);
+    transform: rotate(-6deg);
   }
-
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.9) translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 2.5vw, 34px);
   }
-
-  .pulse {
-    animation: pulse 3s ease-in-out infinite;
+  .site-nav a {
+    color: var(--text-heading);
+    font-size: 13px;
+    white-space: nowrap;
   }
-
-  .logo-wrapper {
+  .site-nav a:hover {
+    color: var(--brand-accent);
+  }
+  .header-account {
+    flex-shrink: 0;
+  }
+  .account-menu {
     position: relative;
-    display: inline-block;
   }
-
-  .logo-wrapper::before {
-    content: '';
+  .account-menu summary {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    color: var(--text-heading);
+    font-size: 12px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .account-menu summary::-webkit-details-marker {
+    display: none;
+  }
+  .account-count {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 23px;
+    height: 23px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    color: var(--brand-accent);
+    font-size: 10px;
+  }
+  .account-dropdown {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('/gold-texture.webp');
-    background-size: cover;
-    background-position: center;
-    mask-image: url('/logo-a.svg');
-    mask-size: contain;
-    mask-repeat: no-repeat;
-    mask-position: center;
-    pointer-events: none;
-    z-index: 2;
+    right: 0;
+    top: calc(100% + 12px);
+    z-index: 100;
+    width: 230px;
+    max-width: 80vw;
+    padding: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    box-shadow: 0 12px 25px #0003;
   }
-
-  /* Estilos para el enlace del logo */
-  .logo-link-wrapper {
+  .account-dropdown > p {
+    padding: 8px 10px 14px;
+    color: var(--text-muted);
+    font-size: 11px;
+    border-bottom: 1px solid var(--border-subtle);
+    overflow-wrap: anywhere;
+  }
+  .account-dropdown a,
+  .account-dropdown button {
     display: block;
-    position: relative;
+    width: 100%;
+    padding: 12px 10px;
+    border-radius: 6px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-heading);
     cursor: pointer;
   }
-
-  /* Contenedor de la flecha y texto */
-  .back-arrow-container {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    rotate: 25deg;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    opacity: 0;
-    z-index: 1;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
+  .account-dropdown a:hover,
+  .account-dropdown button:hover {
+    background: var(--surface-raised);
+    color: var(--brand-accent);
   }
-
-  /* La flecha */
-  .back-arrow {
-    fill: #f9b233;
-    filter: drop-shadow(0 0 10px rgba(249, 178, 51, 0.5));
-    transform: translateX(-10px);
-  }
-
-  /* El texto */
-  .back-text {
-    font-weight: bold;
-    color: #f9b233;
-    text-shadow: 0 0 10px rgba(249, 178, 51, 0.5);
-    white-space: nowrap;
-    font-size: 0.8rem;
-  }
-
-  /* Al hacer hover en el enlace */
-  .logo-link-wrapper:hover .back-arrow-container {
-    opacity: 1;
-    left: -60px;
-    top: -50px;
-    rotate: 15deg;
-  }
-
-  .logo-link-wrapper:hover .logo-wrapper {
-    transform: translateX(10px);
-    filter: drop-shadow(0 0 20px rgba(248, 177, 52, 0.2));
-  }
-
-  /* Ajuste para que el logo no se anime con float cuando está en hover */
-  .logo-link-wrapper .logo-wrapper {
-    animation: float 5s ease-in-out infinite;
-    filter: drop-shadow(0 0 20px rgba(248, 177, 52, 0.4));
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  @media (max-width: 768px) {
-    .back-arrow {
-      width: 30px;
-      height: 30px;
+  @media (max-width: 1050px) {
+    .site-header {
+      gap: 18px;
     }
-
-    .back-text {
-      font-size: 0.875rem;
+    .site-nav {
+      gap: 18px;
+    }
+    .brand-year {
+      display: none;
     }
   }
-
-  .logo-main {
-    display: block;
-    width: 100%;
-    height: auto;
-    opacity: 0;
-    visibility: hidden;
-  }
-
-  .logo-wrapper {
-    animation: float 5s ease-in-out infinite;
-    filter: drop-shadow(0 0 20px rgba(248, 177, 52, 0.4));
-  }
-
-  .logo-container {
-    animation: fadeInScale 0.6s ease-out;
-  }
-
-  .glow-effect {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60%;
-    height: 60%;
-    background: radial-gradient(circle, rgba(248, 177, 52, 0.4) 0%, transparent 70%);
-    filter: blur(40px);
-    animation: glow 3s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
+  @media (max-width: 760px) {
+    .site-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      padding-block: 22px 17px;
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    .brand-link :global(img) {
+      width: 115px !important;
+    }
+    .brand-year {
+      display: block;
+    }
+    .header-account {
+      grid-row: 1;
+      grid-column: 2;
+    }
+    .site-nav {
+      grid-column: 1/-1;
+      grid-row: 2;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .site-nav a {
+      font-size: 10px;
+    }
+    .account-menu summary {
+      font-size: 11px;
     }
   }
-
-  .fade-in-up {
-    animation: fadeInUp 0.3s ease-out;
-  }
-
-  #participation-tooltip {
-    display: none;
-    width: max-content;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: #222;
-    color: white;
-    font-weight: bold;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    z-index: 9999;
-    pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  #tooltip-arrow {
-    position: absolute;
-    background: #222;
-    width: 8px;
-    height: 8px;
-    transform: rotate(45deg);
-  }
-
-  .home-btn {
-    box-shadow: 0 0 20px rgba(248, 177, 52, 0.3);
-  }
-
-  .home-btn:hover {
-    box-shadow: 0 0 30px rgba(248, 177, 52, 0.5);
-  }
-
-  .home-btn svg {
-    filter: drop-shadow(0 0 4px rgba(248, 177, 52, 0.5));
+  @media (max-width: 370px) {
+    .brand-year {
+      display: none;
+    }
+    .site-nav a {
+      font-size: 9px;
+    }
   }
 </style>
-
-<script>
-  import { computePosition, flip, shift, offset, arrow } from '@floating-ui/dom'
-
-  const badge = document.getElementById('participation-badge')
-  const tooltip = document.getElementById('participation-tooltip')
-  const arrowElement = document.getElementById('tooltip-arrow')
-
-  if (badge && tooltip && arrowElement) {
-    function updateTooltip() {
-      if (!badge || !tooltip || !arrowElement) return
-
-      computePosition(badge, tooltip, {
-        placement: 'bottom',
-        middleware: [offset(8), flip(), shift({ padding: 5 }), arrow({ element: arrowElement })],
-      }).then(({ x, y, placement, middlewareData }) => {
-        if (!tooltip || !arrowElement) return
-
-        Object.assign(tooltip.style, {
-          left: `${x}px`,
-          top: `${y}px`,
-        })
-
-        const { x: arrowX, y: arrowY } = middlewareData.arrow || {}
-
-        const staticSide = {
-          top: 'bottom',
-          right: 'left',
-          bottom: 'top',
-          left: 'right',
-        }[placement.split('-')[0]]
-
-        Object.assign(arrowElement.style, {
-          left: arrowX != null ? `${arrowX}px` : '',
-          top: arrowY != null ? `${arrowY}px` : '',
-          right: '',
-          bottom: '',
-          [staticSide as string]: '-4px',
-        })
-      })
-    }
-
-    function showTooltip() {
-      if (!tooltip) return
-      tooltip.style.display = 'block'
-      updateTooltip()
-    }
-
-    function hideTooltip() {
-      if (!tooltip) return
-      tooltip.style.display = 'none'
-    }
-
-    ;[
-      ['mouseenter', showTooltip],
-      ['mouseleave', hideTooltip],
-      ['focus', showTooltip],
-      ['blur', hideTooltip],
-    ].forEach(([event, listener]) => {
-      badge.addEventListener(event as string, listener as EventListener)
-    })
-  }
-</script>

@@ -1,0 +1,63 @@
+---
+import Surface from './Surface.astro'
+import Badge from './Badge.astro'
+interface Props {
+  day: number
+  prize: string
+  name: string | null
+  email: string
+}
+const { day, prize, name, email } = Astro.props
+---
+
+<Surface as="article" padded class="winner-card">
+  <Badge tone="brand">{day} de diciembre</Badge>
+  <h2>{prize}</h2>
+  <div class="winner-person">
+    <p>Ganador/a</p>
+    {name && <strong>{name}</strong>}
+    <span>{email}</span>
+  </div>
+</Surface>
+<style>
+  .winner-card {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 22px;
+    height: 100%;
+  }
+  h2 {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: bold;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--text-heading);
+    text-wrap: balance;
+  }
+  .winner-person {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .winner-person > p {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 9px;
+  }
+  strong {
+    display: block;
+    color: var(--brand-accent);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .winner-person > span {
+    display: block;
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+</style>

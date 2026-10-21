@@ -1,138 +1,171 @@
 ---
-import BentoCard from '@/components/ui/BentoCard.astro'
-import { cells } from '@/data/days-data'
-
-// Función para verificar si un día está activo
-function isDayActive(day: number): boolean {
-  // const now = new Date()
-
-  // // Convertir a hora CET (UTC+1)
-  // const cetTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }))
-
-  // const month = cetTime.getMonth() // 0 = enero, 11 = diciembre
-  // const currentDay = cetTime.getDate()
-
-  // // Si no es diciembre, ningún día está activo
-  // if (month !== 11) return false // 11 = diciembre
-
-  // // Activar el día si estamos en diciembre y es ese día o posterior
-  // return day <= currentDay
-  return true
-}
+import { CAMPAIGN } from '@/data/campaign'
+import { getCampaignDay, isExperienceEnabled } from '@/utils/campaign'
+import AdventBoard from '@/components/AdventBoard.astro'
+import Button from '@/components/Button.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+const { now } = Astro.locals
+const experienceEnabled = isExperienceEnabled(now)
+const currentDay = getCampaignDay(now)
+const openedDays = experienceEnabled ? currentDay : 0
 ---
 
-<BentoCard class="col-span-3 md:col-span-3 p-4 md:p-8">
-  <div class="w-full">
-    <h2
-      class="font-heavy text-3xl md:text-5xl lg:text-6xl font-bold text-brand text-center mb-6 md:mb-8 uppercase text-shadow-title"
+<section id="calendario" class="advent-section" aria-labelledby="advent-title">
+  <div class="advent-copy">
+    <SectionHeading
+      as="h2"
+      id="advent-title"
+      eyebrow={`Del 1 al 24 de diciembre de ${CAMPAIGN.year}`}
     >
-      Calendario de Adviento
-    </h2>
-
-    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-4">
-      {
-        cells.map((cell) => {
-          const isActive = isDayActive(cell.day)
-          const chocolateImage = isActive
-            ? `/chocolatinas/${cell.day}.webp`
-            : `/chocolatinas/mock.webp`
-
-          return (
-            <a
-              href={isActive ? `/casilla-${cell.day}-diciembre` : '#'}
-              class:list={[
-                'calendar-card group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300',
-                isActive
-                  ? 'border-brand/50 hover:border-brand hover:scale-105 cursor-pointer bg-linear-to-br from-brand/10 to-transparent'
-                  : 'border-white/20 cursor-not-allowed opacity-60',
-              ]}
-              aria-label={`Día ${cell.day}`}
-              aria-disabled={!isActive}
-            >
-              {/* Chocolate Image */}
-              <div class="absolute inset-0 flex items-center justify-center p-3 md:p-4">
-                <img
-                  src={chocolateImage}
-                  alt={`Chocolate día ${cell.day}`}
-                  class:list={[
-                    'w-full h-full object-contain transition-all duration-500',
-                    isActive
-                      ? 'chocolate-active group-hover:scale-125 group-hover:rotate-12'
-                      : 'chocolate-inactive grayscale brightness-0',
-                  ]}
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Day Number */}
-              <div class="absolute top-1 right-1 md:top-2 md:right-2 z-10">
-                <span
-                  class:list={[
-                    'font-century text-2xl md:text-3xl font-bold inline-block px-2 py-1 rounded-lg backdrop-blur-sm transition-all duration-300',
-                    isActive
-                      ? 'text-brand bg-black/40 group-hover:text-white group-hover:bg-brand/80 group-hover:scale-110'
-                      : 'text-white/40 bg-black/60',
-                  ]}
-                  style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"
-                >
-                  {cell.day}
-                </span>
-              </div>
-
-              {/* Lock Icon for inactive days */}
-              {!isActive && (
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <svg
-                    class="w-8 h-8 md:w-12 md:h-12 text-white/30"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
-
-              {/* Glow effect on hover for active days */}
-              {isActive && (
-                <div
-                  class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                  style="background: radial-gradient(circle at center, rgba(248, 177, 52, 0.2), transparent 70%);"
-                />
-              )}
-            </a>
-          )
-        })
-      }
+      <Fragment slot="title">
+        24 días.
+        <br />
+        Una puerta
+        <br />
+        a la ilusión.
+      </Fragment>
+    </SectionHeading>
+    <p class="advent-description">
+      Cada día, una nueva casilla.
+      <br />
+      ¿Qué habrá al otro lado?
+    </p>
+    <div class="advent-progress">
+      <span
+        class="progress-ring"
+        style={`--progress: ${openedDays / CAMPAIGN.totalDays}`}
+        aria-hidden="true"
+      >
+        <strong>{openedDays}</strong>
+      </span>
+      <p>
+        <span class="progress-label">
+          {openedDays === 1 ? 'puerta abierta' : 'puertas abiertas'} de {CAMPAIGN.totalDays}
+        </span>
+        <span class="progress-status">
+          {!experienceEnabled
+            ? 'La experiencia ha finalizado'
+            : currentDay === 0
+              ? 'La primera, el 1 de diciembre'
+              : currentDay === CAMPAIGN.totalDays
+                ? '¡Hoy se abre la última!'
+                : `Mañana, la ${currentDay + 1}`}
+        </span>
+      </p>
     </div>
+    {experienceEnabled && currentDay > 0 && (
+      <Button size="lg" href={`/casilla-${currentDay}-diciembre`}>
+        Abrir la puerta de hoy
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </Button>
+    )}
+    <p class="advent-note">
+      Se abren a las 00:00 h, hora peninsular española. Los juegos son opcionales.
+    </p>
   </div>
-</BentoCard>
-
+  <AdventBoard />
+</section>
 <style>
-  .calendar-card {
-    transform-style: preserve-3d;
+  .advent-section {
+    display: grid;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(32px, 4vw, 64px);
+    scroll-margin-top: 32px;
+    color: var(--text-heading);
   }
-
-  .chocolate-active {
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  .advent-copy {
+    display: grid;
+    justify-items: start;
+    gap: 26px;
   }
-
-  .chocolate-inactive {
-    filter: grayscale(100%) brightness(0) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  .advent-copy :global(.ui-heading) {
+    font-size: clamp(30px, 3vw, 40px);
   }
-
-  /* Animación sutil para las cards activas */
-  .calendar-card:not([aria-disabled='true']):hover {
-    box-shadow:
-      0 10px 30px rgba(248, 177, 52, 0.3),
-      0 0 20px rgba(248, 177, 52, 0.2);
+  .advent-description {
+    color: var(--text-copy);
+    font-size: 15px;
+    line-height: 1.7;
+    text-wrap: pretty;
   }
-
-  /* Efecto de profundidad */
-  .calendar-card:not([aria-disabled='true']):active {
-    transform: scale(0.98);
+  /* Progreso en un anillo que se va llenando con cada puerta que se abre */
+  .advent-progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding-block: 22px;
+    border-block: 1px solid var(--border-subtle);
+  }
+  .progress-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 68px;
+    aspect-ratio: 1;
+  }
+  .progress-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--brand-accent) calc(var(--progress) * 1turn),
+      color-mix(in srgb, var(--text-muted) 20%, transparent) 0
+    );
+    mask: radial-gradient(circle, #0000 calc(50% - 5px), #000 calc(50% - 4px));
+  }
+  .progress-ring strong {
+    position: relative;
+    color: var(--brand-accent);
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: normal;
+    line-height: 1;
+  }
+  .advent-progress p {
+    display: grid;
+    gap: 4px;
+  }
+  .progress-label {
+    color: var(--text-heading);
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .progress-status {
+    color: var(--status-warning);
+    font-size: 13px;
+  }
+  .advent-note {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  @media (max-width: 1050px) {
+    .advent-section {
+      grid-template-columns: 1fr;
+    }
+    .advent-copy {
+      max-width: 420px;
+    }
+  }
+  @media (max-width: 760px) {
+    .advent-copy {
+      gap: 22px;
+    }
+    .advent-description {
+      font-size: 14px;
+    }
   }
 </style>

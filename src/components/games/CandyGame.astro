@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -47,13 +48,19 @@ const GAME_DATA = {
     <div id="bomb-warning" class="hidden">
       <div class="bomb-container">
         <div class="bomb">💣</div>
-        <div class="bomb-timer" id="bomb-timer">3</div>
+        <div class="bomb-timer" id="bomb-timer">
+          3
+        </div>
       </div>
     </div>
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <h1>DULCE<br />MANÍA</h1>
+      <h1>
+        DULCE
+        <br />
+        MANÍA
+      </h1>
 
       <div class="instructions">
         <p class="controls-title">CÓMO JUGAR</p>
@@ -64,15 +71,21 @@ const GAME_DATA = {
         <p class="hint">🍫 ¡Antes de que llegue al chocolate!</p>
       </div>
 
-      <button id="start-btn" class="menu-btn blink">EMPEZAR</button>
+      <Button variant="brand" size="sm" id="start-btn" class="menu-btn blink">
+        EMPEZAR
+      </Button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="modal hidden">
       <h1 class="danger">💥 BOOM!</h1>
       <p>Se acabó el tiempo</p>
-      <p>Puntuación: <span id="final-score">0</span></p>
-      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+      <p>
+        Puntuación: <span id="final-score">0</span>
+      </p>
+      <Button variant="brand" size="sm" id="restart-btn" class="menu-btn">
+        REINTENTAR
+      </Button>
     </div>
 
     <!-- No Moves Screen -->
@@ -84,8 +97,14 @@ const GAME_DATA = {
 
     <!-- Win Screen -->
     <div id="win-screen" class="modal hidden">
-      <h1 class="win">¡DULCE<br />VICTORIA!</h1>
-      <p>Has conseguido <span id="win-score">0</span> puntos</p>
+      <h1 class="win">
+        ¡DULCE
+        <br />
+        VICTORIA!
+      </h1>
+      <p>
+        Has conseguido <span id="win-score">0</span> puntos
+      </p>
     </div>
   </div>
 </GameLayout>
@@ -138,7 +157,7 @@ const GAME_DATA = {
 
   .score-label {
     font-size: 8px;
-    color: #f8b134;
+    color: var(--brand-accent);
   }
 
   #score-display,
@@ -146,7 +165,7 @@ const GAME_DATA = {
     font-size: 16px;
     color: #fff;
     text-shadow:
-      0 0 10px #f8b134,
+      0 0 10px var(--brand-accent),
       2px 2px 0 #000;
   }
 
@@ -159,7 +178,7 @@ const GAME_DATA = {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(20, 10, 30, 0.9) 100%);
     gap: 10px;
     flex-shrink: 0;
-    border-top: 2px solid rgba(248, 177, 52, 0.3);
+    border-top: 2px solid color-mix(in srgb, var(--brand-accent) 30%, transparent);
   }
 
   #runner-candy,
@@ -317,7 +336,7 @@ const GAME_DATA = {
   }
 
   .modal h1 {
-    color: #f8b134;
+    color: var(--brand-accent);
     text-shadow: 4px 4px #c0392b;
     font-size: 28px;
     margin-bottom: 20px;
@@ -356,7 +375,7 @@ const GAME_DATA = {
   }
 
   .controls-title {
-    color: #f8b134;
+    color: var(--brand-accent);
     font-size: 12px !important;
     margin-bottom: 10px !important;
   }
@@ -370,7 +389,7 @@ const GAME_DATA = {
     margin-top: 20px;
     padding: 15px 25px;
     font-family: 'Press Start 2P', cursive;
-    background: linear-gradient(180deg, #f8b134 0%, #e09800 100%);
+    background: linear-gradient(180deg, var(--brand-accent) 0%, #e09800 100%);
     color: #1a0a2e;
     border: 4px solid #fff;
     cursor: pointer;

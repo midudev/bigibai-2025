@@ -1,0 +1,85 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import Surface from '@/components/ui/Surface.astro'
+import Notice from '@/components/ui/Notice.astro'
+import AchievementsBox from '@/components/AchievementsBox.astro'
+import CouponInput from '@/components/CouponInput.astro'
+import TicketContainer from '@/components/TicketContainer.astro'
+import GamesContainer from '@/components/GamesContainer.astro'
+import { CAMPAIGN } from '@/data/campaign'
+import { getCampaignPhase, type CampaignPhase } from '@/utils/campaign'
+interface Props {
+  totalCoupons: number
+  userAchievements: Record<string, { created_at: string }>
+  phase?: CampaignPhase
+}
+const { totalCoupons, userAchievements, phase = getCampaignPhase(Astro.locals.now) } = Astro.props
+---
+
+<SectionHeading
+  as="h1"
+  size="page"
+  eyebrow="Tu rincón en la fábrica"
+  title="Tus participaciones, en un vistazo."
+  description="Registra tus calendarios, consulta tus participaciones y sigue descubriendo el universo de Big Ibai."
+/>
+<div class="account-grid">
+  <div class="account-main">
+    <TicketContainer totalCoupons={totalCoupons} />
+    <Surface padded id="coupon-section">
+      {phase === 'registration' ? (
+        <>
+          <SectionHeading
+            as="h2"
+            size="small"
+            title="Registra tu calendario"
+            description="Encontrarás el código detrás de la caja de chocolate."
+          />
+          <div class="coupon-form-wrap">
+            <CouponInput />
+          </div>
+        </>
+      ) : (
+        <Notice
+          variant={phase === 'upcoming' ? 'info' : 'warning'}
+          title={
+            phase === 'upcoming' ? 'El registro aún no está abierto' : 'El registro ha finalizado'
+          }
+        >
+          {phase === 'upcoming'
+            ? `Muy pronto podrás registrar aquí el código de tu calendario ${CAMPAIGN.name} para participar en los sorteos.`
+            : 'Ya no es posible registrar más códigos. Aquí puedes consultar tus participaciones y los logros conseguidos.'}
+        </Notice>
+      )}
+    </Surface>
+    <GamesContainer totalCoupons={totalCoupons} />
+  </div>
+  <aside aria-label="Logros de tu cuenta">
+    <AchievementsBox isLoggedIn={true} userAchievements={userAchievements} />
+  </aside>
+</div>
+<style>
+  .account-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 25px;
+    margin-top: 40px;
+  }
+  .account-main {
+    display: grid;
+    gap: 24px;
+    min-width: 0;
+  }
+  .coupon-form-wrap {
+    margin-top: 25px;
+  }
+  @media (max-width: 950px) {
+    .account-grid {
+      grid-template-columns: 1fr;
+    }
+    .account-grid aside {
+      max-width: 100%;
+    }
+  }
+</style>

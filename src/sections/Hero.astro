@@ -1,104 +1,106 @@
 ---
-import Button from '@/components/Button.astro'
-import AchievementsBox from '@/components/AchievementsBox.astro'
-import BentoCard from '@/components/ui/BentoCard.astro'
-import Chocolates from './Chocolates.astro'
 import Calendar from './Calendar.astro'
-import Map from '@/components/Map.astro'
-
+import Container from '@/components/ui/Container.astro'
+import FactoryIntro from './home/FactoryIntro.astro'
+import Participation from './home/Participation.astro'
+// Sección de llaveros oculta por ahora
+// import Keychains from './home/Keychains.astro'
+import StoreLocator from './home/StoreLocator.astro'
+import CampaignStatus from './home/CampaignStatus.astro'
+import { CAMPAIGN } from '@/data/campaign'
+import {
+  getCampaignPhase,
+  getCampaignDay,
+  getDaysUntilUnlock,
+  isExperienceEnabled,
+  formatCampaignDate,
+} from '@/utils/campaign'
 interface Props {
   isLoggedIn: boolean
   participationCount: number
-  userAchievements: Record<string, { created_at: string }>
 }
 
-const { isLoggedIn, participationCount, userAchievements } = Astro.props
+const { isLoggedIn, participationCount } = Astro.props
+const { now } = Astro.locals
+const phase = getCampaignPhase(now)
+const currentDay = getCampaignDay(now)
+const daysUntilFirstDoor = getDaysUntilUnlock(1, now)
+
+// Lo siguiente que va a pasar en el calendario: la cuenta atrás o las casillas ya abiertas
+const calendarProgress = !isExperienceEnabled(now)
+  ? null
+  : currentDay === 0
+    ? {
+        value: daysUntilFirstDoor,
+        label: `${daysUntilFirstDoor === 1 ? 'día' : 'días'} para abrir la primera casilla`,
+      }
+    : { value: currentDay, label: `de ${CAMPAIGN.totalDays} casillas abiertas` }
+const participations =
+  participationCount === 1 ? '1 participación' : `${participationCount} participaciones`
+
+const campaignCopy = {
+  upcoming: {
+    status: 'La edición 2026 está en camino',
+    title: 'La ilusión se fabrica a lo grande.',
+    text: 'Vuelve Ibai con un nuevo universo, 24 chocolatinas y muchas ganas de que llegue diciembre.',
+    href: '#calendario',
+    cta: 'Descubre el calendario',
+    note: 'Muy pronto anunciaremos la apertura del registro.',
+  },
+  registration: {
+    status: 'El registro de calendarios está abierto',
+    title: 'Tu calendario. Tu código. Tu ilusión.',
+    text: isLoggedIn
+      ? `Tienes ${participations}. Registra el código de tu calendario y prepárate para descubrir una casilla cada día.`
+      : '¿Ya tienes tu calendario? Inicia sesión y registra tu código para participar en los sorteos de esta edición.',
+    href: isLoggedIn ? '/dashboard' : '/registro',
+    cta: isLoggedIn ? 'Registrar mi código' : 'Iniciar sesión y participar',
+    note: CAMPAIGN.registrationClosesAt
+      ? `Registra tu calendario hasta el ${formatCampaignDate(CAMPAIGN.registrationClosesAt)}.`
+      : 'Consulta las condiciones de participación en las bases legales.',
+  },
+  closed: {
+    status: 'El registro de calendarios ha finalizado',
+    title: 'Gracias por formar parte de la fábrica.',
+    text: 'El plazo para registrar códigos ha terminado. Muy pronto podrás consultar aquí los ganadores de esta edición.',
+    href: isLoggedIn ? '/dashboard' : '/registro',
+    cta: 'Ver mis participaciones',
+    note: 'Los ganadores se publicarán según las bases legales.',
+  },
+  winners: {
+    status: 'Los resultados de 2026 ya están aquí',
+    title: 'La ilusión ya tiene ganadores.',
+    text: 'Descubre quiénes se llevan los premios de esta edición de Big Ibai. ¡Gracias por acompañarnos un diciembre más!',
+    href: '/ganadores',
+    cta: 'Ver los ganadores',
+    note: 'Consulta los resultados y las condiciones en las bases legales.',
+  },
+}[phase]
+
+// Cifras de la franja bajo el hero. Los premios deben coincidir con las bases legales de la edición
+const highlights = [
+  { value: CAMPAIGN.totalDays, label: 'chocolatinas' },
+  { value: CAMPAIGN.totalDays, label: 'premios' },
+  { value: 1, label: 'casilla nueva cada día' },
+]
 ---
 
-<main id="main-content" class="mx-auto w-full max-w-7xl px-4 py-12 md:py-20" tabindex="-1">
-  <!-- Bento Grid -->
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
-    <!-- Columna 1 y 2: Validar código (span 2 columnas) -->
+<FactoryIntro {campaignCopy} {calendarProgress} {highlights} />
+<Participation {isLoggedIn} />
+{/* <Keychains /> */}
+<Container class="calendar-wrap">
+  <Calendar />
+</Container>
+<StoreLocator />
+<CampaignStatus {campaignCopy} />
 
-    <BentoCard class="group col-span-3 overflow-hidden md:col-span-2 flex flex-col md:flex-row p-0">
-      <div
-        class="relative flex items-center justify-center md:justify-start md:w-1/3 min-h-[300px] md:min-h-0"
-      >
-        <img
-          src="/bigibai.webp"
-          alt="Ibai celebrando"
-          class="absolute h-auto w-[450px] md:w-[350px] lg:w-[480px] max-w-none object-contain md:-left-16 md:-top-8 group-hover:scale-105 transition-transform duration-300 group-hover:rotate-3 drop-shadow-2xl z-0 pointer-events-none"
-          loading="eager"
-          style="filter: hue-rotate(336deg) brightness(1.2)"
-        />
-      </div>
-      <div
-        class="relative z-10 flex flex-1 flex-col items-center md:items-start justify-center p-8 md:pr-12"
-      >
-        <div class="flex flex-col justify-center gap-6">
-          <div class="space-y-4 flex justify-center items-center flex-col">
-            <h2
-              class="text-shadow-title text-3xl font-bold text-white md:text-4xl lg:text-5xl text-balance text-center"
-            >
-              ¡Ya tenemos los ganadores!
-            </h2>
-            <p class="text-lg text-white/80 md:text-xl lg:text-2xl text-center text-pretty">
-              Consulta la lista completa de afortunados que han ganado premios en nuestro Calendario
-              de Adviento.
-            </p>
-          </div>
-
-          <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
-            <Button href="/ganadores" variant="brand" size="lg"> Ver lista de ganadores </Button>
-            {
-              isLoggedIn && (
-                <Button href="/dashboard" variant="secondary" size="lg">
-                  Mis participaciones
-                </Button>
-              )
-            }
-          </div>
-        </div>
-      </div>
-    </BentoCard>
-
-    <BentoCard class="group col-span-3 md:col-span-1">
-      <div class="relative flex h-full min-h-[400px] flex-col justify-between p-8 md:p-10">
-        <!-- Imagen del producto -->
-        <div class="mb-6 flex flex-1 items-center justify-center">
-          <img
-            src="/calendario-producto.webp"
-            alt="Calendario Big Ibai 2025"
-            class="h-auto w-52 object-contain transition-transform duration-300 group-hover:scale-110 mt-0 md:-mt-40"
-            loading="eager"
-          />
-        </div>
-
-        <!-- Contenido -->
-        <div class="space-y-4">
-          <h3
-            class="text-shadow-title text-2xl font-bold text-white md:text-3xl text-balance text-center"
-          >
-            Calendario Big Ibai 2025
-          </h3>
-
-          <p class="text-base md:hidden text-white/80 md:text-lg text-balance text-center">
-            Consigue tu calendario en los mejores supermercados
-          </p>
-
-          <Button variant="secondary" size="lg" class="w-full" href="#tiendas">
-            <p class="flex items-center justify-center gap-2">¿Dónde lo compro?</p>
-          </Button>
-        </div>
-      </div>
-    </BentoCard>
-
-    <AchievementsBox isLoggedIn={isLoggedIn} userAchievements={userAchievements} />
-
-    <Chocolates />
-
-    <Calendar />
-
-    <Map />
-  </div>
-</main>
+<style>
+  .calendar-wrap {
+    padding-block: 90px;
+  }
+  @media (max-width: 760px) {
+    .calendar-wrap {
+      padding-block: 55px;
+    }
+  }
+</style>

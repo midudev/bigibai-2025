@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { supabaseAdmin } from '@/supabase-admin'
 import { isAdmin } from '@/utils/admin'
-import { hash } from '@/utils/crypto'
+import { hashCoupon } from '@/utils/crypto'
 
 export const GET: APIRoute = async ({ request, locals }) => {
   // Verificar autenticación
@@ -32,7 +32,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    const couponHash = hash(couponCode)
+    const couponHash = hashCoupon(couponCode)
     
     // Buscar el cupón por hash exacto o como duplicado
     // Primero intentamos con el hash exacto

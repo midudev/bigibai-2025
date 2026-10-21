@@ -1,70 +1,22 @@
 @import 'tailwindcss';
+@import 'tailwind-animations';
+@import './styles/tokens.css';
+@import './styles/components.css';
 @plugin "@tailwindcss/typography";
-@plugin "@midudev/tailwind-animations";
 @plugin "@toolwind/corner-shape";
 
 @theme {
-  --color-brand: #f8b134;
-  --color-destructive: var(--color-red-600);
-  --color-destructive-foreground: var(--color-white);
-  --color-primary: hsl(0, 0, 95%);
-  --color-secondary: hsl(0, 0, 60%);
-
-  --text-shadow-title: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 0, 0, 0.5);
-}
-
-.skip-link {
-  position: absolute;
-  left: -999px;
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap;
-}
-
-.skip-link:focus-visible {
-  left: 1rem;
-  top: 1rem;
-  width: auto;
-  height: auto;
-  clip: auto;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  background: #111827;
-  color: #ffffff;
-  border: 2px solid var(--color-brand);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-  z-index: 9999;
-}
-
-:is(a, button, input, select, textarea, summary, [role='button'], [role='link']):focus-visible {
-  outline: 3px solid var(--color-brand);
-  outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45);
-  border-radius: 0.375rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-::selection {
-  background-color: #5c8948;
-  color: white;
-}
-
-::-moz-selection {
-  background-color: #5c8948;
-  color: white;
+  --color-brand: var(--brand-accent);
+  --color-destructive: #c34d61;
+  --color-destructive-foreground: #ffffff;
+  --color-primary: var(--text-heading);
+  --color-secondary: var(--text-muted);
+  --color-copy: var(--text-copy);
+  --color-muted: var(--text-muted);
+  --color-heading: var(--text-heading);
+  --color-surface-inset: var(--surface-inset);
+  --color-border-subtle: var(--border-subtle);
+  --text-shadow-title: none;
 }
 
 @font-face {
@@ -74,7 +26,6 @@
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Century';
   src: url('/fonts/century-bold.woff2') format('woff2');
@@ -82,7 +33,6 @@
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Heavy';
   src: url('/fonts/heavy.woff2') format('woff2');
@@ -91,118 +41,86 @@
   font-display: swap;
 }
 
-h1,
-h2,
-.md-container h1,
-.md-container h2 {
-  font-family: 'Heavy', sans-serif;
-  font-weight: 400;
+html {
+  scroll-behavior: smooth;
+  background: var(--site-bg);
+  color-scheme: dark;
 }
-
-h3,
-h4,
-h5,
-h6,
-.md-container h3,
-.md-container h4,
-.md-container h5,
-.md-container h6 {
-  font-family: 'Century', sans-serif;
+body {
+  margin: 0;
+  color: var(--text-copy);
+  font-family: var(--font-body);
 }
-
-.md-container {
-  @apply prose prose-invert mx-auto px-4 pt-24 pb-2 md:px-0;
-}
-
-.md-container h1,
-h2 {
-  @apply !text-brand !mt-4 text-center leading-[130%] uppercase;
-}
-.md-container h2 {
-  @apply text-6xl;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+@layer base {
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: normal;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-body);
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
   }
 }
 
-@keyframes textGlow {
-  0%,
-  100% {
-    text-shadow:
-      0 0 20px rgba(248, 177, 52, 0.3),
-      0 0 40px rgba(248, 177, 52, 0.2);
-  }
-  50% {
-    text-shadow:
-      0 0 30px rgba(248, 177, 52, 0.5),
-      0 0 60px rgba(248, 177, 52, 0.3);
-  }
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
 }
-
-.fade-in-up {
-  animation: fadeInUp 0.8s ease-out backwards;
+::selection {
+  background: var(--brand-accent);
+  color: var(--brand-ink);
 }
-
+:is(a, button, input, select, textarea, summary, [role='button'], [role='link']):focus-visible {
+  outline: 3px solid var(--brand-accent);
+  outline-offset: 4px;
+}
+.skip-link {
+  position: fixed;
+  left: 20px;
+  top: -100px;
+  z-index: 10000;
+  padding: 12px 18px;
+  border-radius: var(--radius-control);
+  background: var(--brand-accent);
+  color: var(--brand-ink);
+  font-size: 13px;
+  font-weight: bold;
+}
+.skip-link:focus {
+  top: 16px;
+}
+span[data-tip],
+div[data-tip] {
+  cursor: help;
+}
+.fade-in-up,
 .glow-text {
-  animation:
-    fadeInUp 0.8s ease-out backwards,
-    textGlow 3s ease-in-out infinite;
+  animation: none;
 }
-
-/* Desactivar las animaciones por defecto de Astro */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
 }
-
-/* Solo animar la nueva página con la máscara */
-::view-transition-new(root) {
-  animation: svgMaskReveal 0.8s ease-in-out;
-}
-
-/* Mantener la página antigua visible sin fade */
-::view-transition-old(root) {
-  z-index: 1;
-  animation: darken 0.5s ease-in-out;
-}
-
-::view-transition-new(root) {
-  z-index: 2;
-}
-
-@keyframes darken {
-  from {
-    filter: saturate(1);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    filter: saturate(0);
-    opacity: 0;
-  }
-}
-
-@keyframes svgMaskReveal {
-  from {
-    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 51.1 84.79"><path d="m1.03 84.79 11.7-36.64c-.03-.6-3.13-2.46-3.84-3.06C-8.24 30.59.92 1.52 23.25.07c27.6-1.8 38.42 33.62 15.1 47.47l-.07.36 11.74 36.9H1.03Z" fill="black"/></svg>');
-    mask-size: 0% 0%;
-    mask-position: center;
-    mask-repeat: no-repeat;
-  }
-  to {
-    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 51.1 84.79"><path d="m1.03 84.79 11.7-36.64c-.03-.6-3.13-2.46-3.84-3.06C-8.24 30.59.92 1.52 23.25.07c27.6-1.8 38.42 33.62 15.1 47.47l-.07.36 11.74 36.9H1.03Z" fill="black"/></svg>');
-    mask-size: 700% 700%;
-    mask-position: center;
-    mask-repeat: no-repeat;
-  }
-}
-
-span[data-tip], div[data-tip] {
-  cursor: help;
 }

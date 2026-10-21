@@ -1,31 +1,50 @@
 ---
-export interface Props {
+import { CAMPAIGN, NOTICES } from '@/data/campaign'
+import { formatCampaignDate, getCampaignPhase } from '@/utils/campaign'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import Notice from '@/components/ui/Notice.astro'
+interface Props {
   prize: string
 }
-
 const { prize } = Astro.props
+const { winnersPublishedAt, registrationClosesAt } = CAMPAIGN
+const isRegistrationOpen = getCampaignPhase(Astro.locals.now) === 'registration'
 ---
 
-<div
-  id="game-success-content"
-  class="hidden h-full flex-col justify-center items-center text-center"
->
-  <h2
-    class="text-4xl text-brand font-bold mb-6 uppercase text-balance"
-    style="font-family: 'Heavy', sans-serif;"
-  >
-    ¡El premio de hoy ha sido revelado!
-  </h2>
-  <p class="text-white text-lg mb-2">El sorteo de esta casilla es:</p>
-  <p class="text-3xl text-brand font-bold uppercase mb-8 text-balance">{prize}</p>
-
-  <div class="bg-black/30 p-4 rounded-lg border border-white/10 mb-6 w-full">
-    <p class="text-sm text-white/60 mb-2 text-balance">
-      * El ganador de este premio será revelado el 24 de diciembre.
-    </p>
-    <p class="text-sm text-brand/80 font-bold text-balance">
-      ¡Recuerda que tienes hasta el 23 de diciembre para registrar tu calendario y participar en el
-      sorteo de todos estos premios!
-    </p>
-  </div>
+<div id="game-success-content" class="hidden game-success">
+  <SectionHeading
+    as="h2"
+    size="section"
+    eyebrow="Reto completado"
+    title="Sorpresa revelada."
+    description="El premio que se sortea en esta casilla es:"
+  />
+  <p class="revealed-prize">{prize}</p>
+  <Notice variant="warning" title={NOTICES.prizeIsNotWon}>
+    {winnersPublishedAt
+      ? `Los ganadores se anunciarán el ${formatCampaignDate(winnersPublishedAt)}.`
+      : 'Los ganadores se anunciarán según las bases legales de la promoción.'}
+    {isRegistrationOpen && registrationClosesAt && (
+      <p>
+        Recuerda registrar tu calendario antes del {formatCampaignDate(registrationClosesAt)} para
+        participar.
+      </p>
+    )}
+  </Notice>
 </div>
+<style>
+  .game-success {
+    padding-block: 20px;
+  }
+  .game-success :global(.ui-heading) {
+    font-size: 32px;
+  }
+  .revealed-prize {
+    margin-block: 25px;
+    color: var(--brand-accent);
+    font-size: 23px;
+    font-weight: bold;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+</style>

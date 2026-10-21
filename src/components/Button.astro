@@ -1,68 +1,43 @@
 ---
-export interface Props {
-  variant?: 'brand' | 'secondary' | 'ghost' | 'destructive'
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+import type { HTMLAttributes } from 'astro/types'
+import { buttonClasses, type ButtonVariant, type ButtonSize } from '@/components/ui/styles'
+
+export interface Props extends Omit<HTMLAttributes<'button'>, 'class'> {
+  variant?: ButtonVariant
+  size?: ButtonSize
   class?: string
-  type?: 'button' | 'submit' | 'reset'
-  disabled?: boolean
-  id?: string
-  name?: string
-  value?: string
   href?: string
   target?: '_blank' | '_self' | '_parent' | '_top'
   rel?: string
 }
-
 const {
   variant = 'brand',
   size = 'md',
   class: className = '',
   type = 'button',
   disabled = false,
-  value,
-  name,
   href,
   target,
   rel,
   ...rest
 } = Astro.props
-
-const baseClasses =
-  'inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed whitespace-nowrap hover:scale-[1.01] active:scale-[0.99] disabled:hover:scale-100 rounded-lg text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f8b134] focus-visible:ring-2 focus-visible:ring-[#f8b134]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black cursor-pointer disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 transition-[background-color,transform] duration-150 ease-out'
-
-const variantClasses = {
-  brand:
-    'inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 from-brand to-brand/85 text-black shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter,transform] hover:brightness-110 active:brightness-90',
-  secondary:
-    'border-zinc-900 bg-zinc-900/75 text-white hover:bg-zinc-900/85 border border-b-2 shadow-md shadow-zinc-950/20 ring ring-inset ring-white/15 hover:brightness-110',
-  ghost: 'text-brand hover:bg-brand/10',
-  destructive:
-    'from-destructive to-destructive/85 text-destructive-foreground inset-shadow-2xs inset-shadow-white/10 bg-linear-to-t border border-b-2 border-zinc-950/40 shadow-md shadow-zinc-950/20 ring-1 ring-inset ring-white/25 transition-[filter,transform] hover:brightness-110 active:brightness-90',
-}
-
-const sizeClasses = {
-  sm: 'px-3 py-1 text-xs',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-6 py-3 text-base',
-  xl: 'px-8 py-4 text-lg',
-}
-
-const classes = [baseClasses, variantClasses[variant], sizeClasses[size], className]
-  .filter(Boolean)
-  .join(' ')
-
-const isLink = !!href
-const linkRel = target === '_blank' ? rel || 'noopener noreferrer' : rel
+const classes = buttonClasses({ variant, size, className })
 ---
 
-{
-  isLink ? (
-    <a href={href} class={classes} target={target} rel={linkRel} aria-disabled={disabled} {...rest}>
-      <slot />
-    </a>
-  ) : (
-    <button type={type} class={classes} disabled={disabled} value={value} name={name} {...rest}>
-      <slot />
-    </button>
-  )
-}
+{href ? (
+  <a
+    href={disabled ? undefined : href}
+    class={classes}
+    target={target}
+    rel={target === '_blank' ? rel || 'noopener noreferrer' : rel}
+    aria-disabled={disabled || undefined}
+    tabindex={disabled ? -1 : undefined}
+    {...rest}
+  >
+    <slot />
+  </a>
+) : (
+  <button type={type} class={classes} disabled={disabled} {...rest}>
+    <slot />
+  </button>
+)}

@@ -15,10 +15,14 @@ declare global {
   namespace App {
     interface Locals {
       user: null | User
+      // Fecha de referencia de la petición (real o simulada por un admin)
+      now: Date
+      isSimulatedDate: boolean
     }
   }
 
   interface Window {
     L: any
+    Supercluster: any
   }
 }

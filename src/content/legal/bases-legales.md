@@ -1,10 +1,14 @@
 ---
 title: Bases Legales - Calendario de Adviento Big Ibai 2025
+# Edición y versión de estas bases. Al publicar las nuevas, actualiza ambos campos:
+# la versión es la que se guardará como prueba de aceptación en cada registro.
+edition: 2025
+version: '2025-11'
 ---
 
 Las presentes bases constituyen un extracto informativo del sorteo denominado "Calendario de Adviento Big Ibai 2025". Las bases legales completas, con el detalle íntegro de los premios y condiciones de participación, fueron protocolizadas ante el Notario D. Luis Sampietro Villacampa, del Ilustre Colegio de Cataluña, en Barcelona, con fecha 28 de octubre de 2025, bajo número de protocolo 2.081. Los premios se estructuran en distintas categorías (por ejemplo, "Planes increíbles", "Grandes aventuras", "Tu mejor versión", entre otras), cuyo contenido se revelará progresivamente durante el desarrollo de la promoción.
 
-## BASES LEGALES DE LA PROMOCIÓN: CALENDARIO DE ADVIENTO BIG IBAI 2025
+# BASES LEGALES DE LA PROMOCIÓN: CALENDARIO DE ADVIENTO BIG IBAI 2025
 
 ## ORGANIZADOR DE LA PROMOCIÓN
 

@@ -1,92 +1,90 @@
-<footer class="pt-10 text-white pb-4 footer-fade-in relative">
-  <div
-    class="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center"
-  >
-    <a href="/" class="footer-logo">
-      <img
-        class="w-24 drop-shadow drop-shadow-black/30 select-none"
-        src="/logo-a.svg"
-        alt="bigibai logo"
-      />
+---
+import { CAMPAIGN } from '@/data/campaign'
+import BrandLogo from '@/components/ui/BrandLogo.astro'
+---
+
+<footer class="campaign-footer">
+  <div class="footer-main">
+    <a href="/" aria-label="Big Ibai, inicio">
+      <BrandLogo variant="factory" width={170} />
     </a>
-
     <nav aria-label="Enlaces legales">
-      <ul class="flex flex-wrap gap-4 md:gap-6 justify-center items-center">
-        <li class="footer-link-item" style="animation-delay: 0.1s;">
-          <a
-            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
-            href="/privacidad">Privacidad</a
-          >
-        </li>
-        <li class="footer-link-item" style="animation-delay: 0.2s;">
-          <a
-            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
-            href="/aviso-legal">Aviso Legal</a
-          >
-        </li>
-        <li class="footer-link-item" style="animation-delay: 0.3s;">
-          <a
-            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
-            href="/bases-legales">Bases Legales</a
-          >
-        </li>
-        <li class="footer-link-item" style="animation-delay: 0.4s;">
-          <a
-            class="hover:text-yellow-300 transition-all duration-300 relative footer-link"
-            href="/politica-de-cookies">Política de Cookies</a
-          >
-        </li>
-      </ul>
+      <a href="/privacidad">Privacidad</a>
+      <a href="/aviso-legal">Aviso legal</a>
+      <a href="/bases-legales">Bases legales</a>
+      <a href="/politica-de-cookies">Política de cookies</a>
     </nav>
+    <a class="contact" href="mailto:hola@bigibai.com">
+      hola@bigibai.com
+    </a>
   </div>
-
-  <div class="text-center footer-copyright text-yellow-200">
-    <small
-      class="hover:text-yellow-300 transition-colors duration-300"
-      role="contentinfo"
-      aria-label="Todos los derechos reservados para Salad Brands"
-      aria-live="off"
-      >© 2025 Salad Brands SL. · <a class="hover:underline" href="mailto:hola@bigibai.com"
-        >hola@bigibai.com</a
-      >
-    </small>
+  <div class="footer-bottom">
+    <small>© {CAMPAIGN.year} Salad Brands SL. Todos los derechos reservados.</small>
+    <span>La ilusión se hace a lo grande.</span>
   </div>
 </footer>
 
 <style>
-  footer {
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      rgba(0, 0, 0, 0.6) 50%,
-      rgba(0, 0, 0, 0.95) 100%
-    );
+  .campaign-footer {
+    position: relative;
+    padding: 48px max(24px, calc((100% - var(--content-max)) / 2)) 24px;
+    background: var(--surface-inset);
+    color: var(--text-copy);
+    font-family: var(--font-body);
   }
-
-  .footer-logo {
-    transition: transform 0.3s ease;
+  .footer-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 36px;
+    padding-bottom: 34px;
   }
-
-  .footer-logo:hover {
-    transform: scale(1.1) rotate(5deg);
+  .footer-main img {
+    width: 170px;
+    height: auto;
   }
-
-  .footer-link-item {
-    animation: slideInLeft 0.5s ease-out backwards;
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    font-size: 11px;
   }
-
-  .footer-link::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #f8b134, #ffd700);
-    transition: width 0.3s ease;
+  a:hover {
+    color: var(--brand-accent);
   }
-
-  .footer-link:hover::after {
-    width: 100%;
+  .contact {
+    font-size: 12px;
+    color: var(--brand-accent);
+  }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid color-mix(in srgb, var(--text-heading) 10.2%, transparent);
+    padding-top: 23px;
+    font-size: 10px;
+  }
+  small {
+    font-size: inherit;
+  }
+  @media (max-width: 760px) {
+    .campaign-footer {
+      padding-top: 38px;
+    }
+    .footer-main {
+      flex-direction: column;
+      gap: 27px;
+    }
+    nav {
+      gap: 16px;
+      font-size: 10px;
+    }
+    .footer-bottom {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+    }
   }
 </style>

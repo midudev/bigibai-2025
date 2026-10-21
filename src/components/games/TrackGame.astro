@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -34,7 +35,11 @@ const GAME_DATA = {
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <h1>SPRINT<br />250M</h1>
+      <h1>
+        SPRINT
+        <br />
+        250M
+      </h1>
 
       <div class="instructions">
         <p class="controls-title">CÓMO JUGAR</p>
@@ -49,7 +54,9 @@ const GAME_DATA = {
         <p class="hint">🏆 ¡Gana la carrera!</p>
       </div>
 
-      <button id="start-btn" class="menu-btn blink">EMPEZAR</button>
+      <Button variant="brand" size="sm" id="start-btn" class="menu-btn blink">
+        EMPEZAR
+      </Button>
     </div>
 
     <!-- Countdown Screen -->
@@ -60,9 +67,13 @@ const GAME_DATA = {
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="modal hidden">
       <h1 class="danger">¡PERDISTE!</h1>
-      <p>Posición: <span id="final-position">4</span>º</p>
+      <p>
+        Posición: <span id="final-position">4</span>º
+      </p>
       <p class="small-text">No llegaste primero</p>
-      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+      <Button variant="brand" size="sm" id="restart-btn" class="menu-btn">
+        REINTENTAR
+      </Button>
     </div>
 
     <!-- Win Screen -->
@@ -906,13 +917,17 @@ const GAME_DATA = {
               laneX,
               runnerY + 25
             )
-            
-            // Player aura is blue/cyan if super saiyan blue, or yellow if classic. 
-            // Let's go with gold/yellow for everyone for consistency, 
+
+            // Player aura is blue/cyan if super saiyan blue, or yellow if classic.
+            // Let's go with gold/yellow for everyone for consistency,
             // or maybe blue for player to stand out.
             const color1 = runner.isPlayer ? 'rgba(0, 200, 255, 0)' : 'rgba(255, 255, 100, 0)'
-            const color2 = runner.isPlayer ? `rgba(100, 255, 255, ${0.6 - layer * 0.15})` : `rgba(255, 220, 50, ${0.6 - layer * 0.15})`
-            const color3 = runner.isPlayer ? `rgba(0, 150, 255, ${0.4 - layer * 0.1})` : `rgba(255, 180, 0, ${0.4 - layer * 0.1})`
+            const color2 = runner.isPlayer
+              ? `rgba(100, 255, 255, ${0.6 - layer * 0.15})`
+              : `rgba(255, 220, 50, ${0.6 - layer * 0.15})`
+            const color3 = runner.isPlayer
+              ? `rgba(0, 150, 255, ${0.4 - layer * 0.1})`
+              : `rgba(255, 180, 0, ${0.4 - layer * 0.1})`
             const color4 = runner.isPlayer ? 'rgba(0, 100, 255, 0)' : 'rgba(255, 100, 0, 0)'
 
             auraGradient.addColorStop(0, color1)
@@ -957,7 +972,11 @@ const GAME_DATA = {
           // Draw energy particles
           ctx!.globalAlpha = 0.8
           for (let i = 0; i < (runner.isPlayer ? 10 : 6); i++) {
-            const particleY = runnerY - 20 - ((runner.auraFrame * (runner.isPlayer ? 40 : 30) + i * 40) % 60) + bobAmount
+            const particleY =
+              runnerY -
+              20 -
+              ((runner.auraFrame * (runner.isPlayer ? 40 : 30) + i * 40) % 60) +
+              bobAmount
             const particleX = laneX + Math.sin(runner.auraFrame * 2 + i * 1.5) * (8 + i * 2)
             const particleSize = 2 + Math.sin(runner.auraFrame * 3 + i) * 1
 
@@ -966,7 +985,7 @@ const GAME_DATA = {
             } else {
               ctx!.fillStyle = i % 2 === 0 ? '#ffff00' : '#ffaa00'
             }
-            
+
             ctx!.fillRect(
               Math.floor(particleX - particleSize / 2),
               Math.floor(particleY),
@@ -1051,7 +1070,13 @@ const GAME_DATA = {
         }
 
         // Lane number / name (with turbo indicator)
-        ctx!.fillStyle = runner.hasTurbo ? (runner.isPlayer ? '#00ffff' : '#ffd700') : runner.isPlayer ? '#4ade80' : '#fff'
+        ctx!.fillStyle = runner.hasTurbo
+          ? runner.isPlayer
+            ? '#00ffff'
+            : '#ffd700'
+          : runner.isPlayer
+            ? '#4ade80'
+            : '#fff'
         ctx!.font = '6px "Press Start 2P"'
         ctx!.textAlign = 'center'
         const displayName = runner.hasTurbo ? `🔥${runner.name}` : runner.name

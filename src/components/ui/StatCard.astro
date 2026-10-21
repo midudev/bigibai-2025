@@ -1,0 +1,38 @@
+---
+import Surface from './Surface.astro'
+interface Props {
+  label: string
+  value: string | number
+  hint?: string
+}
+const { label, value, hint } = Astro.props
+---
+
+<Surface as="article" padded class="stat-card">
+  <p>{label}</p>
+  <strong>{value}</strong>
+  {hint && <span>{hint}</span>}
+</Surface>
+<style>
+  .stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .stat-card p {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  strong {
+    font-family: var(--font-display);
+    font-weight: normal;
+    font-size: 38px;
+    line-height: 1.2;
+    color: var(--text-heading);
+  }
+  span {
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.8;
+  }
+</style>

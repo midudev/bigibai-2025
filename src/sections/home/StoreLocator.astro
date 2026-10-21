@@ -1,0 +1,149 @@
+---
+import Container from '@/components/ui/Container.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import Map from '@/components/Map.astro'
+import { CAMPAIGN } from '@/data/campaign'
+import { WINNERS_YEAR } from '@/data/winners'
+import { getCampaignPhase } from '@/utils/campaign'
+const phase = getCampaignPhase(Astro.locals.now)
+---
+
+<Container as="section" id="tiendas" class="stores-section" aria-labelledby="stores-title">
+  <div class="stores-copy">
+    <SectionHeading as="h2" id="stores-title" eyebrow="La próxima parada">
+      <Fragment slot="title">
+        Tu diciembre
+        <br />
+        empieza aquí.
+      </Fragment>
+    </SectionHeading>
+    {phase === 'upcoming' ? (
+      <>
+        <p>
+          Explora el mapa y encuentra las tiendas más cercanas. Estamos preparando la llegada de Big
+          Ibai 2026; confirmaremos aquí la disponibilidad de la nueva edición.
+        </p>
+        <span class="availability-note">
+          <span></span> Puntos de venta 2026, próximamente
+        </span>
+      </>
+    ) : (
+      <>
+        <p>
+          Busca en el mapa las tiendas donde encontrar tu calendario. Consulta la disponibilidad
+          directamente con el establecimiento.
+        </p>
+        <a href="#store-map" class="ui-text-link">
+          Consultar las tiendas
+        </a>
+      </>
+    )}
+  </div>
+  <img
+    class="stores-plane"
+    src="/2026/avion.webp"
+    width="640"
+    height="304"
+    alt="Avión de Big Ibai con un regalo preparado para despegar"
+    loading="lazy"
+  />
+  <div id="store-map" class="store-map">
+    <Map edition={phase === 'upcoming' ? WINNERS_YEAR : CAMPAIGN.year} />
+  </div>
+</Container>
+
+<style>
+  .stores-section {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 30px;
+    padding-bottom: 76px;
+  }
+  .stores-copy {
+    position: relative;
+    z-index: 1;
+  }
+  .stores-copy > p:not(.section-kicker) {
+    max-width: 410px;
+    margin-top: 22px;
+    color: var(--text-copy);
+    font-size: 13px;
+    line-height: 1.9;
+  }
+  /* El avión baja por detrás del mapa para que parezca que sale de él:
+     margen negativo = gap + margin-top del mapa + parte oculta (~48px) */
+  .stores-plane {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    max-width: 510px;
+    height: auto;
+    justify-self: center;
+    align-self: end;
+    margin-bottom: -90px;
+    rotate: -28deg;
+    filter: drop-shadow(0 20px 25px #0003);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .stores-plane {
+        animation: plane-takeoff linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 40%;
+      }
+    }
+  }
+  @keyframes plane-takeoff {
+    from {
+      translate: -6% 55%;
+      rotate: -10deg;
+    }
+    to {
+      translate: 0 0;
+      rotate: -28deg;
+    }
+  }
+  .availability-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 23px;
+    color: var(--status-warning);
+    font-size: 10px;
+  }
+  .availability-note > span {
+    width: 6px;
+    height: 6px;
+    background: var(--brand-accent);
+    border-radius: 50%;
+  }
+  .store-map {
+    position: relative;
+    z-index: 1;
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin-top: 12px;
+    scroll-margin-top: 32px;
+  }
+  @media (max-width: 760px) {
+    .stores-section {
+      grid-template-columns: 1fr;
+      gap: 15px;
+      padding-bottom: 45px;
+    }
+    .stores-copy > p:not(.section-kicker) {
+      font-size: 12px;
+    }
+    .stores-plane {
+      width: 90%;
+      max-width: 390px;
+      margin-top: 20px;
+      margin-bottom: -66px;
+    }
+    .store-map {
+      margin-top: 15px;
+    }
+  }
+</style>

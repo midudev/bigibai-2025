@@ -1,0 +1,67 @@
+# Cabeceras para los estáticos servidos por Cloudflare.
+# Las páginas SSR las reciben desde src/middleware/index.ts
+# /_astro/* (ficheros con hash) recibe `immutable` desde @astrojs/cloudflare
+/*
+  X-DNS-Prefetch-Control: on
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Cross-Origin-Opener-Policy: same-origin
+  Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+
+# Las URLs de workers.dev no deben indexarse (el dominio canónico es www.bigibai.com)
+https://:subdomain.workers.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex
+
+# Las fuentes no cambian de nombre
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Imágenes, audio y modelos sin hash: 1 día en caché y revalidación en segundo plano.
+# `:file` no incluye `/`, así que no choca con la regla de /_astro/*
+/:file.webp
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/:file.avif
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/:file.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/:file.jpg
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/:file.svg
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/:file.mp3
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/chocolatinas/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/email/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/enemies/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/food/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/games/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/models/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/pistas/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/2026/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

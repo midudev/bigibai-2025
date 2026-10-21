@@ -1,4 +1,6 @@
-const ADMIN_IDS = import.meta.env.ADMIN_USERS_IDS.split(',')
+import { ADMIN_USERS_IDS } from 'astro:env/server'
+
+const ADMIN_IDS = ADMIN_USERS_IDS.split(',')
 /**
  * Verifica si un email tiene permisos de administrador
  */

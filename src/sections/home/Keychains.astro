@@ -1,0 +1,167 @@
+---
+import Container from '@/components/ui/Container.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import { keychains } from '@/data/keychains'
+---
+
+<section id="llaveros" class="keychains-section" aria-labelledby="keychains-title">
+  <Container>
+    <SectionHeading
+      as="h2"
+      id="keychains-title"
+      align="center"
+      eyebrow="Los nuevos llaveros de Big Ibai"
+      title="Pequeños. Pero muy grandes."
+      description="Tres diseños con mucho de nuestro universo. Lo difícil va a ser elegir tu favorito."
+      class="keychains-heading"
+    />
+    <div class="keychains-grid">
+      {keychains.map((keychain) => (
+        <figure class:list={['keychain', keychain.className]}>
+          <div class="keychain-visual">
+            <span class="keychain-halo" aria-hidden="true"></span>
+            <img
+              src={`/2026/llavero-${keychain.image}.webp`}
+              alt={`Llavero de ${keychain.name}`}
+              width="360"
+              height="520"
+              loading="lazy"
+            />
+          </div>
+          <figcaption>
+            <h3>{keychain.name}</h3>
+            <p>{keychain.description}</p>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </Container>
+</section>
+
+<style>
+  .keychains-section {
+    padding: 68px 0 60px;
+    background: color-mix(in srgb, var(--surface) 53.33%, transparent);
+    border-block: 1px solid color-mix(in srgb, var(--text-heading) 6.27%, transparent);
+    scroll-margin-top: 25px;
+  }
+  .keychains-heading {
+    text-align: center;
+  }
+  .keychains-heading h2 {
+    text-align: center;
+  }
+  .keychains-heading > p:last-child {
+    margin-top: 20px;
+    color: var(--text-copy);
+    font-size: 13px;
+    line-height: 1.9;
+  }
+  .keychains-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    max-width: 1000px;
+    margin: 22px auto 0;
+  }
+  .keychain {
+    text-align: center;
+    margin: 0;
+  }
+  .keychain-visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+  }
+  .keychain-visual img {
+    position: relative;
+    z-index: 1;
+    width: 185px;
+    height: 264px;
+    object-fit: contain;
+    filter: drop-shadow(0 16px 12px #0005);
+    transition: transform 0.3s ease;
+  }
+  .keychain:hover img {
+    transform: translateY(-8px) rotate(-4deg);
+  }
+  .keychain.ronin img {
+    width: 215px;
+    transform: rotate(4deg);
+  }
+  .keychain.ronin:hover img {
+    transform: translateY(-8px) rotate(0deg);
+  }
+  .keychain-halo {
+    position: absolute;
+    inset: 21% 10% 10%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, #414b9959, transparent 70%);
+  }
+  .glove .keychain-halo {
+    background: radial-gradient(ellipse, #be34582b, transparent 70%);
+  }
+  .koi .keychain-halo {
+    background: radial-gradient(ellipse, #15a2ac30, transparent 70%);
+  }
+  .keychain h3 {
+    color: var(--brand-accent);
+    font-family: var(--font-display);
+    font-weight: normal;
+    font-size: 27px;
+  }
+  .keychain figcaption p {
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  @media (max-width: 760px) {
+    .keychains-section {
+      padding-block: 46px 38px;
+    }
+    .keychains-heading h2 {
+      max-width: 300px;
+      margin-inline: auto !important;
+      text-align: center;
+    }
+    .keychains-heading > p:last-child {
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    .keychains-grid {
+      gap: 5px;
+      margin-top: 15px;
+    }
+    .keychain-visual {
+      height: 190px;
+    }
+    .keychain-visual img {
+      width: 110px;
+      height: 160px;
+    }
+    .keychain.ronin img {
+      width: 125px;
+    }
+    .keychain h3 {
+      font-size: 22px;
+    }
+    .keychain figcaption p {
+      font-size: 9px;
+      line-height: 1.7;
+      padding-inline: 3px;
+    }
+    .keychain-halo {
+      inset: 30% 0 10%;
+    }
+  }
+  @media (max-width: 370px) {
+    .keychain-visual {
+      height: 160px;
+    }
+    .keychain-visual img {
+      height: 140px;
+    }
+  }
+</style>

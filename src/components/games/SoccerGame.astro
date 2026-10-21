@@ -174,14 +174,7 @@ const GAME_DATA = {
 
     // Estado del juego
     type GameState =
-      | 'MENU'
-      | 'PLAYING'
-      | 'AIMING'
-      | 'MOVING_BALL'
-      | 'GOAL'
-      | 'MISS'
-      | 'GAMEOVER'
-      | 'WIN'
+      'MENU' | 'PLAYING' | 'AIMING' | 'MOVING_BALL' | 'GOAL' | 'MISS' | 'GAMEOVER' | 'WIN'
     let gameState: GameState = 'MENU'
     let score = 0
     const GOAL_TARGET = 7

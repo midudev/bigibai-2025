@@ -1,154 +1,28 @@
 ---
 import Button from '@/components/Button.astro'
+import CodeInput from '@/components/ui/CodeInput.astro'
+import Surface from '@/components/ui/Surface.astro'
+import { CAMPAIGN } from '@/data/campaign'
+import { formatCampaignDate } from '@/utils/campaign'
+
+const { registrationClosesAt } = CAMPAIGN
 ---
 
 <form id="coupon-form" class="space-y-6">
-  <div>
-    <label class="sr-only">Código del cupón</label>
-
-    <!-- Input oculto para enviar el valor del formulario -->
-    <input type="hidden" id="coupon-value" name="coupon" required />
-
-    <!-- Contenedor de los inputs tipo OTP -->
-    <div class="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
-      <!-- Primer grupo: XXXX -->
-      <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="0">
-        <input
-          type="text"
-          maxlength="1"
-          data-index="0"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="1"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="2"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="3"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-      </div>
-
-      <!-- Separador -->
-      <div class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl">-</div>
-
-      <!-- Segundo grupo: XXXX -->
-      <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="1">
-        <input
-          type="text"
-          maxlength="1"
-          data-index="4"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="5"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="6"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="7"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-      </div>
-
-      <!-- Separador -->
-      <div class="text-brand text-base font-bold sm:text-lg md:text-xl lg:text-2xl">-</div>
-
-      <!-- Tercer grupo: XXXX -->
-      <div class="flex gap-0.5 sm:gap-1 md:gap-2" data-group="2">
-        <input
-          type="text"
-          maxlength="1"
-          data-index="8"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="9"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="10"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-        <input
-          type="text"
-          maxlength="1"
-          data-index="11"
-          autocomplete="off"
-          spellcheck="false"
-          class="coupon-input border-brand/50 focus:ring-brand focus:border-brand h-8 w-6 rounded-md border-2 bg-black/50 text-center font-mono text-base font-bold text-white uppercase transition-all focus:ring-2 focus:outline-none sm:h-10 sm:w-8 sm:text-lg md:h-12 md:w-10 md:text-xl lg:h-14 lg:w-12 lg:text-2xl"
-        />
-      </div>
-    </div>
-
-    <p class="mt-4 text-center text-xs text-white/50">
-      No hace falta introducir el guión, se añadirá automáticamente
-    </p>
-  </div>
-
-  <div class="mx-auto w-full max-w-xl">
-    <Button type="submit" variant="brand" size="lg" class="w-full"> Validar cupón </Button>
-  </div>
+  <input type="hidden" id="coupon-value" name="coupon" required />
+  <CodeInput />
+  <Button type="submit" variant="brand" size="lg" class="w-full">
+    Registrar código
+  </Button>
 </form>
-
-<!-- Mensaje de resultado (entre el botón y la caja de ayuda) -->
 <div id="message-container" class="mt-4">
-  <div
-    id="message"
-    class="invisible relative mx-auto max-w-xl block translate-y-3 scale-90 cursor-crosshair rounded-lg bg-linear-to-bl from-emerald-400 to-green-500 px-5 py-2 text-center text-sm font-semibold text-white opacity-0 shadow ring-4 shadow-emerald-300 ring-white/20 transition duration-300 hover:scale-105"
-  >
-  </div>
+  <div id="message" class="ui-notice hidden" role="status" aria-live="polite"></div>
 </div>
 
 <!-- Contenedor con altura animada para evitar layout shift -->
 <div id="error-help-wrapper" class="error-help-wrapper">
   <div id="error-help-section" class="error-help-content">
-    <div class="error-help-card p-5 md:p-6 rounded-2xl">
+    <Surface padded class="error-help-card">
       <!-- Header -->
       <div class="flex items-center gap-3 mb-5 pb-4 border-b border-white/10">
         <div class="size-10 rounded-full bg-brand/20 flex items-center justify-center">
@@ -163,82 +37,82 @@ import Button from '@/components/Button.astro'
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+            ></path>
             <circle cx="12" cy="17" r="0.5" fill="currentColor"></circle>
           </svg>
         </div>
         <div>
-          <h3 class="text-white font-bold text-base md:text-lg">
-            ¿Algún problema? ¡Tranqui, lo solucionamos! 💪
-          </h3>
-          <p class="text-white/60 text-xs md:text-sm">
-            No te preocupes, tienes hasta el <strong class="text-brand">23 de diciembre</strong> para
-            participar
-          </p>
+          <h3 class="text-white font-bold text-base md:text-lg">¿Necesitas ayuda con el código?</h3>
+          {registrationClosesAt && (
+            <p class="text-white/60 text-xs md:text-sm">
+              No te preocupes, tienes hasta el{' '}
+              <strong class="text-brand">{formatCampaignDate(registrationClosesAt)}</strong> para
+              participar
+            </p>
+          )}
         </div>
       </div>
 
       <!-- Pasos -->
       <div class="space-y-4">
         <div class="flex gap-3">
-          <div
-            class="shrink-0 size-7 rounded-lg bg-brand text-black font-bold text-sm flex items-center justify-center shadow-lg shadow-brand/30"
-          >
+          <div class="shrink-0 size-7 rounded-lg bg-brand text-black font-bold text-sm flex items-center justify-center shadow-lg shadow-brand/30">
             1
           </div>
           <div class="pt-0.5">
             <p class="text-white font-semibold text-sm mb-1">Comprueba el código</p>
             <p class="text-white/70 text-xs md:text-sm leading-relaxed">
               Es fácil confundir caracteres parecidos. Revisa que el número
-              <span
-                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
-                >0</span
-              >
+              <span class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold">
+                0
+              </span>
               no sea la letra
-              <span
-                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
-                >O</span
-              >, o que el
-              <span
-                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
-                >1</span
-              >
+              <span class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold">
+                O
+              </span>
+              , o que el
+              <span class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold">
+                1
+              </span>
               no sea una
-              <span
-                class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold"
-                >I</span
-              >.
+              <span class="inline-flex items-center justify-center size-5 rounded bg-white/10 font-mono text-brand text-xs font-bold">
+                I
+              </span>
+              .
             </p>
           </div>
         </div>
 
         <div class="flex gap-3">
-          <div
-            class="shrink-0 size-7 rounded-lg bg-brand text-black font-bold text-sm flex items-center justify-center shadow-lg shadow-brand/30"
-          >
+          <div class="shrink-0 size-7 rounded-lg bg-brand text-black font-bold text-sm flex items-center justify-center shadow-lg shadow-brand/30">
             2
           </div>
           <div class="pt-0.5">
             <p class="text-white font-semibold text-sm mb-1">¿Te dice que ya está usado?</p>
             <p class="text-white/70 text-xs md:text-sm leading-relaxed">
               Escríbenos a
-              <a href="mailto:hola@bigibai.com" class="text-brand hover:underline font-semibold"
-                >hola@bigibai.com</a
-              >
+              <a href="mailto:hola@bigibai.com" class="text-brand hover:underline font-semibold">
+                hola@bigibai.com
+              </a>
               adjuntando una foto del <strong class="text-white/90">ticket de compra</strong> y del
               <strong class="text-white/90">calendario</strong>. ¡Te ayudamos encantados!
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </Surface>
   </div>
 </div>
 
 <script>
   import { throwConfetti } from '@/utils/confetti'
+  import { showNotice } from '@/components/ui/feedback'
 
   document.addEventListener('astro:page-load', () => {
+    const couponForm = document.getElementById('coupon-form') as HTMLFormElement | null
+    if (!couponForm || couponForm.dataset.ready) return
+    couponForm.dataset.ready = 'true'
     const couponInputs = document.querySelectorAll('.coupon-input') as NodeListOf<HTMLInputElement>
     const hiddenInput = document.getElementById('coupon-value') as HTMLInputElement
     const headerParticipationCount = document.getElementById(
@@ -255,39 +129,10 @@ import Button from '@/components/Button.astro'
 
     // Función para actualizar el ticket
     function updateTicket(totalCoupons: number) {
-      const ticketContent = document.getElementById('ticket-content')
-      if (!ticketContent) return
-
-      const ticketCouponCount = document.getElementById('ticket-coupon-count')
-      const ticketCouponText = document.getElementById('ticket-coupon-text')
-
-      // Si el usuario tiene cupones
-      if (totalCoupons > 0) {
-        // Si ya existe el contenido con cupones, solo actualizar los números
-        if (ticketCouponCount && ticketCouponText) {
-          ticketCouponCount.textContent = totalCoupons.toString()
-          ticketCouponText.textContent = totalCoupons === 1 ? 'participación' : 'participaciones'
-        } else {
-          // Si no existe (era el estado sin cupones), reemplazar todo el contenido
-          ticketContent.innerHTML = `
-            <div class="space-y-2 text-center">
-              <p id="participation-status" class="text-lg md:text-xl font-bold text-white/70">
-                Ya tienes <span class="text-brand" id="ticket-coupon-count">${totalCoupons}</span> 
-                <span id="ticket-coupon-text">${totalCoupons === 1 ? 'participación' : 'participaciones'}</span>
-              </p>
-              <p class="text-white/60 text-xs md:text-sm px-2">
-                Ingresa un código arriba para seguir sumando participaciones en el sorteo
-              </p>
-              <p class="flex items-center justify-center gap-2 text-xs text-brand/80 mx-auto">
-                <svg aria-hidden="true" class="h-2.5 w-2.5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                <span>Introduce un nuevo código</span>
-              </p>
-            </div>
-          `
-        }
-      }
+      const count = document.getElementById('ticket-coupon-count')
+      const label = document.getElementById('ticket-coupon-text')
+      if (count) count.textContent = String(totalCoupons)
+      if (label) label.textContent = totalCoupons === 1 ? 'participación' : 'participaciones'
     }
 
     // Manejar input en cada caja
@@ -342,13 +187,7 @@ import Button from '@/components/Button.astro'
       })
     })
 
-    // Focus en el primer input al cargar
-    if (couponInputs.length > 0) {
-      couponInputs[0].focus()
-    }
-
     // Manejar el submit del formulario
-    const couponForm = document.getElementById('coupon-form') as HTMLFormElement
     const messageContainer = document.getElementById('message') as HTMLDivElement
 
     if (couponForm) {
@@ -439,7 +278,7 @@ import Button from '@/components/Button.astro'
           // Rehabilitar el botón
           if (submitButton) {
             submitButton.disabled = false
-            submitButton.textContent = 'Validar cupón'
+            submitButton.textContent = 'Registrar código'
           }
         } catch (error) {
           console.error('Error al validar el cupón:', error)
@@ -451,7 +290,7 @@ import Button from '@/components/Button.astro'
           ) as HTMLButtonElement
           if (submitButton) {
             submitButton.disabled = false
-            submitButton.textContent = 'Validar cupón'
+            submitButton.textContent = 'Registrar código'
           }
         }
       })
@@ -471,48 +310,8 @@ import Button from '@/components/Button.astro'
     // Función para mostrar mensajes
     function showMessage(text: string, isError = false) {
       if (!messageContainer) return
-
-      messageContainer.textContent = text
-      messageContainer.classList.remove('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
-      messageContainer.classList.add('opacity-100', 'translate-y-0', 'scale-100')
-
-      if (isError) {
-        messageContainer.classList.remove(
-          'from-emerald-400',
-          'to-green-500',
-          'shadow-emerald-300',
-          'text-white'
-        )
-        messageContainer.classList.add(
-          'from-red-400',
-          'to-pink-600',
-          'shadow-pink-400',
-          'text-white'
-        )
-        // Mostrar la sección de ayuda cuando hay error
-        showErrorHelp(true)
-      } else {
-        messageContainer.classList.remove(
-          'from-red-400',
-          'to-pink-600',
-          'shadow-pink-400',
-          'text-white'
-        )
-        messageContainer.classList.add(
-          'from-emerald-400',
-          'to-green-500',
-          'shadow-emerald-300',
-          'text-white'
-        )
-        // Ocultar la sección de ayuda cuando hay éxito
-        showErrorHelp(false)
-      }
-
-      // Ocultar el mensaje después de 5 segundos (pero mantener la ayuda visible)
-      setTimeout(() => {
-        messageContainer.classList.add('invisible', 'opacity-0', 'translate-y-3', 'scale-90')
-        messageContainer.classList.remove('opacity-100', 'translate-y-0', 'scale-100')
-      }, 5000)
+      showNotice(messageContainer, text, isError ? 'error' : 'success')
+      showErrorHelp(isError)
     }
   })
 </script>
@@ -553,15 +352,5 @@ import Button from '@/components/Button.astro'
   .error-help-wrapper.is-visible .error-help-content > div {
     opacity: 1;
     transform: translateY(0);
-  }
-
-  /* Estilo tipo BentoCard para la caja de ayuda */
-  .error-help-card {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(0, 41, 107, 0.6) 100%);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-      0 10px 40px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 </style>

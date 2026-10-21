@@ -1,55 +1,63 @@
 ---
-import AchievementNotification from '@/components/AchievementNotification.astro'
+import Surface from '@/components/ui/Surface.astro'
 import GameSuccessContent from '@/components/games/GameSuccessContent.astro'
 
 export interface Props {
   prize: string
   videoUrl?: string
+  canvas?: boolean
+  videoMessage?: string
 }
 
-const { prize, videoUrl } = Astro.props
+const {
+  prize,
+  videoUrl,
+  canvas = true,
+  videoMessage = 'Completa el reto para descubrir el vídeo.',
+} = Astro.props
+const cleanVideo = videoUrl?.replace(/\.(mp4|webm)$/, '')
+const videoBase = cleanVideo?.startsWith('http')
+  ? cleanVideo
+  : cleanVideo
+    ? `https://videos.bigibai.com/premios/${cleanVideo}`
+    : undefined
 ---
 
-<div class="screen-content game-layout">
-  <!-- Columna Izquierda: Juego -->
-  <div class="game-column">
+<div class:list={['screen-content game-layout', { 'game-layout--form': !canvas }]}>
+  <Surface padded class="game-column">
     <div id="game-active-content">
-      <div class="game-canvas-container">
+      <div class:list={[canvas ? 'game-canvas-container' : 'game-form-container']}>
         <slot name="game" />
       </div>
     </div>
-
-    <!-- Contenido de éxito (Oculto inicialmente) -->
     <GameSuccessContent prize={prize} />
-  </div>
-
-  <!-- Columna Derecha: Video Placeholder / Resultado -->
-  <div class="video-column">
-    <div id="video-placeholder" class="video-placeholder h-full">
+  </Surface>
+  <Surface padded class="video-column">
+    <div id="video-placeholder" class="video-placeholder">
       <div class="placeholder-content">
-        <span class="text-6xl mb-4">🎬</span>
-        <p class="text-white/60 text-center">Completa el juego para desbloquear el vídeo</p>
+        <svg
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="3" />
+          <path d="m10 8 6 4-6 4z" />
+        </svg>
+        <p>{videoMessage}</p>
       </div>
-      <video
-        id="prize-video"
-        class="hidden w-full h-full object-cover rounded-lg"
-        playsinline
-        muted
-        loop
-      >
-        {videoUrl === 'mock' ? (
-          <source src="/videos/mock.mp4" type="video/mp4" />
-        ) : (
-          <source src={`https://videos.bigibai.com/premios/${videoUrl}.webm`} type="video/webm" />
-          <source src={`https://videos.bigibai.com/premios/${videoUrl}.mp4`} type="video/mp4" />
-        )}
-      </video>
+      {videoBase && (
+        <video id="prize-video" class="hidden w-full h-full object-cover" playsinline muted loop>
+          <source src={`${videoBase}.webm`} type="video/webm" />
+          <source src={`${videoBase}.mp4`} type="video/mp4" />
+        </video>
+      )}
     </div>
-  </div>
+  </Surface>
 </div>
-
-<!-- Notificación de Logro -->
-<AchievementNotification />
 
 <script>
   import confetti from 'canvas-confetti'
@@ -72,7 +80,7 @@ const { prize, videoUrl } = Astro.props
     if (video) {
       video.classList.remove('hidden')
       video.muted = false
-      video.play()
+      void video.play().catch(() => {})
 
       // Scroll automático al vídeo para que esté visible en el viewport
       setTimeout(() => {
@@ -121,57 +129,88 @@ const { prize, videoUrl } = Astro.props
 <style>
   .game-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: center;
-    max-width: 1000px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+    max-width: 1080px;
     width: 100%;
+    margin-inline: auto;
   }
-
-  .game-column,
-  .video-column {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    border: 2px solid rgba(248, 177, 52, 0.3);
-  }
-
   .game-canvas-container {
     position: relative;
     width: 100%;
     max-width: 450px;
-    margin: 0 auto;
+    margin-inline: auto;
     aspect-ratio: 9/16;
-    background: #000;
-    border-radius: 0.5rem;
+    background: var(--surface-inset);
+    border-radius: var(--radius-control);
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   }
-
+  .game-form-container {
+    min-height: 340px;
+    padding-block: 16px;
+  }
   .video-placeholder {
-    aspect-ratio: 9/16;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 0.5rem;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px dashed rgba(255, 255, 255, 0.2);
+    aspect-ratio: 9/16;
     overflow: hidden;
-    position: relative;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
+    background: var(--surface-inset);
   }
-
+  .game-layout--form .video-placeholder {
+    aspect-ratio: 1;
+  }
   .placeholder-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 22px;
+    padding: 30px;
+    text-align: center;
   }
-
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
+  .placeholder-content svg {
+    color: var(--brand-accent);
+  }
+  .placeholder-content p {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text-muted);
+    max-width: 25ch;
+  }
+  :global(#casilla-flow .game-layout .ui-button) {
+    font-family: var(--font-body);
+    border-radius: var(--radius-control);
+    text-shadow: none;
+  }
+  :global(#casilla-flow .game-layout .ui-button--brand) {
+    background: var(--brand-accent);
+    color: var(--brand-ink);
+    border: 1px solid var(--brand-accent);
+    box-shadow: 0 3px 0 var(--brand-edge);
+  }
+  :global(#casilla-flow .game-layout .ui-button--secondary) {
+    background: var(--surface-raised);
+    color: var(--text-heading);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
+  }
+  @media (max-width: 760px) {
     .game-layout {
       grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .game-column,
+    .video-column {
+      padding: 16px;
+    }
+    .video-placeholder {
+      max-width: 360px;
+      margin-inline: auto;
     }
   }
 </style>

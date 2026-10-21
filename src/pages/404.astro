@@ -1,30 +1,33 @@
 ---
-import Layout from '@/layouts/Layout.astro'
-import Footer from '@/sections/Footer.astro'
-import Header from '@/sections/Header.astro'
+import PageLayout from '@/layouts/PageLayout.astro'
+import SectionHeading from '@/components/ui/SectionHeading.astro'
 import Button from '@/components/Button.astro'
+import BrandLogo from '@/components/ui/BrandLogo.astro'
 ---
 
-<Layout>
-  <div class="flex min-h-screen flex-col">
-    <Header />
-    <div class="flex flex-1">
-      <section class="max-w-4xl mx-auto px-4 py-20 flex justify-center items-center flex-col gap-8">
-        <h1
-          class="text-6xl md:text-8xl text-brand text-balance text-center"
-          aria-label="Big Ibai aún no ha llegado a estas tierras"
-        >
-          Big Ibai aún no ha llegado a estas tierras
-        </h1>
-        <Button
-          href="/"
-          size="lg"
-          aria-label="Volver al inicio"
-        >
-          Volver al Inicio
-        </Button>
-      </section>
-    </div>
-    <Footer />
+<PageLayout title="Página no encontrada | Big Ibai" width="reading">
+  <div class="not-found">
+    <BrandLogo variant="icon" width={50} />
+    <SectionHeading
+      as="h1"
+      size="page"
+      align="center"
+      eyebrow="Error 404"
+      title="Por aquí todavía no pasa la fábrica."
+      description="No encontramos la página que buscas. Vuelve al inicio para descubrir el calendario y las novedades de Big Ibai."
+    />
+    <Button href="/" size="lg">
+      Volver al inicio
+    </Button>
   </div>
-</Layout>
+</PageLayout>
+<style>
+  .not-found {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding-block: 40px;
+    text-align: center;
+  }
+</style>

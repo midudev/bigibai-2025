@@ -1,4 +1,5 @@
 ---
+import Button from '@/components/Button.astro'
 import GameLayout from '@/components/games/GameLayout.astro'
 
 export interface Props {
@@ -46,7 +47,11 @@ const GAME_DATA = {
 
     <!-- Start Screen -->
     <div id="start-screen" class="modal active">
-      <h1>PIXEL<br />CHASE</h1>
+      <h1>
+        PIXEL
+        <br />
+        CHASE
+      </h1>
 
       <div class="instructions">
         <p class="subtitle">🚗 HUYE DE LA POLICÍA 🚓</p>
@@ -57,15 +62,21 @@ const GAME_DATA = {
         <p class="controls-hint">🔥 ESPACIO = NITRO (acelera x2)</p>
       </div>
 
-      <button id="start-btn" class="menu-btn blink">¡ACELERA!</button>
+      <Button variant="brand" size="sm" id="start-btn" class="menu-btn blink">
+        ¡ACELERA!
+      </Button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="modal hidden">
       <h1 class="danger">¡WASTED!</h1>
       <p>Tu coche ha sido destruido</p>
-      <p>Aguantaste <span id="survived-time">0</span> segundos</p>
-      <button id="restart-btn" class="menu-btn">REINTENTAR</button>
+      <p>
+        Aguantaste <span id="survived-time">0</span> segundos
+      </p>
+      <Button variant="brand" size="sm" id="restart-btn" class="menu-btn">
+        REINTENTAR
+      </Button>
     </div>
 
     <!-- Win Screen -->
@@ -100,12 +111,12 @@ const GAME_DATA = {
 
       <div class="action-wrapper">
         <div id="btn-boost" class="action-btn">
-          <svg class="fire-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            ><path
+          <svg class="fire-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
               fill="currentColor"
               d="M19 13v-3h-1V9h-1V6h-1V4h-1V3h-1V2h-1V1h-2v1h1v2h-1v2h-1v1H9v1H8v1H7v1H6v3h1v2H6v-1H5v-2H4v2H3v3h1v2h1v1h1v1h1v1h1v1h8v-1h1v-1h1v-1h1v-2h1v-5zm-2 7h-1v1h-2v1h-4v-1H9v-4h1v-1h1v-1h1v-1h1v-3h-1v-1h-1V9h1v1h2v2h1v5h-1v2h1v-1h1v-1h1z"
-            ></path></svg
-          >
+            ></path>
+          </svg>
         </div>
         <div class="control-label">NITRO</div>
       </div>
@@ -1081,7 +1092,7 @@ const GAME_DATA = {
           cop.y -= 150
           cop.speed = 40
           // Also push horizontally away from player
-          cop.x += (cop.x > player.x ? 40 : -40)
+          cop.x += cop.x > player.x ? 40 : -40
         }
       }
     }

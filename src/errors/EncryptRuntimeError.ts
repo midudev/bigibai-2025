@@ -1,4 +1,9 @@
-type ErrorCodes = 'UNDEFINED_ECRYPTION_SECRET' | 'ENCRYPTION_SECRET_LENGTH' | 'UNCERTAIN'
+type ErrorCodes =
+  | 'UNDEFINED_ECRYPTION_SECRET'
+  | 'ENCRYPTION_SECRET_LENGTH'
+  | 'UNDEFINED_COUPON_HMAC_SECRET'
+  | 'COUPON_HMAC_SECRET_LENGTH'
+  | 'UNCERTAIN'
 
 /**
  * Error en tiempo de ejecución al encriptar
@@ -17,13 +22,10 @@ export default class EncryptRuntimeError extends Error {
   }
 
   log(): this {
-    const secret = import.meta.env.ENCRYPTION_SECRET || '<undefined>'
-
     // use chalk to make it colorful [pnpm i chalk]
     console.error(`
     [!] ${this.name}: | ${this.code} |...
       └── [+] Message: "${this.message}"
-    ${secret != '<undefined>' ? `       └── [*] On: /.env ==> ENCRYPTION_SECRET=${secret}` : ''}
     `)
     return this
   }

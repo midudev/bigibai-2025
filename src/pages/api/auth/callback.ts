@@ -1,5 +1,6 @@
 import { createClient } from '@/supabase'
 import { type APIRoute } from 'astro'
+import { CAMPAIGN } from '@/data/campaign'
 
 const allowedPaths = ['/dashboard', '/registro', '/']
 
@@ -14,6 +15,8 @@ function isSafeRedirect(path: string): boolean {
 }
 
 export const GET: APIRoute = async ({ request, url, cookies, redirect }) => {
+  if (!CAMPAIGN.signInEnabled) return redirect('/registro')
+
   const code = url.searchParams.get('code')
   const next = url.searchParams.get('next') || '/dashboard'
   const safePath = isSafeRedirect(next) ? next : '/dashboard'

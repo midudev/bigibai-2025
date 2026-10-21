@@ -1,3 +1,6 @@
+import { CAMPAIGN } from '@/data/campaign'
+import { getDaysUntilChristmas, isDayUnlocked } from '@/utils/campaign'
+
 // Tipos de juegos disponibles
 export type GameType =
   | 'anagram'
@@ -31,7 +34,6 @@ export type GameType =
 // Configuración de cada día
 interface DayConfig {
   day: number
-  description: string
   gameType: GameType
   prize?: string
   gameData?: {
@@ -129,8 +131,8 @@ const VIDEO_URLS: Record<number, string> = {
 }
 
 // Función auxiliar para obtener la URL del video según el día
-function getVideoUrlForDay(day: number): string {
-  return VIDEO_URLS[day] || 'mock'
+function getVideoUrlForDay(day: number): string | undefined {
+  return VIDEO_URLS[day]
 }
 
 // Datos específicos de cada día
@@ -233,34 +235,18 @@ const GAME_DATA: Record<number, DayConfig['gameData']> = {
   },
 }
 
-function getDescriptionForDay(day: number): string {
-  const today = new Date()
-  const currentYear = today.getFullYear()
-
-  // Calcular días hasta Navidad
-  let christmas = new Date(currentYear, 11, 25)
-  if (today > christmas) {
-    christmas = new Date(currentYear + 1, 11, 25)
-  }
-  const daysUntil = Math.max(
-    0,
-    Math.ceil((christmas.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-  )
-
-  // Obtener día actual (0 si no estamos en diciembre)
-  const currentDay = today.getMonth() === 11 ? today.getDate() : 0
-
-  // Si el día ya pasó o es hoy, descripción personalizada
-  return day <= currentDay
+// Se calcula en cada petición (no al cargar el módulo) para que cambie al pasar el día
+export function getDayDescription(day: number, now: Date): string {
+  // Si el día ya está desbloqueado, descripción personalizada
+  return isDayUnlocked(day, now)
     ? DESCRIPTIONS[day - 1]
-    : `y ${daysUntil} días para Navidad - Casilla ${day}/24`
+    : `y ${getDaysUntilChristmas(now)} días para Navidad - Casilla ${day}/${CAMPAIGN.totalDays}`
 }
 
-export const cells: DayConfig[] = Array.from({ length: 24 }, (_, i) => {
+export const cells: DayConfig[] = Array.from({ length: CAMPAIGN.totalDays }, (_, i) => {
   const day = i + 1
   return {
     day,
-    description: getDescriptionForDay(day),
     gameType: GAME_CONFIG[day] || 'anagram',
     gameData: GAME_DATA[day],
   }

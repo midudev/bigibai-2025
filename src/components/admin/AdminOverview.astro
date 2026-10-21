@@ -1,0 +1,1147 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro'
+import StatCard from '@/components/ui/StatCard.astro'
+import Surface from '@/components/ui/Surface.astro'
+import Badge from '@/components/ui/Badge.astro'
+import Button from '@/components/Button.astro'
+import Field from '@/components/ui/Field.astro'
+interface Props {
+  userName: string
+  uniqueUsersCount: number
+  totalCouponsUsed: number
+  averageCouponsPerUser: number
+  claimedPercentage: string
+}
+const { userName, uniqueUsersCount, totalCouponsUsed, averageCouponsPerUser, claimedPercentage } =
+  Astro.props
+---
+
+<div class="admin-overview">
+  <div class="admin-content">
+    <div class="space-y-8">
+      <SectionHeading
+        as="h1"
+        size="page"
+        eyebrow="Gestión de la campaña"
+        title="Administración"
+        description={`Bienvenido, ${userName || 'administrador'}. Consulta la actividad y gestiona las participaciones.`}
+      />
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Usuarios con calendarios" value={uniqueUsersCount ?? 0} />
+        <StatCard label="Códigos registrados" value={totalCouponsUsed ?? 0} />
+        <StatCard
+          label="Calendarios por usuario"
+          value={Number(averageCouponsPerUser || 0).toFixed(2)}
+        />
+        <StatCard label="Códigos registrados del total" value={`${claimedPercentage}%`} />
+      </div>
+
+      <!-- Grid de búsquedas -->
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- Sección de validación de cupones -->
+        <Surface padded class="overflow-hidden">
+          <div>
+            <h2 class="ui-heading ui-heading--small mb-4">Validar cupón</h2>
+            <p class="mb-6 text-sm leading-relaxed text-copy">
+              Introduce el código de un cupón para verificar si ha sido usado
+            </p>
+
+            <form id="coupon-validation-form" class="mx-auto max-w-md space-y-4">
+              <div>
+                <Field
+                  label="Código del cupón"
+                  type="text"
+                  id="coupon-input"
+                  name="coupon"
+                  placeholder="Código del cupón"
+                  required
+                />
+              </div>
+
+              <Button type="submit" variant="brand" size="lg" class="w-full">
+                Validar cupón
+              </Button>
+            </form>
+
+            <!-- Resultado de la búsqueda -->
+            <div id="coupon-result" class="mt-6">
+              <!-- Loading -->
+              <Surface id="coupon-loading" status="info" padded class="hidden">
+                <div class="mb-4 text-4xl">⏳</div>
+                <p class="text-copy">Buscando cupón...</p>
+              </Surface>
+
+              <!-- Error -->
+              <Surface id="coupon-error" status="error" padded class="hidden">
+                <div class="mb-4 text-center text-4xl">❌</div>
+                <p id="coupon-error-message" class="text-center text-heading font-bold"></p>
+              </Surface>
+
+              <!-- Cupón no usado -->
+              <Surface id="coupon-unused" status="warning" padded class="hidden">
+                <div class="mb-4 text-center text-4xl">⚠️</div>
+                <h3 class="mb-2 text-center text-xl font-bold text-heading">Cupón no usado</h3>
+                <p class="text-center text-copy">Este cupón existe pero aún no ha sido utilizado</p>
+                <div class="mt-4 text-center">
+                  <p class="text-sm text-muted">
+                    ID: <span id="coupon-unused-id"></span>
+                  </p>
+                </div>
+              </Surface>
+
+              <!-- Cupón usado -->
+              <Surface id="coupon-used" status="success" padded class="hidden">
+                <div class="mb-4 text-center text-4xl">✅</div>
+                <h3 class="mb-4 text-center text-xl font-bold text-heading">Cupón usado</h3>
+
+                <div class="space-y-3 text-copy">
+                  <div id="coupon-is-duplicate-row" class="hidden mb-4">
+                    <div class="flex justify-center pb-3 border-b border-border-subtle">
+                      <Badge tone="info">📋 Este cupón se ha usado dos veces</Badge>
+                    </div>
+                  </div>
+
+                  <!-- Información del uso original (si es duplicado) -->
+                  <div
+                    id="coupon-original-usage"
+                    class="hidden mb-4 pb-4 border-b border-border-subtle"
+                  >
+                    <h4 class="text-sm font-semibold text-heading mb-3 bg-surface-inset px-3 py-2 rounded-md">
+                      🥇 Primer uso del cupón
+                    </h4>
+                    <div class="space-y-2">
+                      <div class="admin-data-row border-b border-border-subtle pb-2">
+                        <span class="font-semibold">ID del cupón:</span>
+                        <span id="coupon-original-id" class="font-mono text-sm"></span>
+                      </div>
+                      <div class="admin-data-row border-b border-border-subtle pb-2">
+                        <span class="font-semibold">Estado:</span>
+                        <span id="coupon-original-reactivable-badge"></span>
+                      </div>
+                      <div class="admin-data-row border-b border-border-subtle pb-2">
+                        <span class="font-semibold">Usuario ID:</span>
+                        <span id="coupon-original-user" class="font-mono text-sm"></span>
+                      </div>
+                      <div id="coupon-original-email-row" class="hidden">
+                        <div class="admin-data-row border-b border-border-subtle pb-2">
+                          <span class="font-semibold">Email:</span>
+                          <span id="coupon-original-email" class="text-sm"></span>
+                        </div>
+                      </div>
+                      <div id="coupon-original-name-row" class="hidden">
+                        <div class="admin-data-row border-b border-border-subtle pb-2">
+                          <span class="font-semibold">Nombre:</span>
+                          <span id="coupon-original-name" class="text-sm"></span>
+                        </div>
+                      </div>
+                      <div class="admin-data-row border-b border-border-subtle pb-2">
+                        <span class="font-semibold">Usado el:</span>
+                        <span id="coupon-original-date" class="text-sm"></span>
+                      </div>
+                      <div id="coupon-original-ip-row" class="hidden">
+                        <div class="admin-data-row border-b border-border-subtle pb-2">
+                          <span class="font-semibold">IP:</span>
+                          <span id="coupon-original-ip" class="font-mono text-sm"></span>
+                        </div>
+                      </div>
+                      <div id="coupon-original-location-row" class="hidden">
+                        <div class="admin-data-row pb-2">
+                          <span class="font-semibold">Ubicación:</span>
+                          <div class="flex flex-col items-end">
+                            <span id="coupon-original-location" class="text-sm"></span>
+                            <span class="text-xs text-muted italic">(aproximada)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Información del segundo uso (si es duplicado) -->
+                  <div id="coupon-second-usage" class="hidden mb-4">
+                    <h4 class="text-sm font-semibold text-heading mb-3 bg-surface-inset px-3 py-2 rounded-md">
+                      🥈 Segundo uso del cupón
+                    </h4>
+                  </div>
+
+                  <!-- Acción para eliminar cupón duplicado -->
+                  <div
+                    id="coupon-duplicate-actions"
+                    class="hidden mt-4 pt-4 border-t border-border-subtle"
+                  >
+                    <div class="flex flex-col gap-2">
+                      <Button
+                        id="delete-duplicate-btn"
+                        variant="destructive"
+                        size="md"
+                        class="w-full"
+                      >
+                        🗑️ Eliminar duplicado y reactivar original
+                      </Button>
+                      <p class="text-xs text-muted text-center">
+                        Esto eliminará el segundo uso y permitirá que el cupón original sea usado de
+                        nuevo.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">ID del cupón:</span>
+                    <span id="coupon-used-id" class="font-mono text-sm"></span>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">Estado:</span>
+                    <span id="coupon-reactivable-badge"></span>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">Usuario ID:</span>
+                    <span id="coupon-used-by" class="font-mono text-sm"></span>
+                  </div>
+
+                  <div id="coupon-used-email-row" class="hidden">
+                    <div class="admin-data-row border-b border-border-subtle pb-2">
+                      <span class="font-semibold">Email:</span>
+                      <span id="coupon-used-email" class="text-sm"></span>
+                    </div>
+                  </div>
+
+                  <div id="coupon-used-name-row" class="hidden">
+                    <div class="admin-data-row border-b border-border-subtle pb-2">
+                      <span class="font-semibold">Nombre:</span>
+                      <span id="coupon-used-name" class="text-sm"></span>
+                    </div>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">Usado el:</span>
+                    <span id="coupon-used-date" class="text-sm"></span>
+                  </div>
+
+                  <div id="coupon-used-ip-row" class="hidden">
+                    <div class="admin-data-row border-b border-border-subtle pb-2">
+                      <span class="font-semibold">IP:</span>
+                      <span id="coupon-used-ip" class="font-mono text-sm"></span>
+                    </div>
+                  </div>
+
+                  <div id="coupon-used-location-row" class="hidden">
+                    <div class="admin-data-row pb-2">
+                      <span class="font-semibold">Ubicación:</span>
+                      <div class="flex flex-col items-end">
+                        <span id="coupon-used-location" class="text-sm"></span>
+                        <span class="text-xs text-muted italic">(aproximada)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Acciones del cupón -->
+                  <div id="coupon-actions" class="mt-4 pt-4 border-t border-border-subtle hidden">
+                    <div class="flex flex-col gap-2">
+                      <Button
+                        id="mark-reactivable-btn"
+                        variant="destructive"
+                        size="md"
+                        class="w-full"
+                      >
+                        ⚠️ Marcar como reactivable
+                      </Button>
+                      <p id="reactivable-status" class="text-xs text-muted text-center hidden">
+                        ✓ Este cupón puede ser usado de nuevo por cualquier usuario
+                      </p>
+                      <Button id="reset-coupon-btn" variant="destructive" size="md" class="w-full">
+                        🔄 Resetear cupón
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Surface>
+            </div>
+          </div>
+        </Surface>
+
+        <!-- Sección de búsqueda de usuario -->
+        <Surface padded class="overflow-hidden">
+          <div>
+            <h2 class="ui-heading ui-heading--small mb-4">Buscar usuario</h2>
+            <p class="mb-6 text-sm leading-relaxed text-copy">
+              Introduce el email o ID de un usuario para ver su información
+            </p>
+
+            <form id="user-search-form" class="mx-auto max-w-md space-y-4">
+              <div>
+                <Field
+                  label="Correo electrónico o ID del usuario"
+                  type="text"
+                  id="user-query-input"
+                  name="query"
+                  placeholder="Email o ID del usuario"
+                  required
+                />
+              </div>
+
+              <Button type="submit" variant="brand" size="lg" class="w-full">
+                Buscar usuario
+              </Button>
+            </form>
+
+            <!-- Resultado de la búsqueda -->
+            <div id="user-result" class="mt-6">
+              <!-- Loading -->
+              <Surface id="user-loading" status="info" padded class="hidden">
+                <div class="mb-4 text-4xl">⏳</div>
+                <p class="text-copy">Buscando usuario...</p>
+              </Surface>
+
+              <!-- Error -->
+              <Surface id="user-error" status="error" padded class="hidden">
+                <div class="mb-4 text-center text-4xl">❌</div>
+                <p id="user-error-message" class="text-center text-heading font-bold"></p>
+              </Surface>
+
+              <!-- Usuario encontrado -->
+              <Surface id="user-found" status="info" padded class="hidden">
+                <div class="mb-4 text-center text-4xl">👤</div>
+                <h3 class="mb-4 text-center text-xl font-bold text-heading">Usuario encontrado</h3>
+
+                <div class="space-y-3 text-copy">
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">ID:</span>
+                    <span id="user-id" class="font-mono text-sm"></span>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">Email:</span>
+                    <span id="user-email" class="text-sm"></span>
+                  </div>
+
+                  <div id="user-name-row" class="hidden">
+                    <div class="admin-data-row border-b border-border-subtle pb-2">
+                      <span class="font-semibold">Nombre:</span>
+                      <span id="user-name" class="text-sm"></span>
+                    </div>
+                  </div>
+
+                  <div id="user-provider-row" class="hidden">
+                    <div class="admin-data-row border-b border-border-subtle pb-2">
+                      <span class="font-semibold">Proveedor:</span>
+                      <span id="user-provider" class="text-sm"></span>
+                    </div>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">Creado:</span>
+                    <span id="user-created" class="text-sm"></span>
+                  </div>
+
+                  <div class="admin-data-row border-b border-border-subtle pb-2">
+                    <span class="font-semibold">Último acceso:</span>
+                    <span id="user-last-signin" class="text-sm"></span>
+                  </div>
+
+                  <div class="admin-data-row pb-2">
+                    <span class="font-semibold">Email verificado:</span>
+                    <span id="user-email-verified" class="text-sm"></span>
+                  </div>
+                </div>
+
+                <!-- Cupones del usuario -->
+                <div id="user-coupons-section" class="mt-4 border-t border-border-subtle pt-4">
+                  <h4 class="mb-3 text-center font-semibold text-heading">
+                    Cupones usados (<span id="user-coupons-count">0</span>)
+                  </h4>
+                  <div id="user-coupons-list" class="max-h-60 space-y-2 overflow-y-auto">
+                    <!-- Los cupones se agregarán aquí dinámicamente -->
+                  </div>
+                  <div id="user-no-coupons" class="hidden text-center">
+                    <p class="text-muted">No ha usado ningún cupón</p>
+                  </div>
+                </div>
+
+                <!-- Logros del usuario -->
+                <div id="user-achievements-section" class="mt-4 border-t border-border-subtle pt-4">
+                  <h4 class="mb-3 text-center font-semibold text-heading">Logros del usuario</h4>
+                  <div id="user-achievements-loading" class="hidden text-center py-4">
+                    <p class="text-muted">Cargando logros...</p>
+                  </div>
+                  <div
+                    id="user-achievements-list"
+                    class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto"
+                  >
+                    <!-- Los logros se agregarán aquí dinámicamente -->
+                  </div>
+                  <div id="user-no-achievements" class="hidden text-center py-4">
+                    <p class="text-muted">No hay logros disponibles</p>
+                  </div>
+                </div>
+              </Surface>
+            </div>
+          </div>
+        </Surface>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  import { buttonClasses } from '@/components/ui/styles'
+
+  document.addEventListener('astro:page-load', () => {
+    const container = document.querySelector<HTMLElement>('.admin-overview')
+    if (!container || container.dataset.ready) return
+    container.dataset.ready = 'true'
+    const $ = container.querySelector.bind(container)
+    const form = $('#coupon-validation-form') as HTMLFormElement
+    const couponInput = $('#coupon-input') as HTMLInputElement
+
+    // Elementos para cupón
+    const couponLoading = $('#coupon-loading') as HTMLDivElement
+    const couponError = $('#coupon-error') as HTMLDivElement
+    const couponErrorMessage = $('#coupon-error-message') as HTMLParagraphElement
+    const couponUnused = $('#coupon-unused') as HTMLDivElement
+    const couponUnusedId = $('#coupon-unused-id') as HTMLSpanElement
+    const couponUsed = $('#coupon-used') as HTMLDivElement
+    const couponUsedId = $('#coupon-used-id') as HTMLSpanElement
+    const couponUsedBy = $('#coupon-used-by') as HTMLSpanElement
+    const couponUsedEmailRow = $('#coupon-used-email-row') as HTMLDivElement
+    const couponUsedEmail = $('#coupon-used-email') as HTMLSpanElement
+    const couponUsedNameRow = $('#coupon-used-name-row') as HTMLDivElement
+    const couponUsedName = $('#coupon-used-name') as HTMLSpanElement
+    const couponUsedDate = $('#coupon-used-date') as HTMLSpanElement
+    const couponUsedIpRow = $('#coupon-used-ip-row') as HTMLDivElement
+    const couponUsedIp = $('#coupon-used-ip') as HTMLSpanElement
+    const couponUsedLocationRow = $('#coupon-used-location-row') as HTMLDivElement
+    const couponUsedLocation = $('#coupon-used-location') as HTMLSpanElement
+    const couponReactivableBadge = $('#coupon-reactivable-badge') as HTMLSpanElement
+    const couponIsDuplicateRow = $('#coupon-is-duplicate-row') as HTMLDivElement
+    const couponSecondUsage = $('#coupon-second-usage') as HTMLDivElement
+    const couponOriginalUsage = $('#coupon-original-usage') as HTMLDivElement
+    const couponOriginalId = $('#coupon-original-id') as HTMLSpanElement
+    const couponOriginalUser = $('#coupon-original-user') as HTMLSpanElement
+    const couponOriginalEmail = $('#coupon-original-email') as HTMLSpanElement
+    const couponOriginalEmailRow = $('#coupon-original-email-row') as HTMLDivElement
+    const couponOriginalName = $('#coupon-original-name') as HTMLSpanElement
+    const couponOriginalNameRow = $('#coupon-original-name-row') as HTMLDivElement
+    const couponOriginalDate = $('#coupon-original-date') as HTMLSpanElement
+    const couponOriginalIp = $('#coupon-original-ip') as HTMLSpanElement
+    const couponOriginalIpRow = $('#coupon-original-ip-row') as HTMLDivElement
+    const couponOriginalLocation = $('#coupon-original-location') as HTMLSpanElement
+    const couponOriginalLocationRow = $('#coupon-original-location-row') as HTMLDivElement
+    const couponOriginalReactivableBadge = $(
+      '#coupon-original-reactivable-badge'
+    ) as HTMLSpanElement
+    const couponActions = $('#coupon-actions') as HTMLDivElement
+    const markReactivableBtn = $('#mark-reactivable-btn') as HTMLButtonElement
+    const reactivableStatus = $('#reactivable-status') as HTMLParagraphElement
+    const resetCouponBtn = $('#reset-coupon-btn') as HTMLButtonElement
+    const couponDuplicateActions = $('#coupon-duplicate-actions') as HTMLDivElement
+    const deleteDuplicateBtn = $('#delete-duplicate-btn') as HTMLButtonElement
+
+    // Variable para almacenar el ID del cupón actual
+    let currentCouponId: string | null = null
+    // Variable para almacenar el ID del cupón duplicado
+    let currentDuplicateCouponId: string | null = null
+
+    // Función para ocultar todos los estados de cupón
+    function hideAllCouponStates() {
+      couponLoading.classList.add('hidden')
+      couponError.classList.add('hidden')
+      couponUnused.classList.add('hidden')
+      couponUsed.classList.add('hidden')
+      couponUsedIpRow.classList.add('hidden')
+      couponUsedLocationRow.classList.add('hidden')
+      couponActions.classList.add('hidden')
+      couponDuplicateActions.classList.add('hidden')
+      currentCouponId = null
+      currentDuplicateCouponId = null
+    }
+
+    // Función para obtener la ubicación de una IP
+    async function getIpLocation(ip: string): Promise<string | null> {
+      try {
+        const response = await fetch(`https://free.freeipapi.com/api/json/${ip}`)
+        if (!response.ok) return null
+
+        const data = await response.json()
+        const locationParts: string[] = []
+
+        if (data.cityName) locationParts.push(data.cityName)
+        if (data.regionName) locationParts.push(data.regionName)
+        if (data.countryName) locationParts.push(data.countryName)
+
+        return locationParts.length > 0 ? locationParts.join(', ') : null
+      } catch (error) {
+        console.error('Error obteniendo ubicación de IP:', error)
+        return null
+      }
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const coupon = couponInput.value.trim()
+      if (!coupon) return
+
+      // Mostrar loading
+      hideAllCouponStates()
+      couponLoading.classList.remove('hidden')
+
+      try {
+        const response = await fetch(
+          `/api/admin/validate-coupon?coupon=${encodeURIComponent(coupon)}`
+        )
+        const data = await response.json()
+
+        hideAllCouponStates()
+
+        if (!response.ok) {
+          // Mostrar error
+          couponErrorMessage.textContent = data.error || 'Error al buscar el cupón'
+          couponError.classList.remove('hidden')
+          return
+        }
+
+        if (!data.is_used) {
+          // Mostrar cupón no usado
+          couponUnusedId.textContent = String(data.id || '')
+          couponUnused.classList.remove('hidden')
+        } else {
+          // Mostrar cupón usado
+          const usedDate = new Date(data.used_at)
+          const formattedDate = usedDate.toLocaleString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+
+          couponUsedId.textContent = String(data.id || '')
+          couponUsedBy.textContent = String(data.used_by || '')
+          couponUsedDate.textContent = formattedDate
+
+          // Mostrar u ocultar campos opcionales
+          if (data.user_email) {
+            couponUsedEmail.textContent = String(data.user_email)
+            couponUsedEmailRow.classList.remove('hidden')
+          } else {
+            couponUsedEmailRow.classList.add('hidden')
+          }
+
+          if (data.user_name) {
+            couponUsedName.textContent = String(data.user_name)
+            couponUsedNameRow.classList.remove('hidden')
+          } else {
+            couponUsedNameRow.classList.add('hidden')
+          }
+
+          if (data.used_ip) {
+            couponUsedIp.textContent = String(data.used_ip)
+            couponUsedIpRow.classList.remove('hidden')
+
+            // Obtener y mostrar la ubicación de la IP
+            couponUsedLocation.textContent = 'Cargando...'
+            couponUsedLocationRow.classList.remove('hidden')
+
+            const location = await getIpLocation(data.used_ip)
+            if (location) {
+              couponUsedLocation.textContent = location
+            } else {
+              couponUsedLocationRow.classList.add('hidden')
+            }
+          } else {
+            couponUsedIpRow.classList.add('hidden')
+            couponUsedLocationRow.classList.add('hidden')
+          }
+
+          // Mostrar si es un duplicado (tiene un segundo uso)
+          if (data.is_duplicate && data.duplicate_usage) {
+            couponIsDuplicateRow.classList.remove('hidden')
+            couponSecondUsage.classList.remove('hidden')
+
+            // Los datos en el nivel superior son del PRIMER uso (original)
+            // Ya se mostraron arriba en las líneas 578-624
+
+            // Ahora mostramos información del PRIMER uso en la sección de "primer uso"
+            couponOriginalId.textContent = String(data.id || '')
+            couponOriginalUser.textContent = String(data.used_by || '')
+            couponOriginalDate.textContent = formattedDate // Ya formateado arriba
+
+            // Email del primer uso
+            if (data.user_email) {
+              couponOriginalEmail.textContent = String(data.user_email)
+              couponOriginalEmailRow.classList.remove('hidden')
+            } else {
+              couponOriginalEmailRow.classList.add('hidden')
+            }
+
+            // Nombre del primer uso
+            if (data.user_name) {
+              couponOriginalName.textContent = String(data.user_name)
+              couponOriginalNameRow.classList.remove('hidden')
+            } else {
+              couponOriginalNameRow.classList.add('hidden')
+            }
+
+            // IP del primer uso
+            if (data.used_ip) {
+              couponOriginalIp.textContent = String(data.used_ip)
+              couponOriginalIpRow.classList.remove('hidden')
+
+              // Obtener y mostrar la ubicación de la IP original
+              couponOriginalLocation.textContent = 'Cargando...'
+              couponOriginalLocationRow.classList.remove('hidden')
+
+              const originalLocation = await getIpLocation(data.used_ip)
+              if (originalLocation) {
+                couponOriginalLocation.textContent = originalLocation
+              } else {
+                couponOriginalLocationRow.classList.add('hidden')
+              }
+            } else {
+              couponOriginalIpRow.classList.add('hidden')
+              couponOriginalLocationRow.classList.add('hidden')
+            }
+
+            // Estado del cupón original (ya no es reactivable después de ser reusado)
+            couponOriginalReactivableBadge.innerHTML =
+              '<span class="ui-badge ui-badge--error">Ya reusado</span>'
+
+            couponOriginalUsage.classList.remove('hidden')
+
+            // Ahora mostramos la información del SEGUNDO uso (duplicate_usage)
+            const duplicateUsage = data.duplicate_usage
+            const duplicateUsedDate = new Date(duplicateUsage.used_at)
+            const duplicateFormattedDate = duplicateUsedDate.toLocaleString('es-ES', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+
+            // Reemplazar los datos del nivel superior con los del segundo uso
+            couponUsedId.textContent = String(duplicateUsage.id || '')
+            couponUsedBy.textContent = String(duplicateUsage.used_by || '')
+            couponUsedDate.textContent = duplicateFormattedDate
+
+            // Email del segundo uso
+            if (duplicateUsage.user_email) {
+              couponUsedEmail.textContent = String(duplicateUsage.user_email)
+              couponUsedEmailRow.classList.remove('hidden')
+            } else {
+              couponUsedEmailRow.classList.add('hidden')
+            }
+
+            // Nombre del segundo uso
+            if (duplicateUsage.user_name) {
+              couponUsedName.textContent = String(duplicateUsage.user_name)
+              couponUsedNameRow.classList.remove('hidden')
+            } else {
+              couponUsedNameRow.classList.add('hidden')
+            }
+
+            // IP del segundo uso
+            if (duplicateUsage.used_ip) {
+              couponUsedIp.textContent = String(duplicateUsage.used_ip)
+              couponUsedIpRow.classList.remove('hidden')
+
+              // Obtener y mostrar la ubicación de la IP del segundo uso
+              couponUsedLocation.textContent = 'Cargando...'
+              couponUsedLocationRow.classList.remove('hidden')
+
+              const duplicateLocation = await getIpLocation(duplicateUsage.used_ip)
+              if (duplicateLocation) {
+                couponUsedLocation.textContent = duplicateLocation
+              } else {
+                couponUsedLocationRow.classList.add('hidden')
+              }
+            } else {
+              couponUsedIpRow.classList.add('hidden')
+              couponUsedLocationRow.classList.add('hidden')
+            }
+          } else {
+            couponIsDuplicateRow.classList.add('hidden')
+            couponOriginalUsage.classList.add('hidden')
+            couponSecondUsage.classList.add('hidden')
+          }
+
+          // Mostrar estado de reactivable
+          if (data.is_reactivable) {
+            couponReactivableBadge.innerHTML =
+              '<span class="ui-badge ui-badge--success">✓ Reactivable</span>'
+          } else if (data.is_duplicate) {
+            couponReactivableBadge.innerHTML =
+              '<span class="ui-badge ui-badge--info">Reusado</span>'
+          } else {
+            couponReactivableBadge.innerHTML = '<span class="ui-badge ui-badge--error">Usado</span>'
+          }
+
+          // Configurar acciones del cupón
+          currentCouponId = String(data.id || '')
+          if (data.is_duplicate && data.duplicate_usage) {
+            // Si es un duplicado, mostrar acciones de duplicado
+            couponActions.classList.add('hidden')
+            currentDuplicateCouponId = String(data.duplicate_usage.id || '')
+            couponDuplicateActions.classList.remove('hidden')
+          } else {
+            // No es duplicado, mostrar acciones normales
+            couponDuplicateActions.classList.add('hidden')
+            currentDuplicateCouponId = null
+            if (data.is_reactivable) {
+              markReactivableBtn.disabled = true
+              markReactivableBtn.classList.add('opacity-50', 'cursor-not-allowed')
+              reactivableStatus.classList.remove('hidden')
+            } else {
+              markReactivableBtn.disabled = false
+              markReactivableBtn.classList.remove('opacity-50', 'cursor-not-allowed')
+              reactivableStatus.classList.add('hidden')
+            }
+            couponActions.classList.remove('hidden')
+          }
+
+          couponUsed.classList.remove('hidden')
+        }
+      } catch (error) {
+        console.error('Error:', error)
+        hideAllCouponStates()
+        couponErrorMessage.textContent = 'Error al validar el cupón. Inténtalo de nuevo más tarde.'
+        couponError.classList.remove('hidden')
+      }
+    })
+
+    // Event listener para marcar cupón como reactivable
+    markReactivableBtn?.addEventListener('click', async () => {
+      if (!currentCouponId) return
+
+      const originalText = markReactivableBtn.textContent
+      markReactivableBtn.disabled = true
+      markReactivableBtn.textContent = 'Marcando...'
+
+      try {
+        const response = await fetch('/api/admin/mark-coupon-reactivable', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ couponId: currentCouponId }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          alert(`Error: ${data.error || 'No se pudo marcar el cupón como reactivable'}`)
+          markReactivableBtn.disabled = false
+          markReactivableBtn.textContent = originalText
+          return
+        }
+
+        // Actualizar UI
+        markReactivableBtn.disabled = true
+        markReactivableBtn.classList.add('opacity-50', 'cursor-not-allowed')
+        markReactivableBtn.textContent = originalText
+        reactivableStatus.classList.remove('hidden')
+
+        // Actualizar badge de estado
+        couponReactivableBadge.innerHTML =
+          '<span class="ui-badge ui-badge--success">✓ Reactivable</span>'
+      } catch (error) {
+        console.error('Error al marcar cupón como reactivable:', error)
+        alert('Error al marcar el cupón como reactivable. Inténtalo de nuevo.')
+        markReactivableBtn.disabled = false
+        markReactivableBtn.textContent = originalText
+      }
+    })
+
+    // Event listener para resetear cupón
+    resetCouponBtn?.addEventListener('click', async () => {
+      if (!currentCouponId) return
+
+      // Confirmar acción con el usuario
+      if (
+        !confirm(
+          '¿Estás seguro de que quieres resetear este cupón? Esta acción quitará el cupón del usuario y lo dejará disponible para usar de nuevo.'
+        )
+      ) {
+        return
+      }
+
+      const originalText = resetCouponBtn.textContent
+      resetCouponBtn.disabled = true
+      resetCouponBtn.textContent = 'Reseteando...'
+
+      try {
+        const response = await fetch('/api/admin/reset-coupon', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ couponId: currentCouponId }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          alert(`Error: ${data.error || 'No se pudo resetear el cupón'}`)
+          resetCouponBtn.disabled = false
+          resetCouponBtn.textContent = originalText
+          return
+        }
+
+        // Mostrar mensaje de éxito
+        alert('✅ Cupón reseteado correctamente')
+
+        // Limpiar el formulario y ocultar todos los estados
+        hideAllCouponStates()
+        couponInput.value = ''
+        resetCouponBtn.textContent = originalText
+      } catch (error) {
+        console.error('Error al resetear cupón:', error)
+        alert('Error al resetear el cupón. Inténtalo de nuevo.')
+        resetCouponBtn.disabled = false
+        resetCouponBtn.textContent = originalText
+      }
+    })
+
+    // Script para búsqueda de usuario
+    const userForm = $('#user-search-form') as HTMLFormElement
+    const queryInput = $('#user-query-input') as HTMLInputElement
+
+    // Elementos para usuario
+    const userLoading = $('#user-loading') as HTMLDivElement
+    const userError = $('#user-error') as HTMLDivElement
+    const userErrorMessage = $('#user-error-message') as HTMLParagraphElement
+    const userFound = $('#user-found') as HTMLDivElement
+    const userId = $('#user-id') as HTMLSpanElement
+    const userEmail = $('#user-email') as HTMLSpanElement
+    const userNameRow = $('#user-name-row') as HTMLDivElement
+    const userName = $('#user-name') as HTMLSpanElement
+    const userProviderRow = $('#user-provider-row') as HTMLDivElement
+    const userProvider = $('#user-provider') as HTMLSpanElement
+    const userCreated = $('#user-created') as HTMLSpanElement
+    const userLastSignin = $('#user-last-signin') as HTMLSpanElement
+    const userEmailVerified = $('#user-email-verified') as HTMLSpanElement
+    const userCouponsCount = $('#user-coupons-count') as HTMLSpanElement
+    const userCouponsList = $('#user-coupons-list') as HTMLDivElement
+    const userNoCoupons = $('#user-no-coupons') as HTMLDivElement
+
+    // Función para ocultar todos los estados de usuario
+    function hideAllUserStates() {
+      userLoading.classList.add('hidden')
+      userError.classList.add('hidden')
+      userFound.classList.add('hidden')
+    }
+
+    userForm?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const query = queryInput.value.trim()
+      if (!query) return
+
+      // Mostrar loading
+      hideAllUserStates()
+      userLoading.classList.remove('hidden')
+
+      try {
+        const response = await fetch(`/api/admin/search-user?query=${encodeURIComponent(query)}`)
+        const data = await response.json()
+
+        hideAllUserStates()
+
+        if (!response.ok) {
+          // Mostrar error
+          userErrorMessage.textContent = data.error || 'Error al buscar el usuario'
+          userError.classList.remove('hidden')
+          return
+        }
+
+        // Formatear fechas
+        const createdDate = new Date(data.created_at)
+        const formattedCreatedDate = createdDate.toLocaleString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+
+        const lastSignIn = data.last_sign_in_at
+          ? new Date(data.last_sign_in_at).toLocaleString('es-ES', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : 'Nunca'
+
+        // Actualizar datos del usuario
+        userId.textContent = String(data.id || '')
+        userEmail.textContent = String(data.email || '')
+        userCreated.textContent = formattedCreatedDate
+        userLastSignin.textContent = lastSignIn
+        userEmailVerified.textContent = data.email_confirmed_at ? '✅ Sí' : '❌ No'
+
+        // Mostrar u ocultar campos opcionales
+        if (data.name) userName.textContent = String(data.name)
+        userNameRow.classList.toggle('hidden', !data.name)
+
+        if (data.provider) userProvider.textContent = String(data.provider)
+        userProviderRow.classList.toggle('hidden', !data.provider)
+
+        // Manejar cupones
+        userCouponsList.innerHTML = '' // Limpiar lista anterior
+
+        if (data.coupons && data.coupons.length > 0) {
+          userCouponsCount.textContent = String(data.coupons.length)
+          userNoCoupons.classList.add('hidden')
+
+          // Crear elementos de cupones de forma segura
+          data.coupons.forEach((coupon: any) => {
+            const usedDate = new Date(coupon.used_at).toLocaleString('es-ES', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+
+            const couponDiv = document.createElement('div')
+            couponDiv.className = 'ui-surface ui-surface--inset p-3'
+
+            const couponContent = document.createElement('div')
+            couponContent.className = 'admin-data-row text-xs text-copy'
+
+            const couponId = document.createElement('span')
+            couponId.textContent = `ID: ${coupon.id || ''}`
+
+            const couponDate = document.createElement('span')
+            couponDate.textContent = usedDate
+
+            couponContent.appendChild(couponId)
+            couponContent.appendChild(couponDate)
+            couponDiv.appendChild(couponContent)
+            userCouponsList.appendChild(couponDiv)
+          })
+        } else {
+          userCouponsCount.textContent = '0'
+          userNoCoupons.classList.remove('hidden')
+        }
+
+        // Cargar logros del usuario
+        await loadUserAchievements(data.id)
+
+        userFound.classList.remove('hidden')
+      } catch (error) {
+        console.error('Error:', error)
+        hideAllUserStates()
+        userErrorMessage.textContent = 'Error al buscar el usuario. Inténtalo de nuevo más tarde.'
+        userError.classList.remove('hidden')
+      }
+    })
+
+    // Elementos para logros
+    const userAchievementsLoading = $('#user-achievements-loading') as HTMLDivElement
+    const userAchievementsList = $('#user-achievements-list') as HTMLDivElement
+    const userNoAchievements = $('#user-no-achievements') as HTMLDivElement
+
+    // Función para cargar logros de un usuario
+    async function loadUserAchievements(userId: string) {
+      if (!userId) return
+
+      // Mostrar loading
+      userAchievementsLoading.classList.remove('hidden')
+      userAchievementsList.classList.add('hidden')
+      userNoAchievements.classList.add('hidden')
+
+      try {
+        const response = await fetch(
+          `/api/admin/user-achievements?userId=${encodeURIComponent(userId)}`
+        )
+        const data = await response.json()
+
+        userAchievementsLoading.classList.add('hidden')
+
+        if (!response.ok) {
+          console.error('Error al cargar logros:', data.error)
+          userNoAchievements.classList.remove('hidden')
+          return
+        }
+
+        if (!data.achievements || data.achievements.length === 0) {
+          userNoAchievements.classList.remove('hidden')
+          return
+        }
+
+        // Limpiar lista anterior
+        userAchievementsList.innerHTML = ''
+
+        // Crear elementos de logros
+        data.achievements.forEach((achievement: any) => {
+          const achievementDiv = document.createElement('div')
+          achievementDiv.className = `ui-surface p-3 ${
+            achievement.unlocked
+              ? 'ui-surface--status ui-status--success'
+              : 'ui-surface--inset opacity-60'
+          }`
+
+          const achievementContent = document.createElement('div')
+          achievementContent.className = 'flex flex-col items-center gap-2'
+
+          // Imagen del logro
+          const achievementImg = document.createElement('img')
+          achievementImg.src = achievement.image
+          achievementImg.alt = achievement.title
+          achievementImg.className = `w-12 h-12 object-contain ${
+            achievement.unlocked ? '' : 'grayscale'
+          }`
+
+          // Título del logro
+          const achievementTitle = document.createElement('p')
+          achievementTitle.className = 'text-xs font-bold text-heading text-center leading-tight'
+          achievementTitle.textContent = achievement.title
+
+          // Estado y botón
+          const achievementActions = document.createElement('div')
+          achievementActions.className = 'flex flex-col items-center gap-1 w-full'
+
+          const achievementStatus = document.createElement('span')
+          achievementStatus.className = `ui-badge ui-badge--${achievement.unlocked ? 'success' : 'muted'}`
+          achievementStatus.textContent = achievement.unlocked ? '✅ Desbloqueado' : '🔒 Bloqueado'
+
+          const toggleButton = document.createElement('button')
+          toggleButton.type = 'button'
+          toggleButton.className = buttonClasses({
+            variant: achievement.unlocked ? 'destructive' : 'brand',
+            size: 'sm',
+            className: 'w-full',
+          })
+          toggleButton.textContent = achievement.unlocked ? 'Desactivar' : 'Activar'
+          toggleButton.onclick = () =>
+            toggleAchievement(userId, achievement.id, !achievement.unlocked)
+
+          achievementActions.appendChild(achievementStatus)
+          achievementActions.appendChild(toggleButton)
+
+          achievementContent.appendChild(achievementImg)
+          achievementContent.appendChild(achievementTitle)
+          achievementContent.appendChild(achievementActions)
+          achievementDiv.appendChild(achievementContent)
+
+          userAchievementsList.appendChild(achievementDiv)
+        })
+
+        userAchievementsList.classList.remove('hidden')
+      } catch (error) {
+        console.error('Error al cargar logros:', error)
+        userAchievementsLoading.classList.add('hidden')
+        userNoAchievements.classList.remove('hidden')
+      }
+    }
+
+    // Función para activar/desactivar un logro
+    async function toggleAchievement(userId: string, achievementId: string, activate: boolean) {
+      try {
+        const response = await fetch('/api/admin/user-achievements', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            achievementId,
+            action: activate ? 'activate' : 'deactivate',
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          alert(`Error: ${data.error || 'No se pudo actualizar el logro'}`)
+          return
+        }
+
+        // Recargar logros
+        await loadUserAchievements(userId)
+      } catch (error) {
+        console.error('Error al actualizar logro:', error)
+        alert('Error al actualizar el logro. Inténtalo de nuevo.')
+      }
+    }
+
+    // Event listener para eliminar cupón duplicado
+    deleteDuplicateBtn?.addEventListener('click', async () => {
+      if (!currentDuplicateCouponId) return
+
+      // Confirmar acción con el usuario
+      if (
+        !confirm(
+          '¿Estás seguro de que quieres eliminar este cupón duplicado? Esta acción eliminará el segundo uso y permitirá que el cupón original sea usado de nuevo.'
+        )
+      ) {
+        return
+      }
+
+      const originalText = deleteDuplicateBtn.textContent
+      deleteDuplicateBtn.disabled = true
+      deleteDuplicateBtn.textContent = 'Eliminando...'
+
+      try {
+        const response = await fetch('/api/admin/delete-duplicate-coupon', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ duplicateCouponId: currentDuplicateCouponId }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          alert(`Error: ${data.error || 'No se pudo eliminar el cupón duplicado'}`)
+          deleteDuplicateBtn.disabled = false
+          deleteDuplicateBtn.textContent = originalText
+          return
+        }
+
+        // Mostrar mensaje de éxito
+        alert('✅ Cupón duplicado eliminado y original reactivado correctamente')
+
+        // Limpiar el formulario y ocultar todos los estados
+        hideAllCouponStates()
+        couponInput.value = ''
+        deleteDuplicateBtn.textContent = originalText
+      } catch (error) {
+        console.error('Error al eliminar cupón duplicado:', error)
+        alert('Error al eliminar el cupón duplicado. Inténtalo de nuevo.')
+        deleteDuplicateBtn.disabled = false
+        deleteDuplicateBtn.textContent = originalText
+      }
+    })
+  })
+</script>
+
+<style>
+  .admin-overview :global(.admin-data-row) {
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    align-items: start;
+    gap: 8px 16px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .admin-overview :global(.admin-data-row > :last-child) {
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 640px) {
+    .admin-overview :global(.admin-data-row) {
+      grid-template-columns: 1fr;
+      gap: 3px;
+    }
+    .admin-overview :global(.admin-data-row > :last-child) {
+      text-align: left;
+      align-items: start;
+    }
+  }
+</style>
