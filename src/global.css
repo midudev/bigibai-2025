@@ -1,9 +1,6 @@
 @import 'tailwindcss';
-@import 'tailwind-animations';
 @import './styles/tokens.css';
 @import './styles/components.css';
-@plugin "@tailwindcss/typography";
-@plugin "@toolwind/corner-shape";
 
 @theme {
   --color-brand: var(--brand-accent);
