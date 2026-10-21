@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "bigibai-2025",
+      "name": "bigibai",
       "dependencies": {
         "@astrojs/cloudflare": "14.4.0",
         "@astrojs/sitemap": "3.7.4",
