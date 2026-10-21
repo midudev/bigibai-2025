@@ -49,11 +49,12 @@ const {
 } = Astro
 
 const paramDayNumber = Number(paramDay)
-if (Number.isNaN(paramDayNumber)) return Astro.redirect('/404')
+// rewrite (no redirect): la URL inexistente responde con un 404 de verdad
+if (Number.isNaN(paramDayNumber)) return Astro.rewrite('/404')
 
 const dayData = cells.find((cell) => cell.day === paramDayNumber)
 
-if (!dayData) return Astro.redirect('/404')
+if (!dayData) return Astro.rewrite('/404')
 
 const { gameType, gameData } = dayData
 
