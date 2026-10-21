@@ -3,6 +3,14 @@
   "name": "bigibai",
   // Cuenta dueña de la zona bigibai.com
   "account_id": "8817a7505a3fb59b2a44ab4b00edede0",
+  // Rutas sobre los registros DNS con proxy de la zona. Sin workers.dev ni URLs de preview:
+  // se saltarían el WAF y el rate limiting de la zona
+  "routes": [
+    { "pattern": "www.bigibai.com/*", "zone_name": "bigibai.com" },
+    { "pattern": "bigibai.com/*", "zone_name": "bigibai.com" }
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
   // `main` y el binding `ASSETS` los añade @astrojs/cloudflare
   "compatibility_date": "2026-10-12",
   // src/utils/crypto.ts usa el módulo `crypto` de Node
