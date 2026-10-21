@@ -6,7 +6,10 @@ import { CAMPAIGN } from '@/data/campaign'
 const isPreviousEdition = frontmatter.edition !== CAMPAIGN.year
 ---
 
-<LegalLayout title="Bases legales">
+<LegalLayout
+  title="Bases legales"
+  description="Bases legales de los sorteos del calendario de Adviento Big Ibai: quién puede participar, cómo registrar tu calendario, premios y plazos."
+>
   {isPreviousEdition && (
     <Notice slot="notice" variant="warning" class="mb-8">
       Estas son las bases legales de la edición {frontmatter.edition}. Las bases de {CAMPAIGN.name}{' '}

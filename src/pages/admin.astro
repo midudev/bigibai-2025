@@ -51,7 +51,7 @@ const claimedPercentage =
     : '0.0'
 ---
 
-<PageLayout title={`Administración | ${CAMPAIGN.name}`} participationCount={totalUserCoupons}>
+<PageLayout title={`Administración | ${CAMPAIGN.name}`} participationCount={totalUserCoupons} noindex>
   <AdminOverview
     userName={Astro.locals.user.user_metadata.full_name || 'Administrador'}
     uniqueUsersCount={uniqueUsersCount ?? 0}

@@ -11,7 +11,11 @@ const user = Astro.locals.user
 if (user) return Astro.redirect('/dashboard')
 ---
 
-<PageLayout title="Inicia sesión | Big Ibai" participationCount={0}>
+<PageLayout
+  title="Registro e inicio de sesión | Big Ibai"
+  description="Entra o crea tu cuenta en Big Ibai para registrar el código de tu calendario de Adviento y participar en los sorteos de cada casilla."
+  participationCount={0}
+>
   <div class="login-layout">
     <div class="login-intro">
       <SectionHeading

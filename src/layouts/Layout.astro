@@ -11,19 +11,76 @@ import WinnersModal from '@/components/WinnersModal.astro'
 import { formatCampaignDateTime, getCampaignPhase } from '@/utils/campaign'
 
 const defaultTitle = `${CAMPAIGN.name} y la fábrica de regalos`
-const defaultDescription =
-  'Descubre el calendario de Adviento de Big Ibai y la fábrica de regalos. 24 días de ilusión, chocolates y juegos.'
+const defaultDescription = `${CAMPAIGN.name} y la fábrica de regalos: el calendario de Adviento de Ibai con 24 chocolatinas, 24 premios en sorteo y un juego nuevo cada día de diciembre.`
+
+const SITE_NAME = 'Big Ibai'
+const OG_IMAGE_ALT = `${CAMPAIGN.name} y la fábrica de regalos: calendario de Adviento con 24 chocolatinas y 24 premios`
 
 export interface Props {
   title?: string
   description?: string
   participationCount?: number
+  // Páginas privadas o sin contenido propio (cuenta, administración, 404)
+  noindex?: boolean
 }
 
-let { title, description, participationCount } = Astro.props
+let { title, description, participationCount, noindex = false } = Astro.props
 
 title ??= defaultTitle
 description ??= defaultDescription
+
+// Sin barra final ni query string (?fecha=...): una sola URL por página
+const siteUrl = new URL('/', Astro.site).href
+const canonicalPath = Astro.url.pathname.replace(/(.)\/$/, '$1')
+const canonicalUrl = new URL(canonicalPath, Astro.site).href
+const ogImage = new URL('/2026/og-image.jpg', Astro.site).href
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${siteUrl}#organization`,
+      name: SITE_NAME,
+      url: siteUrl,
+      logo: new URL('/2026/apple-touch-icon.png', Astro.site).href,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}#website`,
+      name: SITE_NAME,
+      alternateName: ['BigIbai', CAMPAIGN.name],
+      url: siteUrl,
+      inLanguage: 'es-ES',
+      publisher: { '@id': `${siteUrl}#organization` },
+      author: { '@type': 'Person', name: 'Ibai Llanos', url: 'https://x.com/IbaiLlanos' },
+    },
+    {
+      '@type': 'WebPage',
+      '@id': `${canonicalUrl}#webpage`,
+      url: canonicalUrl,
+      name: title,
+      description,
+      inLanguage: 'es-ES',
+      isPartOf: { '@id': `${siteUrl}#website` },
+      primaryImageOfPage: { '@type': 'ImageObject', url: ogImage, width: 1200, height: 630 },
+    },
+    ...(canonicalPath === '/'
+      ? []
+      : [
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+              { '@type': 'ListItem', position: 2, name: title.split(' | ')[0], item: canonicalUrl },
+            ],
+          },
+        ]),
+  ],
+}
+
+// `<` escapado para que ningún texto pueda cerrar el <script>
+const structuredDataJson = JSON.stringify(structuredData).replace(/</g, '\\u003c')
 
 const { now = new Date(), isSimulatedDate = false } = Astro.locals
 const showWinnersModal = getCampaignPhase(now) === 'winners'
@@ -59,34 +116,36 @@ const showWinnersModal = getCampaignPhase(now) === 'winners'
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="keywords" content="bigibai" />
     <meta name="author" content="Ibai Llanos" />
+    <meta
+      name="robots"
+      content={noindex
+        ? 'noindex, follow'
+        : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'}
+    />
+    <link rel="canonical" href={canonicalUrl} />
 
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={'https://www.bigibai.com/2026/og.jpg'} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={title} />
+    <meta property="og:image:alt" content={OG_IMAGE_ALT} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@IbaiLlanos" />
     <meta name="twitter:creator" content="@IbaiLlanos" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={'https://www.bigibai.com/2026/og.jpg'} />
-    <meta name="twitter:image:alt" content={title} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={OG_IMAGE_ALT} />
     <meta name="theme-color" content="#081c50" />
 
-    <script
-      type="application/ld+json"
-      set:html={JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Big Ibai',
-        url: 'https://www.bigibai.com',
-        description,
-        author: { '@type': 'Person', name: 'Ibai Llanos', url: 'https://twitter.com/IbaiLlanos' },
-      })}
-    />
+    <script type="application/ld+json" set:html={structuredDataJson} />
     <link rel="icon" type="image/png" sizes="16x16" href="/cropped-favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/cropped-favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/cropped-favicon-192x192.png" />

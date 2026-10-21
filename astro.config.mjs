@@ -8,6 +8,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 import cloudflare from '@astrojs/cloudflare'
 
+import { CAMPAIGN } from './src/data/campaign.ts'
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://www.bigibai.com',
@@ -15,9 +17,22 @@ export default defineConfig({
   adapter: cloudflare({ imageService: 'compile' }),
   // No usamos Astro.session: evita que el adapter cree un KV para sesiones
   session: false,
-  integrations: [sitemap({
-    filter: (page) => !page.includes('/admin')
-  })],
+  integrations: [
+    sitemap({
+      // Las páginas privadas llevan noindex; las casillas son dinámicas y no las detecta solo
+      filter: (page) => !/^\/(admin|dashboard)\/?$/.test(new URL(page).pathname),
+      customPages: Array.from(
+        { length: CAMPAIGN.totalDays },
+        (_, i) => `https://www.bigibai.com/casilla-${i + 1}-diciembre`
+      ),
+      // Mismas URLs que el canonical: sin barra final
+      serialize(item) {
+        const url = new URL(item.url)
+        if (url.pathname !== '/') url.pathname = url.pathname.replace(/\/$/, '')
+        return { ...item, url: url.href }
+      },
+    }),
+  ],
   output: 'server',
   // Se leen al ejecutar (secrets del Worker; en local, .env.local), así que no acaban en el bundle
   env: {

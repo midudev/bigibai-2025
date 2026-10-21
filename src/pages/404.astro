@@ -5,7 +5,12 @@ import Button from '@/components/Button.astro'
 import BrandLogo from '@/components/ui/BrandLogo.astro'
 ---
 
-<PageLayout title="Página no encontrada | Big Ibai" width="reading">
+<PageLayout
+  title="Página no encontrada | Big Ibai"
+  description="La página que buscas no existe. Vuelve al calendario de Adviento de Big Ibai y descubre la fábrica de regalos."
+  width="reading"
+  noindex
+>
   <div class="not-found">
     <BrandLogo variant="icon" width={50} />
     <SectionHeading

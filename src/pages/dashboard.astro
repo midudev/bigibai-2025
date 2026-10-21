@@ -24,6 +24,6 @@ const totalCoupons = userCouponsResult.data?.length || 0
 const userAchievements = achievementsResult.data?.achievements ?? {}
 ---
 
-<PageLayout title={`Mis participaciones | ${CAMPAIGN.name}`} participationCount={totalCoupons}>
+<PageLayout title={`Mis participaciones | ${CAMPAIGN.name}`} participationCount={totalCoupons} noindex>
   <AccountOverview totalCoupons={totalCoupons} userAchievements={userAchievements} />
 </PageLayout>
