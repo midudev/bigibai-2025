@@ -30,7 +30,9 @@ const SECURITY_HEADERS = {
   'Content-Security-Policy':
     "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src-attr 'none'; upgrade-insecure-requests",
 }
-const HSTS_HEADER = 'max-age=63072000; includeSubDomains; preload'
+// Sin includeSubDomains (ni preload, que lo exige) mientras el seguimiento de clics de Mailgun use
+// http://email.bigibai.com: con él, los enlaces de los emails de acceso fallarían por HTTPS
+const HSTS_HEADER = 'max-age=63072000'
 
 // Rutas que no necesitan verificación de autenticación
 function shouldSkipAuth(pathname: string): boolean {
