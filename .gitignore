@@ -6,7 +6,6 @@ dist/
 
 # dependencies
 node_modules/
-pnpm-workspace.yaml
 
 # logs
 npm-debug.log*

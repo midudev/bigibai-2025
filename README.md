@@ -146,7 +146,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 ## 🧑🖥️ Desarrollo Local:
 
 > [!IMPORTANT]
-> Deberás tener instalado [pnpm][pnpm-url]
+> Deberás tener instalado [Bun][bun-url]
 
 <details>
     <summary>Script automatizado...</summary>
@@ -158,8 +158,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
   git clone https://github.com/midudev/bigibai-2025.git &&
   cd bigibai-2025 &&
   cp .env.example .env &&
-  pnpm install &&
-  pnpm run dev &&
+  bun install &&
+  bun run dev &&
   open "http://localhost:4321"
   ```
 - **Windows:**
@@ -167,8 +167,8 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
   git clone https://github.com/midudev/bigibai-2025.git &&
   cd bigibai-2025 &&
   copy .env.example .env &&
-  pnpm install &&
-  pnpm run dev &&
+  bun install &&
+  bun run dev &&
   Start-Process "http://localhost:4321"
   ```
 
@@ -191,7 +191,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 3. Instale las dependencias:
 
    ```bash
-   pnpm install
+   bun install
    ```
 
 4. Configure el archivo .env:
@@ -210,7 +210,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 5. Inicia el servidor en modo desarrollo:
 
    ```bash
-   pnpm run dev
+   bun run dev
    ```
 
 6. Abre el navegador en la siguiente URL:
@@ -256,7 +256,7 @@ El proyecto se construye en stream, a través de la plataforma [Twitch](https://
 [tailwind-url]: https://tailwindcss.com/
 [midu-animations-url]: https://tailwindcss-animations.vercel.app/
 [supabase-url]: https://supabase.com/
-[pnpm-url]: https://pnpm.io/installation
+[bun-url]: https://bun.com/docs/installation
 [astro-badge]: https://img.shields.io/badge/Astro-fff?style=for-the-badge&logo=astro&logoColor=bd303a&color=352563
 [typescript-badge]: https://img.shields.io/badge/Typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white&color=blue
 [tailwind-badge]: https://img.shields.io/badge/Tailwind-ffffff?style=for-the-badge&logo=tailwindcss&logoColor=38bdf8

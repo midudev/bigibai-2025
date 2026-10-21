@@ -2,6 +2,7 @@
   "name": "bigibai-2025",
   "type": "module",
   "version": "0.0.2",
+  "packageManager": "bun@1.4.3",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
