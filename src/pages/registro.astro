@@ -73,6 +73,7 @@ if (user) return Astro.redirect('/dashboard')
             inputmode="email"
             placeholder="tu@email.com"
           />
+          <div id="turnstile-widget" class="turnstile-widget"></div>
           <Button id="magic-link-btn" type="submit" size="lg" class="w-full">
             <span id="magic-link-text">Enviar enlace de acceso</span>
             <svg
@@ -156,6 +157,10 @@ if (user) return Astro.redirect('/dashboard')
     text-decoration: underline;
     text-underline-offset: 3px;
   }
+  .turnstile-widget {
+    display: flex;
+    justify-content: center;
+  }
   @media (max-width: 900px) {
     .login-layout {
       gap: 40px;
@@ -178,10 +183,14 @@ if (user) return Astro.redirect('/dashboard')
 <script>
   import { actions, isInputError } from 'astro:actions'
   import { showNotice } from '@/components/ui/feedback'
+  import { createCaptcha } from '@/utils/turnstile'
   document.addEventListener('astro:page-load', () => {
     const form = document.querySelector<HTMLFormElement>('#magic-link-form')
     if (!form || form.dataset.ready) return
     form.dataset.ready = 'true'
+    // Supabase Auth valida el token (Bot and Abuse Protection): así tampoco se pueden pedir
+    // enlaces directamente a su API saltándose la web
+    const captcha = createCaptcha(form.querySelector<HTMLElement>('#turnstile-widget')!)
     const button = form.querySelector<HTMLButtonElement>('#magic-link-btn')!
     const text = form.querySelector<HTMLElement>('#magic-link-text')!
     const spinner = form.querySelector<HTMLElement>('#magic-link-spinner')!
@@ -197,7 +206,15 @@ if (user) return Astro.redirect('/dashboard')
       message.classList.add('hidden')
       try {
         const email = String(new FormData(form).get('email') || '')
-        const { data, error } = await actions.sendMagicLink({ email })
+        const captchaToken = await captcha.getToken()
+        if (!captchaToken) {
+          showMessage(
+            'No hemos podido comprobar que no eres un robot. Recarga la página e inténtalo de nuevo.',
+            true
+          )
+          return
+        }
+        const { data, error } = await actions.sendMagicLink({ email, captchaToken })
         if (error) {
           showMessage(
             isInputError(error)
@@ -217,6 +234,8 @@ if (user) return Astro.redirect('/dashboard')
           true
         )
       } finally {
+        // Cada token sirve una sola vez: se pide otro para el siguiente envío
+        captcha.reset()
         button.disabled = false
         text.textContent = 'Enviar enlace de acceso'
         spinner.classList.add('hidden')

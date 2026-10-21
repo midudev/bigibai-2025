@@ -55,8 +55,10 @@ export const server = {
   sendMagicLink: defineAction({
     input: z.object({
       email: emailSchema,
+      // Token de Turnstile. Lo valida Supabase Auth cuando tiene activada la protección con CAPTCHA
+      captchaToken: z.string().max(2048).optional(),
     }),
-    async handler({ email }, ctx) {
+    async handler({ email, captchaToken }, ctx) {
       if (!CAMPAIGN.signInEnabled) {
         throw new ActionError({
           code: 'FORBIDDEN',
@@ -91,6 +93,7 @@ export const server = {
           email,
           options: {
             emailRedirectTo: `${ctx.url.origin}/api/auth/callback`,
+            captchaToken,
           },
         })
 
