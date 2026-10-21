@@ -12,7 +12,12 @@ export function createClient({ request, cookies }: { request: Request; cookies: 
         cookiesToSet.forEach(({ name, value, options }) => {
           cookies.set(name, value, {
             ...options,
-            maxAge: 60 * 60 * 24 * 7, // 1 week
+            // 1 week. maxAge 0 es como borra Supabase las cookies al cerrar sesión: se respeta
+            maxAge: options.maxAge === 0 ? 0 : 60 * 60 * 24 * 7,
+            // Supabase solo se usa en el servidor: el JS de la página no necesita leer la sesión,
+            // así que un XSS no podría robarla
+            httpOnly: true,
+            secure: !import.meta.env.DEV,
           })
         })
       },

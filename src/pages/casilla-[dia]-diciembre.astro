@@ -48,7 +48,8 @@ const {
   params: { dia: paramDay },
 } = Astro
 
-const paramDayNumber = Number(paramDay)
+// Solo la forma canónica: con Number() a secas, 01, 1.0 o 0x1 también serían la casilla 1
+const paramDayNumber = /^[1-9]\d?$/.test(paramDay ?? '') ? Number(paramDay) : NaN
 // rewrite (no redirect): la URL inexistente responde con un 404 de verdad
 if (Number.isNaN(paramDayNumber)) return Astro.rewrite('/404')
 
@@ -245,7 +246,6 @@ if (user) {
                 src={`/chocolatinas/${paramDayNumber}.webp`}
                 alt="Chocolatina"
                 class="chocolate-image floating-chocolate"
-                onerror="this.src='/chocolatinas/1.webp'"
               />
             </div>
 

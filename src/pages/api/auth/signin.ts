@@ -24,7 +24,8 @@ export const POST: APIRoute = async ({ request, url, redirect, cookies }) => {
     })
 
     if (error) {
-      return new Response(error.message, { status: 500 })
+      console.error('Error starting OAuth sign in:', error)
+      return redirect('/registro?error=auth_failed')
     }
 
     return redirect(data.url)

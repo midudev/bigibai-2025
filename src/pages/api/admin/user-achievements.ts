@@ -107,7 +107,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       )
     }
 
-    if (!ACHIEVEMENTS[achievementId]) {
+    if (!Object.hasOwn(ACHIEVEMENTS, achievementId)) {
       return new Response(JSON.stringify({ error: 'Logro no encontrado' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },

@@ -24,9 +24,11 @@ const SECURITY_HEADERS = {
   'Permissions-Policy':
     'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()',
   'Cross-Origin-Opener-Policy': 'same-origin',
-  // Sin restringir scripts ni estilos (Leaflet y Google Fonts vienen de CDNs externos)
+  // Sin restringir scripts ni estilos (Leaflet y Google Fonts vienen de CDNs externos; la CSP con
+  // hashes de Astro no es compatible con el ClientRouter). script-src-attr 'none' bloquea los
+  // manejadores inline (onerror=, onclick=...), el vector habitual de un XSS
   'Content-Security-Policy':
-    "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+    "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src-attr 'none'; upgrade-insecure-requests",
 }
 const HSTS_HEADER = 'max-age=63072000; includeSubDomains; preload'
 
@@ -56,7 +58,12 @@ function resolveNow(context: APIContext, userId?: string) {
       return realNow
     }
 
-    context.cookies.set(SIMULATED_DATE_COOKIE, param, { path: '/', httpOnly: true, sameSite: 'lax' })
+    context.cookies.set(SIMULATED_DATE_COOKIE, param, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: !import.meta.env.DEV,
+    })
     return { now: simulated, isSimulatedDate: true }
   }
 
@@ -64,6 +71,19 @@ function resolveNow(context: APIContext, userId?: string) {
   const simulated = cookie ? parseSimulatedDate(cookie) : null
 
   return simulated ? { now: simulated, isSimulatedDate: true } : realNow
+}
+
+// La web solo ofrece enlace mágico y Google, pero la API de Supabase Auth también acepta altas con
+// contraseña (y sin confirmar el email). Sin esto, alguien podría registrar el email de otra
+// persona con una contraseña suya y entrar después en su cuenta cuando ella participe
+function isPasswordSession(accessToken: string): boolean {
+  try {
+    const payload = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const { amr = [] } = JSON.parse(atob(payload)) as { amr?: { method?: string }[] }
+    return amr.some(({ method }) => method === 'password')
+  } catch {
+    return false
+  }
 }
 
 function setSecurityHeaders(response: Response, url: URL) {
@@ -118,21 +138,32 @@ const auth = defineMiddleware(async (context, next) => {
     cookies: context.cookies,
   })
 
-  const { data } = await supabase.auth.getUser()
+  let {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // getUser() ya ha validado este token contra Supabase: aquí solo se lee cómo se inició la sesión
+  if (user) {
+    const { data } = await supabase.auth.getSession()
+    if (data.session && isPasswordSession(data.session.access_token)) {
+      await supabase.auth.signOut({ scope: 'local' })
+      user = null
+    }
+  }
 
   // Verificar si es una ruta protegida (incluye rutas que empiezan con /admin)
   const isProtectedRoute = protectedRoutes.includes(pathname)
 
-  if (!data.user && isProtectedRoute) {
+  if (!user && isProtectedRoute) {
     return context.redirect('/registro')
   }
 
-  if (data.user && redirectRoutes.includes(pathname)) {
+  if (user && redirectRoutes.includes(pathname)) {
     return context.redirect('/dashboard')
   }
 
-  context.locals.user = data.user
-  Object.assign(context.locals, resolveNow(context, data.user?.id))
+  context.locals.user = user
+  Object.assign(context.locals, resolveNow(context, user?.id))
 
   return next()
 })

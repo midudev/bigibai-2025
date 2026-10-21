@@ -33,7 +33,7 @@ const dimension = sizeMap[size] ?? sizeMap.md
         width={dimension}
         height={dimension}
         loading="lazy"
-        onerror="this.onerror=null; this.src='/fallback-avatar.webp'"
+        data-fallback="/fallback-avatar.webp"
       />
     ) : (
       <span class="avatar" aria-label={alt} role="img">
@@ -65,3 +65,32 @@ const dimension = sizeMap[size] ?? sizeMap.md
     object-fit: cover;
   }
 </style>
+
+<script>
+  // Sin onerror en el HTML: la CSP bloquea los manejadores inline (script-src-attr 'none')
+  function useFallback(img: HTMLImageElement) {
+    const { fallback } = img.dataset
+    if (!fallback) return
+    // Una sola vez, por si la de reserva también falla
+    delete img.dataset.fallback
+    img.src = fallback
+  }
+
+  document.addEventListener(
+    'error',
+    (event) => {
+      if (event.target instanceof HTMLImageElement) useFallback(event.target)
+    },
+    true
+  )
+
+  // Las que ya han fallado antes de que se ejecute este script
+  function checkBrokenImages() {
+    document.querySelectorAll<HTMLImageElement>('img[data-fallback]').forEach((img) => {
+      if (img.complete && img.naturalWidth === 0) useFallback(img)
+    })
+  }
+
+  checkBrokenImages()
+  document.addEventListener('astro:page-load', checkBrokenImages)
+</script>

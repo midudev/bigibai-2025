@@ -1,5 +1,5 @@
 import { checkRateLimit, RATE_LIMIT_MESSAGE } from '@/services/ratelimit'
-import { ActionError, defineAction } from 'astro:actions'
+import { ActionError, defineAction, type ActionAPIContext } from 'astro:actions'
 import { z } from 'astro:schema'
 import { supabaseAdmin } from '@/supabase-admin'
 import { createClient } from '@/supabase'
@@ -12,17 +12,10 @@ import { CAMPAIGN } from '@/data/campaign'
 import { GAME_ACHIEVEMENTS } from '@/data/achievements'
 import { cells, type GameType } from '@/data/days-data'
 
-// Extrae IP real del cliente evitando spoofing básico.
-function getClientIp(ctx: any): string {
-  const h = ctx?.request?.headers
-  const first = (v?: string | null) => v?.split(',')[0]?.trim()
-  return (
-    first(h?.get('cf-connecting-ip')) ||
-    first(h?.get('x-real-ip')) ||
-    first(h?.get('x-forwarded-for')) ||
-    (ctx as any)?.clientAddress ||
-    'unknown'
-  )
+// IP real del cliente. Cloudflare sobrescribe `cf-connecting-ip` en cada petición; x-forwarded-for
+// y x-real-ip los puede mandar cualquiera y servirían para saltarse el rate limit por IP
+function getClientIp(ctx: ActionAPIContext): string {
+  return ctx.request.headers.get('cf-connecting-ip') || ctx.clientAddress || 'unknown'
 }
 
 // Valida el formato del cupón XXXX-XXXX-XXXX
@@ -435,7 +428,10 @@ export const server = {
       }
 
       // Solo los logros de los juegos de las casillas, y únicamente si el usuario puede jugarlos
-      const gameTypes = GAME_ACHIEVEMENTS[achievementId]
+      // hasOwn: con `constructor` o `__proto__` la búsqueda normal devolvería algo de Object
+      const gameTypes = Object.hasOwn(GAME_ACHIEVEMENTS, achievementId)
+        ? GAME_ACHIEVEMENTS[achievementId]
+        : undefined
       if (!gameTypes) {
         throw new ActionError({
           code: 'BAD_REQUEST',

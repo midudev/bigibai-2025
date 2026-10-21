@@ -2,7 +2,7 @@ import { supabaseAdmin } from '@/supabase-admin'
 import { ACHIEVEMENTS, type Achievement } from '@/data/achievements'
 
 export async function grantAchievement(userId: string, achievementId: string) {
-  if (!ACHIEVEMENTS[achievementId]) {
+  if (!Object.hasOwn(ACHIEVEMENTS, achievementId)) {
     console.error(`Achievement ${achievementId} does not exist`)
     return { success: false, error: 'Achievement not found' }
   }
