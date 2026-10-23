@@ -1,4 +1,5 @@
 import { checkRateLimit, RATE_LIMIT_MESSAGE } from '@/services/ratelimit'
+import { verifyTurnstile } from '@/services/turnstile'
 import { ActionError, defineAction, type ActionAPIContext } from 'astro:actions'
 import { z } from 'astro:schema'
 import { supabaseAdmin } from '@/supabase-admin'
@@ -55,8 +56,8 @@ export const server = {
   sendMagicLink: defineAction({
     input: z.object({
       email: emailSchema,
-      // Token de Turnstile. Lo valida Supabase Auth cuando tiene activada la protección con CAPTCHA
-      captchaToken: z.string().max(2048).optional(),
+      // Token de Turnstile (src/services/turnstile.ts)
+      captchaToken: z.string().min(1).max(2048),
     }),
     async handler({ email, captchaToken }, ctx) {
       if (!CAMPAIGN.signInEnabled) {
@@ -85,6 +86,14 @@ export const server = {
         })
       }
 
+      if (!(await verifyTurnstile(captchaToken, ip))) {
+        throw new ActionError({
+          code: 'FORBIDDEN',
+          message:
+            'No hemos podido comprobar que no eres un robot. Recarga la página e inténtalo de nuevo.',
+        })
+      }
+
       try {
         const supabase = createClient({ request: ctx.request, cookies: ctx.cookies })
 
@@ -93,7 +102,6 @@ export const server = {
           email,
           options: {
             emailRedirectTo: `${ctx.url.origin}/api/auth/callback`,
-            captchaToken,
           },
         })
 

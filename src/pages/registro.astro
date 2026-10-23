@@ -219,7 +219,7 @@ if (user) return Astro.redirect('/dashboard')
           showMessage(
             isInputError(error)
               ? Object.values(error.fields)[0]?.[0] || 'Revisa tu correo electrónico.'
-              : error.code === 'TOO_MANY_REQUESTS'
+              : error.code === 'TOO_MANY_REQUESTS' || error.code === 'FORBIDDEN'
                 ? error.message
                 : 'No se ha podido enviar el enlace. Inténtalo de nuevo más tarde.',
             true

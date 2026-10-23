@@ -1,9 +1,16 @@
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
 import type { AstroCookies } from 'astro'
-import { PUBLIC_SUPABASE_KEY, PUBLIC_SUPABASE_URL } from 'astro:env/server'
+import { PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY } from 'astro:env/server'
 
+// Solo para Supabase Auth. Va con la clave secreta: sin sesión de usuario, una consulta a la base de
+// datos desde este cliente tendría permisos de admin
 export function createClient({ request, cookies }: { request: Request; cookies: AstroCookies }) {
-  return createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_KEY, {
+  // Supabase Auth limita por IP y todas las peticiones del Worker le llegan desde la misma IP de
+  // Cloudflare: sin esto, los límites serían compartidos por toda la web
+  const clientIp = request.headers.get('cf-connecting-ip')
+
+  return createServerClient(PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, {
+    global: { headers: clientIp ? { 'sb-forwarded-for': clientIp } : {} },
     cookies: {
       getAll() {
         return parseCookieHeader(request.headers.get('Cookie') ?? '')
