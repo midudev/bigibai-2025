@@ -14,7 +14,8 @@ interface ImportMeta {
 declare global {
   namespace App {
     interface Locals {
-      user: null | User
+      // Sacado de los claims del JWT (getClaims), no es el usuario completo de Supabase Auth
+      user: null | Pick<User, 'id' | 'email' | 'user_metadata'>
       // Fecha de referencia de la petición (real o simulada por un admin)
       now: Date
       isSimulatedDate: boolean

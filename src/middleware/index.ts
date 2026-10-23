@@ -1,5 +1,6 @@
 import { defineMiddleware, sequence } from 'astro:middleware'
 import type { APIContext } from 'astro'
+import type { JwtPayload } from '@supabase/supabase-js'
 import { createClient } from '@/supabase'
 import { isAdmin } from '@/utils/admin'
 import { parseSimulatedDate } from '@/utils/campaign'
@@ -78,14 +79,8 @@ function resolveNow(context: APIContext, userId?: string) {
 // La web solo ofrece enlace mágico y Google, pero la API de Supabase Auth también acepta altas con
 // contraseña (y sin confirmar el email). Sin esto, alguien podría registrar el email de otra
 // persona con una contraseña suya y entrar después en su cuenta cuando ella participe
-function isPasswordSession(accessToken: string): boolean {
-  try {
-    const payload = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    const { amr = [] } = JSON.parse(atob(payload)) as { amr?: { method?: string }[] }
-    return amr.some(({ method }) => method === 'password')
-  } catch {
-    return false
-  }
+function isPasswordSession(amr: JwtPayload['amr'] = []): boolean {
+  return amr.some((entry) => (typeof entry === 'string' ? entry : entry.method) === 'password')
 }
 
 function setSecurityHeaders(response: Response, url: URL) {
@@ -140,18 +135,19 @@ const auth = defineMiddleware(async (context, next) => {
     cookies: context.cookies,
   })
 
-  let {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Verifica la firma del JWT en local con la clave pública del proyecto (el JWKS queda en caché en
+  // el isolate). A cambio, una sesión revocada sigue valiendo hasta que caduca su JWT (1 hora)
+  const { data } = await supabase.auth.getClaims()
+  let claims = data?.claims
 
-  // getUser() ya ha validado este token contra Supabase: aquí solo se lee cómo se inició la sesión
-  if (user) {
-    const { data } = await supabase.auth.getSession()
-    if (data.session && isPasswordSession(data.session.access_token)) {
-      await supabase.auth.signOut({ scope: 'local' })
-      user = null
-    }
+  if (claims && isPasswordSession(claims.amr)) {
+    await supabase.auth.signOut({ scope: 'local' })
+    claims = undefined
   }
+
+  const user = claims
+    ? { id: claims.sub, email: claims.email, user_metadata: claims.user_metadata ?? {} }
+    : null
 
   // Verificar si es una ruta protegida (incluye rutas que empiezan con /admin)
   const isProtectedRoute = protectedRoutes.includes(pathname)
