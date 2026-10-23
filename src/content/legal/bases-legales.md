@@ -1,150 +1,144 @@
 ---
-title: Bases Legales - Calendario de Adviento Big Ibai 2025
+title: Bases Legales - Calendario de Adviento Big Ibai 2026
 # Edición y versión de estas bases. Al publicar las nuevas, actualiza ambos campos:
 # la versión es la que se guardará como prueba de aceptación en cada registro.
-edition: 2025
-version: '2025-11'
+edition: 2026
+version: '2026-10'
 ---
 
-Las presentes bases constituyen un extracto informativo del sorteo denominado "Calendario de Adviento Big Ibai 2025". Las bases legales completas, con el detalle íntegro de los premios y condiciones de participación, fueron protocolizadas ante el Notario D. Luis Sampietro Villacampa, del Ilustre Colegio de Cataluña, en Barcelona, con fecha 28 de octubre de 2025, bajo número de protocolo 2.081. Los premios se estructuran en distintas categorías (por ejemplo, "Planes increíbles", "Grandes aventuras", "Tu mejor versión", entre otras), cuyo contenido se revelará progresivamente durante el desarrollo de la promoción.
+# BASES LEGALES DE LA PROMOCIÓN: CALENDARIO DE ADVIENTO BIG IBAI 2026
 
-# BASES LEGALES DE LA PROMOCIÓN: CALENDARIO DE ADVIENTO BIG IBAI 2025
+## 1. ORGANIZADOR DE LA PROMOCIÓN
 
-## ORGANIZADOR DE LA PROMOCIÓN
+La entidad mercantil Salad Brands, S.L. (en adelante, "SALAD BRANDS"), con domicilio social en Carrer Sagués, 27, 08021, Barcelona, y provista de CIF B70835202, organiza la promoción denominada "Calendario de Adviento Big Ibai 2026" (en adelante, "promoción"), dirigido a aquellos clientes que hayan adquirido previamente el Calendario de Adviento Big Ibai 2026 en alguno de los puntos de venta autorizados. Los participantes deberán ser mayores de 18 años y residentes en España.
 
-La entidad mercantil Salad Brands, S.L. (en adelante, "SALAD BRANDS"), con domicilio social en Carrer Sagués, 27, 08021, Barcelona, y provista de CIF B70835202, organiza la promoción denominada "Calendario de Adviento Big Ibai 2025" (en adelante, "promoción"), dirigido a aquellos clientes que hayan adquirido previamente el Calendario de Adviento Big Ibai 2025 en alguno de los puntos de venta autorizados. Los participantes deberán ser mayores de 18 años y residentes en España.
+SALAD BRANDS se reserva el derecho de modificar las fechas, suspender, aplazar o cancelar la promoción cuando concurran circunstancias excepcionales, causas de fuerza mayor, incidencias técnicas, fraude, imposibilidad sobrevenida o cualquier otra circunstancia objetiva y justificada que impida su normal desarrollo. Dichas decisiones serán comunicadas a los participantes a través de la página web oficial y se adoptarán respetando los derechos legalmente reconocidos a los consumidores.
 
-SALAD BRANDS se reserva el derecho de modificar unilateralmente las fechas de inicio y finalización de la promoción, así como suspenderlo o cancelarlo en caso de que razones técnicas u otras circunstancias fuera de su control impidan su normal desarrollo.
+Para cualquier consulta relacionada con la promoción, los participantes pueden contactar al correo electrónico [sorteo@bigibai.com](mailto:sorteo@bigibai.com).
 
-Para cualquier consulta relacionada con la promoción, los participantes pueden contactar a través del correo electrónico <sorteo@bigibai.com>
+## 2. DURACIÓN DE LA PROMOCIÓN
 
-## DURACIÓN DE LA PROMOCIÓN
+Se podrá participar en la promoción **desde el día 22 de octubre de 2026** hasta el **23 de diciembre de 2026 a las 23:59:59 horas** (hora peninsular española).
 
-Se podrá participar en la promoción desde el día 22 de Octubre de 2025 hasta el 23 de diciembre de 2025 a las 23:59 horas (hora peninsular española).
-
-El sorteo se realizará el 24 de diciembre de 2025 e incluirá a todos los participantes que se hayan registrado correctamente hasta el 23 de diciembre de 2025 a las 23:59 horas.
+El sorteo se realizará el **24 de diciembre de 2026** e incluirá a todos los participantes que se hayan registrado correctamente hasta el 23 de diciembre de 2026 a las 23:59:59 horas.
 
 Durante el sorteo se seleccionarán los 24 ganadores correspondientes a los premios principales, así como cinco (5) suplentes por cada premio.
 
-La selección de ganadores y suplentes se llevará a cabo ante notario el mismo día 24 de diciembre de 2025, y los resultados serán publicados ese mismo día a las 18:00 horas (hora peninsular española) en la página web oficial: <www.bigibai.com>, en adelante, "la web" o "la página web".
+La selección de ganadores y suplentes se llevará a cabo ante notario el mismo día 24 de diciembre de 2026, y los resultados serán publicados ese mismo día a las 19:00 horas (hora peninsular española) en la página web oficial: [www.bigibai.com](https://www.bigibai.com), en adelante, "la web" o "la página web".
 
-## MECÁNICA
+## 3. MECÁNICA
 
 Podrán participar en la presente promoción todas aquellas personas que cumplan con los requisitos establecidos en las presentes bases legales.
 
-Para participar, los usuarios deberán haber adquirido un calendario Big Ibai 2025 en alguno de los puntos oficiales de venta: Carrefour, El Corte Inglés, Alcampo, Eroski, Caprabo y Gadisa.
+Para participar, los usuarios deberán haber adquirido un calendario Big Ibai 2026 en alguno de los puntos oficiales de venta: Carrefour, El Corte Inglés, Alcampo, Lidl, Eroski, Caprabo, Vegalsa, Consum y Gadisa.
 
-Posteriormente, deberán acceder a la página web <www.bigibai.com>
+Posteriormente, deberán acceder a la página web [www.bigibai.com](https://www.bigibai.com).
 
-En caso de no estar registrados, deberán completar el formulario de registro, introduciendo todos los datos obligatorios, y aceptar la política de privacidad y las bases legales del sorteo.
-
-En caso de estar ya registrados, deberán identificarse con sus credenciales.
+- En caso de no estar registrados, deberán completar el formulario de registro, introduciendo todos los datos obligatorios, y aceptar la política de privacidad y las bases legales del sorteo.
+- En caso de estar ya registrados, deberán identificarse con sus credenciales.
 
 Una vez autenticados, los participantes deberán validar en la web el código alfanumérico único que encontrarán en la casilla situada en la parte trasera de su calendario, pudiendo también escanear el código QR que figure en el mismo.
 
-Será imprescindible conservar la casilla del código alfanumérico del calendario (y opcionalmente el ticket de compra) hasta el 30 de enero de 2026 a las 23:59 horas, ya que podrá ser requerido para verificar la condición de ganador.
+Será imprescindible conservar la casilla del código alfanumérico del calendario (y opcionalmente el ticket de compra) hasta el 30 de enero de 2027 a las 23:59 horas, ya que podrá ser requerido para verificar la condición de ganador.
 
-Quedará expresamente prohibido intentar participar utilizando un código alfanumérico previamente registrado o usado por otro participante, considerándo dicha acción como participación fraudulenta y motivo de descalificación inmediata.
+Quedará expresamente prohibido intentar participar utilizando un código alfanumérico previamente registrado o usado por otro participante, considerando dicha acción como participación fraudulenta y motivo de descalificación inmediata.
 
 Un mismo ganador no podrá ganar más de 1 premio en toda la promoción.
 
-Habida cuenta de las características del Premio (que implica el disfrute físico de una determinada experiencia o evento), el Participante manifiesta que no sufre o padece en la actualidad, ni ha sufrido o padecido en el pasado, ninguna enfermedad, ni tiene defecto, lesión preexistente o alteración física alguna, que le impida o limite la posibilidad de disfrute del mismo. Asimismo, el Participante manifiesta estar médicamente apto y adecuadamente entrenado para participar en el evento/experiencia en qué consiste el Premio.
+Cuando el premio consista en una actividad deportiva, de aventura, viaje o experiencia que pueda implicar riesgos para la salud o integridad física, será responsabilidad del ganador comprobar que reúne las condiciones personales, físicas y médicas necesarias para su disfrute, así como cumplir las instrucciones, requisitos de seguridad y condiciones establecidos por el proveedor correspondiente.
 
-A estos efectos, el Participante será el único responsable de las posibles consecuencias adversas que se pudieran derivar para el mismo en el disfrute del Premio, tales como fallecimiento, accidente o lesión, entre otros, por causa de su actuación dolosa, culposa o negligente, siendo asimismo responsable de los daños que pueda causar a otras personas o entidades.
+SALAD BRANDS no será responsable de los daños, accidentes, lesiones, pérdidas o perjuicios derivados de actuaciones negligentes o imprudentes del ganador, del incumplimiento de las normas de seguridad o de circunstancias ajenas al control del Organizador, salvo en aquellos supuestos en que legalmente le corresponda responsabilidad.
 
-La falta de veracidad, inexactitud o carácter incompleto de las manifestaciones del Participante a estos efectos, no le exime de las responsabilidades en las que incurre, exonerando en cualquiera de los anteriores supuestos a SALAD BRANDS. Y a cualquier otra entidad vinculada con la organización y desarrollo del evento/experiencia en qué consiste el Premio de cualquier responsabilidad y manteniéndolos indemnes de las mencionadas posibles consecuencias adversas que pudiera sufrir. En particular, el Participante renuncia a reclamar en tales casos a SALAD BRANDS. y a cualquier otra entidad vinculada con la organización y desarrollo del evento/experiencia en qué consiste el Premio, cualquier supuesto de posible lucro cesante.
+El ganador será responsable de obtener y mantener en vigor los documentos, autorizaciones, permisos, seguros y demás requisitos personales necesarios para disfrutar del premio, cuando resulten exigibles y no estén expresamente incluidos en este.
 
-De entre los Participantes de la Promoción resultará 1 ganador por premio y/o por día y 5 suplentes por día, que se determinarán según lo establecido en la Cláusula 7 (en adelante, los "Ganadores").
+De entre los Participantes de la Promoción resultará 1 ganador por premio y/o por día y **5 suplentes por día**, que se determinarán según lo establecido en la Cláusula 7 (en adelante, los "Ganadores").
 
-## PREMIOS
+## 4. PREMIOS
 
-Día 1/12 - Categoría: Drop Épico
+Se sortearán veinticuatro (24) premios, uno por cada casilla del 1 al 24 de diciembre, con las categorías y denominaciones resumidas recogidas en la siguiente tabla.
 
-Día 2/12 - Categoría: Planes Increíbles
+| Día | Categoría | Premio |
+| --- | --- | --- |
+| 1/12 | Equipamiento Pro | El simulador de conducción definitivo |
+| 2/12 | Drops Épicos | PACK POKÉMON TCG |
+| 3/12 | Tu mejor Versión | Apple Watch Ultra 3 + AppleCare |
+| 4/12 | Planes Increíbles | Una noche privada en un observatorio para 2 |
+| 5/12 | Gigante Noble | Vive La Velada desde dentro para 2 |
+| 6/12 | Planes Increíbles | Fórmula 1 Official Hospitality para 2 |
+| 7/12 | Drops Épicos | Todo tu entretenimiento durante un año |
+| 8/12 | Planes Increíbles | Maldivas para 2 con todo organizado |
+| 9/12 | Equipamiento Pro | Patinete eléctrico TOP |
+| 10/12 | Drops Épicos | Set de LEGO valorado en 3.000 € |
+| 11/12 | Planes Increíbles | Cine privado para ti y tus amigos |
+| 12/12 | Gigante Noble | Art Toy 1/1 firmado por Ibai Llanos |
+| 13/12 | Tu mejor Versión | Un año para aprender lo que quieras |
+| 14/12 | Drops Épicos | Tu año de sneakers: 2.000 € en zapatillas |
+| 15/12 | Equipamiento Pro | Moto eléctrica NIU RQi Sport |
+| 16/12 | Drops Épicos | Coche tipo Mini por definir |
+| 17/12 | Planes Increíbles | Semana de esquí para 2 |
+| 18/12 | Equipamiento Pro | iPhone Duo |
+| 19/12 | Planes Increíbles | Una temporada siguiendo a tu equipo |
+| 20/12 | Planes Increíbles | Puenting para 2 |
+| 21/12 | Planes Increíbles | Un finde en Canarias para ti y 4 amigos |
+| 22/12 | Planes Increíbles | 12 conciertos en un año |
+| 23/12 | Planes Increíbles | Ruta 66 durante 17 días para 2 |
+| 24/12 | Premio Legendario | Vuelta al mundo para 2 - 15 días |
 
-Día 3/12 - Categoría: Equipamiento Pro
+Los detalles completos de los premios se actualizarán durante los próximos días en [www.bigibai.com/bases-legales/](https://www.bigibai.com/bases-legales/), incluyendo, antes de su adjudicación, sus características, valoración económica, proveedores y condiciones específicas de disfrute o entrega. Cualquier aclaración respetará la oferta anunciada y los derechos de los participantes.
 
-Día 4/12 - Categoría: Planes Increíbles
+Los nombres indicados son resúmenes comerciales y no sustituyen la descripción detallada definitiva. En particular, el vehículo de la casilla 16 está pendiente de definir; las condiciones y el modelo deberán publicarse de forma transparente. Los premios no se canjearán por dinero, salvo exigencia legal.
 
-Día 5/12 - Categoría: Drops Épicos
+SALAD BRANDS se reserva el derecho de sustituir cualquiera de los premios anunciados por otro de características similares y valor económico equivalente o superior, exclusivamente cuando concurran causas justificadas, como falta de disponibilidad, cancelación del proveedor, fuerza mayor o circunstancias ajenas a su control.
 
-Día 6/12 - Categoría: Cena/Comida en el Celler de Can Roca.
+Los premios serán personales e intransferibles, salvo autorización expresa del Organizador, y no podrán canjearse por dinero en efectivo.
 
-Día 7/12 - Categoría: Equipamiento Pro
+Cualquier gasto, impuesto, desplazamiento, alojamiento, servicio o coste adicional que no figure expresamente incluido en la descripción definitiva del premio será asumido por el ganador, sin perjuicio de las obligaciones legales que correspondan al Organizador.
 
-Día 8/12 - Categoría: Planes Increíbles
+## 5. FISCALIDAD
 
-Día 9/12 - Categoría: Drops Épicos
+Todos los premios objeto de esta promoción estarán sometidos a la legislación fiscal vigente en España en el momento de su entrega, de conformidad con lo dispuesto en la Ley 35/2006 del Impuesto sobre la Renta de las Personas Físicas, el Real Decreto 439/2007, por el que se aprueba su Reglamento, y demás normativa aplicable.
 
-Día 10/12 - Categoría: Imprescindible Tecnológico
+Los premios cuyo valor supere los trescientos euros (300 €) estarán sujetos, con carácter general, a la correspondiente retención o ingreso a cuenta del IRPF, de acuerdo con la normativa vigente.
 
-Día 11/12 - Categoría: Equipamiento Pro
+**En el caso de premios en especie, el ingreso a cuenta correspondiente será repercutido al ganador**, quien deberá abonar a SALAD BRANDS el importe que legalmente proceda, antes de recibir el premio. SALAD BRANDS será responsable de efectuar el ingreso ante la Agencia Tributaria.
 
-Día 12/12 - Categoría: Gigante Noble
+SALAD BRANDS comunicará previamente al ganador la valoración fiscal del premio y el importe del ingreso a cuenta que deberá satisfacer.
 
-Día 13/12 - Categoría: Equipamiento Pro
+La aceptación del premio estará condicionada al cumplimiento de las obligaciones fiscales correspondientes. En caso de que el ganador no facilite la documentación requerida o no abone el importe del ingreso a cuenta dentro del plazo comunicado por SALAD BRANDS, se entenderá que renuncia al premio, que podrá adjudicarse al siguiente suplente conforme a las presentes bases legales.
 
-Día 14/12 - Categoría: Planes Increíbles
+Los ganadores serán responsables de declarar los premios recibidos en su correspondiente declaración del IRPF y de cumplir con las obligaciones fiscales personales que resulten aplicables.
 
-Día 15/12 - Categoría: Gran Aventura
+SALAD BRANDS facilitará a los ganadores la certificación fiscal correspondiente, de acuerdo con la normativa vigente.
 
-Día 16/12 - Categoría: Gigante Noble
+## 6. UTILIZACIÓN DEL NOMBRE, APELLIDOS E IMAGEN DEL GANADOR
 
-Día 17/12 - Categoría: Equipamiento Pro
+Los ganadores autorizan y consienten expresamente por el hecho de participar en la presente Promoción a SALAD BRANDS a utilizar, publicar y difundir sus nombres, apellidos e imágenes, en las publicaciones a través de la web, en los perfiles en redes sociales de SALAD BRANDS o sus colaboradores del proyecto Calendario de Adviento Big Ibai 2026, así como en el material publicitario de la presente promoción o de cualquier otro para el que se necesite hacer referencia al presente, con fines publicitarios y promocionales, incluyendo su publicación en las webs del grupo y en cualquier otro medio de difusión, sin limitación geográfica ni temporal, y sin que ello dé lugar a derecho a contraprestación económica alguna.
 
-Día 18/12 - Categoría: Equipamiento Pro
+## 7. SORTEO
 
-Día 19/12 - Categoría: Imprescindible Tecnológico
+Los usuarios podrán participar en la promoción desde el 22 de octubre de 2026 hasta el **23 de diciembre de 2026 a las 23:59:59 horas**, según el horario oficial de la España peninsular.
 
-Día 20/12 - Categoría: Planes Increíbles
+El sorteo se celebrará el **24 de diciembre de 2026, ante notario**, mediante un procedimiento de selección aleatoria que garantice la transparencia, imparcialidad y trazabilidad del proceso, dejando constancia de sus resultados en la correspondiente acta notarial.
 
-Día 21/12 - Categoría: Equipamiento Pro
+La selección se efectuará exclusivamente entre las participaciones válidamente registradas dentro del plazo establecido y que cumplan los requisitos previstos en las presentes bases legales.
 
-Día 22/12 - Categoría: Tu mejor versión
+Se designará un (1) ganador para cada uno de los veinticuatro (24) premios previstos, así como cinco (5) suplentes por premio, que serán seleccionados por orden de prelación (suplente primero, segundo, tercero, cuarto y quinto).
 
-Día 23/12 - Categoría: Planes Increíbles
+**Cada código alfanumérico único, válido y correctamente registrado constituirá una participación independiente en el sorteo.** Un mismo participante podrá registrar varios códigos válidos procedentes de calendarios adquiridos legítimamente, incrementando así sus posibilidades de resultar premiado.
 
-Día 24/12 - Categoría: Premio Legendario
+No obstante, **una misma persona únicamente podrá resultar adjudicataria de un (1) premio durante toda la promoción**, independientemente del número de códigos que haya registrado.
 
-## FISCALIDAD
+Los premios se adjudicarán siguiendo el orden de las casillas, del número 1 al 24. Una vez seleccionada una persona como ganadora de un premio, sus restantes participaciones quedarán excluidas de las siguientes adjudicaciones como ganador. Si una persona previamente seleccionada resultara nuevamente elegida, se descartará dicha extracción y se procederá a seleccionar otra participación válida, conforme al procedimiento establecido ante notario. Los suplentes se designarán siguiendo el mismo criterio de unicidad para cada premio, sin perjuicio de que una persona pueda figurar provisionalmente como suplente de distintos premios hasta la adjudicación definitiva.
 
-De conformidad con la normativa fiscal vigente, los premios cuya cuantía sea igual o superior a trescientos euros (300 €) estarán sujetos a retención a cuenta del Impuesto sobre la Renta de las Personas Físicas (IRPF).
+Con carácter previo al sorteo, SALAD BRANDS podrá verificar y depurar la base de datos de participaciones, excluyendo los registros fraudulentos, códigos duplicados, participaciones nulas o aquellos que incumplan los requisitos establecidos en las presentes bases legales.
 
-Todos los premios objeto de esta promoción estarán sometidos a la legislación fiscal aplicable en España en el momento de su entrega, de acuerdo con lo dispuesto en el Real Decreto 439/2007, por el que se aprueba el Reglamento del IRPF, y demás normas complementarias.
+SALAD BRANDS se reserva el derecho de comprobar la identidad de los participantes, la autenticidad de los códigos registrados y la adquisición legítima de los calendarios, pudiendo solicitar la documentación justificativa razonablemente necesaria para verificar la validez de las participaciones y la condición de ganador.
 
-En el caso de los premios cuyo valor supere los 300 €, la entidad organizadora efectuará la retención e ingreso a cuenta del IRPF correspondiente, aplicando el tipo impositivo vigente en el momento de la entrega.
+El notario levantará acta del sorteo, en la que se recogerán el procedimiento utilizado, los resultados de las extracciones, la relación de ganadores y suplentes y, en su caso, las incidencias.
 
-Los ganadores estarán obligados a incluir el valor del premio en su declaración del IRPF correspondiente al ejercicio fiscal en el que reciban el mismo, conforme a la legislación tributaria aplicable.
+## 8. CONSIDERACIONES GENERALES
 
-La participación en la presente promoción implica la aceptación expresa de las presentes condiciones fiscales y la obligación de los participantes de cumplir con todas las disposiciones tributarias que resulten de aplicación.
-
-En caso de que la normativa fiscal se modifique con anterioridad a la entrega de los premios, la retención y tratamiento fiscal aplicable se ajustará automáticamente a las disposiciones vigentes en dicho momento.
-
-## UTILIZACIÓN DEL NOMBRE, APELLIDOS E IMAGEN DEL GANADOR
-
-Los ganadores autorizan y consienten expresamente por el hecho de participar en la presente Promoción a SALAD BRANDS a utilizar, publicar y difundir sus nombres, apellidos e imágenes, en las publicaciones a través de la web, en los perfiles en redes sociales de SALAD BRANDS o sus colaboradores del proyecto Calendario de Adviento Big Ibai 2025, así como en el material publicitario de la presente promoción o de cualquier otro para el que se necesite hacer referencia al presente, con fines publicitarios y promocionales, incluyendo su publicación en las webs del grupo y en cualquier otro medio de difusión, sin limitación geográfica ni temporal, y sin que ello dé lugar a derecho a contraprestación económica alguna
-
-## SORTEO
-
-Los usuarios pueden participar en la promoción desde el 22 de octubre de 2025 hasta el 23 de diciembre de 2025, a las 23:59 de la noche hora peninsular española.
-
-El sorteo se celebrará el 24 de diciembre de 2025, ante notario, mediante una aplicación informática habilitada por el Colegio Notarial que garantiza la aleatoriedad y la trazabilidad del proceso. La aplicación efectuará extracciones aleatorias sobre la base de datos que contenga únicamente a los participantes válidamente registrados dentro del plazo indicado.
-
-Se designará un (1) ganador por cada uno de los veinticuatro (24) premios previstos y cinco (5) suplentes por cada premio, por estricto orden de prelación (suplente 1, suplente 2, etc.).
-
-Con carácter previo a la extracción, se depurará la base para excluir registros duplicados, participaciones nulas o códigos alfanuméricos ya utilizados. Cualquier participación que incumpla las bases será automáticamente anulada.
-
-El notario levantará acta del resultado, que incluirá el procedimiento de selección, la relación de ganadores y suplentes y, en su caso, las incidencias. La organizadora custodiará el acta y la base de datos de participantes conforme a la normativa aplicable.
-
-En caso de que un ganador: (i) no cumpla las bases; (ii) no pueda ser localizado o no responda en plazo; o (iii) renuncie al premio, la organizadora adjudicará el premio, por orden, al siguiente suplente hasta agotar la lista.
-
-En el plazo de siete (7) días naturales siguientes a la determinación de los ganadores, SALAD BRANDS, S.L. o los agentes designados comunicarán por correo electrónico a cada ganador su condición y el premio obtenido, conforme a lo indicado en estas bases.
-
-Sin perjuicio de lo anterior, los resultados se publicarán el 24 de diciembre de 2025 a las 18:00 horas (hora peninsular española) en la web oficial <www.bigibai.com>, de acuerdo con la Cláusula 2.
-
-## CONSIDERACIONES GENERALES
-
-Podrán participar en la promoción las personas físicas que sean consumidores finales del Calendario de Adviento Big Ibai 2025, siempre que sean mayores de 18 años y residan legalmente en España.
+Podrán participar en la promoción las personas físicas que sean consumidores finales del Calendario de Adviento Big Ibai 2026, siempre que sean mayores de 18 años y residan legalmente en España.
 
 La identidad, mayoría de edad y residencia serán corroborados mediante la presentación del Documento Nacional de Identidad (DNI) u otro documento acreditativo de la identidad de las personas físicas, en el momento de entrega del premio.
 
@@ -156,18 +150,24 @@ Cuando el premio consista en la realización de un determinado viaje, se entiend
 
 Los premios se entregarán exclusivamente dentro del territorio nacional en la dirección que SALAD BRANDS indique a los ganadores o, en su caso, suplentes en el momento de la notificación del premio.
 
-El período de reclamación de los premios finaliza transcurridos treinta (30) días desde que los consumidores reciban la notificación de que han resultado agraciados con el premio en la dirección que hayan facilitado a tal efecto. Los ganadores podrán reclamar los premios a través del Contacto de la web o por email a la siguiente dirección <sorteo@bigibai.com>. En caso de que los ganadores no reclamen el premio en este plazo, el premio pasará al siguiente suplente y así sucesivamente hasta agotar el número de suplentes. Agotado el número de suplentes, la Promoción del día se declarará desierta.
+El período de reclamación de los premios finaliza transcurridos treinta (30) días desde que los consumidores reciban la notificación de que han resultado agraciados con el premio en la dirección que hayan facilitado a tal efecto. Los ganadores podrán reclamar los premios a través del Contacto de la web o por email a la siguiente dirección [sorteo@bigibai.com](mailto:sorteo@bigibai.com). En caso de que los ganadores no reclamen el premio en este plazo, el premio pasará al siguiente suplente y así sucesivamente hasta agotar el número de suplentes. Agotado el número de suplentes, la Promoción del día se declarará desierta.
 
-## ACEPTACIÓN DE LAS BASES LEGALES
+## 9. ACEPTACIÓN DE LAS BASES LEGALES
 
-La participación en la presente Promoción el usuario/participante implica obligatoriamente la aceptación íntegra de las presentes Bases Legales y de las correspondientes condiciones particulares que se detallaran en el link <www.bigibai.com/bases-legales/>, así como la aceptación del criterio interpretativo de SALAD BRANDS en cuanto a la resolución de cualquier cuestión derivada de esta Promoción. SALAD BRANDS se reserva el derecho a modificar estas Bases Legales si así lo exigieran las circunstancias y dirimir cuantas dudas pudieran surgir en lo no previsto en las mismas.
+La participación en la presente promoción implica la aceptación íntegra de estas Bases Legales y de las condiciones particulares publicadas en [www.bigibai.com/bases-legales/](https://www.bigibai.com/bases-legales/).
 
-SALAD BRANDS se reserva también el derecho de anular, prorrogar, ampliar, recortar o modificar la Promoción si las circunstancias lo obligan, sin tener que justificar la decisión y sin que se le pueda reclamar ningún tipo de responsabilidad como consecuencia de ello, siempre que no perjudique los derechos adquiridos por los participantes.
+SALAD BRANDS se reserva el derecho de interpretar y resolver las dudas o incidencias que puedan surgir en relación con la aplicación de estas Bases Legales, actuando conforme a criterios objetivos, razonables y de buena fe, y respetando en todo caso la normativa aplicable y los derechos de los participantes.
 
-## LEY APLICABLE Y JURISDICCIÓN
+Asimismo, SALAD BRANDS podrá modificar, suspender, aplazar, prorrogar o cancelar total o parcialmente la promoción cuando concurran circunstancias excepcionales, causas de fuerza mayor, incidencias técnicas, fraude, problemas con proveedores, imposibilidad sobrevenida o cualquier otra circunstancia objetiva y justificada que impida su normal desarrollo.
+
+Cualquier modificación relevante será comunicada a través de la página web oficial de la promoción y no podrá perjudicar injustificadamente los derechos adquiridos por los participantes.
+
+SALAD BRANDS no asumirá responsabilidad por los perjuicios derivados exclusivamente de dichas circunstancias ajenas a su control, salvo en aquellos supuestos en los que legalmente le corresponda responsabilidad.
+
+## 10. LEY APLICABLE Y JURISDICCIÓN
 
 Las presentes Bases Legales se regirán e interpretarán de acuerdo con su propio contenido y por las leyes de España. En caso de divergencia entre los participantes en la Promoción y la interpretación de las presentes Bases Legales por SALAD BRANDS, serán competentes para conocer los litigios que puedan plantearse los Juzgados y Tribunales de la Ciudad de Barcelona (ESPAÑA), renunciando expresamente los participantes de esta Promoción a su propio fuero en caso de que lo tuvieren.
 
 ---
 
-**Última actualización:** Noviembre 2025
+**Última actualización:** Octubre 2026
