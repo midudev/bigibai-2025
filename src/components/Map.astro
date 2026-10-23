@@ -447,18 +447,29 @@ const retailers = [
 
         const bounds = map.getBounds().pad(0.2)
         const zoomLevel = Math.max(0, Math.min(CLUSTER_MAX_ZOOM, Math.round(map.getZoom())))
-        const features = index.getClusters(
-          [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
-          zoomLevel
-        )
+        // Al dar la vuelta al mundo Leaflet usa longitudes fuera de ±180. Se consulta cada copia del mundo visible.
+        const west = bounds.getWest()
+        const east = bounds.getEast()
+        const firstCopy = Math.floor((west + 180) / 360)
+        const lastCopy = Math.floor((east + 180) / 360)
+        const features: { feature: any; shift: number }[] = []
+        for (let copy = firstCopy; copy <= lastCopy; copy++) {
+          const shift = copy * 360
+          const found = index.getClusters(
+            [Math.max(west - shift, -180), bounds.getSouth(), Math.min(east - shift, 180), bounds.getNorth()],
+            zoomLevel
+          )
+          for (const feature of found) features.push({ feature, shift })
+        }
 
         const seen = new Set<string>()
         for (let n = 0; n < features.length; n++) {
-          const feature = features[n]
-          const [featureLon, featureLat] = feature.geometry.coordinates
+          const { feature, shift } = features[n]
+          const [baseLon, featureLat] = feature.geometry.coordinates
+          const featureLon = baseLon + shift
           const props = feature.properties
           const isCluster = props.cluster === true
-          const id = isCluster ? `c${props.cluster_id}` : `p${props.i}`
+          const id = `${shift}${isCluster ? `c${props.cluster_id}` : `p${props.i}`}`
           seen.add(id)
           if (visible.has(id)) continue
 
